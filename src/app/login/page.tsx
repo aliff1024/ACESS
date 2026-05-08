@@ -52,8 +52,9 @@ export default function LoginPage() {
       const dashboard = role === 'educator' ? '/educator' : '/learner';
       toast.success(`Welcome back! Redirecting to ${role} dashboard...`);
       setTimeout(() => router.push(dashboard), 800);
-    } catch {
-      setError('Login failed. Please try again.');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
