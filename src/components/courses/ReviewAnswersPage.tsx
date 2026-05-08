@@ -11,6 +11,15 @@ interface ReviewAnswersPageProps {
   onRetryQuiz: () => void;
 }
 
+type QuizOption = { id: string; text: string };
+type QuizQuestion = {
+  id: string;
+  question: string;
+  options: QuizOption[];
+  correctAnswer: string;
+  explanation: string;
+};
+
 const quizData = {
   questions: [
     {
@@ -77,8 +86,8 @@ const quizData = {
 };
 
 export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswersPageProps) {
-  const getOptionById = (question: any, optionId: string) => {
-    return question.options.find((opt: any) => opt.id === optionId);
+  const getOptionById = (question: QuizQuestion, optionId: string) => {
+    return question.options.find((opt) => opt.id === optionId);
   };
 
   const correctCount = answers.filter((answer) => {

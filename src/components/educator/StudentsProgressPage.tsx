@@ -81,7 +81,7 @@ export function StudentsProgressPage() {
     <div className="p-8 space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Students Progress</h2>
-        <p className="text-gray-600 mt-1">Monitor and support your students' learning journey</p>
+        <p className="text-gray-600 mt-1">Monitor and support your students&apos; learning journey</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

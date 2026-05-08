@@ -100,7 +100,7 @@ export function CourseProgressDetailPage({
                 <h3 className="text-2xl font-bold text-gray-900 mb-1">
                   🎉 Congratulations! You have completed this course.
                 </h3>
-                <p className="text-gray-700">You're now ready to receive your certificate of completion.</p>
+                <p className="text-gray-700">You&apos;re now ready to receive your certificate of completion.</p>
               </div>
               <Button
                 onClick={() => onGenerateCertificate(course.id)}

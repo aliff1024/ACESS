@@ -9,6 +9,7 @@ import {
 } from '../ui/dropdown-menu';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 export function TopBar() {
   const [notificationCount] = useState(3);
@@ -56,10 +57,12 @@ export function TopBar() {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </DropdownMenuItem>
+              <LogoutButton asChild>
+                <DropdownMenuItem className="text-red-600" onSelect={(e) => e.preventDefault()}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </LogoutButton>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

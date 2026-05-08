@@ -33,7 +33,7 @@ export function EducatorDashboardOverview({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Welcome back, Prof. Johnson!</h2>
-          <p className="text-gray-600 mt-1">Here's what's happening with your courses today</p>
+          <p className="text-gray-600 mt-1">Here&apos;s what&apos;s happening with your courses today</p>
         </div>
         <Button onClick={onCreateCourse} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-6 text-lg">
           <Plus className="w-5 h-5 mr-2" />
@@ -154,7 +154,7 @@ export function EducatorDashboardOverview({
             </Button>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Students who haven't been active recently or are struggling with progress
+            Students who haven&apos;t been active recently or are struggling with progress
           </p>
           <div className="space-y-3">
             {atRiskStudents.map((student, index) => (

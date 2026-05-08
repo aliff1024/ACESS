@@ -44,7 +44,7 @@ export function CertificateListPage({
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">No Certificates Yet</h2>
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            You haven't earned any certificates yet. Complete courses to earn your first certificate and showcase
+            You haven&apos;t earned any certificates yet. Complete courses to earn your first certificate and showcase
             your achievements!
           </p>
           <Button onClick={onBrowseCourses} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg">

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Button } from '../ui/button';
 
 interface NavbarProps {
@@ -12,9 +13,9 @@ export function Navbar({ onTryDemo }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-12">
-            <div className="text-2xl font-bold text-blue-600">
+            <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700">
               ACESS
-            </div>
+            </Link>
             <div className="hidden md:flex items-center gap-8">
               <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">
                 Home
@@ -32,11 +33,11 @@ export function Navbar({ onTryDemo }: NavbarProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost" className="hidden md:inline-flex">
-              Login
+            <Button asChild variant="ghost" className="hidden md:inline-flex">
+              <Link href="/login">Login</Link>
             </Button>
-            <Button variant="outline" className="hidden md:inline-flex">
-              Register
+            <Button asChild variant="outline" className="hidden md:inline-flex">
+              <Link href="/signup">Register</Link>
             </Button>
             <Button onClick={onTryDemo} className="bg-blue-600 hover:bg-blue-700 text-white">
               Try Demo

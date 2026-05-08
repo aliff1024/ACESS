@@ -72,7 +72,7 @@ export function LessonPage({ lessonTitle, onBack }: LessonPageProps) {
 
                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
                   Welcome to this lesson on fundamental concepts. This content is designed
-                  to be clear, accessible, and easy to understand. We'll take things step by
+                  to be clear, accessible, and easy to understand. We&apos;ll take things step by
                   step, ensuring you grasp each concept before moving forward.
                 </p>
 
@@ -88,7 +88,7 @@ export function LessonPage({ lessonTitle, onBack }: LessonPageProps) {
                     and examples that reinforce understanding.
                   </li>
                   <li className="text-lg text-gray-700 leading-relaxed">
-                    <strong>Concept 3:</strong> Advanced applications and how to apply what you've learned
+                    <strong>Concept 3:</strong> Advanced applications and how to apply what you&apos;ve learned
                     in different contexts.
                   </li>
                 </ul>
@@ -96,14 +96,14 @@ export function LessonPage({ lessonTitle, onBack }: LessonPageProps) {
                 <div className="bg-blue-50 border-l-4 border-blue-600 p-6 rounded-r-lg mb-6">
                   <h4 className="text-lg font-semibold text-blue-900 mb-2">💡 Pro Tip</h4>
                   <p className="text-gray-700 leading-relaxed">
-                    Take your time with each section. There's no rush! You can pause, re-read,
+                    Take your time with each section. There&apos;s no rush! You can pause, re-read,
                     or use the text-to-speech feature to listen to the content at your own pace.
                   </p>
                 </div>
 
                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  As you progress through this lesson, you'll notice that the content adapts to your
-                  learning style. If you need more time on certain topics, that's perfectly fine.
+                  As you progress through this lesson, you&apos;ll notice that the content adapts to your
+                  learning style. If you need more time on certain topics, that&apos;s perfectly fine.
                   Our adaptive system will adjust future recommendations based on your pace.
                 </p>
 
@@ -153,7 +153,7 @@ export function LessonPage({ lessonTitle, onBack }: LessonPageProps) {
                       [00:15] This content is designed to be clear, accessible, and easy to understand...
                     </p>
                     <p className="mb-3">
-                      [00:30] We'll take things step by step, ensuring you grasp each concept...
+                      [00:30] We&apos;ll take things step by step, ensuring you grasp each concept...
                     </p>
                     <p className="mb-3">
                       [00:45] The first key concept introduces the main idea and its practical applications...

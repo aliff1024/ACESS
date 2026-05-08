@@ -69,10 +69,9 @@ export function QuizResultModal({
         <DialogHeader>
           <DialogTitle className="text-3xl text-center">Quiz Results</DialogTitle>
           <DialogDescription className="text-center text-gray-600">
-            Here's how you performed on this quiz
+            Here&apos;s how you performed on this quiz
           </DialogDescription>
         </DialogHeader>
-
         <div className="py-6">
           <div className="flex flex-col items-center mb-8">
             {feedback.icon}

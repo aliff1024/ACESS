@@ -1,6 +1,7 @@
 'use client';
 
 import { LayoutDashboard, BookOpen, Plus, BarChart3, Users, LogOut } from 'lucide-react';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 interface EducatorSidebarProps {
   activeView: string;
@@ -46,10 +47,12 @@ export function EducatorSidebar({ activeView, onNavigate }: EducatorSidebarProps
       </nav>
 
       <div className="p-4 border-t border-gray-200">
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200">
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
-        </button>
+        <LogoutButton asChild>
+          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200">
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
+        </LogoutButton>
       </div>
     </aside>
   );

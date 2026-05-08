@@ -50,7 +50,7 @@ export function QuizBuilderModal({ isOpen, onClose, onSave }: AddQuizModalProps)
     setQuestions(questions.filter((q) => q.id !== id));
   };
 
-  const updateQuestion = (id: string, field: string, value: any) => {
+  const updateQuestion = (id: string, field: keyof Question, value: string | number) => {
     setQuestions(
       questions.map((q) => (q.id === id ? { ...q, [field]: value } : q))
     );

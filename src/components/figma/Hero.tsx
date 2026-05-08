@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Button } from '../ui/button';
 import { BookOpen, Users, TrendingUp } from 'lucide-react';
 
@@ -22,10 +23,11 @@ export function Hero({ onTryDemo }: HeroProps) {
 
           <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
             <Button
+              asChild
               size="lg"
               className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6"
             >
-              Explore Courses
+              <Link href="/signup">Explore Courses</Link>
             </Button>
             <Button
               size="lg"
