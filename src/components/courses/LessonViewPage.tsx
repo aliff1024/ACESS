@@ -1,128 +1,145 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { Volume2, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Volume2, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed } from '@/lib/learner-api';
+import { fetchLessonAssets } from '@/lib/educator-api';
+import type { LessonContent, QuizData } from '@/lib/learner-api';
+import type { LessonAsset } from '@/lib/educator-api';
+import { PdfViewer } from './PdfViewer';
+import { QuizPage } from './QuizPage';
+import { QuizResultModal } from './QuizResultModal';
+import { ReviewAnswersPage } from './ReviewAnswersPage';
+import { toast } from 'sonner';
 
 interface LessonViewPageProps {
   lessonId: string;
+  courseId: string;
   onBack: () => void;
-  onTakeQuiz: () => void;
-  onNextLesson: () => void;
-  onPreviousLesson: () => void;
+  onNextLesson?: () => void;
+  onPreviousLesson?: () => void;
 }
 
-const lessonContent = {
-  l6: {
-    title: 'Screen Reader Compatibility',
-    lessonNumber: 6,
-    totalLessons: 12,
-    content: `Screen readers are assistive technologies that enable users who are blind or have low vision to access digital content through audio output. Understanding how screen readers work is essential for creating truly accessible web experiences.
-
-## What is a Screen Reader?
-
-A screen reader is software that converts text and other visual information on a screen into speech or Braille output. Users navigate through content using keyboard commands, and the screen reader announces the content aloud or displays it on a refreshable Braille display.
-
-## Popular Screen Readers
-
-The most commonly used screen readers include:
-
-• JAWS (Job Access With Speech) - Windows
-• NVDA (NonVisual Desktop Access) - Windows, Free and open-source
-• VoiceOver - macOS and iOS, Built into Apple devices
-• TalkBack - Android, Built into Android devices
-• Narrator - Windows, Built into Windows 10+
-
-## How Screen Readers Navigate Content
-
-Screen readers provide multiple ways to navigate web content:
-
-1. **Reading Order**: Content is read from top to bottom following the DOM structure
-2. **Headings Navigation**: Users can jump between headings (H1, H2, H3, etc.)
-3. **Landmarks**: Main, navigation, footer, and other ARIA landmarks help users orient themselves
-4. **Links and Buttons**: Users can tab through or get a list of all interactive elements
-5. **Forms**: Special commands help users navigate form fields efficiently
-
-## Best Practices for Screen Reader Compatibility
-
-### Use Semantic HTML
-
-Always use proper HTML elements that convey meaning:
-- Use <button> for buttons, not <div> with click handlers
-- Use <nav> for navigation menus
-- Use <main> for primary content
-- Use heading tags (h1-h6) to create a logical document structure
-
-### Provide Alternative Text
-
-All images should have descriptive alt text that conveys the image's purpose and content. If an image is purely decorative, use an empty alt attribute (alt="").
-
-### Label Form Elements
-
-Every form input should have a clear, associated label element. Use the for attribute to explicitly connect labels with inputs.
-
-### Announce Dynamic Content
-
-When content changes dynamically (like loading data or showing errors), use ARIA live regions to announce these changes to screen reader users.
-
-## Testing with Screen Readers
-
-The best way to ensure your content works with screen readers is to test it yourself. Here's how to get started:
-
-1. **Windows**: Download NVDA (free) from nvaccess.org
-2. **macOS**: Enable VoiceOver in System Preferences
-3. **Mobile**: Enable TalkBack (Android) or VoiceOver (iOS) in accessibility settings
-
-Practice basic navigation commands and try to complete common tasks using only the screen reader without looking at the screen.
-
-## Key Takeaways
-
-• Screen readers are the primary way many users with visual disabilities access web content
-• Semantic HTML and proper ARIA attributes are essential for screen reader accessibility
-• Testing with actual screen readers is the best way to identify and fix accessibility issues
-• Small changes in code can make huge differences in the user experience for screen reader users
-
-Understanding screen readers isn't just about compliance—it's about ensuring that everyone can access and use your digital content effectively.`,
-    transcript: `Welcome to Lesson 6: Screen Reader Compatibility.
-
-In this lesson, we'll explore how screen readers work and why they're so important for web accessibility.
-
-Screen readers are assistive technologies that convert text and visual information into audio output or Braille. They're essential tools for users who are blind or have low vision.
-
-The most popular screen readers include JAWS for Windows, NVDA which is free and open source, VoiceOver built into Apple devices, TalkBack for Android, and Windows Narrator.
-
-Screen readers provide multiple ways to navigate content. Users can read from top to bottom, jump between headings, use landmarks like navigation and main content areas, tab through links and buttons, and efficiently navigate forms.
-
-To make your content screen reader friendly, always use semantic HTML. This means using proper elements like button for buttons, nav for navigation, and heading tags to create logical structure.
-
-Provide descriptive alternative text for all images. Label all form elements clearly. And use ARIA live regions to announce dynamic content changes.
-
-The best way to ensure compatibility is to test with actual screen readers. Download NVDA for free on Windows, or use VoiceOver on Mac and iOS devices.
-
-Remember, screen reader accessibility isn't just about compliance. It's about making your content truly accessible to everyone.
-
-This concludes our lesson on screen reader compatibility.`,
-  },
-};
+type TabId = 'content' | 'pdf' | 'quiz';
 
 export function LessonViewPage({
   lessonId,
+  courseId,
   onBack,
-  onTakeQuiz,
   onNextLesson,
   onPreviousLesson,
 }: LessonViewPageProps) {
+  const [lesson, setLesson] = useState<LessonContent | null>(null);
+  const [assets, setAssets] = useState<LessonAsset[]>([]);
+  const [quizData, setQuizData] = useState<QuizData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showTranscript, setShowTranscript] = useState(false);
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>('content');
 
-  const lesson = lessonContent[lessonId as keyof typeof lessonContent] || lessonContent.l6;
+  // Quiz flow state
+  const [quizId, setQuizId] = useState<string | null>(null);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState<{ questionId: string; selectedAnswer: string }[]>([]);
+  const [showQuizResult, setShowQuizResult] = useState(false);
+  const [isReviewingAnswers, setIsReviewingAnswers] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchLessonContent(lessonId),
+      fetchLessonAssets(lessonId).catch(() => [] as LessonAsset[]),
+      fetchQuizData(lessonId),
+    ])
+      .then(([lessonData, assetData, quizResult]) => {
+        if (lessonData) {
+          setLesson(lessonData);
+          markLessonViewed(lessonId, courseId).catch(() => {});
+        }
+        setAssets(assetData);
+        if (quizResult) {
+          setQuizData(quizResult);
+          setQuizId(quizResult.id);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [lessonId, courseId]);
 
   const handlePlayTTS = () => {
     setIsPlayingTTS(!isPlayingTTS);
-    // In a real app, this would trigger text-to-speech
-    console.log('TTS toggled:', !isPlayingTTS);
   };
+
+  const hasPdfAssets = assets.length > 0;
+  const hasQuiz = quizData !== null;
+
+  const tabs: { id: TabId; label: string; icon: typeof BookOpen }[] = [
+    { id: 'content', label: 'Lesson', icon: BookOpen },
+    ...(hasPdfAssets ? [{ id: 'pdf' as const, label: 'PDF Materials', icon: FileText }] : []),
+    ...(hasQuiz ? [{ id: 'quiz' as const, label: 'Quiz', icon: HelpCircle }] : []),
+  ];
+
+  const handleQuizSubmit = async (score: number, answers: { questionId: string; selectedAnswer: string }[]) => {
+    if (!quizId || !courseId || submitting) return;
+    setSubmitting(true);
+    setQuizAnswers(answers);
+    try {
+      const transformed = answers.map((a) => ({
+        questionId: a.questionId,
+        selectedOptionId: a.selectedAnswer,
+      }));
+      const result = await submitQuizAttempt({ quizId, courseId, answers: transformed });
+      setQuizScore(result.score);
+      if (result.passed) {
+        toast.success('Quiz passed!');
+      }
+    } catch {
+      setQuizScore(score);
+      toast.error('Failed to save quiz attempt');
+    } finally {
+      setSubmitting(false);
+      setShowQuizResult(true);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!lesson) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Lesson not found</p>
+      </div>
+    );
+  }
+
+  if (isReviewingAnswers) {
+    return (
+      <ReviewAnswersPage
+        lessonId={lessonId}
+        answers={quizAnswers}
+        onBack={() => {
+          setIsReviewingAnswers(false);
+          setShowQuizResult(true);
+        }}
+        onRetryQuiz={() => {
+          setIsReviewingAnswers(false);
+          setShowQuizResult(false);
+          setQuizAnswers([]);
+        }}
+      />
+    );
+  }
+
+  const contentHtml = lesson.content_html || '';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -133,138 +150,166 @@ export function LessonViewPage({
               onClick={onBack}
               className="text-blue-600 hover:text-blue-700 flex items-center gap-2"
             >
-              ← Back to Course
+              &larr; Back to Course
             </button>
             <div className="text-sm text-gray-600">
-              Lesson {lesson.lessonNumber} of {lesson.totalLessons}
+              Lesson {lesson.sequence_order} of {lesson.total_lessons}
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">{lesson.title}</h1>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Accessibility Tools</h2>
-          <div className="flex gap-4">
-            <Button
-              onClick={handlePlayTTS}
-              className={`${
-                isPlayingTTS ? 'bg-blue-700' : 'bg-blue-600'
-              } hover:bg-blue-700 text-white`}
-            >
-              <Volume2 className="w-5 h-5 mr-2" />
-              {isPlayingTTS ? 'Stop TTS' : 'Play TTS'}
-            </Button>
-            <Button
-              onClick={() => setShowTranscript(!showTranscript)}
-              variant="outline"
-              className="border-blue-300 text-blue-700 hover:bg-blue-100"
-            >
-              <FileText className="w-5 h-5 mr-2" />
-              {showTranscript ? 'Hide Transcript' : 'Show Transcript'}
-            </Button>
+      {activeTab !== 'quiz' && (
+        <div className="max-w-6xl mx-auto px-6 py-4 mt-2">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Accessibility Tools</h2>
+            <div className="flex gap-4">
+              <Button
+                onClick={handlePlayTTS}
+                className={`${
+                  isPlayingTTS ? 'bg-blue-700' : 'bg-blue-600'
+                } hover:bg-blue-700 text-white`}
+              >
+                <Volume2 className="w-5 h-5 mr-2" />
+                {isPlayingTTS ? 'Stop TTS' : 'Play TTS'}
+              </Button>
+              <Button
+                onClick={() => setShowTranscript(!showTranscript)}
+                variant="outline"
+                className="border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                <FileText className="w-5 h-5 mr-2" />
+                {showTranscript ? 'Hide Transcript' : 'Show Transcript'}
+              </Button>
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className={showTranscript ? 'lg:col-span-2' : 'lg:col-span-3'}>
-            <Card className="p-8 rounded-2xl border-2 border-gray-200">
-              <div
-                className="prose prose-lg max-w-none text-gray-900 leading-relaxed"
-                style={{ fontSize: '18px', lineHeight: '1.8' }}
+      <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="flex gap-1 border-b border-gray-200 mb-6">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
-                {lesson.content.split('\n\n').map((paragraph, index) => {
-                  if (paragraph.startsWith('## ')) {
-                    return (
-                      <h2 key={index} className="text-2xl font-bold text-gray-900 mt-8 mb-4">
-                        {paragraph.replace('## ', '')}
-                      </h2>
-                    );
-                  }
-                  if (paragraph.startsWith('### ')) {
-                    return (
-                      <h3 key={index} className="text-xl font-semibold text-gray-900 mt-6 mb-3">
-                        {paragraph.replace('### ', '')}
-                      </h3>
-                    );
-                  }
-                  if (paragraph.startsWith('• ')) {
-                    const items = paragraph.split('\n');
-                    return (
-                      <ul key={index} className="list-disc list-inside space-y-2 mb-6">
-                        {items.map((item, i) => (
-                          <li key={i} className="text-gray-700">
-                            {item.replace('• ', '')}
-                          </li>
-                        ))}
-                      </ul>
-                    );
-                  }
-                  if (/^\d+\./.test(paragraph)) {
-                    const items = paragraph.split('\n');
-                    return (
-                      <ol key={index} className="list-decimal list-inside space-y-2 mb-6">
-                        {items.map((item, i) => (
-                          <li key={i} className="text-gray-700">
-                            {item.replace(/^\d+\.\s\*\*/, '').replace(/\*\*/, ': ')}
-                          </li>
-                        ))}
-                      </ol>
-                    );
-                  }
-                  return (
-                    <p key={index} className="mb-6 text-gray-700">
-                      {paragraph}
-                    </p>
-                  );
-                })}
-              </div>
-            </Card>
-          </div>
+                <Icon className="w-5 h-5" /> {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-          {showTranscript && (
-            <div className="lg:col-span-1">
-              <Card className="p-6 rounded-2xl border-2 border-gray-200 sticky top-24">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Transcript
-                </h3>
-                <div className="text-gray-700 leading-relaxed space-y-4 text-sm max-h-[600px] overflow-y-auto">
-                  {lesson.transcript.split('\n\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
-                </div>
+        {/* ── Content Tab ── */}
+        {activeTab === 'content' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className={showTranscript ? 'lg:col-span-2' : 'lg:col-span-3'}>
+              <Card className="p-8 rounded-2xl border-2 border-gray-200">
+                <div
+                  className="prose prose-lg max-w-none text-gray-900 leading-relaxed"
+                  style={{ fontSize: '18px', lineHeight: '1.8' }}
+                  dangerouslySetInnerHTML={{ __html: contentHtml }}
+                />
               </Card>
             </div>
-          )}
-        </div>
 
+            {showTranscript && lesson.transcript && (
+              <div className="lg:col-span-1">
+                <Card className="p-6 rounded-2xl border-2 border-gray-200 sticky top-24">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Transcript
+                  </h3>
+                  <div className="text-gray-700 leading-relaxed space-y-4 text-sm max-h-[600px] overflow-y-auto">
+                    {lesson.transcript.split('\n\n').map((paragraph, index) => (
+                      <p key={index}>{paragraph}</p>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── PDF Tab ── */}
+        {activeTab === 'pdf' && (
+          <div className="space-y-6">
+            {assets.map((asset) => (
+              <PdfViewer key={asset.id} url={asset.url} title={asset.title || 'PDF Document'} />
+            ))}
+          </div>
+        )}
+
+        {/* ── Quiz Tab ── */}
+        {activeTab === 'quiz' && (
+          <QuizPage
+            lessonId={lessonId}
+            courseId={courseId}
+            onBack={() => setActiveTab('content')}
+            onSubmit={handleQuizSubmit}
+          />
+        )}
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 pb-8">
         <div className="mt-8 flex items-center justify-between gap-4">
           <Button
             onClick={onPreviousLesson}
             variant="outline"
             className="px-8 py-6 text-lg"
-            disabled={lesson.lessonNumber === 1}
+            disabled={lesson.sequence_order <= 1}
           >
             <ChevronLeft className="w-5 h-5 mr-2" />
             Previous Lesson
           </Button>
 
-          <Button onClick={onTakeQuiz} className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 text-lg">
-            Take Quiz
-          </Button>
+          <div className="flex gap-3">
+            {hasQuiz && (
+              <Button
+                onClick={() => setActiveTab('quiz')}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 text-lg"
+              >
+                <HelpCircle className="w-5 h-5 mr-2" />
+                Take Quiz
+              </Button>
+            )}
+          </div>
 
           <Button
             onClick={onNextLesson}
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
-            disabled={lesson.lessonNumber === lesson.totalLessons}
+            disabled={lesson.sequence_order >= lesson.total_lessons}
           >
             Next Lesson
             <ChevronRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
       </div>
+
+      <QuizResultModal
+        isOpen={showQuizResult}
+        score={quizScore}
+        onClose={() => setShowQuizResult(false)}
+        onReviewAnswers={() => {
+          setShowQuizResult(false);
+          setIsReviewingAnswers(true);
+        }}
+        onRetryQuiz={() => {
+          setShowQuizResult(false);
+          setQuizAnswers([]);
+        }}
+        onContinueLearning={() => {
+          setShowQuizResult(false);
+          setActiveTab('content');
+        }}
+      />
     </div>
   );
 }

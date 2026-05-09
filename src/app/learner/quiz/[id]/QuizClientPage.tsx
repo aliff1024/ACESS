@@ -1,23 +1,57 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { QuizPage } from '@/components/courses/QuizPage';
 import { QuizResultModal } from '@/components/courses/QuizResultModal';
 import { ReviewAnswersPage } from '@/components/courses/ReviewAnswersPage';
+import { fetchQuizData, submitQuizAttempt } from '@/lib/learner-api';
+import { toast } from 'sonner';
 
-type QuizAnswer = { questionId: string; selectedAnswer: string };
-
-export default function QuizClientPage({ lessonId, courseId }: { lessonId: string; courseId: string }) {
+export default function QuizClientPage({ lessonId }: { lessonId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const courseId = searchParams.get('courseId') || '';
+  const [quizId, setQuizId] = useState<string | null>(null);
   const [quizScore, setQuizScore] = useState(0);
-  const [quizAnswers, setQuizAnswers] = useState<QuizAnswer[]>([]);
+  const [quizAnswers, setQuizAnswers] = useState<{ questionId: string; selectedAnswer: string }[]>([]);
   const [showQuizResult, setShowQuizResult] = useState(false);
   const [isReviewingAnswers, setIsReviewingAnswers] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchQuizData(lessonId).then((data) => {
+      if (data) setQuizId(data.id);
+    }).catch(() => {});
+  }, [lessonId]);
+
+  const handleSubmit = async (score: number, answers: { questionId: string; selectedAnswer: string }[]) => {
+    if (!quizId || !courseId || submitting) return;
+    setSubmitting(true);
+    setQuizAnswers(answers);
+    try {
+      const transformed = answers.map((a) => ({
+        questionId: a.questionId,
+        selectedOptionId: a.selectedAnswer,
+      }));
+      const result = await submitQuizAttempt({ quizId, courseId, answers: transformed });
+      setQuizScore(result.score);
+      if (result.passed) {
+        toast.success('Quiz passed!');
+      }
+    } catch {
+      setQuizScore(score);
+      toast.error('Failed to save quiz attempt');
+    } finally {
+      setSubmitting(false);
+      setShowQuizResult(true);
+    }
+  };
 
   if (isReviewingAnswers) {
     return (
       <ReviewAnswersPage
+        lessonId={lessonId}
         answers={quizAnswers}
         onBack={() => {
           setIsReviewingAnswers(false);
@@ -35,12 +69,10 @@ export default function QuizClientPage({ lessonId, courseId }: { lessonId: strin
   return (
     <>
       <QuizPage
+        lessonId={lessonId}
+        courseId={courseId}
         onBack={() => router.push(`/learner/lesson/${lessonId}?courseId=${courseId}`)}
-        onSubmit={(score, answers) => {
-          setQuizScore(score);
-          setQuizAnswers(answers);
-          setShowQuizResult(true);
-        }}
+        onSubmit={handleSubmit}
       />
 
       <QuizResultModal

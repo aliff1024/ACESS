@@ -1,10 +1,14 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { BookOpen, Clock, Check, Lock, Play } from 'lucide-react';
+import { BookOpen, Clock, Check, Lock, Play, Loader2 } from 'lucide-react';
+import { fetchCourseDetail, enrollInCourse } from '@/lib/learner-api';
+import type { CourseDetail } from '@/lib/learner-api';
+import { toast } from 'sonner';
 
 interface CourseDetailPageProps {
   courseId: string;
@@ -12,47 +16,35 @@ interface CourseDetailPageProps {
   onStartLesson: (lessonId: string) => void;
 }
 
-const courseData = {
-  '1': {
-    title: 'Introduction to Web Accessibility',
-    description: 'Learn the fundamentals of making web content accessible to everyone, including people with disabilities. This comprehensive course covers WCAG guidelines, semantic HTML, ARIA attributes, and practical implementation techniques.',
-    difficulty: 'Easy',
-    category: 'Skills',
-    progress: 45,
-    totalLessons: 12,
-    completedLessons: 5,
-    duration: '6 hours',
-    tags: ['Accessibility', 'Web Development', 'WCAG', 'Inclusive Design'],
-    lessons: [
-      { id: 'l1', title: 'Introduction to Web Accessibility', status: 'completed', duration: '25 min' },
-      { id: 'l2', title: 'Understanding WCAG Guidelines', status: 'completed', duration: '30 min' },
-      { id: 'l3', title: 'Semantic HTML Basics', status: 'completed', duration: '35 min' },
-      { id: 'l4', title: 'ARIA Attributes and Roles', status: 'completed', duration: '40 min' },
-      { id: 'l5', title: 'Keyboard Navigation', status: 'completed', duration: '30 min' },
-      { id: 'l6', title: 'Screen Reader Compatibility', status: 'current', duration: '35 min' },
-      { id: 'l7', title: 'Color Contrast and Visual Design', status: 'locked', duration: '30 min' },
-      { id: 'l8', title: 'Form Accessibility', status: 'locked', duration: '40 min' },
-      { id: 'l9', title: 'Accessible Media Content', status: 'locked', duration: '35 min' },
-      { id: 'l10', title: 'Testing for Accessibility', status: 'locked', duration: '30 min' },
-      { id: 'l11', title: 'Common Accessibility Issues', status: 'locked', duration: '35 min' },
-      { id: 'l12', title: 'Final Project and Certification', status: 'locked', duration: '45 min' },
-    ],
-  },
+const difficultyColors: Record<string, string> = {
+  beginner: 'bg-green-100 text-green-700 border-green-200',
+  intermediate: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  advanced: 'bg-red-100 text-red-700 border-red-200',
 };
 
 export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDetailPageProps) {
-  const course = courseData[courseId as keyof typeof courseData] || courseData['1'];
+  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'Medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'Hard':
-        return 'bg-red-100 text-red-700 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+  useEffect(() => {
+    fetchCourseDetail(courseId)
+      .then(setCourse)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [courseId]);
+
+  const handleEnroll = async () => {
+    setEnrolling(true);
+    try {
+      await enrollInCourse(courseId);
+      toast.success('Enrolled successfully!');
+      const updated = await fetchCourseDetail(courseId);
+      setCourse(updated);
+    } catch {
+      toast.error('Failed to enroll');
+    } finally {
+      setEnrolling(false);
     }
   };
 
@@ -82,6 +74,24 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <p className="text-gray-600">Course not found</p>
+      </div>
+    );
+  }
+
+  const diffKey = course.difficulty_level?.toLowerCase() || 'beginner';
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -89,7 +99,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
           onClick={onBack}
           className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2"
         >
-          ← Back to Courses
+          &larr; Back to Courses
         </button>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
@@ -100,12 +110,14 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
 
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
-                <Badge className={`${getDifficultyColor(course.difficulty)} border`}>
-                  {course.difficulty}
+                <Badge className={`${difficultyColors[diffKey] || difficultyColors.beginner} border`}>
+                  {course.difficulty_level || 'Beginner'}
                 </Badge>
-                <Badge variant="outline" className="text-gray-600">
-                  {course.category}
-                </Badge>
+                {course.category && (
+                  <Badge variant="outline" className="text-gray-600">
+                    {course.category}
+                  </Badge>
+                )}
               </div>
 
               <h1 className="text-4xl font-bold text-gray-900 mb-3">{course.title}</h1>
@@ -114,11 +126,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
               <div className="flex items-center gap-6 text-gray-600">
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-5 h-5" />
-                  <span>{course.totalLessons} lessons</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  <span>{course.duration}</span>
+                  <span>{course.total_lessons} lessons</span>
                 </div>
               </div>
             </div>
@@ -132,16 +140,26 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
             ))}
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-lg font-semibold text-gray-900">Your Progress</span>
-              <span className="text-lg font-bold text-blue-600">{course.progress}%</span>
+          {course.enrollment_id ? (
+            <div className="bg-gray-50 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-lg font-semibold text-gray-900">Your Progress</span>
+                <span className="text-lg font-bold text-blue-600">{course.progress}%</span>
+              </div>
+              <Progress value={course.progress} className="h-3 mb-2" />
+              <p className="text-sm text-gray-600">
+                {course.completed_lessons} of {course.total_lessons} lessons completed
+              </p>
             </div>
-            <Progress value={course.progress} className="h-3 mb-2" />
-            <p className="text-sm text-gray-600">
-              {course.completedLessons} of {course.totalLessons} lessons completed
-            </p>
-          </div>
+          ) : (
+            <Button
+              onClick={handleEnroll}
+              disabled={enrolling}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
+            >
+              {enrolling ? 'Enrolling...' : 'Enroll in Course'}
+            </Button>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
@@ -175,32 +193,30 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-semibold text-gray-500">
-                        Lesson {index + 1}
+                        Lesson {lesson.sequence_order}
                       </span>
                       {lesson.status === 'current' && (
                         <Badge className="bg-blue-600 text-white text-xs">In Progress</Badge>
                       )}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">{lesson.title}</h3>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock className="w-4 h-4" />
-                      <span>{lesson.duration}</span>
-                    </div>
                   </div>
 
-                  <Button
-                    onClick={() => onStartLesson(lesson.id)}
-                    disabled={lesson.status === 'locked'}
-                    className={`${
-                      lesson.status === 'current'
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : lesson.status === 'completed'
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    } px-8`}
-                  >
-                    {getLessonButtonText(lesson.status)}
-                  </Button>
+                  {course.enrollment_id && (
+                    <Button
+                      onClick={() => onStartLesson(lesson.id)}
+                      disabled={lesson.status === 'locked'}
+                      className={`${
+                        lesson.status === 'current'
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : lesson.status === 'completed'
+                          ? 'bg-green-600 hover:bg-green-700 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      } px-8`}
+                    >
+                      {getLessonButtonText(lesson.status)}
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}

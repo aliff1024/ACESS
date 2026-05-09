@@ -2,11 +2,9 @@ import LessonClientPage from './LessonClientPage';
 
 export default async function LearnerLessonPage({
   params,
-  searchParams,
 }: {
-  params: { id: string };
-  searchParams: Promise<{ courseId?: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { courseId } = await searchParams;
-  return <LessonClientPage lessonId={params.id ?? 'l6'} courseId={courseId ?? '1'} />;
+  const { id } = await params;
+  return <LessonClientPage lessonId={id} />;
 }

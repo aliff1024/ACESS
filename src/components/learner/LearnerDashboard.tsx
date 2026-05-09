@@ -188,8 +188,8 @@ export function LearnerDashboard() {
     return (
       <LessonViewPage
         lessonId={selectedLesson || 'l6'}
+        courseId={selectedCourse || ''}
         onBack={handleBackToCourseDetail}
-        onTakeQuiz={handleTakeQuiz}
         onNextLesson={handleNextLesson}
         onPreviousLesson={handlePreviousLesson}
       />
@@ -197,13 +197,14 @@ export function LearnerDashboard() {
   }
 
   if (currentView === 'quiz') {
-    return <QuizPage onBack={handleBackToLesson} onSubmit={handleQuizSubmit} />;
+    return <QuizPage lessonId={selectedLesson || ''} courseId={selectedCourse || ''} onBack={handleBackToLesson} onSubmit={handleQuizSubmit} />;
   }
 
   if (currentView === 'reviewAnswers') {
     return (
       <ReviewAnswersPage
         answers={quizAnswers}
+        lessonId={selectedLesson || ''}
         onBack={handleBackToResults}
         onRetryQuiz={handleRetryQuiz}
       />

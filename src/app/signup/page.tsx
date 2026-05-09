@@ -291,13 +291,9 @@ return (
         </div>
       </div>
 
-      <Button
-        asChild
-        variant="outline"
-        className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-lg font-semibold rounded-xl"
-      >
-        <Link href="/learner">Start Learner Demo</Link>
-      </Button>
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-900">
+        <strong>Already have an account?</strong> Sign in to access your courses and progress.
+      </div>
 
       <div className="mt-6 text-center">
         <p className="text-gray-600">

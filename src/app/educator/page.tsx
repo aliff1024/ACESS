@@ -8,7 +8,7 @@ export default function EducatorDashboardPage() {
 
   return (
     <EducatorDashboardOverview
-      onCreateCourse={() => router.push('/educator/courses')}
+      onCreateCourse={() => router.push('/educator/courses/create')}
       onViewCourses={() => router.push('/educator/courses')}
       onViewStudents={() => router.push('/educator/students')}
     />

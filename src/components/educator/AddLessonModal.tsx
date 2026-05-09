@@ -5,24 +5,53 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { FileText, Video, Upload, X } from 'lucide-react';
+import { FileText, Video, Upload } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import { createLesson } from '@/lib/educator-api';
 
 interface AddLessonModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  courseId?: string;
 }
 
-export function AddLessonModal({ isOpen, onClose, onSave }: AddLessonModalProps) {
+export function AddLessonModal({ isOpen, onClose, onSave, courseId }: AddLessonModalProps) {
   const [lessonTitle, setLessonTitle] = useState('');
   const [lessonContent, setLessonContent] = useState('');
   const [hasVideo, setHasVideo] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    onSave();
-    setLessonTitle('');
-    setLessonContent('');
-    setHasVideo(false);
+  const handleSave = async () => {
+    if (!courseId) {
+      toast.error('No course selected. Create a course first.');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
+      await createLesson(user.user.id, {
+        course_id: courseId,
+        title: lessonTitle,
+        content_html: lessonContent,
+        sequence_order: 1,
+        status: 'published',
+      });
+
+      toast.success('Lesson added successfully!');
+      onSave();
+      setLessonTitle('');
+      setLessonContent('');
+      setHasVideo(false);
+    } catch (err) {
+      toast.error('Failed to save lesson');
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -119,11 +148,11 @@ export function AddLessonModal({ isOpen, onClose, onSave }: AddLessonModalProps)
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!lessonTitle || !lessonContent}
+            disabled={!lessonTitle || !lessonContent || isSaving || !courseId}
             className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 ml-auto"
           >
             <FileText className="w-5 h-5 mr-2" />
-            Save Lesson
+            {isSaving ? 'Saving...' : 'Save Lesson'}
           </Button>
         </div>
       </DialogContent>

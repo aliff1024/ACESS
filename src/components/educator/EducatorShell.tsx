@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { toast, Toaster } from 'sonner';
+import { Toaster } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { useAuth, useRole } from '@/providers/AuthProvider';
 import { EducatorSidebar } from './EducatorSidebar';
 import { EducatorTopBar } from './EducatorTopBar';
-import { CreateCourseModal } from './CreateCourseModal';
-import { AddLessonModal } from './AddLessonModal';
-import { QuizBuilderModal } from './QuizBuilderModal';
 
 const viewMeta: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: 'Dashboard', subtitle: 'Overview of your teaching activity' },
@@ -26,17 +25,34 @@ const pathnameToView = (pathname: string): keyof typeof viewMeta => {
 export function EducatorShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isCreateCourseModalOpen, setIsCreateCourseModalOpen] = useState(false);
-  const [isAddLessonModalOpen, setIsAddLessonModalOpen] = useState(false);
-  const [isQuizBuilderModalOpen, setIsQuizBuilderModalOpen] = useState(false);
+  const { isLoading, isAuthenticated } = useAuth();
+  const role = useRole();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (role !== 'educator' && role !== 'admin') { router.replace('/access-denied'); }
+  }, [isLoading, isAuthenticated, role, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || (role !== 'educator' && role !== 'admin')) {
+    return null;
+  }
+
   const view = pathnameToView(pathname);
 
   const handleNavigate = (nextView: string) => {
-    if (nextView === 'create') {
-      setIsCreateCourseModalOpen(true);
-      return;
-    }
-
+    if (nextView === 'create') { router.push('/educator/courses/create'); return; }
     if (nextView === 'courses') router.push('/educator/courses');
     if (nextView === 'students') router.push('/educator/students');
     if (nextView === 'analytics') router.push('/educator/analytics');
@@ -47,48 +63,10 @@ export function EducatorShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-gray-50 flex">
       <Toaster position="top-right" richColors />
       <EducatorSidebar activeView={view} onNavigate={handleNavigate} />
-
       <div className="flex-1 flex flex-col">
         <EducatorTopBar title={viewMeta[view].title} subtitle={viewMeta[view].subtitle} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
-
-      <CreateCourseModal
-        isOpen={isCreateCourseModalOpen}
-        onClose={() => setIsCreateCourseModalOpen(false)}
-        onPublish={() => {
-          toast.success('Course published successfully!', {
-            description: 'Students can now enroll in your course',
-          });
-          setIsCreateCourseModalOpen(false);
-        }}
-        onAddLesson={() => {
-          setIsCreateCourseModalOpen(false);
-          setIsAddLessonModalOpen(true);
-        }}
-        onAddQuiz={() => {
-          setIsCreateCourseModalOpen(false);
-          setIsQuizBuilderModalOpen(true);
-        }}
-      />
-
-      <AddLessonModal
-        isOpen={isAddLessonModalOpen}
-        onClose={() => setIsAddLessonModalOpen(false)}
-        onSave={() => {
-          toast.success('Lesson added successfully!');
-          setIsAddLessonModalOpen(false);
-        }}
-      />
-
-      <QuizBuilderModal
-        isOpen={isQuizBuilderModalOpen}
-        onClose={() => setIsQuizBuilderModalOpen(false)}
-        onSave={() => {
-          toast.success('Quiz created successfully!');
-          setIsQuizBuilderModalOpen(false);
-        }}
-      />
     </div>
   );
 }

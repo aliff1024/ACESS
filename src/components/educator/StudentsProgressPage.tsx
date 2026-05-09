@@ -1,81 +1,62 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { Users, TrendingUp, AlertTriangle, Mail, Search } from 'lucide-react';
+import { Users, TrendingUp, AlertTriangle, Mail, Search, Loader2, BookOpen } from 'lucide-react';
 import { Input } from '../ui/input';
+import { supabase } from '@/lib/supabase';
+import { fetchStudentsWithProgress } from '@/lib/educator-api';
 
-const students = [
-  {
-    id: '1',
-    name: 'Emma Davis',
-    email: 'emma.davis@example.com',
-    courses: [
-      { title: 'Introduction to Web Accessibility', progress: 92, avgScore: 88, status: 'on-track' },
-      { title: 'Reading Comprehension Strategies', progress: 78, avgScore: 82, status: 'on-track' },
-    ],
-    lastActive: '2 hours ago',
-    totalProgress: 85,
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    email: 'michael.chen@example.com',
-    courses: [
-      { title: 'Introduction to Web Accessibility', progress: 100, avgScore: 94, status: 'completed' },
-      { title: 'Inclusive Design Principles', progress: 65, avgScore: 76, status: 'on-track' },
-    ],
-    lastActive: '5 hours ago',
-    totalProgress: 82,
-  },
-  {
-    id: '3',
-    name: 'Alex Thompson',
-    email: 'alex.thompson@example.com',
-    courses: [
-      { title: 'Introduction to Web Accessibility', progress: 23, avgScore: 58, status: 'at-risk' },
-    ],
-    lastActive: '5 days ago',
-    totalProgress: 23,
-  },
-  {
-    id: '4',
-    name: 'Sarah Miller',
-    email: 'sarah.miller@example.com',
-    courses: [
-      { title: 'Introduction to Web Accessibility', progress: 88, avgScore: 92, status: 'on-track' },
-      { title: 'Reading Comprehension Strategies', progress: 95, avgScore: 89, status: 'on-track' },
-    ],
-    lastActive: '1 hour ago',
-    totalProgress: 91,
-  },
-  {
-    id: '5',
-    name: 'Maria Garcia',
-    email: 'maria.garcia@example.com',
-    courses: [
-      { title: 'Reading Comprehension Strategies', progress: 35, avgScore: 64, status: 'at-risk' },
-    ],
-    lastActive: '3 days ago',
-    totalProgress: 35,
-  },
-  {
-    id: '6',
-    name: 'David Lee',
-    email: 'david.lee@example.com',
-    courses: [
-      { title: 'Introduction to Web Accessibility', progress: 18, avgScore: 52, status: 'at-risk' },
-    ],
-    lastActive: '1 week ago',
-    totalProgress: 18,
-  },
-];
+interface StudentCourse {
+  title: string;
+  progress: number;
+  avgScore: number;
+  status: string;
+}
+
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+  courses: StudentCourse[];
+  lastActive: string;
+  totalProgress: number;
+}
 
 export function StudentsProgressPage() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (user.user) {
+          const data = await fetchStudentsWithProgress(user.user.id);
+          setStudents(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   const atRiskCount = students.filter((s) => s.courses.some((c) => c.status === 'at-risk')).length;
   const activeCount = students.filter((s) => !s.lastActive.includes('day') && !s.lastActive.includes('week')).length;
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-6">
@@ -139,90 +120,98 @@ export function StudentsProgressPage() {
           </div>
         </div>
 
-        <div className="space-y-4">
-          {students.map((student) => {
-            const isAtRisk = student.courses.some((c) => c.status === 'at-risk');
-            return (
-              <div
-                key={student.id}
-                className={`p-6 rounded-2xl border-2 ${
-                  isAtRisk
-                    ? 'bg-orange-50 border-orange-200'
-                    : 'bg-gray-50 border-gray-200'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                      {student.name.split(' ').map((n) => n[0]).join('')}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <h4 className="text-lg font-bold text-gray-900">{student.name}</h4>
-                        {isAtRisk && (
-                          <Badge className="bg-orange-600 text-white">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            At Risk
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-3">{student.email}</p>
-                      <p className="text-sm text-gray-500">Last active: {student.lastActive}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600 mb-1">Overall Progress</p>
-                    <p className="text-3xl font-bold text-gray-900">{student.totalProgress}%</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-4">
-                  {student.courses.map((course, index) => (
-                    <div key={index} className="p-4 bg-white border-2 border-gray-200 rounded-xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="font-semibold text-gray-900">{course.title}</p>
-                        <Badge
-                          className={
-                            course.status === 'completed'
-                              ? 'bg-green-600 text-white'
-                              : course.status === 'at-risk'
-                              ? 'bg-orange-600 text-white'
-                              : 'bg-blue-600 text-white'
-                          }
-                        >
-                          {course.status === 'completed'
-                            ? 'Completed'
-                            : course.status === 'at-risk'
-                            ? 'At Risk'
-                            : 'On Track'}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mb-2">
-                        <div>
-                          <p className="text-xs text-gray-600 mb-1">Course Progress</p>
-                          <Progress value={course.progress} className="h-2" />
-                          <p className="text-sm font-semibold text-gray-900 mt-1">{course.progress}%</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-600 mb-1">Average Score</p>
-                          <p className="text-2xl font-bold text-gray-900">{course.avgScore}%</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
+        {students.length === 0 ? (
+          <div className="text-center py-16 text-gray-500">
+            <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-xl font-semibold text-gray-700 mb-2">No students yet</p>
+            <p className="text-gray-500">Students will appear here once they enroll in your courses</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {students.map((student) => {
+              const isAtRisk = student.courses.some((c) => c.status === 'at-risk');
+              return (
+                <div
+                  key={student.id}
+                  className={`p-6 rounded-2xl border-2 ${
+                    isAtRisk
+                      ? 'bg-orange-50 border-orange-200'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}
                 >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Send Message
-                </Button>
-              </div>
-            );
-          })}
-        </div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                        {student.name.split(' ').map((n) => n[0]).join('')}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <h4 className="text-lg font-bold text-gray-900">{student.name}</h4>
+                          {isAtRisk && (
+                            <Badge className="bg-orange-600 text-white">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              At Risk
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">{student.email}</p>
+                        <p className="text-sm text-gray-500">Last active: {student.lastActive}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600 mb-1">Overall Progress</p>
+                      <p className="text-3xl font-bold text-gray-900">{student.totalProgress}%</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-4">
+                    {student.courses.map((course, index) => (
+                      <div key={index} className="p-4 bg-white border-2 border-gray-200 rounded-xl">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold text-gray-900">{course.title}</p>
+                          <Badge
+                            className={
+                              course.status === 'completed'
+                                ? 'bg-green-600 text-white'
+                                : course.status === 'at-risk'
+                                ? 'bg-orange-600 text-white'
+                                : 'bg-blue-600 text-white'
+                            }
+                          >
+                            {course.status === 'completed'
+                              ? 'Completed'
+                              : course.status === 'at-risk'
+                              ? 'At Risk'
+                              : 'On Track'}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-2">
+                          <div>
+                            <p className="text-xs text-gray-600 mb-1">Course Progress</p>
+                            <Progress value={course.progress} className="h-2" />
+                            <p className="text-sm font-semibold text-gray-900 mt-1">{course.progress}%</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600 mb-1">Average Score</p>
+                            <p className="text-2xl font-bold text-gray-900">{course.avgScore}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send Message
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Card>
     </div>
   );

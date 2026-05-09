@@ -6,11 +6,14 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Plus, X, CheckCircle, HelpCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { createFullQuiz } from '@/lib/educator-api';
 
 interface AddQuizModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  lessonId?: string;
 }
 
 interface Question {
@@ -21,7 +24,7 @@ interface Question {
   explanation: string;
 }
 
-export function QuizBuilderModal({ isOpen, onClose, onSave }: AddQuizModalProps) {
+export function QuizBuilderModal({ isOpen, onClose, onSave, lessonId }: AddQuizModalProps) {
   const [quizTitle, setQuizTitle] = useState('');
   const [questions, setQuestions] = useState<Question[]>([
     {
@@ -66,18 +69,50 @@ export function QuizBuilderModal({ isOpen, onClose, onSave }: AddQuizModalProps)
     );
   };
 
-  const handleSave = () => {
-    onSave();
-    setQuizTitle('');
-    setQuestions([
-      {
-        id: '1',
-        question: '',
-        options: ['', '', '', ''],
-        correctAnswer: 0,
-        explanation: '',
-      },
-    ]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!lessonId) {
+      toast.error('No lesson selected. Create a lesson first.');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await createFullQuiz(
+        {
+          lesson_id: lessonId,
+          title: quizTitle || 'Untitled Quiz',
+        },
+        questions.map((q, i) => ({
+          question_text: q.question,
+          question_type: 'multiple_choice',
+          sequence_order: i + 1,
+          options: q.options.filter((o) => o.trim()).map((opt, oi) => ({
+            option_text: opt,
+            is_correct: oi === q.correctAnswer,
+            sequence_order: oi + 1,
+          })),
+        }))
+      );
+
+      toast.success('Quiz created successfully!');
+      onSave();
+      setQuizTitle('');
+      setQuestions([
+        {
+          id: '1',
+          question: '',
+          options: ['', '', '', ''],
+          correctAnswer: 0,
+          explanation: '',
+        },
+      ]);
+    } catch (err) {
+      toast.error('Failed to create quiz');
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -208,11 +243,11 @@ export function QuizBuilderModal({ isOpen, onClose, onSave }: AddQuizModalProps)
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!quizTitle || questions.some((q) => !q.question || q.options.some((o) => !o))}
+            disabled={isSaving || !lessonId || !quizTitle || questions.some((q) => !q.question || q.options.some((o) => !o))}
             className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 ml-auto"
           >
             <HelpCircle className="w-5 h-5 mr-2" />
-            Save Quiz
+            {isSaving ? 'Saving...' : 'Save Quiz'}
           </Button>
         </div>
       </DialogContent>

@@ -13,8 +13,8 @@ export default function LearnerDashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
       <WelcomeSection />
-      <AdaptiveRecommendations onStartLesson={() => router.push('/learner/courses/1')} />
-      <MyCoursesSection onContinue={() => router.push('/learner/courses/1')} />
+      <AdaptiveRecommendations onStartLesson={(lessonId) => router.push(`/learner/lesson/${lessonId}?courseId=`)} />
+      <MyCoursesSection onContinue={(courseId) => router.push(`/learner/courses/${courseId}`)} />
       <ProgressOverview />
       <QuickActions onBrowseCourses={() => router.push('/learner/courses')} />
     </div>

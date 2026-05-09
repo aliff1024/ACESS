@@ -1,9 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Award, Calendar, Hash, Eye, Download, Search } from 'lucide-react';
+import { Award, Calendar, Hash, Eye, Download, Search, Loader2 } from 'lucide-react';
+import { fetchCertificates } from '@/lib/learner-api';
+import type { Certificate } from '@/lib/learner-api';
 
 interface CertificateListPageProps {
   onViewCertificate: (certificateId: string) => void;
@@ -11,29 +14,30 @@ interface CertificateListPageProps {
   onDownload: (certificateId: string) => void;
 }
 
-const certificatesData = [
-  {
-    id: 'cert-001',
-    courseTitle: 'Introduction to Web Accessibility',
-    completionDate: 'March 15, 2026',
-    certificateCode: 'ACESS-2026-00123',
-    score: 85,
-  },
-  {
-    id: 'cert-002',
-    courseTitle: 'Effective Study Techniques',
-    completionDate: 'March 28, 2026',
-    certificateCode: 'ACESS-2026-00456',
-    score: 92,
-  },
-];
-
 export function CertificateListPage({
   onViewCertificate,
   onBrowseCourses,
   onDownload,
 }: CertificateListPageProps) {
-  const hasCertificates = certificatesData.length > 0;
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCertificates()
+      .then(setCertificates)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  const hasCertificates = certificates.length > 0;
 
   if (!hasCertificates) {
     return (
@@ -71,7 +75,7 @@ export function CertificateListPage({
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {certificatesData.length} Certificate{certificatesData.length !== 1 ? 's' : ''} Earned
+                {certificates.length} Certificate{certificates.length !== 1 ? 's' : ''} Earned
               </h2>
               <p className="text-gray-700">Keep learning to earn more achievements!</p>
             </div>
@@ -79,7 +83,7 @@ export function CertificateListPage({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {certificatesData.map((certificate) => (
+          {certificates.map((certificate) => (
             <Card
               key={certificate.id}
               className="p-6 rounded-2xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200"
@@ -89,7 +93,7 @@ export function CertificateListPage({
                   <Award className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{certificate.courseTitle}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{certificate.course_title}</h3>
                   <Badge className="bg-green-600 text-white">Completed</Badge>
                 </div>
               </div>
@@ -99,14 +103,14 @@ export function CertificateListPage({
                   <Calendar className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-600">Completed on</p>
-                    <p className="font-semibold">{certificate.completionDate}</p>
+                    <p className="font-semibold">{certificate.completion_date}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <Hash className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-600">Certificate Code</p>
-                    <p className="font-semibold font-mono text-sm">{certificate.certificateCode}</p>
+                    <p className="font-semibold font-mono text-sm">{certificate.certificate_code}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">

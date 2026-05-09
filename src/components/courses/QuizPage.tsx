@@ -1,85 +1,59 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Progress } from '../ui/progress';
-import { Clock, CheckCircle } from 'lucide-react';
+import { Clock, CheckCircle, Loader2 } from 'lucide-react';
+import { fetchQuizData } from '@/lib/learner-api';
+import type { QuizData, QuizOption } from '@/lib/learner-api';
 
 interface QuizPageProps {
+  lessonId: string;
+  courseId: string;
   onBack: () => void;
   onSubmit: (score: number, answers: { questionId: string; selectedAnswer: string }[]) => void;
 }
 
-const quizData = {
-  title: 'Screen Reader Compatibility Quiz',
-  questions: [
-    {
-      id: 'q1',
-      question: 'Which of the following is a free and open-source screen reader for Windows?',
-      options: [
-        { id: 'a', text: 'JAWS' },
-        { id: 'b', text: 'NVDA' },
-        { id: 'c', text: 'VoiceOver' },
-        { id: 'd', text: 'Narrator' },
-      ],
-      correctAnswer: 'b',
-    },
-    {
-      id: 'q2',
-      question: 'What HTML element should you use for a clickable button?',
-      options: [
-        { id: 'a', text: '<div> with onclick handler' },
-        { id: 'b', text: '<span> with role="button"' },
-        { id: 'c', text: '<button>' },
-        { id: 'd', text: '<a> with href="#"' },
-      ],
-      correctAnswer: 'c',
-    },
-    {
-      id: 'q3',
-      question: 'What should you include for images that are purely decorative?',
-      options: [
-        { id: 'a', text: 'Detailed alt text describing the decoration' },
-        { id: 'b', text: 'Empty alt attribute (alt="")' },
-        { id: 'c', text: 'Alt text saying "decorative image"' },
-        { id: 'd', text: 'No alt attribute at all' },
-      ],
-      correctAnswer: 'b',
-    },
-    {
-      id: 'q4',
-      question: 'Which ARIA attribute is used to announce dynamic content changes to screen readers?',
-      options: [
-        { id: 'a', text: 'aria-label' },
-        { id: 'b', text: 'aria-live' },
-        { id: 'c', text: 'aria-hidden' },
-        { id: 'd', text: 'aria-describedby' },
-      ],
-      correctAnswer: 'b',
-    },
-    {
-      id: 'q5',
-      question: 'What is the primary way screen reader users navigate through headings?',
-      options: [
-        { id: 'a', text: 'By clicking on each heading with the mouse' },
-        { id: 'b', text: 'By using keyboard shortcuts to jump between heading levels' },
-        { id: 'c', text: 'By scrolling through the page visually' },
-        { id: 'd', text: 'By searching for specific heading text' },
-      ],
-      correctAnswer: 'b',
-    },
-  ],
-};
-
-export function QuizPage({ onBack, onSubmit }: QuizPageProps) {
+export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps) {
+  const [quizData, setQuizData] = useState<QuizData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ questionId: string; selectedAnswer: string }[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-  const currentQuestion = quizData.questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === quizData.questions.length - 1;
-  const progress = ((currentQuestionIndex + 1) / quizData.questions.length) * 100;
+  useEffect(() => {
+    fetchQuizData(lessonId)
+      .then(setQuizData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [lessonId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!quizData || quizData.questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <Card className="p-8 text-center">
+          <p className="text-gray-600 mb-4">No quiz available for this lesson</p>
+          <Button onClick={onBack} className="bg-blue-600 text-white">
+            Back to Lesson
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const questions = quizData.questions;
+  const currentQuestion = questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   const handleSelectOption = (optionId: string) => {
     setSelectedOption(optionId);
@@ -92,21 +66,20 @@ export function QuizPage({ onBack, onSubmit }: QuizPageProps) {
         { questionId: currentQuestion.id, selectedAnswer: selectedOption },
       ];
       setAnswers(updatedAnswers);
+      setSelectedOption(null);
 
       if (isLastQuestion) {
-        // Calculate score
-        let correctCount = 0;
-        updatedAnswers.forEach((answer) => {
-          const question = quizData.questions.find((q) => q.id === answer.questionId);
-          if (question && question.correctAnswer === answer.selectedAnswer) {
-            correctCount++;
-          }
-        });
-        const score = (correctCount / quizData.questions.length) * 100;
+        const correctCount = updatedAnswers.filter((answer) => {
+          const question = questions.find((q) => q.id === answer.questionId);
+          const correctOption = question?.options.find((o) => o.is_correct);
+          return correctOption && correctOption.id === answer.selectedAnswer;
+        }).length;
+        const score = (correctCount / questions.length) * 100;
         onSubmit(score, updatedAnswers);
       } else {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
-        setSelectedOption(null);
+        const existing = answers.find((a) => a.questionId === questions[currentQuestionIndex + 1].id);
+        setSelectedOption(existing?.selectedAnswer || null);
       }
     }
   };
@@ -114,7 +87,7 @@ export function QuizPage({ onBack, onSubmit }: QuizPageProps) {
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
-      const previousAnswer = answers.find((a) => a.questionId === quizData.questions[currentQuestionIndex - 1].id);
+      const previousAnswer = answers.find((a) => a.questionId === questions[currentQuestionIndex - 1].id);
       setSelectedOption(previousAnswer?.selectedAnswer || null);
     }
   };
@@ -126,7 +99,7 @@ export function QuizPage({ onBack, onSubmit }: QuizPageProps) {
           onClick={onBack}
           className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2"
         >
-          ← Back to Lesson
+          &larr; Back to Lesson
         </button>
 
         <Card className="p-8 rounded-2xl border-2 border-gray-200 mb-6">
@@ -135,13 +108,13 @@ export function QuizPage({ onBack, onSubmit }: QuizPageProps) {
               <h1 className="text-3xl font-bold text-gray-900">{quizData.title}</h1>
               <div className="flex items-center gap-2 text-gray-600">
                 <Clock className="w-5 h-5" />
-                <span className="text-lg">No time limit</span>
+                <span className="text-lg">{quizData.time_limit_seconds ? `${Math.round(quizData.time_limit_seconds / 60)} min` : 'No time limit'}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-4 mb-2">
               <span className="text-lg font-semibold text-gray-900">
-                Question {currentQuestionIndex + 1} of {quizData.questions.length}
+                Question {currentQuestionIndex + 1} of {questions.length}
               </span>
             </div>
             <Progress value={progress} className="h-3" />
@@ -149,7 +122,7 @@ export function QuizPage({ onBack, onSubmit }: QuizPageProps) {
 
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-8 leading-relaxed">
-              {currentQuestion.question}
+              {currentQuestion.question_text}
             </h2>
 
             <div className="space-y-4">
@@ -175,7 +148,7 @@ export function QuizPage({ onBack, onSubmit }: QuizPageProps) {
                         <CheckCircle className="w-4 h-4 text-white" />
                       )}
                     </div>
-                    <span className="text-lg text-gray-900">{option.text}</span>
+                    <span className="text-lg text-gray-900">{option.option_text}</span>
                   </div>
                 </button>
               ))}
@@ -193,7 +166,7 @@ export function QuizPage({ onBack, onSubmit }: QuizPageProps) {
             </Button>
 
             <div className="flex gap-2">
-              {quizData.questions.map((_, index) => (
+              {questions.map((_, index) => (
                 <div
                   key={index}
                   className={`w-3 h-3 rounded-full ${

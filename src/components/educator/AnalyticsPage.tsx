@@ -1,44 +1,56 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card } from '../ui/card';
 import { Progress } from '../ui/progress';
-import { TrendingUp, TrendingDown, Users, BookOpen, Award, Target } from 'lucide-react';
+import { TrendingUp, Users, BookOpen, Award, Target, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { fetchCourseAnalytics } from '@/lib/educator-api';
+
+interface CourseAnalytics {
+  title: string;
+  status: string;
+  enrolled: number;
+  completed: number;
+  avgCompletion: number;
+}
+
+interface AggStats {
+  totalEnrollments: number;
+  completions: number;
+  avgCompletion: number;
+}
 
 export function AnalyticsPage() {
-  const courseAnalytics = [
-    {
-      title: 'Introduction to Web Accessibility',
-      enrolled: 89,
-      completed: 67,
-      avgCompletion: 84,
-      avgScore: 87,
-      completionTrend: 'up',
-    },
-    {
-      title: 'Reading Comprehension Strategies',
-      enrolled: 67,
-      completed: 42,
-      avgCompletion: 72,
-      avgScore: 79,
-      completionTrend: 'down',
-    },
-    {
-      title: 'Inclusive Design Principles',
-      enrolled: 45,
-      completed: 28,
-      avgCompletion: 68,
-      avgScore: 82,
-      completionTrend: 'up',
-    },
-  ];
+  const [courses, setCourses] = useState<CourseAnalytics[]>([]);
+  const [stats, setStats] = useState<AggStats>({ totalEnrollments: 0, completions: 0, avgCompletion: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const lessonAnalytics = [
-    { lesson: 'What is Web Accessibility?', avgScore: 90, completionRate: 98 },
-    { lesson: 'WCAG Guidelines Overview', avgScore: 85, completionRate: 95 },
-    { lesson: 'Semantic HTML Basics', avgScore: 88, completionRate: 92 },
-    { lesson: 'ARIA Attributes', avgScore: 82, completionRate: 89 },
-    { lesson: 'Screen Reader Compatibility', avgScore: 80, completionRate: 86 },
-  ];
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (user.user) {
+          const data = await fetchCourseAnalytics(user.user.id);
+          setCourses(data.courses);
+          setStats(data.stats);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8">
@@ -55,12 +67,12 @@ export function AnalyticsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Enrollments</p>
-              <p className="text-3xl font-bold text-gray-900">247</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalEnrollments}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-green-600">
             <TrendingUp className="w-4 h-4" />
-            <p className="text-sm font-semibold">+12% this month</p>
+            <p className="text-sm font-semibold">Live from database</p>
           </div>
         </Card>
 
@@ -71,12 +83,12 @@ export function AnalyticsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Completions</p>
-              <p className="text-3xl font-bold text-gray-900">137</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.completions}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-green-600">
             <TrendingUp className="w-4 h-4" />
-            <p className="text-sm font-semibold">+8% this month</p>
+            <p className="text-sm font-semibold">Total completions</p>
           </div>
         </Card>
 
@@ -87,12 +99,8 @@ export function AnalyticsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Avg Completion</p>
-              <p className="text-3xl font-bold text-gray-900">78%</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.avgCompletion}%</p>
             </div>
-          </div>
-          <div className="flex items-center gap-2 text-red-600">
-            <TrendingDown className="w-4 h-4" />
-            <p className="text-sm font-semibold">-3% this month</p>
           </div>
         </Card>
 
@@ -102,86 +110,73 @@ export function AnalyticsPage() {
               <BookOpen className="w-7 h-7 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Avg Quiz Score</p>
-              <p className="text-3xl font-bold text-gray-900">83%</p>
+              <p className="text-sm text-gray-600">Total Courses</p>
+              <p className="text-3xl font-bold text-gray-900">{courses.length}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-2 text-green-600">
-            <TrendingUp className="w-4 h-4" />
-            <p className="text-sm font-semibold">+5% this month</p>
           </div>
         </Card>
       </div>
 
       <Card className="p-8 rounded-2xl border-2 border-gray-200">
         <h3 className="text-xl font-bold text-gray-900 mb-6">Course Performance</h3>
-        <div className="space-y-6">
-          {courseAnalytics.map((course, index) => (
-            <div key={index} className="p-6 bg-gray-50 border-2 border-gray-200 rounded-xl">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">{course.title}</h4>
-                  <div className="flex items-center gap-6">
-                    <div>
-                      <p className="text-sm text-gray-600">Enrolled</p>
-                      <p className="text-xl font-bold text-gray-900">{course.enrolled}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Completed</p>
-                      <p className="text-xl font-bold text-gray-900">{course.completed}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Completion Rate</p>
-                      <p className="text-xl font-bold text-gray-900">
-                        {Math.round((course.completed / course.enrolled) * 100)}%
-                      </p>
+        {courses.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No course data available yet</p>
+        ) : (
+          <div className="space-y-6">
+            {courses.map((course, index) => (
+              <div key={index} className="p-6 bg-gray-50 border-2 border-gray-200 rounded-xl">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">{course.title}</h4>
+                    <div className="flex items-center gap-6">
+                      <div>
+                        <p className="text-sm text-gray-600">Enrolled</p>
+                        <p className="text-xl font-bold text-gray-900">{course.enrolled}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Completed</p>
+                        <p className="text-xl font-bold text-gray-900">{course.completed}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Completion Rate</p>
+                        <p className="text-xl font-bold text-gray-900">
+                          {course.avgCompletion}%
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                    course.completionTrend === 'up'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {course.completionTrend === 'up' ? (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-100 text-green-700">
                     <TrendingUp className="w-5 h-5" />
-                  ) : (
-                    <TrendingDown className="w-5 h-5" />
-                  )}
-                  <span className="font-semibold">
-                    {course.completionTrend === 'up' ? 'Trending Up' : 'Trending Down'}
-                  </span>
+                    <span className="font-semibold">{course.status}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-gray-600">Average Completion</p>
-                    <p className="text-lg font-bold text-gray-900">{course.avgCompletion}%</p>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold text-gray-600">Average Completion</p>
+                      <p className="text-lg font-bold text-gray-900">{course.avgCompletion}%</p>
+                    </div>
+                    <Progress value={course.avgCompletion} className="h-3" />
                   </div>
-                  <Progress value={course.avgCompletion} className="h-3" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-gray-600">Average Score</p>
-                    <p className="text-lg font-bold text-gray-900">{course.avgScore}%</p>
-                  </div>
-                  <Progress value={course.avgScore} className="h-3" />
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-8 rounded-2xl border-2 border-gray-200">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Top Performing Lessons</h3>
           <div className="space-y-4">
-            {lessonAnalytics.map((lesson, index) => (
+            {[
+              { lesson: 'What is Web Accessibility?', avgScore: 90, completionRate: 98 },
+              { lesson: 'WCAG Guidelines Overview', avgScore: 85, completionRate: 95 },
+              { lesson: 'Semantic HTML Basics', avgScore: 88, completionRate: 92 },
+              { lesson: 'ARIA Attributes', avgScore: 82, completionRate: 89 },
+              { lesson: 'Screen Reader Compatibility', avgScore: 80, completionRate: 86 },
+            ].map((lesson, index) => (
               <div key={index} className="p-4 bg-green-50 border-2 border-green-200 rounded-xl">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">

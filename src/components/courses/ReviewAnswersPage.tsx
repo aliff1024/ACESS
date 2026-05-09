@@ -1,101 +1,61 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { CheckCircle, XCircle, BookOpen } from 'lucide-react';
+import { CheckCircle, XCircle, BookOpen, RotateCcw, Loader2 } from 'lucide-react';
+import { fetchQuizData } from '@/lib/learner-api';
+import type { QuizData, QuizOption } from '@/lib/learner-api';
 
 interface ReviewAnswersPageProps {
+  lessonId: string;
   answers: { questionId: string; selectedAnswer: string }[];
   onBack: () => void;
   onRetryQuiz: () => void;
 }
 
-type QuizOption = { id: string; text: string };
-type QuizQuestion = {
-  id: string;
-  question: string;
-  options: QuizOption[];
-  correctAnswer: string;
-  explanation: string;
-};
+export function ReviewAnswersPage({ lessonId, answers, onBack, onRetryQuiz }: ReviewAnswersPageProps) {
+  const [quizData, setQuizData] = useState<QuizData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-const quizData = {
-  questions: [
-    {
-      id: 'q1',
-      question: 'Which of the following is a free and open-source screen reader for Windows?',
-      options: [
-        { id: 'a', text: 'JAWS' },
-        { id: 'b', text: 'NVDA' },
-        { id: 'c', text: 'VoiceOver' },
-        { id: 'd', text: 'Narrator' },
-      ],
-      correctAnswer: 'b',
-      explanation: 'NVDA (NonVisual Desktop Access) is a free and open-source screen reader for Windows. While JAWS is powerful, it requires a paid license. VoiceOver is built into Apple devices, and Narrator comes with Windows.',
-    },
-    {
-      id: 'q2',
-      question: 'What HTML element should you use for a clickable button?',
-      options: [
-        { id: 'a', text: '<div> with onclick handler' },
-        { id: 'b', text: '<span> with role="button"' },
-        { id: 'c', text: '<button>' },
-        { id: 'd', text: '<a> with href="#"' },
-      ],
-      correctAnswer: 'c',
-      explanation: 'The <button> element is the semantic HTML element for buttons. It provides built-in keyboard accessibility, focus management, and is properly announced by screen readers. Using divs or spans requires additional ARIA attributes and JavaScript to be accessible.',
-    },
-    {
-      id: 'q3',
-      question: 'What should you include for images that are purely decorative?',
-      options: [
-        { id: 'a', text: 'Detailed alt text describing the decoration' },
-        { id: 'b', text: 'Empty alt attribute (alt="")' },
-        { id: 'c', text: 'Alt text saying "decorative image"' },
-        { id: 'd', text: 'No alt attribute at all' },
-      ],
-      correctAnswer: 'b',
-      explanation: 'Decorative images should have an empty alt attribute (alt=""). This tells screen readers to skip the image entirely, avoiding unnecessary clutter. Omitting the alt attribute completely can cause screen readers to announce the filename.',
-    },
-    {
-      id: 'q4',
-      question: 'Which ARIA attribute is used to announce dynamic content changes to screen readers?',
-      options: [
-        { id: 'a', text: 'aria-label' },
-        { id: 'b', text: 'aria-live' },
-        { id: 'c', text: 'aria-hidden' },
-        { id: 'd', text: 'aria-describedby' },
-      ],
-      correctAnswer: 'b',
-      explanation: 'The aria-live attribute creates a "live region" that announces content changes to screen reader users. aria-label provides accessible names, aria-hidden hides content from assistive technologies, and aria-describedby provides additional descriptions.',
-    },
-    {
-      id: 'q5',
-      question: 'What is the primary way screen reader users navigate through headings?',
-      options: [
-        { id: 'a', text: 'By clicking on each heading with the mouse' },
-        { id: 'b', text: 'By using keyboard shortcuts to jump between heading levels' },
-        { id: 'c', text: 'By scrolling through the page visually' },
-        { id: 'd', text: 'By searching for specific heading text' },
-      ],
-      correctAnswer: 'b',
-      explanation: 'Screen reader users navigate headings using keyboard shortcuts (like H key in most screen readers) to jump between heading levels. This allows them to quickly understand page structure and navigate to relevant sections without reading everything sequentially.',
-    },
-  ],
-};
+  useEffect(() => {
+    fetchQuizData(lessonId)
+      .then(setQuizData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [lessonId]);
 
-export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswersPageProps) {
-  const getOptionById = (question: QuizQuestion, optionId: string) => {
-    return question.options.find((opt) => opt.id === optionId);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!quizData) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <p className="text-gray-600">Quiz data not found</p>
+      </div>
+    );
+  }
+
+  const questions = quizData.questions;
+
+  const getOptionById = (questionId: string, optionId: string): QuizOption | undefined => {
+    const q = questions.find((q) => q.id === questionId);
+    return q?.options.find((o) => o.id === optionId);
   };
 
   const correctCount = answers.filter((answer) => {
-    const question = quizData.questions.find((q) => q.id === answer.questionId);
-    return question && question.correctAnswer === answer.selectedAnswer;
+    const question = questions.find((q) => q.id === answer.questionId);
+    const correctOption = question?.options.find((o) => o.is_correct);
+    return correctOption && correctOption.id === answer.selectedAnswer;
   }).length;
 
-  const score = Math.round((correctCount / quizData.questions.length) * 100);
+  const score = Math.round((correctCount / questions.length) * 100);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -104,7 +64,7 @@ export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswer
           onClick={onBack}
           className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2"
         >
-          ← Back to Results
+          &larr; Back to Results
         </button>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
@@ -121,7 +81,7 @@ export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswer
                 {score}%
               </p>
               <p className="text-sm text-gray-600">
-                {correctCount} of {quizData.questions.length} correct
+                {correctCount} of {questions.length} correct
               </p>
             </div>
           </div>
@@ -133,11 +93,11 @@ export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswer
         </div>
 
         <div className="space-y-6">
-          {quizData.questions.map((question, index) => {
+          {questions.map((question, index) => {
             const userAnswer = answers.find((a) => a.questionId === question.id);
-            const userOption = userAnswer ? getOptionById(question, userAnswer.selectedAnswer) : null;
-            const correctOption = getOptionById(question, question.correctAnswer);
-            const isCorrect = userAnswer?.selectedAnswer === question.correctAnswer;
+            const selectedOption = userAnswer ? getOptionById(question.id, userAnswer.selectedAnswer) : null;
+            const correctOption = question.options.find((o) => o.is_correct);
+            const isCorrect = userAnswer?.selectedAnswer === correctOption?.id;
 
             return (
               <Card key={question.id} className="p-6 rounded-2xl border-2 border-gray-200">
@@ -161,7 +121,7 @@ export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswer
                       </Badge>
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                      {question.question}
+                      {question.question_text}
                     </h3>
                   </div>
                 </div>
@@ -169,7 +129,7 @@ export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswer
                 <div className="space-y-3 mb-4 ml-16">
                   {question.options.map((option) => {
                     const isUserAnswer = userAnswer?.selectedAnswer === option.id;
-                    const isCorrectAnswer = question.correctAnswer === option.id;
+                    const isCorrectAnswer = option.is_correct;
 
                     return (
                       <div
@@ -183,7 +143,7 @@ export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswer
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-gray-900">{option.text}</span>
+                          <span className="text-gray-900">{option.option_text}</span>
                           {isCorrectAnswer && (
                             <Badge className="bg-green-600 text-white ml-auto">
                               Correct Answer
@@ -205,7 +165,7 @@ export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswer
                     <BookOpen className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1" />
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Explanation</h4>
-                      <p className="text-gray-700 leading-relaxed">{question.explanation}</p>
+                      <p className="text-gray-700 leading-relaxed">{correctOption?.option_text} is correct.</p>
                     </div>
                   </div>
                 </div>
@@ -221,25 +181,5 @@ export function ReviewAnswersPage({ answers, onBack, onRetryQuiz }: ReviewAnswer
         </div>
       </div>
     </div>
-  );
-}
-
-function RotateCcw({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-      <path d="M3 3v5h5" />
-    </svg>
   );
 }

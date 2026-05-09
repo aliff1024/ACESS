@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,18 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import type { Role } from '@/lib/auth-types';
+import { getDashboardForRole } from '@/lib/auth-types';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
   const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setRedirectTo(params.get('redirect'));
+  }, []);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,10 +56,10 @@ export default function LoginPage() {
         return;
       }
 
-      const role = data.user.user_metadata?.role || 'learner';
-      const dashboard = role === 'educator' ? '/educator' : '/learner';
+      const role = (data.user.user_metadata?.role as Role) || 'learner';
+      const target = redirectTo || getDashboardForRole(role);
       toast.success(`Welcome back! Redirecting to ${role} dashboard...`);
-      setTimeout(() => router.push(dashboard), 800);
+      setTimeout(() => router.push(target), 800);
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
@@ -147,13 +155,9 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <Button
-        asChild
-        variant="outline"
-        className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-lg font-semibold rounded-xl"
-      >
-        <Link href="/learner">Continue as Learner Demo</Link>
-      </Button>
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-900">
+        <strong>Don&apos;t have an account?</strong> Create one below to get started with personalized learning.
+      </div>
 
       <div className="mt-6 text-center">
         <p className="text-gray-600">

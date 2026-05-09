@@ -1,9 +1,20 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
+import { fetchLearnerProfile } from '@/lib/learner-api';
 
 export function WelcomeSection() {
+  const [name, setName] = useState('Learner');
   const currentHour = new Date().getHours();
   const greeting =
     currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening';
+
+  useEffect(() => {
+    fetchLearnerProfile()
+      .then((p) => setName(p.full_name || 'Learner'))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 border border-blue-100">
@@ -13,7 +24,7 @@ export function WelcomeSection() {
         </div>
         <div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {greeting}, Learner
+            {greeting}, {name}
           </h2>
           <p className="text-lg text-gray-700">
             Continue your learning journey with personalized content tailored to your pace

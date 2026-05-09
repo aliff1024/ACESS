@@ -1,72 +1,53 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { BookOpen, Award, TrendingUp, Target } from 'lucide-react';
+import { BookOpen, Award, TrendingUp, Target, Loader2 } from 'lucide-react';
+import { fetchLearnerStats, fetchEnrolledCourses } from '@/lib/learner-api';
+import type { EnrolledCourse } from '@/lib/learner-api';
 
 interface ProgressPageProps {
   onViewCourseProgress: (courseId: string) => void;
   onBrowseCourses: () => void;
 }
 
-const coursesData = [
-  {
-    id: '1',
-    title: 'Introduction to Web Accessibility',
-    progress: 100,
-    status: 'completed',
-    lessonsCompleted: 12,
-    totalLessons: 12,
-    averageScore: 85,
-    completionDate: 'March 15, 2026',
-  },
-  {
-    id: '2',
-    title: 'Reading Comprehension Strategies',
-    progress: 68,
-    status: 'inProgress',
-    lessonsCompleted: 12,
-    totalLessons: 18,
-    averageScore: 78,
-    completionDate: null,
-  },
-  {
-    id: '3',
-    title: 'Mathematics Fundamentals',
-    progress: 23,
-    status: 'inProgress',
-    lessonsCompleted: 6,
-    totalLessons: 24,
-    averageScore: 72,
-    completionDate: null,
-  },
-  {
-    id: '4',
-    title: 'Effective Study Techniques',
-    progress: 100,
-    status: 'completed',
-    lessonsCompleted: 10,
-    totalLessons: 10,
-    averageScore: 92,
-    completionDate: 'March 28, 2026',
-  },
-  {
-    id: '5',
-    title: 'Digital Literacy Essentials',
-    progress: 45,
-    status: 'inProgress',
-    lessonsCompleted: 7,
-    totalLessons: 15,
-    averageScore: 80,
-    completionDate: null,
-  },
-];
-
 export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: ProgressPageProps) {
-  const enrolledCourses = coursesData.length;
-  const completedCourses = coursesData.filter((c) => c.status === 'completed').length;
-  const totalScore = coursesData.reduce((sum, c) => sum + c.averageScore, 0);
-  const averageScore = Math.round(totalScore / coursesData.length);
+  const [courses, setCourses] = useState<EnrolledCourse[]>([]);
+  const [stats, setStats] = useState<{
+    courses_completed: number;
+    lessons_completed: number;
+    avg_score: number;
+    certificates_count: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetchLearnerStats(),
+      fetchEnrolledCourses(),
+    ])
+      .then(([s, c]) => {
+        setStats(s);
+        setCourses(c);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  const enrolledCourses = courses.length;
+  const completedCourses = stats?.courses_completed ?? 0;
+  const averageScore = stats?.avg_score ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -120,59 +101,63 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
           </div>
 
           <div className="space-y-4">
-            {coursesData.map((course) => (
-              <div
-                key={course.id}
-                className="p-6 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900">{course.title}</h3>
-                      {course.status === 'completed' ? (
-                        <Badge className="bg-green-600 text-white">Completed</Badge>
-                      ) : (
-                        <Badge className="bg-blue-600 text-white">In Progress</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-6 text-sm text-gray-600">
-                      <span>
-                        Lessons: {course.lessonsCompleted}/{course.totalLessons}
-                      </span>
-                      <span>Average Score: {course.averageScore}%</span>
-                      {course.completionDate && (
-                        <span>Completed: {course.completionDate}</span>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => onViewCourseProgress(course.id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white ml-4"
-                  >
-                    View Details
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-gray-600">Progress</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {course.progress}%
-                      </span>
-                    </div>
-                    <Progress value={course.progress} className="h-3" />
-                  </div>
-                  <div className="w-16 h-16 rounded-full border-4 border-gray-200 flex items-center justify-center">
-                    <span className="text-lg font-bold text-gray-900">{course.progress}%</span>
-                  </div>
-                </div>
+            {courses.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-lg font-semibold text-gray-700 mb-1">No courses yet</p>
+                <p className="text-gray-500">Enroll in a course to track your progress</p>
               </div>
-            ))}
+            ) : (
+              courses.map((course) => (
+                <div
+                  key={course.id}
+                  className="p-6 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-semibold text-gray-900">{course.title}</h3>
+                        {course.enrollment_status === 'completed' ? (
+                          <Badge className="bg-green-600 text-white">Completed</Badge>
+                        ) : (
+                          <Badge className="bg-blue-600 text-white">In Progress</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-6 text-sm text-gray-600">
+                        <span>
+                          Lessons: {course.completed_lessons}/{course.total_lessons}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => onViewCourseProgress(course.id)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white ml-4"
+                    >
+                      View Details
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-gray-600">Progress</span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {course.progress}%
+                        </span>
+                      </div>
+                      <Progress value={course.progress} className="h-3" />
+                    </div>
+                    <div className="w-16 h-16 rounded-full border-4 border-gray-200 flex items-center justify-center">
+                      <span className="text-lg font-bold text-gray-900">{course.progress}%</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Card>
 
-        {completedCourses === 0 && (
+        {completedCourses === 0 && courses.length > 0 && (
           <Card className="p-8 rounded-2xl border-2 border-blue-200 bg-blue-50 text-center">
             <div className="max-w-md mx-auto">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">

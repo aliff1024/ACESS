@@ -1,8 +1,13 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { CheckCircle, PlayCircle, Lock, Trophy, TrendingUp } from 'lucide-react';
+import { CheckCircle, PlayCircle, Lock, Trophy, TrendingUp, Loader2 } from 'lucide-react';
+import { fetchCourseProgress } from '@/lib/learner-api';
+import type { CourseProgress } from '@/lib/learner-api';
 
 interface CourseProgressDetailPageProps {
   courseId: string;
@@ -11,83 +16,47 @@ interface CourseProgressDetailPageProps {
   onStartLesson: (lessonId: string) => void;
 }
 
-const courseData = {
-  '1': {
-    id: '1',
-    title: 'Introduction to Web Accessibility',
-    description: 'Learn the fundamentals of creating accessible web content for all users',
-    progress: 100,
-    status: 'completed',
-    completionDate: 'March 15, 2026',
-    lessons: [
-      { id: 'l1', title: 'What is Web Accessibility?', status: 'completed', score: 90 },
-      { id: 'l2', title: 'WCAG Guidelines Overview', status: 'completed', score: 85 },
-      { id: 'l3', title: 'Semantic HTML Basics', status: 'completed', score: 88 },
-      { id: 'l4', title: 'ARIA Attributes', status: 'completed', score: 82 },
-      { id: 'l5', title: 'Keyboard Navigation', status: 'completed', score: 95 },
-      { id: 'l6', title: 'Screen Reader Compatibility', status: 'completed', score: 80 },
-      { id: 'l7', title: 'Color Contrast Requirements', status: 'completed', score: 92 },
-      { id: 'l8', title: 'Forms and Labels', status: 'completed', score: 87 },
-      { id: 'l9', title: 'Images and Alternative Text', status: 'completed', score: 84 },
-      { id: 'l10', title: 'Testing for Accessibility', status: 'completed', score: 89 },
-      { id: 'l11', title: 'Common Accessibility Mistakes', status: 'completed', score: 78 },
-      { id: 'l12', title: 'Building Accessible Components', status: 'completed', score: 86 },
-    ],
-  },
-  '2': {
-    id: '2',
-    title: 'Reading Comprehension Strategies',
-    description: 'Develop effective reading techniques for better understanding and retention',
-    progress: 68,
-    status: 'inProgress',
-    completionDate: null,
-    lessons: [
-      { id: 'l1', title: 'Active Reading Techniques', status: 'completed', score: 88 },
-      { id: 'l2', title: 'Identifying Main Ideas', status: 'completed', score: 75 },
-      { id: 'l3', title: 'Making Inferences', status: 'completed', score: 82 },
-      { id: 'l4', title: 'Understanding Context Clues', status: 'completed', score: 79 },
-      { id: 'l5', title: 'Summarizing Text', status: 'completed', score: 85 },
-      { id: 'l6', title: 'Critical Reading Skills', status: 'completed', score: 72 },
-      { id: 'l7', title: 'Reading Different Text Types', status: 'completed', score: 80 },
-      { id: 'l8', title: 'Vocabulary Building', status: 'completed', score: 76 },
-      { id: 'l9', title: 'Note-Taking Strategies', status: 'completed', score: 83 },
-      { id: 'l10', title: 'Speed Reading Basics', status: 'completed', score: 70 },
-      { id: 'l11', title: 'Reading Comprehension Practice', status: 'completed', score: 78 },
-      { id: 'l12', title: 'Analyzing Arguments', status: 'completed', score: 74 },
-      { id: 'l13', title: 'Reading for Research', status: 'inProgress', score: null },
-      { id: 'l14', title: 'Digital Reading Skills', status: 'locked', score: null },
-      { id: 'l15', title: 'Reading Assessment Strategies', status: 'locked', score: null },
-      { id: 'l16', title: 'Advanced Comprehension', status: 'locked', score: null },
-      { id: 'l17', title: 'Reading in Different Subjects', status: 'locked', score: null },
-      { id: 'l18', title: 'Final Reading Assessment', status: 'locked', score: null },
-    ],
-  },
-};
-
 export function CourseProgressDetailPage({
   courseId,
   onBack,
   onGenerateCertificate,
   onStartLesson,
 }: CourseProgressDetailPageProps) {
-  const course = courseData[courseId as keyof typeof courseData] || courseData['1'];
+  const [course, setCourse] = useState<CourseProgress | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCourseProgress(courseId)
+      .then(setCourse)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [courseId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <p className="text-gray-600">Course not found</p>
+      </div>
+    );
+  }
 
   const completedLessons = course.lessons.filter((l) => l.status === 'completed').length;
   const totalLessons = course.lessons.length;
-  const averageScore =
-    Math.round(
-      course.lessons
-        .filter((l) => l.score !== null)
-        .reduce((sum, l) => sum + (l.score || 0), 0) / completedLessons
-    ) || 0;
-
   const isCompleted = course.status === 'completed';
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-6 py-8">
         <button onClick={onBack} className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2">
-          ← Back to Progress
+          &larr; Back to Progress
         </button>
 
         {isCompleted && (
@@ -98,7 +67,7 @@ export function CourseProgressDetailPage({
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                  🎉 Congratulations! You have completed this course.
+                  Congratulations! You have completed this course.
                 </h3>
                 <p className="text-gray-700">You&apos;re now ready to receive your certificate of completion.</p>
               </div>
@@ -153,7 +122,7 @@ export function CourseProgressDetailPage({
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Average Score</p>
-                  <p className="text-2xl font-bold text-gray-900">{averageScore}%</p>
+                  <p className="text-2xl font-bold text-gray-900">{course.avg_score}%</p>
                 </div>
               </div>
             </div>
@@ -195,7 +164,7 @@ export function CourseProgressDetailPage({
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          Lesson {index + 1}: {lesson.title}
+                          Lesson {lesson.sequence_order}: {lesson.title}
                         </h3>
                         {lesson.status === 'completed' && (
                           <Badge className="bg-green-600 text-white">Completed</Badge>

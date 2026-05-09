@@ -1,11 +1,30 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card } from '../ui/card';
-import { CheckCircle2, BookOpen, TrendingUp, Award } from 'lucide-react';
+import { CheckCircle2, BookOpen, TrendingUp, Award, Loader2 } from 'lucide-react';
+import { fetchLearnerStats } from '@/lib/learner-api';
 
 export function ProgressOverview() {
-  const stats = [
+  const [stats, setStats] = useState<{
+    courses_completed: number;
+    lessons_completed: number;
+    avg_score: number;
+    certificates_count: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLearnerStats()
+      .then(setStats)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statCards = [
     {
       label: 'Courses Completed',
-      value: '8',
+      value: stats?.courses_completed ?? 0,
       icon: CheckCircle2,
       color: 'green',
       bgColor: 'bg-green-50',
@@ -13,7 +32,7 @@ export function ProgressOverview() {
     },
     {
       label: 'Lessons Completed',
-      value: '127',
+      value: stats?.lessons_completed ?? 0,
       icon: BookOpen,
       color: 'blue',
       bgColor: 'bg-blue-50',
@@ -21,7 +40,7 @@ export function ProgressOverview() {
     },
     {
       label: 'Average Score',
-      value: '87%',
+      value: `${stats?.avg_score ?? 0}%`,
       icon: TrendingUp,
       color: 'purple',
       bgColor: 'bg-purple-50',
@@ -29,7 +48,7 @@ export function ProgressOverview() {
     },
     {
       label: 'Certificates Earned',
-      value: '6',
+      value: stats?.certificates_count ?? 0,
       icon: Award,
       color: 'orange',
       bgColor: 'bg-orange-50',
@@ -45,7 +64,7 @@ export function ProgressOverview() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
+        {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <Card
@@ -57,8 +76,14 @@ export function ProgressOverview() {
                   <Icon className={`w-6 h-6 ${stat.textColor}`} />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
-              <p className="text-gray-600">{stat.label}</p>
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+              ) : (
+                <>
+                  <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
+                  <p className="text-gray-600">{stat.label}</p>
+                </>
+              )}
             </Card>
           );
         })}

@@ -2,11 +2,9 @@ import QuizClientPage from './QuizClientPage';
 
 export default async function LearnerQuizPage({
   params,
-  searchParams,
 }: {
-  params: { id: string };
-  searchParams: Promise<{ courseId?: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { courseId } = await searchParams;
-  return <QuizClientPage lessonId={params.id ?? 'l6'} courseId={courseId ?? '1'} />;
+  const { id } = await params;
+  return <QuizClientPage lessonId={id} />;
 }
