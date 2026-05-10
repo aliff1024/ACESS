@@ -1,7 +1,10 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import AdminCourseCreate from '@/components/admin/AdminCourseCreate';
 
 export default function AdminCourseCreatePage() {
-  return <AdminCourseCreate />;
+  const searchParams = useSearchParams();
+  const courseType = searchParams.get('type') || 'educator';
+  return <AdminCourseCreate courseType={courseType as 'educator' | 'system'} />;
 }

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MoreVertical, UserCog, Power, Trash2, Loader2 } from 'lucide-react';
+import { Search, MoreVertical, UserCog, Power, Trash2, Loader2, AlertTriangle } from 'lucide-react';
+import { ConfirmAction } from '../ui/ConfirmAction';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import RoleEditModal from './RoleEditModal';
@@ -12,7 +13,6 @@ interface AdminUser {
   email: string;
   role: string;
   created_at: string;
-  last_sign_in_at: string | null;
 }
 
 export default function UserManagement() {
@@ -23,13 +23,15 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [dropdownUserId, setDropdownUserId] = useState<string | null>(null);
+  const [confirmToggleUserId, setConfirmToggleUserId] = useState<string | null>(null);
+  const [confirmDeleteUserId, setConfirmDeleteUserId] = useState<string | null>(null);
 
   const loadUsers = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, full_name, email, role, created_at, last_login_at as last_sign_in_at')
+        .select('id, full_name, email, role, created_at')
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
@@ -86,7 +88,6 @@ export default function UserManagement() {
 
     const currentlyActive = user.role !== 'disabled';
     const action = currentlyActive ? 'deactivate' : 'activate';
-    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
 
     try {
       if (currentlyActive) {
@@ -103,7 +104,6 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
     try {
       await supabase.from('users').update({ deleted_at: new Date().toISOString(), is_active: false }).eq('id', userId);
       toast.success('User deleted');
@@ -214,7 +214,6 @@ export default function UserManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Active</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -223,7 +222,7 @@ export default function UserManagement() {
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold text-sm">
                           {(user.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </span>
@@ -240,7 +239,6 @@ export default function UserManagement() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(user.created_at)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(user.last_sign_in_at)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="relative inline-block">
                       <button
@@ -260,7 +258,7 @@ export default function UserManagement() {
                             Edit Role
                           </button>
                           <button
-                            onClick={() => { setDropdownUserId(null); handleToggleStatus(user.id); }}
+                            onClick={() => { setDropdownUserId(null); setConfirmToggleUserId(user.id); }}
                             className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                           >
                             <Power className="w-4 h-4" />
@@ -268,7 +266,7 @@ export default function UserManagement() {
                           </button>
                           <hr className="my-2" />
                           <button
-                            onClick={() => { setDropdownUserId(null); handleDeleteUser(user.id); }}
+                            onClick={() => { setDropdownUserId(null); setConfirmDeleteUserId(user.id); }}
                             className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -301,6 +299,43 @@ export default function UserManagement() {
           onSave={handleRoleChange}
         />
       )}
+
+      {/* Confirm Toggle Status */}
+      {confirmToggleUserId && (() => {
+        const u = users.find(u => u.id === confirmToggleUserId);
+        if (!u) return null;
+        const activating = u.role === 'disabled';
+        return (
+          <ConfirmAction
+            title={activating ? 'Activate User' : 'Deactivate User'}
+            description={`Are you sure you want to ${activating ? 'activate' : 'deactivate'} ${u.full_name || u.email}?`}
+            confirmText={activating ? 'Activate' : 'Deactivate'}
+            confirmClassName={activating ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}
+            icon={<AlertTriangle className="w-5 h-5 text-amber-600" />}
+            onConfirm={() => { handleToggleStatus(confirmToggleUserId); setConfirmToggleUserId(null); }}
+            open={true}
+            onOpenChange={(o) => { if (!o) setConfirmToggleUserId(null); }}
+          />
+        );
+      })()}
+
+      {/* Confirm Delete User */}
+      {confirmDeleteUserId && (() => {
+        const u = users.find(u => u.id === confirmDeleteUserId);
+        if (!u) return null;
+        return (
+          <ConfirmAction
+            title="Delete User"
+            description={`Are you sure you want to permanently delete ${u.full_name || u.email}? This action cannot be undone.`}
+            confirmText="Delete"
+            confirmClassName="bg-red-600 hover:bg-red-700 text-white"
+            icon={<Trash2 className="w-5 h-5 text-red-600" />}
+            onConfirm={() => { handleDeleteUser(confirmDeleteUserId); setConfirmDeleteUserId(null); }}
+            open={true}
+            onOpenChange={(o) => { if (!o) setConfirmDeleteUserId(null); }}
+          />
+        );
+      })()}
     </div>
   );
 }

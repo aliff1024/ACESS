@@ -60,7 +60,7 @@ export function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="p-6 rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+        <Card className="p-6 rounded-2xl border-2 border-blue-200 bg-white">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center">
               <Users className="w-7 h-7 text-white" />
@@ -76,7 +76,7 @@ export function AnalyticsPage() {
           </div>
         </Card>
 
-        <Card className="p-6 rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-white">
+        <Card className="p-6 rounded-2xl border-2 border-green-200 bg-white">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center">
               <Award className="w-7 h-7 text-white" />
@@ -92,7 +92,7 @@ export function AnalyticsPage() {
           </div>
         </Card>
 
-        <Card className="p-6 rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+        <Card className="p-6 rounded-2xl border-2 border-purple-200 bg-white">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 bg-purple-600 rounded-xl flex items-center justify-center">
               <Target className="w-7 h-7 text-white" />
@@ -104,7 +104,7 @@ export function AnalyticsPage() {
           </div>
         </Card>
 
-        <Card className="p-6 rounded-2xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-white">
+        <Card className="p-6 rounded-2xl border-2 border-orange-200 bg-white">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 bg-orange-600 rounded-xl flex items-center justify-center">
               <BookOpen className="w-7 h-7 text-white" />

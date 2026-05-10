@@ -43,7 +43,7 @@ export function CertificateListPage({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <Card className="max-w-2xl w-full p-12 rounded-2xl border-2 border-gray-200 text-center">
-          <div className="w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Award className="w-16 h-16 text-blue-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">No Certificates Yet</h2>
@@ -68,7 +68,7 @@ export function CertificateListPage({
           <p className="text-xl text-gray-600">View and download your earned certificates</p>
         </div>
 
-        <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border-2 border-blue-200">
+        <div className="mb-6 p-6 bg-blue-50 rounded-2xl border-2 border-blue-200">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
               <Award className="w-8 h-8 text-white" />
@@ -89,7 +89,7 @@ export function CertificateListPage({
               className="p-6 rounded-2xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200"
             >
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Award className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">

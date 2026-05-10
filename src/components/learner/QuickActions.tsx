@@ -7,7 +7,7 @@ interface QuickActionsProps {
 
 export function QuickActions({ onBrowseCourses }: QuickActionsProps) {
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 border border-blue-100">
+    <div className="bg-blue-50 rounded-2xl p-8 border border-blue-100">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

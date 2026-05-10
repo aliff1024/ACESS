@@ -170,6 +170,9 @@ export async function createCourse(educatorId: string, fields: CourseFields) {
       difficulty_level: fields.difficulty_level,
       category: fields.category || null,
       thumbnail_url: fields.thumbnail_url || null,
+      course_type: 'educator',
+      created_by_role: 'educator',
+      managed_by_admin: false,
     })
     .select()
     .single()
@@ -179,6 +182,7 @@ export async function createCourse(educatorId: string, fields: CourseFields) {
 }
 
 export async function updateCourse(courseId: string, fields: Partial<CourseFields>) {
+  await guardSystemCourse(courseId)
   const { data, error } = await supabase
     .from('courses')
     .update(fields)
@@ -191,12 +195,26 @@ export async function updateCourse(courseId: string, fields: Partial<CourseField
 }
 
 export async function deleteCourse(courseId: string) {
+  await guardSystemCourse(courseId)
   const { error } = await supabase
     .from('courses')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', courseId)
 
   if (error) throw error
+}
+
+/** Prevent educators from modifying system courses */
+async function guardSystemCourse(courseId: string) {
+  const { data: course } = await supabase
+    .from('courses')
+    .select('course_type')
+    .eq('id', courseId)
+    .single()
+
+  if (course?.course_type === 'system') {
+    throw new Error('System courses cannot be modified by educators')
+  }
 }
 
 // ─── Lessons ───────────────────────────────────────────────────────────
@@ -728,12 +746,14 @@ export interface LessonWithQuiz {
   has_quiz: boolean
   quiz_id: string | null
   assets_count: number
+  video_url: string | null
+  has_content: boolean
 }
 
 export async function fetchLessonsWithQuizzes(courseId: string): Promise<LessonWithQuiz[]> {
   const { data: lessons, error } = await supabase
     .from('lessons')
-    .select('id, title, sequence_order, status')
+    .select('id, title, sequence_order, status, video_url, content_html')
     .eq('course_id', courseId)
     .order('sequence_order', { ascending: true })
 
@@ -766,6 +786,8 @@ export async function fetchLessonsWithQuizzes(courseId: string): Promise<LessonW
     has_quiz: quizMap.has(l.id),
     quiz_id: quizMap.get(l.id)?.id || null,
     assets_count: assetCountMap.get(l.id) || 0,
+    video_url: l.video_url || null,
+    has_content: !!l.content_html,
   }))
 }
 

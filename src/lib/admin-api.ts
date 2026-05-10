@@ -1,4 +1,252 @@
 import { supabase } from './supabase'
+import type { CourseStatus } from './educator-api'
+
+// ─── System Course Types ─────────────────────────────────────────────
+
+export interface SystemCourseFields {
+  title: string
+  description: string
+  difficulty_level: string
+  category?: string
+  status: CourseStatus
+  thumbnail_url?: string
+  recommended_age_group?: string
+  guided_learning_enabled?: boolean
+}
+
+export interface SystemCourseItem {
+  id: string
+  title: string
+  description: string
+  status: string
+  created_at: string
+  thumbnail_url: string | null
+  course_type: string
+  system_course: boolean
+  built_in_course: boolean
+  created_by_role: string
+  guided_learning_enabled: boolean
+  recommended_age_group: string | null
+  official_course_order: number | null
+  managed_by_admin: boolean
+  creator_name?: string
+  total_enrollments?: number
+}
+
+export interface SystemCourseStats {
+  totalSystemCourses: number
+  totalEnrollments: number
+  activeLearners: number
+  mostEnrolled: { title: string; enrollments: number }[]
+}
+
+// ─── System Course CRUD ──────────────────────────────────────────────
+
+export async function createSystemCourse(adminId: string, fields: SystemCourseFields) {
+  const slug = fields.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+
+  const { data, error } = await supabase
+    .from('courses')
+    .insert({
+      created_by: adminId,
+      title: fields.title,
+      slug,
+      description: fields.description,
+      status: fields.status,
+      difficulty_level: fields.difficulty_level,
+      category: fields.category || null,
+      thumbnail_url: fields.thumbnail_url || null,
+      course_type: 'system',
+      system_course: true,
+      built_in_course: true,
+      created_by_role: 'admin',
+      managed_by_admin: true,
+      guided_learning_enabled: fields.guided_learning_enabled ?? true,
+      recommended_age_group: fields.recommended_age_group || null,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function updateSystemCourse(courseId: string, fields: Partial<SystemCourseFields & {
+  status: CourseStatus
+  guided_learning_enabled: boolean
+  recommended_age_group: string | null
+}>) {
+  const { error } = await supabase
+    .from('courses')
+    .update({
+      ...fields,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', courseId)
+    .eq('course_type', 'system')
+
+  if (error) throw error
+}
+
+export async function archiveSystemCourse(courseId: string) {
+  const { error } = await supabase
+    .from('courses')
+    .update({ status: 'archived', updated_at: new Date().toISOString() })
+    .eq('id', courseId)
+    .eq('course_type', 'system')
+
+  if (error) throw error
+}
+
+export async function duplicateSystemCourse(courseId: string): Promise<string> {
+  const { data: original, error: fetchError } = await supabase
+    .from('courses')
+    .select('title, description, difficulty_level, category, thumbnail_url, recommended_age_group, guided_learning_enabled')
+    .eq('id', courseId)
+    .single()
+
+  if (fetchError) throw fetchError
+
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) throw new Error('Not authenticated')
+
+  const newTitle = `${original.title} (Copy)`
+  const slug = newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+  const { data: newCourse, error: insertError } = await supabase
+    .from('courses')
+    .insert({
+      created_by: user.user.id,
+      title: newTitle,
+      slug,
+      description: original.description,
+      difficulty_level: original.difficulty_level,
+      category: original.category,
+      thumbnail_url: original.thumbnail_url,
+      status: 'draft',
+      course_type: 'system',
+      system_course: true,
+      built_in_course: true,
+      created_by_role: 'admin',
+      managed_by_admin: true,
+      guided_learning_enabled: original.guided_learning_enabled ?? true,
+      recommended_age_group: original.recommended_age_group,
+    })
+    .select()
+    .single()
+
+  if (insertError) throw insertError
+  return newCourse.id
+}
+
+export async function fetchSystemCourseStats(): Promise<SystemCourseStats> {
+  const { count: totalSystemCourses } = await supabase
+    .from('courses')
+    .select('id', { count: 'exact', head: true })
+    .eq('course_type', 'system')
+    .is('deleted_at', null)
+
+  const systemCourseIds: string[] = []
+  const { data: systemCourses } = await supabase
+    .from('courses')
+    .select('id, title')
+    .eq('course_type', 'system')
+    .is('deleted_at', null)
+  for (const c of systemCourses || []) {
+    systemCourseIds.push(c.id)
+  }
+
+  let totalEnrollments = 0
+  let activeLearners = 0
+  const enrollCounts: { title: string; enrollments: number }[] = []
+
+  if (systemCourseIds.length > 0) {
+    const { data: enrollments } = await supabase
+      .from('enrollments')
+      .select('course_id, status')
+      .in('course_id', systemCourseIds)
+
+    const countMap = new Map<string, number>()
+    for (const e of enrollments || []) {
+      countMap.set(e.course_id, (countMap.get(e.course_id) || 0) + 1)
+      if (e.status === 'active') activeLearners++
+    }
+    totalEnrollments = enrollments?.length ?? 0
+
+    for (const c of systemCourses || []) {
+      const cnt = countMap.get(c.id) || 0
+      if (cnt > 0) {
+        enrollCounts.push({ title: c.title, enrollments: cnt })
+      }
+    }
+    enrollCounts.sort((a, b) => b.enrollments - a.enrollments)
+  }
+
+  return {
+    totalSystemCourses: totalSystemCourses ?? 0,
+    totalEnrollments,
+    activeLearners,
+    mostEnrolled: enrollCounts.slice(0, 5),
+  }
+}
+
+export async function fetchSystemCourses(): Promise<SystemCourseItem[]> {
+  const { data: coursesData, error } = await supabase
+    .from('courses')
+    .select('id, title, description, status, created_at, thumbnail_url, course_type, system_course, built_in_course, created_by_role, guided_learning_enabled, recommended_age_group, official_course_order, managed_by_admin, created_by')
+    .eq('course_type', 'system')
+    .is('deleted_at', null)
+    .order('official_course_order', { ascending: true, nullsLast: true })
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  const creatorIds = [...new Set((coursesData || []).map(c => c.created_by).filter(Boolean))]
+  const userMap = new Map<string, string>()
+  if (creatorIds.length > 0) {
+    const { data: usersData } = await supabase
+      .from('users')
+      .select('id, full_name')
+      .in('id', creatorIds)
+    for (const u of usersData || []) {
+      userMap.set(u.id, u.full_name || 'Admin')
+    }
+  }
+
+  const courseIds = (coursesData || []).map(c => c.id)
+  const enrollCounts = new Map<string, number>()
+  if (courseIds.length > 0) {
+    const { data: enrollments } = await supabase
+      .from('enrollments')
+      .select('course_id')
+      .in('course_id', courseIds)
+    for (const e of enrollments || []) {
+      enrollCounts.set(e.course_id, (enrollCounts.get(e.course_id) || 0) + 1)
+    }
+  }
+
+  return (coursesData || []).map(c => ({
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    status: c.status,
+    created_at: c.created_at,
+    thumbnail_url: c.thumbnail_url,
+    course_type: c.course_type,
+    system_course: c.system_course,
+    built_in_course: c.built_in_course,
+    created_by_role: c.created_by_role,
+    guided_learning_enabled: c.guided_learning_enabled,
+    recommended_age_group: c.recommended_age_group,
+    official_course_order: c.official_course_order,
+    managed_by_admin: c.managed_by_admin,
+    creator_name: userMap.get(c.created_by) || 'System Admin',
+    total_enrollments: enrollCounts.get(c.id) || 0,
+  }))
+}
 
 // ─── Dashboard Types ─────────────────────────────────────────────────
 
@@ -275,7 +523,229 @@ export async function revokeCertificate(certId: string, reason: string): Promise
   if (error) throw error
 }
 
-// ─── Reports ─────────────────────────────────────────────────────────
+// ─── Course Chapters CRUD ──────────────────────────────────────────────
+
+export interface ChapterItem {
+  id: string
+  course_id: string
+  title: string
+  description: string | null
+  sequence_order: number
+  lesson_count?: number
+}
+
+export async function fetchChapters(courseId: string): Promise<ChapterItem[]> {
+  const { data, error } = await supabase
+    .from('course_chapters')
+    .select('id, course_id, title, description, sequence_order')
+    .eq('course_id', courseId)
+    .order('sequence_order', { ascending: true })
+  if (error) throw error
+
+  const chapters = data || []
+  const chapterIds = chapters.map(c => c.id)
+  const countMap = new Map<string, number>()
+  if (chapterIds.length > 0) {
+    const { data: lessons } = await supabase
+      .from('lessons')
+      .select('chapter_id')
+      .in('chapter_id', chapterIds)
+    for (const l of lessons || []) {
+      countMap.set(l.chapter_id, (countMap.get(l.chapter_id) || 0) + 1)
+    }
+  }
+  return chapters.map(c => ({
+    ...c,
+    lesson_count: countMap.get(c.id) || 0,
+  }))
+}
+
+export async function createChapter(courseId: string, title: string, description?: string): Promise<ChapterItem> {
+  const { data: max } = await supabase
+    .from('course_chapters')
+    .select('sequence_order')
+    .eq('course_id', courseId)
+    .order('sequence_order', { ascending: false })
+    .limit(1)
+  const nextOrder = (max?.[0]?.sequence_order ?? -1) + 1
+
+  const { data, error } = await supabase
+    .from('course_chapters')
+    .insert({ course_id: courseId, title, description: description || null, sequence_order: nextOrder })
+    .select()
+    .single()
+  if (error) throw error
+  return { ...data, lesson_count: 0 }
+}
+
+export async function updateChapter(chapterId: string, updates: { title?: string; description?: string; sequence_order?: number }): Promise<void> {
+  const { error } = await supabase.from('course_chapters').update(updates).eq('id', chapterId)
+  if (error) throw error
+}
+
+export async function deleteChapter(chapterId: string): Promise<void> {
+  await supabase.from('lessons').update({ chapter_id: null }).eq('chapter_id', chapterId)
+  const { error } = await supabase.from('course_chapters').delete().eq('id', chapterId)
+  if (error) throw error
+}
+
+export async function reorderChapters(courseId: string, orderedIds: string[]): Promise<void> {
+  for (let i = 0; i < orderedIds.length; i++) {
+    await supabase.from('course_chapters').update({ sequence_order: i }).eq('id', orderedIds[i])
+  }
+}
+
+// ─── Lesson Templates ─────────────────────────────────────────────────
+
+export interface LessonTemplate {
+  id: string
+  title: string
+  description: string | null
+  lesson_type: string
+  content_html: string | null
+  estimated_duration: number | null
+  is_public: boolean
+  created_at: string
+}
+
+export async function fetchLessonTemplates(): Promise<LessonTemplate[]> {
+  const userId = (await supabase.auth.getUser()).data.user?.id
+  const { data, error } = await supabase
+    .from('lesson_templates')
+    .select('*')
+    .or(`is_public.eq.true,created_by.eq.${userId}`)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function createLessonTemplate(template: {
+  title: string; description?: string; lesson_type?: string; content_html?: string; estimated_duration?: number; is_public?: boolean;
+}): Promise<LessonTemplate> {
+  const userId = (await supabase.auth.getUser()).data.user?.id
+  if (!userId) throw new Error('Not authenticated')
+  const { data, error } = await supabase.from('lesson_templates').insert({
+    created_by: userId,
+    title: template.title,
+    description: template.description || null,
+    lesson_type: template.lesson_type || 'standard',
+    content_html: template.content_html || null,
+    estimated_duration: template.estimated_duration || null,
+    is_public: template.is_public ?? false,
+  }).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteLessonTemplate(templateId: string): Promise<void> {
+  const { error } = await supabase.from('lesson_templates').delete().eq('id', templateId)
+  if (error) throw error
+}
+
+// ─── Course Milestones ────────────────────────────────────────────────
+
+export interface CourseMilestone {
+  id: string
+  course_id: string
+  title: string
+  description: string | null
+  required_completion_pct: number
+  icon: string | null
+  sequence_order: number
+}
+
+export async function fetchCourseMilestones(courseId: string): Promise<CourseMilestone[]> {
+  const { data, error } = await supabase
+    .from('course_milestones')
+    .select('*')
+    .eq('course_id', courseId)
+    .order('sequence_order', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function createCourseMilestone(courseId: string, milestone: {
+  title: string; description?: string; required_completion_pct?: number; icon?: string
+}): Promise<CourseMilestone> {
+  const { data: max } = await supabase
+    .from('course_milestones')
+    .select('sequence_order')
+    .eq('course_id', courseId)
+    .order('sequence_order', { ascending: false })
+    .limit(1)
+  const { data, error } = await supabase.from('course_milestones').insert({
+    course_id: courseId,
+    title: milestone.title,
+    description: milestone.description || null,
+    required_completion_pct: milestone.required_completion_pct ?? 100,
+    icon: milestone.icon || null,
+    sequence_order: (max?.[0]?.sequence_order ?? -1) + 1,
+  }).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteCourseMilestone(milestoneId: string): Promise<void> {
+  const { error } = await supabase.from('course_milestones').delete().eq('id', milestoneId)
+  if (error) throw error
+}
+
+// ─── Lesson Checkpoints ───────────────────────────────────────────────
+
+export interface LessonCheckpoint {
+  id: string
+  lesson_id: string
+  title: string
+  description: string | null
+  checkpoint_type: string
+  sequence_order: number
+  required: boolean
+}
+
+export async function fetchLessonCheckpoints(lessonId: string): Promise<LessonCheckpoint[]> {
+  const { data, error } = await supabase
+    .from('lesson_checkpoints')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function createLessonCheckpoint(lessonId: string, checkpoint: {
+  title: string; description?: string; checkpoint_type?: string; required?: boolean
+}): Promise<LessonCheckpoint> {
+  const { data: max } = await supabase
+    .from('lesson_checkpoints')
+    .select('sequence_order')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: false })
+    .limit(1)
+  const { data, error } = await supabase.from('lesson_checkpoints').insert({
+    lesson_id: lessonId,
+    title: checkpoint.title,
+    description: checkpoint.description || null,
+    checkpoint_type: checkpoint.checkpoint_type || 'reflection',
+    required: checkpoint.required ?? false,
+    sequence_order: (max?.[0]?.sequence_order ?? -1) + 1,
+  }).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteLessonCheckpoint(checkpointId: string): Promise<void> {
+  const { error } = await supabase.from('lesson_checkpoints').delete().eq('id', checkpointId)
+  if (error) throw error
+}
+
+export async function updateLessonCheckpoint(checkpointId: string, updates: {
+  title?: string; description?: string; checkpoint_type?: string; required?: boolean; completed?: boolean
+}): Promise<void> {
+  const { error } = await supabase.from('lesson_checkpoints').update(updates).eq('id', checkpointId)
+  if (error) throw error
+}
+
+// ─── Reports ──────────────────────────────────────────────────────────
 
 export async function generateReport(reportType: string): Promise<ReportDefinition> {
   switch (reportType) {

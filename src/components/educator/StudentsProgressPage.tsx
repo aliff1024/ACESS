@@ -66,7 +66,7 @@ export function StudentsProgressPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+        <Card className="p-6 rounded-2xl border-2 border-blue-200 bg-white">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center">
               <Users className="w-7 h-7 text-white" />
@@ -78,7 +78,7 @@ export function StudentsProgressPage() {
           </div>
         </Card>
 
-        <Card className="p-6 rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-white">
+        <Card className="p-6 rounded-2xl border-2 border-green-200 bg-white">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center">
               <TrendingUp className="w-7 h-7 text-white" />
@@ -90,7 +90,7 @@ export function StudentsProgressPage() {
           </div>
         </Card>
 
-        <Card className="p-6 rounded-2xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-white">
+        <Card className="p-6 rounded-2xl border-2 border-orange-200 bg-white">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-orange-600 rounded-xl flex items-center justify-center">
               <AlertTriangle className="w-7 h-7 text-white" />
@@ -141,7 +141,7 @@ export function StudentsProgressPage() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4 flex-1">
-                      <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                      <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
                         {student.name.split(' ').map((n) => n[0]).join('')}
                       </div>
                       <div className="flex-1">

@@ -58,7 +58,7 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6 rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100">
+          <Card className="p-6 rounded-2xl border-2 border-gray-200 bg-blue-50">
             <div className="flex items-start justify-between mb-4">
               <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center">
                 <BookOpen className="w-7 h-7 text-white" />
@@ -69,7 +69,7 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
             <p className="text-5xl font-bold text-gray-900">{enrolledCourses}</p>
           </Card>
 
-          <Card className="p-6 rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-green-50 to-green-100">
+          <Card className="p-6 rounded-2xl border-2 border-gray-200 bg-white">
             <div className="flex items-start justify-between mb-4">
               <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center">
                 <Award className="w-7 h-7 text-white" />
@@ -80,7 +80,7 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
             <p className="text-5xl font-bold text-gray-900">{completedCourses}</p>
           </Card>
 
-          <Card className="p-6 rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-purple-50 to-purple-100">
+          <Card className="p-6 rounded-2xl border-2 border-gray-200 bg-white">
             <div className="flex items-start justify-between mb-4">
               <div className="w-14 h-14 bg-purple-600 rounded-xl flex items-center justify-center">
                 <TrendingUp className="w-7 h-7 text-white" />

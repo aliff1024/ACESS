@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -150,3 +150,272 @@
     @apply font-sans;
   }
 }
+
+/* ─── Accessibility: Font Size ───────────────────────────────────────── */
+html[data-font-size="small"] { font-size: 14px; }
+html[data-font-size="medium"] { font-size: 16px; }
+html[data-font-size="large"] { font-size: 18px; }
+html[data-font-size="xlarge"] { font-size: 20px; }
+
+/* ─── Accessibility: Font Type ─────────────────────────────────────────── */
+html[data-font-type="serif"] body {
+  font-family: Georgia, 'Times New Roman', serif !important;
+}
+html[data-font-type="sans_serif"] body {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+html[data-font-type="dyslexia"] body {
+  font-family: 'Trebuchet MS', 'Tahoma', 'Verdana', sans-serif !important;
+  letter-spacing: 0.035em !important;
+  word-spacing: 0.12em !important;
+}
+
+/* ─── Accessibility: Soft Theme (cognitive-friendly light mode) ──────── */
+html[data-theme="soft"] {
+  --background: oklch(0.93 0.015 85);
+  --foreground: oklch(0.22 0.015 260);
+  --card: oklch(0.97 0.01 80);
+  --card-foreground: oklch(0.22 0.015 260);
+  --popover: oklch(0.97 0.01 80);
+  --popover-foreground: oklch(0.22 0.015 260);
+  --primary: oklch(0.55 0.12 250);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.92 0.012 85);
+  --secondary-foreground: oklch(0.35 0.01 260);
+  --muted: oklch(0.94 0.01 85);
+  --muted-foreground: oklch(0.5 0.015 260);
+  --accent: oklch(0.88 0.015 85);
+  --accent-foreground: oklch(0.3 0.01 260);
+  --destructive: oklch(0.6 0.15 30);
+  --border: oklch(0.78 0.015 80);
+  --input: oklch(0.78 0.015 80);
+  --ring: oklch(0.65 0.1 250);
+  --sidebar: oklch(0.93 0.015 85);
+  --sidebar-foreground: oklch(0.22 0.015 260);
+  --sidebar-primary: oklch(0.55 0.12 250);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.92 0.012 85);
+  --sidebar-accent-foreground: oklch(0.35 0.01 260);
+  --sidebar-border: oklch(0.78 0.015 80);
+  --sidebar-ring: oklch(0.65 0.1 250);
+}
+
+/* ─── Accessibility: High Contrast Theme ──────────────────────────────── */
+html[data-theme="high_contrast"] {
+  --background: #000000;
+  --foreground: #ffff00;
+  --card: #000000;
+  --card-foreground: #ffff00;
+  --popover: #000000;
+  --popover-foreground: #ffff00;
+  --primary: #ffff00;
+  --primary-foreground: #000000;
+  --secondary: #222222;
+  --secondary-foreground: #ffff00;
+  --muted: #111111;
+  --muted-foreground: #cccc00;
+  --accent: #333333;
+  --accent-foreground: #ffff00;
+  --destructive: #ff4444;
+  --border: #ffff00;
+  --input: #ffff00;
+  --ring: #ffff00;
+  --sidebar: #000000;
+  --sidebar-foreground: #ffff00;
+  --sidebar-primary: #ffff00;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #222222;
+  --sidebar-accent-foreground: #ffff00;
+  --sidebar-border: #ffff00;
+  --sidebar-ring: #ffff00;
+  color-scheme: dark;
+}
+
+/* ─── Accessibility: Line Spacing ────────────────────────────────────── */
+html[data-line-spacing="relaxed"] body {
+  line-height: 1.8;
+}
+html[data-line-spacing="loose"] body {
+  line-height: 2.2;
+}
+
+/* ─── Accessibility: Reduced Motion ──────────────────────────────────── */
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ─── Accessibility: Simplified UI ───────────────────────────────────── */
+html[data-simplified-ui="true"] .simplifiable {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   THEME OVERRIDES: force hardcoded colors to respect active theme
+   Covers all patterns found across learner/course/progress components
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Shared dark/high-contrast: tinted backgrounds ─────────────────── */
+.dark .bg-blue-50,  html[data-theme="high_contrast"] .bg-blue-50  { background-color: oklch(0.15 0.03 250) !important; }
+.dark .bg-green-50, html[data-theme="high_contrast"] .bg-green-50 { background-color: oklch(0.15 0.03 150) !important; }
+.dark .bg-red-50,   html[data-theme="high_contrast"] .bg-red-50   { background-color: oklch(0.15 0.03 30) !important; }
+.dark .bg-purple-50,html[data-theme="high_contrast"] .bg-purple-50{ background-color: oklch(0.15 0.03 280) !important; }
+.dark .bg-yellow-50,html[data-theme="high_contrast"] .bg-yellow-50{ background-color: oklch(0.15 0.03 80) !important; }
+.dark .bg-orange-50,html[data-theme="high_contrast"] .bg-orange-50{ background-color: oklch(0.15 0.03 60) !important; }
+.dark .bg-amber-50, html[data-theme="high_contrast"] .bg-amber-50 { background-color: oklch(0.15 0.03 70) !important; }
+.dark .bg-teal-50,  html[data-theme="high_contrast"] .bg-teal-50  { background-color: oklch(0.15 0.03 170) !important; }
+.dark .bg-pink-50,  html[data-theme="high_contrast"] .bg-pink-50  { background-color: oklch(0.15 0.03 340) !important; }
+.dark .bg-indigo-50,html[data-theme="high_contrast"] .bg-indigo-50{ background-color: oklch(0.15 0.03 260) !important; }
+.dark .bg-emerald-50,html[data-theme="high_contrast"] .bg-emerald-50{ background-color: oklch(0.15 0.03 160) !important; }
+
+.dark .bg-blue-100,  html[data-theme="high_contrast"] .bg-blue-100  { background-color: oklch(0.18 0.04 250) !important; }
+.dark .bg-green-100, html[data-theme="high_contrast"] .bg-green-100 { background-color: oklch(0.18 0.04 150) !important; }
+.dark .bg-red-100,   html[data-theme="high_contrast"] .bg-red-100   { background-color: oklch(0.18 0.04 30) !important; }
+.dark .bg-purple-100,html[data-theme="high_contrast"] .bg-purple-100{ background-color: oklch(0.18 0.04 280) !important; }
+.dark .bg-yellow-100,html[data-theme="high_contrast"] .bg-yellow-100{ background-color: oklch(0.18 0.04 80) !important; }
+.dark .bg-orange-100,html[data-theme="high_contrast"] .bg-orange-100{ background-color: oklch(0.18 0.04 60) !important; }
+.dark .bg-amber-100, html[data-theme="high_contrast"] .bg-amber-100 { background-color: oklch(0.18 0.04 70) !important; }
+.dark .bg-teal-100,  html[data-theme="high_contrast"] .bg-teal-100  { background-color: oklch(0.18 0.04 170) !important; }
+.dark .bg-pink-100,  html[data-theme="high_contrast"] .bg-pink-100  { background-color: oklch(0.18 0.04 340) !important; }
+
+/* ─── Shared dark/high-contrast: gray backgrounds ───────────────────── */
+.dark .bg-gray-50,  .dark .bg-gray-100,
+html[data-theme="high_contrast"] .bg-gray-50,
+html[data-theme="high_contrast"] .bg-gray-100 { background-color: var(--background) !important; }
+
+.dark .bg-white, html[data-theme="high_contrast"] .bg-white { background-color: var(--card) !important; }
+
+/* ─── Shared dark/high-contrast: gray text ──────────────────────────── */
+.dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700,
+html[data-theme="high_contrast"] .text-gray-900,
+html[data-theme="high_contrast"] .text-gray-800,
+html[data-theme="high_contrast"] .text-gray-700 { color: var(--foreground) !important; }
+
+.dark .text-gray-600, .dark .text-gray-500, .dark .text-gray-400,
+html[data-theme="high_contrast"] .text-gray-600,
+html[data-theme="high_contrast"] .text-gray-500,
+html[data-theme="high_contrast"] .text-gray-400 { color: var(--muted-foreground) !important; }
+
+/* ─── Shared dark/high-contrast: colored text ───────────────────────── */
+.dark .text-blue-600,   .dark .text-blue-700,
+html[data-theme="high_contrast"] .text-blue-600,
+html[data-theme="high_contrast"] .text-blue-700   { color: oklch(0.7 0.18 250) !important; }
+
+.dark .text-green-600,  .dark .text-green-700,
+html[data-theme="high_contrast"] .text-green-600,
+html[data-theme="high_contrast"] .text-green-700 { color: oklch(0.7 0.18 150) !important; }
+
+.dark .text-red-600,    .dark .text-red-700,
+html[data-theme="high_contrast"] .text-red-600,
+html[data-theme="high_contrast"] .text-red-700   { color: oklch(0.7 0.18 30) !important; }
+
+.dark .text-purple-600,
+html[data-theme="high_contrast"] .text-purple-600 { color: oklch(0.7 0.18 280) !important; }
+
+.dark .text-yellow-600,
+html[data-theme="high_contrast"] .text-yellow-600 { color: oklch(0.7 0.15 80) !important; }
+
+.dark .text-orange-600,
+html[data-theme="high_contrast"] .text-orange-600 { color: oklch(0.7 0.18 60) !important; }
+
+.dark .text-amber-600, .dark .text-amber-700,
+html[data-theme="high_contrast"] .text-amber-600,
+html[data-theme="high_contrast"] .text-amber-700 { color: oklch(0.8 0.15 70) !important; }
+
+.dark .text-teal-600,
+html[data-theme="high_contrast"] .text-teal-600   { color: oklch(0.7 0.18 170) !important; }
+
+/* ─── Shared dark/high-contrast: borders ────────────────────────────── */
+.dark .border-gray-200, .dark .border-gray-300,
+html[data-theme="high_contrast"] .border-gray-200,
+html[data-theme="high_contrast"] .border-gray-300 { border-color: var(--border) !important; }
+
+.dark .border-blue-200, .dark .border-blue-300, .dark .border-blue-400,
+html[data-theme="high_contrast"] .border-blue-200,
+html[data-theme="high_contrast"] .border-blue-300,
+html[data-theme="high_contrast"] .border-blue-400 { border-color: oklch(0.35 0.06 250) !important; }
+
+.dark .border-green-200, .dark .border-green-300,
+html[data-theme="high_contrast"] .border-green-200,
+html[data-theme="high_contrast"] .border-green-300 { border-color: oklch(0.35 0.06 150) !important; }
+
+.dark .border-red-200, .dark .border-red-300,
+html[data-theme="high_contrast"] .border-red-200,
+html[data-theme="high_contrast"] .border-red-300   { border-color: oklch(0.35 0.06 30) !important; }
+
+.dark .border-purple-200,
+html[data-theme="high_contrast"] .border-purple-200 { border-color: oklch(0.35 0.06 280) !important; }
+
+.dark .border-yellow-200,
+html[data-theme="high_contrast"] .border-yellow-200 { border-color: oklch(0.35 0.06 80) !important; }
+
+.dark .border-red-300,
+html[data-theme="high_contrast"] .border-red-300    { border-color: oklch(0.5 0.15 30) !important; }
+
+/* ─── Shared dark/high-contrast: misc utility classes ───────────────── */
+.dark .divide-gray-100, .dark .divide-gray-200,
+html[data-theme="high_contrast"] .divide-gray-100,
+html[data-theme="high_contrast"] .divide-gray-200 { border-color: var(--border) !important; }
+
+.dark .bg-white\/80,
+html[data-theme="high_contrast"] .bg-white\/80 { background-color: oklch(0.18 0 0 / 0.8) !important; }
+
+.dark .ring-blue-500, html[data-theme="high_contrast"] .ring-blue-500 { --tw-ring-color: oklch(0.5 0.15 250) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SOFT THEME: warm cognitive-friendly palette
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Soft: gray backgrounds ────────────────────────────────────────── */
+html[data-theme="soft"] .bg-gray-50  { background-color: oklch(0.93 0.015 85) !important; }
+html[data-theme="soft"] .bg-gray-100 { background-color: oklch(0.92 0.012 85) !important; }
+html[data-theme="soft"] .bg-white    { background-color: oklch(0.97 0.01 80) !important; }
+
+/* ─── Soft: tinted backgrounds ──────────────────────────────────────── */
+html[data-theme="soft"] .bg-blue-50   { background-color: oklch(0.92 0.015 85) !important; }
+html[data-theme="soft"] .bg-green-50  { background-color: oklch(0.93 0.015 140) !important; }
+html[data-theme="soft"] .bg-red-50    { background-color: oklch(0.93 0.015 30) !important; }
+html[data-theme="soft"] .bg-purple-50 { background-color: oklch(0.92 0.015 280) !important; }
+html[data-theme="soft"] .bg-yellow-50 { background-color: oklch(0.94 0.015 80) !important; }
+html[data-theme="soft"] .bg-orange-50 { background-color: oklch(0.93 0.015 60) !important; }
+html[data-theme="soft"] .bg-amber-50  { background-color: oklch(0.93 0.015 70) !important; }
+html[data-theme="soft"] .bg-teal-50   { background-color: oklch(0.93 0.015 170) !important; }
+html[data-theme="soft"] .bg-pink-50   { background-color: oklch(0.93 0.015 340) !important; }
+
+html[data-theme="soft"] .bg-blue-100   { background-color: oklch(0.9 0.02 85) !important; }
+html[data-theme="soft"] .bg-green-100  { background-color: oklch(0.91 0.02 140) !important; }
+html[data-theme="soft"] .bg-red-100    { background-color: oklch(0.91 0.02 30) !important; }
+html[data-theme="soft"] .bg-purple-100 { background-color: oklch(0.9 0.02 280) !important; }
+html[data-theme="soft"] .bg-orange-100 { background-color: oklch(0.91 0.02 60) !important; }
+
+/* ─── Soft: gray text ───────────────────────────────────────────────── */
+html[data-theme="soft"] .text-gray-900,
+html[data-theme="soft"] .text-gray-800,
+html[data-theme="soft"] .text-gray-700 { color: oklch(0.22 0.015 260) !important; }
+html[data-theme="soft"] .text-gray-600,
+html[data-theme="soft"] .text-gray-500,
+html[data-theme="soft"] .text-gray-400 { color: oklch(0.5 0.015 260) !important; }
+
+/* ─── Soft: colored text ────────────────────────────────────────────── */
+html[data-theme="soft"] .text-blue-600,
+html[data-theme="soft"] .text-blue-700   { color: oklch(0.45 0.1 250) !important; }
+html[data-theme="soft"] .text-green-600,
+html[data-theme="soft"] .text-green-700  { color: oklch(0.45 0.1 150) !important; }
+html[data-theme="soft"] .text-red-600,
+html[data-theme="soft"] .text-red-700    { color: oklch(0.5 0.12 30) !important; }
+html[data-theme="soft"] .text-purple-600 { color: oklch(0.45 0.1 280) !important; }
+html[data-theme="soft"] .text-amber-600,
+html[data-theme="soft"] .text-amber-700  { color: oklch(0.5 0.1 70) !important; }
+
+/* ─── Soft: borders ─────────────────────────────────────────────────── */
+html[data-theme="soft"] .border-gray-200,
+html[data-theme="soft"] .border-gray-300 { border-color: oklch(0.78 0.015 80) !important; }
+html[data-theme="soft"] .border-blue-200,
+html[data-theme="soft"] .border-blue-300 { border-color: oklch(0.75 0.02 85) !important; }
+html[data-theme="soft"] .border-green-200,
+html[data-theme="soft"] .border-green-300 { border-color: oklch(0.76 0.02 140) !important; }
+

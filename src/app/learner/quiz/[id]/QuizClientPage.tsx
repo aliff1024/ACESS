@@ -18,6 +18,7 @@ export default function QuizClientPage({ lessonId }: { lessonId: string }) {
   const [showQuizResult, setShowQuizResult] = useState(false);
   const [isReviewingAnswers, setIsReviewingAnswers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     fetchQuizData(lessonId).then((data) => {
@@ -69,6 +70,7 @@ export default function QuizClientPage({ lessonId }: { lessonId: string }) {
   return (
     <>
       <QuizPage
+        key={resetKey}
         lessonId={lessonId}
         courseId={courseId}
         onBack={() => router.push(`/learner/lesson/${lessonId}?courseId=${courseId}`)}
@@ -86,6 +88,7 @@ export default function QuizClientPage({ lessonId }: { lessonId: string }) {
         onRetryQuiz={() => {
           setShowQuizResult(false);
           setQuizAnswers([]);
+          setResetKey((k) => k + 1);
         }}
         onContinueLearning={() => {
           setShowQuizResult(false);

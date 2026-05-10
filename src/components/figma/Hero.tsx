@@ -4,13 +4,9 @@ import Link from 'next/link';
 import { Button } from '../ui/button';
 import { BookOpen, Users, TrendingUp } from 'lucide-react';
 
-interface HeroProps {
-  onTryDemo: () => void;
-}
-
-export function Hero({ onTryDemo }: HeroProps) {
+export function Hero() {
   return (
-    <section className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-20 px-6">
+    <section className="bg-blue-50 dark:bg-gray-900 py-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -29,14 +25,7 @@ export function Hero({ onTryDemo }: HeroProps) {
             >
               <Link href="/signup">Explore Courses</Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={onTryDemo}
-              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 text-lg px-8 py-6"
-            >
-              Try Demo
-            </Button>
+
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">

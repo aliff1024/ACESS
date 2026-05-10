@@ -10,11 +10,13 @@ import { CoursesPreview } from '@/components/figma/CoursesPreview';
 import { AccessibilityHighlight } from '@/components/figma/AccessibilityHighlight';
 import { Footer } from '@/components/figma/Footer';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/providers/AuthProvider';
 import { getDashboardForRole } from '@/lib/auth-types';
 import type { Role } from '@/lib/auth-types';
 
 export default function LandingPage() {
   const router = useRouter();
+  const { isAuthenticated, enterPreview } = useAuth();
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -30,19 +32,24 @@ export default function LandingPage() {
     });
   }, [router]);
 
-  const handleSelectRole = (_role: 'learner' | 'educator' | 'admin') => {
-    router.push('/login');
+  const handleSelectRole = (selectedRole: 'learner' | 'educator' | 'admin') => {
     setIsDemoModalOpen(false);
+    if (isAuthenticated) {
+      enterPreview(selectedRole);
+      router.push(getDashboardForRole(selectedRole));
+    } else {
+      router.push('/login');
+    }
   };
 
   if (checking) return null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       <Navbar onTryDemo={() => setIsDemoModalOpen(true)} />
 
       <main>
-        <Hero onTryDemo={() => setIsDemoModalOpen(true)} />
+        <Hero />
         <Features />
         <CoursesPreview />
         <AccessibilityHighlight />

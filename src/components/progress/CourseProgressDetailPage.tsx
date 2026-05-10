@@ -60,7 +60,7 @@ export function CourseProgressDetailPage({
         </button>
 
         {isCompleted && (
-          <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl">
+          <div className="mb-6 p-6 bg-white border-2 border-green-300 rounded-2xl">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <Trophy className="w-8 h-8 text-white" />

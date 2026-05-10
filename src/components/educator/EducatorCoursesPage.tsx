@@ -195,7 +195,7 @@ export function EducatorCoursesPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                    <div className="w-full h-full bg-blue-100 flex items-center justify-center">
                       <BookOpen className="w-16 h-16 text-blue-300" />
                     </div>
                   )}
@@ -236,11 +236,11 @@ export function EducatorCoursesPage() {
                             Manage Course
                           </button>
                           <button
-                            onClick={() => { setSelectedCourse(null); enterPreview('learner'); router.push(`/learner/courses/${course.id}`); }}
+                            onClick={() => { setSelectedCourse(null); router.push(`/educator/courses/${course.id}/preview`); }}
                             className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                           >
                             <Eye className="w-4 h-4" />
-                            Preview as Learner
+                            Preview Course
                           </button>
                           <button
                             onClick={() => { setSelectedCourse(null); handleTogglePublish(course.id, course.status); }}

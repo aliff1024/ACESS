@@ -76,10 +76,14 @@ export default function SignupPage() {
         return;
       }
 
-      const dashboard = formData.role === 'educator' ? '/educator' : '/learner';
       if (data.session) {
-        toast.success(`Account created! Welcome to your ${formData.role} dashboard.`);
-        setTimeout(() => router.push(dashboard), 800);
+        if (formData.role === 'learner') {
+          toast.success('Account created! Let\'s set up your preferences.');
+          setTimeout(() => router.push('/learner/onboarding'), 800);
+        } else {
+          toast.success(`Account created! Welcome to your ${formData.role} dashboard.`);
+          setTimeout(() => router.push(`/${formData.role}`), 800);
+        }
       } else {
         toast.success('Account created! Check your email to confirm your account.', {
           duration: 5000,

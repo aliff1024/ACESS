@@ -49,7 +49,7 @@ export function CoursesPreview() {
   };
 
   return (
-    <section className="py-20 px-6 bg-gray-50" id="courses">
+    <section className="py-20 px-6 bg-gray-50 dark:bg-gray-900" id="courses">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -64,7 +64,7 @@ export function CoursesPreview() {
           {courses.map((course, index) => (
             <Card
               key={index}
-              className="p-6 rounded-2xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 flex flex-col"
+                className="p-6 rounded-2xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 hover:shadow-lg transition-all duration-200 flex flex-col"
             >
               <div className="mb-4">
                 <Badge

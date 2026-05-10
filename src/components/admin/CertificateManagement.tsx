@@ -151,7 +151,7 @@ export default function CertificateManagement() {
                 <tr key={cert.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold text-sm">
                           {cert.learner_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || '?'}
                         </span>

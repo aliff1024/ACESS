@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Clock } from 'lucide-react';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import type { Role } from '@/lib/auth-types';
 import { getDashboardForRole } from '@/lib/auth-types';
+import { fetchFullProfile } from '@/lib/learner-api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,6 +26,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === 'true') {
+      setSessionExpired(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +66,20 @@ export default function LoginPage() {
       }
 
       const role = (data.user.user_metadata?.role as Role) || 'learner';
+
+      if (role === 'learner' && !redirectTo) {
+        try {
+          const profile = await fetchFullProfile();
+          if (!profile.accessibility) {
+            toast.success('Welcome! Please set up your preferences.');
+            setTimeout(() => router.push('/learner/onboarding'), 500);
+            return;
+          }
+        } catch {
+          // ignore fetch errors
+        }
+      }
+
       const target = redirectTo || getDashboardForRole(role);
       toast.success(`Welcome back! Redirecting to ${role} dashboard...`);
       setTimeout(() => router.push(target), 800);
@@ -73,6 +96,16 @@ export default function LoginPage() {
     title="Welcome Back"
     subtitle="Sign in to continue your learning journey with adaptive, accessible coursework."
   >
+      {sessionExpired && (
+        <div className="mb-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl flex items-center gap-3">
+          <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <div>
+            <p className="font-semibold text-amber-800">Session Expired</p>
+            <p className="text-sm text-amber-700">Your session timed out due to inactivity. Please log in again.</p>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
@@ -132,7 +165,7 @@ export default function LoginPage() {
             <input type="checkbox" className="w-4 h-4 rounded border-2 border-gray-300" />
             Remember me
           </label>
-          <Link href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
+          <Link href="/forgot-password" className="text-blue-600 hover:text-blue-700 font-semibold">
             Forgot password?
           </Link>
         </div>
@@ -145,28 +178,6 @@ export default function LoginPage() {
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
-
-      <div className="my-6 relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t-2 border-gray-200"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-600">Or try demo</span>
-        </div>
-      </div>
-
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-900">
-        <strong>Don&apos;t have an account?</strong> Create one below to get started with personalized learning.
-      </div>
-
-      <div className="mt-6 text-center">
-        <p className="text-gray-600">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-semibold">
-            Create one
-          </Link>
-        </p>
-      </div>
     </AuthShell>
   );
 }

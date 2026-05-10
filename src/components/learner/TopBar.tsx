@@ -15,8 +15,10 @@ import NotificationPanel from '@/components/ui/NotificationPanel';
 import { ProfileDialog } from '@/components/profile/ProfileDialog';
 import { fetchLearnerProfile } from '@/lib/learner-api';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/useTranslation';
 
 export function TopBar() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [profile, setProfile] = useState<{ full_name: string; email: string } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -42,8 +44,8 @@ export function TopBar() {
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Learner Dashboard</h1>
-          <p className="text-sm text-gray-600 mt-1">Welcome back to your learning space</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('topbar.dashboard')}</h1>
+          <p className="text-sm text-gray-600 mt-1">{t('topbar.welcomeMessage')}</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -52,7 +54,7 @@ export function TopBar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -69,17 +71,17 @@ export function TopBar() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem onClick={() => setProfileOpen(true)}>
                 <User className="w-4 h-4 mr-2" />
-                View Profile
+                {t('topbar.viewProfile')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setProfileOpen(true)}>
                 <Settings className="w-4 h-4 mr-2" />
-                Settings
+                {t('topbar.settings')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <LogoutButton asChild>
                 <DropdownMenuItem className="text-red-600" onSelect={(e) => e.preventDefault()}>
                   <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  {t('topbar.logout')}
                 </DropdownMenuItem>
               </LogoutButton>
             </DropdownMenuContent>

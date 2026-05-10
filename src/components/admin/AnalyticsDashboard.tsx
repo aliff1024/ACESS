@@ -83,7 +83,7 @@ export default function AnalyticsDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Course Enrollment Trends</h3>
-            <div className="h-80 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center border border-gray-200">
+            <div className="h-80 bg-blue-50 rounded-lg flex items-center justify-center border border-gray-200">
               <div className="text-center">
                 <p className="text-gray-600 font-medium">Bar Chart Visualization</p>
                 <p className="text-sm text-gray-500 mt-2">Enrollment trends over time</p>
@@ -92,7 +92,7 @@ export default function AnalyticsDashboard() {
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Completion Rate Over Time</h3>
-            <div className="h-80 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg flex items-center justify-center border border-gray-200">
+            <div className="h-80 bg-blue-50 rounded-lg flex items-center justify-center border border-gray-200">
               <div className="text-center">
                 <p className="text-gray-600 font-medium">Line Chart Visualization</p>
                 <p className="text-sm text-gray-500 mt-2">Course completion trends</p>

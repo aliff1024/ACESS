@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Download, Eye, Award } from 'lucide-react';
+import { Logo } from '../ui/Logo';
 
 interface CertificateGenerationModalProps {
   isOpen: boolean;
@@ -39,11 +40,11 @@ export function CertificateGenerationModal({
         </DialogHeader>
 
         <div className="py-6">
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-2xl border-2 border-blue-200 mb-6">
+          <div className="bg-white p-8 rounded-2xl border-2 border-blue-200 mb-6">
             <div className="bg-white p-8 rounded-xl border-4 border-double border-blue-600 shadow-lg">
               <div className="text-center">
                 <div className="mb-6">
-                  <h3 className="text-3xl font-bold text-blue-900 mb-2">ACESS</h3>
+                  <Logo size="lg" className="mx-auto mb-2" />
                   <p className="text-sm text-gray-600 uppercase tracking-wider">
                     Certificate of Completion
                   </p>

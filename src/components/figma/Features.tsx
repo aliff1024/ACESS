@@ -46,7 +46,7 @@ export function Features() {
   };
 
   return (
-    <section className="py-20 px-6 bg-white" id="features">
+    <section className="py-20 px-6 bg-white dark:bg-gray-950" id="features">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -63,7 +63,7 @@ export function Features() {
             return (
               <Card
                 key={index}
-                className="p-8 rounded-2xl border-2 border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-200"
+                className="p-8 rounded-2xl border-2 border-gray-100 dark:border-gray-800 hover:border-blue-200 hover:shadow-lg transition-all duration-200"
               >
                 <div
                   className={`w-16 h-16 ${colorClasses[feature.color as keyof typeof colorClasses]} rounded-xl flex items-center justify-center mb-6`}

@@ -241,7 +241,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           <>
             <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
               <div className="relative group flex-shrink-0">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden">
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (

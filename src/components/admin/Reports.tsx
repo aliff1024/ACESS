@@ -152,7 +152,7 @@ export default function Reports() {
           </div>
         )}
 
-        <div className="mt-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200 p-8">
+        <div className="mt-8 bg-blue-50 rounded-xl border-2 border-blue-200 p-8">
           <div className="flex items-start gap-6">
             <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
               <Filter className="w-8 h-8 text-white" />

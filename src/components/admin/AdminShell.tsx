@@ -14,6 +14,7 @@ import {
 import { ProfileDialog } from '@/components/profile/ProfileDialog';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useRole } from '@/providers/AuthProvider';
+import { Logo } from '@/components/ui/Logo';
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
@@ -94,8 +95,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     <div className="flex min-h-screen bg-gray-50">
       <aside className="w-64 bg-gray-900 min-h-screen flex flex-col flex-shrink-0">
         <div className="p-6">
-          <h1 className="text-xl font-bold text-white mb-1">ACESS</h1>
-          <p className="text-sm text-gray-400">Admin Portal</p>
+          <Logo href="/admin" size="md" showSubtitle subtitle="Admin Portal" />
         </div>
         <nav className="flex-1 px-4 space-y-1">
           {menuItems.map((item) => {
@@ -127,7 +127,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-3 pl-4 border-l border-gray-200 hover:bg-gray-50 rounded-lg pr-3 py-2 transition-colors">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-blue-600">
                       {avatarUrl ? (
                         <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : (

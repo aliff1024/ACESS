@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Role } from '@/lib/auth-types';
 
-const PUBLIC_ROUTES = ['/', '/login', '/signup', '/access-denied'];
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/access-denied', '/forgot-password', '/reset-password', '/api/auth/forgot-password', '/api/auth/reset-password'];
 
 const ROLE_PREFIXES: Record<string, Role> = {
   '/learner': 'learner',

@@ -5,6 +5,7 @@ import { type ReactNode } from 'react';
 import { Footer } from '@/components/figma/Footer';
 import { Navbar } from '@/components/figma/Navbar';
 import { Toaster } from '@/components/ui/sonner';
+import { Logo } from '@/components/ui/Logo';
 
 interface AuthShellProps {
   title: string;
@@ -16,21 +17,19 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-blue-50 dark:bg-gray-950">
       <Toaster position="top-right" richColors />
       <Navbar onTryDemo={() => router.push('/login')} />
 
       <main className="mx-auto flex min-h-[calc(100vh-10rem)] w-full max-w-7xl items-center justify-center px-6 py-12">
         <div className="grid w-full gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-[2rem] border border-white/80 bg-white/95 p-8 shadow-2xl shadow-slate-200/50 backdrop-blur-xl sm:p-10">
+          <section className="rounded-[2rem] border border-white/80 bg-white/95 p-8 shadow-2xl shadow-slate-200/50 backdrop-blur-xl sm:p-10 dark:border-gray-700 dark:bg-gray-900">
             <div className="mb-8 space-y-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.32em] text-blue-600">
-                ACESS
-              </p>
-              <h1 className="text-4xl font-bold text-slate-950 sm:text-5xl">
+              <Logo size="sm" />
+              <h1 className="text-4xl font-bold text-slate-950 sm:text-5xl dark:text-white">
                 {title}
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-600">
+              <p className="max-w-2xl text-base leading-7 text-slate-600 dark:text-gray-400">
                 {subtitle}
               </p>
             </div>
@@ -42,7 +41,8 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
             <div className="space-y-8">
               <div>
                 <p className="text-sm uppercase tracking-[0.28em] text-cyan-300">
-                  Welcome to ACESS
+                  Welcome to{' '}
+                  <Logo size="sm" className="inline-block align-middle" />
                 </p>
                 <h2 className="mt-4 text-3xl font-bold">Designed for accessible learning</h2>
               </div>

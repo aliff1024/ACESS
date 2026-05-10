@@ -1,6 +1,7 @@
 'use client';
 
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from 'react-icons/fa';
+import { Logo } from '../ui/Logo';
 
 export function Footer() {
   return (
@@ -8,7 +9,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="text-2xl font-bold text-blue-400 mb-4">ACESS</h3>
+            <Logo href="/" size="lg" className="mb-4" />
             <p className="text-gray-400 leading-relaxed">
               Making education accessible for everyone through adaptive learning technology.
             </p>

@@ -2,6 +2,7 @@
 
 import { LayoutDashboard, BookOpen, Plus, BarChart3, Users, LogOut } from 'lucide-react';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import { Logo } from '@/components/ui/Logo';
 
 interface EducatorSidebarProps {
   activeView: string;
@@ -20,8 +21,7 @@ export function EducatorSidebar({ activeView, onNavigate }: EducatorSidebarProps
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-purple-600">ACESS</h1>
-        <p className="text-sm text-gray-600 mt-1">Educator Portal</p>
+        <Logo href="/educator" size="md" showSubtitle subtitle="Educator Portal" />
       </div>
 
       <nav className="flex-1 p-4 space-y-2">

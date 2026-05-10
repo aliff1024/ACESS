@@ -2,6 +2,7 @@
 
 import { Button } from '../ui/button';
 import { Award, Download, Share2, Calendar, Hash } from 'lucide-react';
+import { Logo } from '../ui/Logo';
 
 interface CertificatePageProps {
   courseTitle: string;
@@ -23,7 +24,7 @@ export function CertificatePage({
   onShare,
 }: CertificatePageProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-6">
+    <div className="min-h-screen bg-blue-50 py-12 px-6">
       <div className="max-w-5xl mx-auto">
         <button onClick={onBack} className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2">
           ← Back to Dashboard
@@ -32,17 +33,17 @@ export function CertificatePage({
         <div className="bg-white p-12 rounded-3xl shadow-2xl border-4 border-double border-blue-600 mb-8">
           <div className="text-center">
             <div className="mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Award className="w-14 h-14 text-white" />
               </div>
-              <h1 className="text-5xl font-bold text-blue-900 mb-3">ACESS</h1>
+              <Logo size="xl" className="mx-auto" />
               <p className="text-lg text-gray-600 uppercase tracking-widest">
                 Adaptive Cognitive & Educational Skill Support Platform
               </p>
-              <div className="w-32 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto mt-4"></div>
+              <div className="w-32 h-1 bg-blue-600 mx-auto mt-4"></div>
             </div>
 
-            <div className="border-4 border-double border-blue-300 rounded-2xl py-12 my-8 bg-gradient-to-br from-blue-50 to-purple-50">
+            <div className="border-4 border-double border-blue-300 rounded-2xl py-12 my-8 bg-white">
               <p className="text-2xl text-gray-700 mb-6">This certificate is proudly awarded to</p>
               <p className="text-5xl font-bold text-gray-900 mb-8">{learnerName}</p>
               <p className="text-xl text-gray-700 mb-4">for successfully completing</p>
@@ -75,7 +76,7 @@ export function CertificatePage({
                   <div className="w-24 h-1 bg-gray-900 mx-auto mb-2"></div>
                   <p className="text-sm font-semibold text-gray-900">Platform Director</p>
                 </div>
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
                   <Award className="w-10 h-10 text-white" />
                 </div>
                 <div className="text-center">

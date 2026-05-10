@@ -99,7 +99,7 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
                 <tr key={enrollment.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-white font-semibold text-sm">
                           {(enrollment.users?.full_name || '??').split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                         </span>
@@ -135,7 +135,7 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedStudent(null)}>
           <div className="bg-white rounded-xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold text-xl">
                   {(selectedStudent.users?.full_name || '??').split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                 </span>

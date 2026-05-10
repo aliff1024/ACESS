@@ -14,11 +14,15 @@ export interface EnrolledCourse {
   description: string
   difficulty_level: string
   category: string | null
+  thumbnail_url: string | null
   progress: number
   total_lessons: number
   completed_lessons: number
   enrollment_status: string
   enrollment_id: string
+  course_type: string
+  system_course: boolean
+  guided_learning_enabled: boolean
 }
 
 export interface AvailableCourse {
@@ -29,6 +33,9 @@ export interface AvailableCourse {
   category: string | null
   tags: string[]
   lesson_count: number
+  thumbnail_url: string | null
+  course_type: string
+  system_course: boolean
 }
 
 export interface CourseDetail {
@@ -38,11 +45,17 @@ export interface CourseDetail {
   difficulty_level: string
   category: string | null
   tags: string[]
+  thumbnail_url: string | null
   progress: number
   total_lessons: number
   completed_lessons: number
   enrollment_id: string | null
   lessons: LessonSummary[]
+  /** System course indicators */
+  course_type: string
+  system_course: boolean
+  guided_learning_enabled: boolean
+  recommended_age_group: string | null
 }
 
 export interface LessonSummary {
@@ -164,7 +177,7 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
     .select(`
       id, status,
       course_id,
-      courses!inner(id, title, description, difficulty_level, category)
+      courses!inner(id, title, description, difficulty_level, category, thumbnail_url, course_type, system_course, guided_learning_enabled)
     `)
     .eq('user_id', userId)
     .neq('status', 'dropped')
@@ -175,7 +188,7 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
     id: string
     status: string
     course_id: string
-    courses: { id: string; title: string; description: string; difficulty_level: string; category: string | null }
+    courses: { id: string; title: string; description: string; difficulty_level: string; category: string | null; thumbnail_url: string | null }
   }[]
 
   const courseIds = enrollmentsArr.map((e) => e.course_id)
@@ -225,11 +238,15 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
       description: e.courses.description,
       difficulty_level: e.courses.difficulty_level,
       category: e.courses.category,
+      thumbnail_url: e.courses.thumbnail_url,
       progress: total > 0 ? Math.round((completed / total) * 100) : 0,
       total_lessons: total,
       completed_lessons: completed,
       enrollment_status: e.status,
       enrollment_id: e.id,
+      course_type: (e.courses as Record<string, unknown>).course_type as string || 'educator',
+      system_course: (e.courses as Record<string, unknown>).system_course as boolean || false,
+      guided_learning_enabled: (e.courses as Record<string, unknown>).guided_learning_enabled as boolean || false,
     }
   })
 }
@@ -240,7 +257,8 @@ export async function fetchAvailableCourses(): Promise<AvailableCourse[]> {
   const { data: courses, error } = await supabase
     .from('courses')
     .select(`
-      id, title, description, difficulty_level, category,
+      id, title, description, difficulty_level, category, thumbnail_url,
+      course_type, system_course,
       course_tags(tag),
       lessons(count)
     `)
@@ -270,8 +288,11 @@ export async function fetchAvailableCourses(): Promise<AvailableCourse[]> {
         description: c.description as string,
         difficulty_level: c.difficulty_level as string,
         category: c.category as string | null,
+        thumbnail_url: c.thumbnail_url as string | null,
         tags: (tagsArr || []).map((t) => t.tag),
         lesson_count: lessonsArr?.[0]?.count ?? 0,
+        course_type: c.course_type as string || 'educator',
+        system_course: c.system_course as boolean || false,
       }
     })
 }
@@ -284,7 +305,8 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
   const { data: course, error: courseError } = await supabase
     .from('courses')
     .select(`
-      id, title, description, difficulty_level, category,
+      id, title, description, difficulty_level, category, thumbnail_url,
+      course_type, system_course, guided_learning_enabled, recommended_age_group,
       course_tags(tag)
     `)
     .eq('id', courseId)
@@ -342,12 +364,17 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
     description: course.description,
     difficulty_level: course.difficulty_level,
     category: course.category,
+    thumbnail_url: course.thumbnail_url,
     tags: (course.course_tags || []).map((t: { tag: string }) => t.tag),
     progress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
     total_lessons: totalLessons,
     completed_lessons: completedLessons,
     enrollment_id: enrollment?.id || null,
     lessons: lessonsWithStatus,
+    course_type: course.course_type || 'educator',
+    system_course: course.system_course || false,
+    guided_learning_enabled: course.guided_learning_enabled || false,
+    recommended_age_group: course.recommended_age_group || null,
   }
 }
 
@@ -418,7 +445,199 @@ export async function markLessonViewed(lessonId: string, courseId: string): Prom
   }
 }
 
+// ─── System Course Enhanced Progress ───────────────────────────────────
+
+export interface SystemCourseProgress {
+  completed_lessons: number
+  total_lessons: number
+  progress_pct: number
+  quiz_scores: { lesson_title: string; score: number }[]
+  learning_streak: number
+  last_activity: string | null
+  time_spent_minutes: number
+  milestones: { label: string; achieved: boolean; achieved_at: string | null }[]
+  next_lesson_id: string | null
+  next_lesson_title: string | null
+}
+
+export async function fetchSystemCourseProgress(courseId: string): Promise<SystemCourseProgress | null> {
+  const userId = await ensureUserId()
+
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .neq('status', 'dropped')
+    .maybeSingle()
+
+  if (!enrollment) return null
+
+  const { data: lessons } = await supabase
+    .from('lessons')
+    .select('id, title, sequence_order')
+    .eq('course_id', courseId)
+    .eq('status', 'published')
+    .order('sequence_order', { ascending: true })
+
+  const totalLessons = lessons?.length ?? 0
+
+  const { data: lp } = await supabase
+    .from('lesson_progress')
+    .select('lesson_id, is_viewed, last_viewed_at')
+    .eq('enrollment_id', enrollment.id)
+
+  const completedSet = new Set((lp || []).filter(p => p.is_viewed).map(p => p.lesson_id))
+  const completedLessons = completedSet.size
+
+  // Find next incomplete lesson
+  let nextLessonId: string | null = null
+  let nextLessonTitle: string | null = null
+  for (const l of lessons || []) {
+    if (!completedSet.has(l.id)) {
+      nextLessonId = l.id
+      nextLessonTitle = l.title
+      break
+    }
+  }
+
+  // Quiz scores per lesson
+  const lessonIds = (lessons || []).map(l => l.id)
+  const quizScores: { lesson_title: string; score: number }[] = []
+  if (lessonIds.length > 0) {
+    const { data: quizzes } = await supabase
+      .from('quizzes')
+      .select('id, lesson_id')
+      .in('lesson_id', lessonIds)
+
+    const quizIds = (quizzes || []).map(q => q.id)
+    if (quizIds.length > 0) {
+      const { data: attempts } = await supabase
+        .from('quiz_attempts')
+        .select('quiz_id, score_pct')
+        .in('quiz_id', quizIds)
+        .eq('user_id', userId)
+        .neq('result', 'in_progress')
+
+      const bestScore = new Map<string, number>()
+      for (const a of attempts || []) {
+        const curr = bestScore.get(a.quiz_id) ?? 0
+        if ((a.score_pct ?? 0) > curr) bestScore.set(a.quiz_id, a.score_pct ?? 0)
+      }
+
+      for (const q of quizzes || []) {
+        const score = bestScore.get(q.id)
+        if (score !== undefined) {
+          const lesson = (lessons || []).find(l => l.id === q.lesson_id)
+          quizScores.push({ lesson_title: lesson?.title || 'Unknown', score })
+        }
+      }
+    }
+  }
+
+  // Learning streak: count consecutive days with activity
+  let streak = 0
+  const dates = (lp || [])
+    .filter(p => p.last_viewed_at)
+    .map(p => new Date(p.last_viewed_at!).toISOString().split('T')[0])
+  const uniqueDates = [...new Set(dates)].sort().reverse()
+  const today = new Date().toISOString().split('T')[0]
+  let checkDate = today
+  for (const d of uniqueDates) {
+    if (d === checkDate) {
+      streak++
+      const prev = new Date(checkDate)
+      prev.setDate(prev.getDate() - 1)
+      checkDate = prev.toISOString().split('T')[0]
+    } else if (d < checkDate) {
+      break
+    }
+  }
+
+  // Time spent (simple estimate: count view records * 10 min each)
+  const timeSpentMinutes = (lp || []).filter(p => p.is_viewed).length * 10
+
+  // Last activity
+  const datesWithActivity = (lp || [])
+    .filter(p => p.last_viewed_at)
+    .map(p => p.last_viewed_at!)
+    .sort()
+  const lastActivity = datesWithActivity.length > 0 ? datesWithActivity[datesWithActivity.length - 1] : null
+
+  // Milestones
+  const pct = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
+  const milestones = [
+    { label: 'Started', achieved: completedLessons > 0, achieved_at: lastActivity },
+    { label: '25% Complete', achieved: pct >= 25, achieved_at: null },
+    { label: '50% Complete', achieved: pct >= 50, achieved_at: null },
+    { label: '75% Complete', achieved: pct >= 75, achieved_at: null },
+    { label: '100% Complete', achieved: pct >= 100, achieved_at: null },
+    { label: 'First Quiz Passed', achieved: quizScores.some(q => q.score >= 60), achieved_at: null },
+    { label: '7-Day Streak', achieved: streak >= 7, achieved_at: null },
+  ]
+
+  return {
+    completed_lessons: completedLessons,
+    total_lessons: totalLessons,
+    progress_pct: pct,
+    quiz_scores: quizScores,
+    learning_streak: streak,
+    last_activity: lastActivity,
+    time_spent_minutes: timeSpentMinutes,
+    milestones,
+    next_lesson_id: nextLessonId,
+    next_lesson_title: nextLessonTitle,
+  }
+}
+
 // ─── Quiz ──────────────────────────────────────────────────────────────
+
+export async function checkQuizAttempts(lessonId: string, courseId: string): Promise<{
+  canAttempt: boolean
+  usedAttempts: number
+  maxAttempts: number | null
+  message?: string
+}> {
+  const userId = await ensureUserId()
+
+  const { data: quiz } = await supabase
+    .from('quizzes')
+    .select('id, max_attempts')
+    .eq('lesson_id', lessonId)
+    .maybeSingle()
+
+  if (!quiz) return { canAttempt: false, usedAttempts: 0, maxAttempts: null, message: 'No quiz found' }
+
+  const max = quiz.max_attempts ?? 0
+
+  if (max <= 0) return { canAttempt: true, usedAttempts: 0, maxAttempts: 0 }
+
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .neq('status', 'dropped')
+    .maybeSingle()
+
+  if (!enrollment) return { canAttempt: true, usedAttempts: 0, maxAttempts: max }
+
+  const { count } = await supabase
+    .from('quiz_attempts')
+    .select('*', { count: 'exact', head: true })
+    .eq('enrollment_id', enrollment.id)
+    .eq('quiz_id', quiz.id)
+
+  const used = count ?? 0
+  const canAttempt = used < max
+
+  return {
+    canAttempt,
+    usedAttempts: used,
+    maxAttempts: max,
+    message: canAttempt ? undefined : `You have used all ${max} allowed attempt${max > 1 ? 's' : ''} for this quiz.`,
+  }
+}
 
 export async function fetchQuizData(lessonId: string): Promise<QuizData | null> {
   const { data: quiz, error: quizError } = await supabase
@@ -847,6 +1066,8 @@ export interface AccessibilitySettingsData {
   reduced_motion?: boolean | null
   simplified_ui?: boolean | null
   dyslexia_friendly_font?: boolean | null
+  preferred_font?: string | null
+  preferred_language?: string | null
   preferred_reading_level?: string | null
   preferred_content_format?: string | null
 }
@@ -911,6 +1132,8 @@ export async function fetchFullProfile(): Promise<FullProfile> {
       reduced_motion: a.reduced_motion,
       simplified_ui: a.simplified_ui,
       dyslexia_friendly_font: a.dyslexia_friendly_font,
+      preferred_font: a.preferred_font,
+      preferred_language: a.preferred_language,
       preferred_reading_level: a.preferred_reading_level,
       preferred_content_format: a.preferred_content_format,
     } : null,
@@ -974,6 +1197,83 @@ export async function enrollInCourse(courseId: string): Promise<{ enrollmentId: 
 
   if (error) throw error
   return { enrollmentId: data.id }
+}
+
+// ─── Favorites ─────────────────────────────────────────────────────────
+
+export async function toggleFavorite(courseId: string): Promise<boolean> {
+  const userId = await ensureUserId()
+  const { data: existing } = await supabase
+    .from('course_favorites')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .maybeSingle()
+
+  if (existing) {
+    const { error } = await supabase
+      .from('course_favorites')
+      .delete()
+      .eq('id', existing.id)
+    if (error) throw error
+    return false // no longer favourited
+  } else {
+    const { error } = await supabase
+      .from('course_favorites')
+      .insert({ user_id: userId, course_id: courseId })
+    if (error) throw error
+    return true // now favourited
+  }
+}
+
+export async function checkIsFavorited(courseId: string): Promise<boolean> {
+  const userId = await ensureUserId()
+  const { data } = await supabase
+    .from('course_favorites')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .maybeSingle()
+  return !!data
+}
+
+export async function fetchFavoriteCourseIds(): Promise<string[]> {
+  const userId = await ensureUserId()
+  const { data } = await supabase
+    .from('course_favorites')
+    .select('course_id')
+    .eq('user_id', userId)
+  return (data || []).map((r) => r.course_id)
+}
+
+export async function fetchFavoriteCourses() {
+  const ids = await fetchFavoriteCourseIds()
+  if (ids.length === 0) return []
+  const { data, error } = await supabase
+    .from('courses')
+    .select('id, title, description, difficulty_level, category, thumbnail_url')
+    .in('id', ids)
+    .is('deleted_at', null)
+    .eq('status', 'published')
+  if (error) throw error
+  return (data || []).map((c) => ({
+    ...c,
+    isFavorited: true,
+    lesson_count: 0,
+  }))
+}
+
+// ─── Unenroll ───────────────────────────────────────────────────────────
+
+export async function unenrollFromCourse(courseId: string): Promise<void> {
+  const userId = await ensureUserId()
+  const { error } = await supabase
+    .from('enrollments')
+    .update({ status: 'dropped' })
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .neq('status', 'dropped')
+  if (error) throw error
 }
 
 // ─── Adjacent Lessons ──────────────────────────────────────────────────
