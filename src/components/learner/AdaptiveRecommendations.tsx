@@ -9,7 +9,7 @@ import { fetchRecommendations } from '@/lib/learner-api';
 import type { Recommendation } from '@/lib/learner-api';
 
 interface AdaptiveRecommendationsProps {
-  onStartLesson: (lessonId: string) => void;
+  onStartLesson: (lessonId: string, courseId?: string) => void;
 }
 
 const tierConfig: Record<string, { label: string; color: string; badgeColor: string; icon: typeof Book }> = {
@@ -98,7 +98,7 @@ export function AdaptiveRecommendations({ onStartLesson }: AdaptiveRecommendatio
               </p>
 
               <Button
-                onClick={() => onStartLesson(rec.lesson_id)}
+                onClick={() => onStartLesson(rec.lesson_id, rec.course_id)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Start Lesson

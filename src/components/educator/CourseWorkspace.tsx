@@ -7,7 +7,7 @@ import {
   ArrowLeft, BookOpen, FileText, Users, Settings, Plus, Loader2,
   Globe, EyeOff, Eye, ChevronUp, ChevronDown,
   Edit, Trash2, Upload, FileText as FileIcon, X, Download,
-  CheckCircle, FileType, Video, GripVertical, Clock, Copy, ExternalLink, AlertTriangle,
+  CheckCircle, FileType, Video, GripVertical, Clock, Copy, ExternalLink, AlertTriangle, Award, Shield,
 } from 'lucide-react';
 import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ import {
 import CourseAssets from './CourseAssets';
 import PublishValidationModal from './PublishValidationModal';
 import StudentProgressView from './StudentProgressView';
+import CertificateSettingsPanel from './CertificateSettingsPanel';
 
 interface CourseWorkspaceProps {
   courseId: string;
@@ -58,6 +59,9 @@ interface CourseData {
   thumbnail_url: string | null;
   created_at: string;
   updated_at: string;
+  certificate_enabled?: boolean;
+  certificate_settings?: Record<string, unknown>;
+  certification_locked?: boolean;
 }
 
 interface QuizQuestionForm {
@@ -223,7 +227,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   const [course, setCourse] = useState<CourseData | null>(null);
   const [lessons, setLessons] = useState<LessonWithQuiz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'settings'>('lessons');
+  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'settings'>('lessons');
 
   // Lesson modal
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
@@ -573,6 +577,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
     { id: 'lessons' as const, label: 'Lessons', icon: FileText },
     { id: 'assets' as const, label: 'Assets', icon: FileType },
     { id: 'students' as const, label: 'Students', icon: Users },
+    { id: 'certificates' as const, label: 'Certificates', icon: Award },
     { id: 'settings' as const, label: 'Settings', icon: Settings },
   ];
 
@@ -632,10 +637,22 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
         {activeTab === 'overview' && (
           <div className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Course Overview</h2>
+            {course.certification_locked && (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                <Shield className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-semibold text-amber-900 text-sm">Course structure is locked</p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    This course includes certification. Major course structure changes are locked to preserve certificate integrity.
+                    You can still edit the description and thumbnail.
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">Title</label>
-                <Input value={overviewTitle} onChange={(e) => setOverviewTitle(e.target.value)} className="text-lg py-6" />
+                <Input value={overviewTitle} onChange={(e) => setOverviewTitle(e.target.value)} disabled={course.certification_locked} className="text-lg py-6" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">Description</label>
@@ -1057,6 +1074,17 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
           <StudentProgressView courseId={courseId} courseTitle={course.title} />
         )}
 
+        {/* ─── Certificates Tab ────────────────────────────────────── */}
+        {activeTab === 'certificates' && (
+          <CertificateSettingsPanel
+            courseId={courseId}
+            courseTitle={course.title}
+            isPublished={isPublished}
+            hasEnrollments={false} // simplified; could check dynamically
+            onCertChange={load}
+          />
+        )}
+
         {/* ─── Settings Tab ─────────────────────────────────────────── */}
         {activeTab === 'settings' && (
           <div className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8">
@@ -1249,6 +1277,10 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
         isOpen={showPublishModal}
         onClose={() => setShowPublishModal(false)}
         onPublish={async () => {
+          // If certificate is enabled, lock the course
+          if (course.certificate_enabled) {
+            await supabase.from('courses').update({ certification_locked: true }).eq('id', courseId)
+          }
           await updateCourseStatus(courseId, 'published');
           toast.success('Course published!');
           setShowPublishModal(false);
@@ -1259,6 +1291,12 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
           { id: 'description', label: 'Course Description', status: course.description?.trim() ? 'pass' : 'warning', message: course.description?.trim() ? 'Course description provided' : 'Consider adding a course description' },
           { id: 'lessons', label: 'Lessons', status: lessons.length > 0 ? 'pass' : 'fail', message: lessons.length > 0 ? `${lessons.length} lesson(s) created` : 'At least one lesson is required' },
           { id: 'published_lessons', label: 'Published Lessons', status: lessons.every(l => l.status === 'published') ? 'pass' : lessons.some(l => l.status === 'published') ? 'warning' : 'fail', message: lessons.every(l => l.status === 'published') ? `All ${lessons.length} lessons published` : lessons.some(l => l.status === 'published') ? `${lessons.filter(l => l.status === 'published').length} of ${lessons.length} lessons published` : 'No lessons published yet' },
+          ...(course.certificate_enabled ? [{
+            id: 'cert_settings' as const,
+            label: 'Certificate Settings',
+            status: (course.certificate_settings as Record<string, unknown>)?.educator_name ? 'pass' as const : 'warning' as const,
+            message: (course.certificate_settings as Record<string, unknown>)?.educator_name ? 'Educator name is set' : 'Consider setting the educator name in Certificate Settings',
+          }] : []),
         ]}
       />
 

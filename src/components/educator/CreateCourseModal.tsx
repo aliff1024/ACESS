@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { Switch } from '../ui/switch';
+import { CheckCircle, Loader2, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { createCourse } from '@/lib/educator-api';
@@ -23,6 +24,7 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
   const [courseDescription, setCourseDescription] = useState('');
   const [category, setCategory] = useState('Accessibility');
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('beginner');
+  const [certificateEnabled, setCertificateEnabled] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleCreate = async () => {
@@ -40,6 +42,30 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
         difficulty_level: difficulty,
         category,
       });
+
+      if (certificateEnabled) {
+        await supabase
+          .from('courses')
+          .update({
+            certificate_enabled: true,
+            certificate_settings: {
+              enabled: true,
+              pass_threshold_pct: 80,
+              required_lessons: [],
+              completion_rules: {
+                all_lessons_required: true,
+                quiz_threshold_pct: 80,
+                minimum_progress_pct: 100,
+                mandatory_activities: true,
+              },
+              educator_name: '',
+              institution_name: 'ACESS Platform',
+              course_duration_hours: 0,
+              skills: [],
+            },
+          })
+          .eq('id', course.id)
+      }
 
       toast.success('Course created! Now add lessons and quizzes.');
       onClose();
@@ -119,6 +145,29 @@ export function CreateCourseModal({ isOpen, onClose }: CreateCourseModalProps) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-start gap-3">
+                <Award className="w-6 h-6 text-amber-600 mt-0.5" />
+                <div>
+                  <label className="font-semibold text-gray-900 text-sm">Certificate of Completion</label>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Offer a downloadable certificate to learners who complete this course
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={certificateEnabled}
+                onCheckedChange={setCertificateEnabled}
+              />
+            </div>
+            {certificateEnabled && (
+              <div className="mt-3 text-xs text-amber-700 bg-amber-100/50 rounded-lg px-3 py-2">
+                You can configure certificate settings (educator name, skills, pass threshold) in the course workspace before publishing.
+              </div>
+            )}
           </div>
         </div>
 

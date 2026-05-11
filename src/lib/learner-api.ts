@@ -23,6 +23,8 @@ export interface EnrolledCourse {
   course_type: string
   system_course: boolean
   guided_learning_enabled: boolean
+  certificate_enabled?: boolean
+  has_certificate?: boolean
 }
 
 export interface AvailableCourse {
@@ -36,6 +38,7 @@ export interface AvailableCourse {
   thumbnail_url: string | null
   course_type: string
   system_course: boolean
+  certificate_enabled?: boolean
 }
 
 export interface CourseDetail {
@@ -56,6 +59,7 @@ export interface CourseDetail {
   system_course: boolean
   guided_learning_enabled: boolean
   recommended_age_group: string | null
+  certificate_enabled?: boolean
 }
 
 export interface LessonSummary {
@@ -136,6 +140,7 @@ export interface Certificate {
 export interface Recommendation {
   lesson_id: string
   lesson_title: string
+  course_id: string
   difficulty_tier: string
   trigger_reason: string
 }
@@ -188,20 +193,20 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
     id: string
     status: string
     course_id: string
-    courses: { id: string; title: string; description: string; difficulty_level: string; category: string | null; thumbnail_url: string | null }
+    courses: { id: string; title: string; description: string; difficulty_level: string; category: string | null; thumbnail_url: string | null; certificate_enabled: boolean }
   }[]
 
   const courseIds = enrollmentsArr.map((e) => e.course_id)
 
   const lessonCounts = new Map<string, number>()
   const completedCounts = new Map<string, number>()
+  const certMap = new Map<string, boolean>()
 
   if (courseIds.length > 0) {
-    const { data: lessons } = await supabase
-      .from('lessons')
-      .select('id, course_id')
-      .in('course_id', courseIds)
-      .eq('status', 'published')
+    const [{ data: lessons }, { data: certs }] = await Promise.all([
+      supabase.from('lessons').select('id, course_id').in('course_id', courseIds).eq('status', 'published'),
+      supabase.from('certificates').select('enrollment_id').in('enrollment_id', enrollmentsArr.map(e => e.id)).eq('status', 'issued'),
+    ])
 
     const lessonMap = new Map<string, string[]>()
     for (const l of lessons || []) {
@@ -212,6 +217,10 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
 
     for (const [cid, ids] of lessonMap) {
       lessonCounts.set(cid, ids.length)
+    }
+
+    for (const c of certs || []) {
+      certMap.set(c.enrollment_id, true)
     }
 
     const enrollmentIds = enrollmentsArr.map((e) => e.id)
@@ -232,21 +241,24 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
   return enrollmentsArr.map((e) => {
     const total = lessonCounts.get(e.course_id) ?? 0
     const completed = completedCounts.get(e.course_id) ?? 0
+    const course = e.courses
     return {
       id: e.course_id,
-      title: e.courses.title,
-      description: e.courses.description,
-      difficulty_level: e.courses.difficulty_level,
-      category: e.courses.category,
-      thumbnail_url: e.courses.thumbnail_url,
+      title: course.title,
+      description: course.description,
+      difficulty_level: course.difficulty_level,
+      category: course.category,
+      thumbnail_url: course.thumbnail_url,
       progress: total > 0 ? Math.round((completed / total) * 100) : 0,
       total_lessons: total,
       completed_lessons: completed,
       enrollment_status: e.status,
       enrollment_id: e.id,
-      course_type: (e.courses as Record<string, unknown>).course_type as string || 'educator',
-      system_course: (e.courses as Record<string, unknown>).system_course as boolean || false,
-      guided_learning_enabled: (e.courses as Record<string, unknown>).guided_learning_enabled as boolean || false,
+      course_type: (course as Record<string, unknown>).course_type as string || 'educator',
+      system_course: (course as Record<string, unknown>).system_course as boolean || false,
+      guided_learning_enabled: (course as Record<string, unknown>).guided_learning_enabled as boolean || false,
+      certificate_enabled: course.certificate_enabled || false,
+      has_certificate: certMap.get(e.id) || false,
     }
   })
 }
@@ -258,7 +270,7 @@ export async function fetchAvailableCourses(): Promise<AvailableCourse[]> {
     .from('courses')
     .select(`
       id, title, description, difficulty_level, category, thumbnail_url,
-      course_type, system_course,
+      course_type, system_course, certificate_enabled,
       course_tags(tag),
       lessons(count)
     `)
@@ -293,6 +305,7 @@ export async function fetchAvailableCourses(): Promise<AvailableCourse[]> {
         lesson_count: lessonsArr?.[0]?.count ?? 0,
         course_type: c.course_type as string || 'educator',
         system_course: c.system_course as boolean || false,
+        certificate_enabled: c.certificate_enabled as boolean || false,
       }
     })
 }
@@ -307,6 +320,7 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
     .select(`
       id, title, description, difficulty_level, category, thumbnail_url,
       course_type, system_course, guided_learning_enabled, recommended_age_group,
+      certificate_enabled,
       course_tags(tag)
     `)
     .eq('id', courseId)
@@ -375,6 +389,7 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
     system_course: course.system_course || false,
     guided_learning_enabled: course.guided_learning_enabled || false,
     recommended_age_group: course.recommended_age_group || null,
+    certificate_enabled: course.certificate_enabled || false,
   }
 }
 
@@ -972,39 +987,17 @@ export async function fetchCertificates(): Promise<Certificate[]> {
 
 // ─── Recommendations ───────────────────────────────────────────────────
 
+interface ApiResponse {
+  success: boolean
+  recommendations?: Recommendation[]
+  error?: string
+}
+
 export async function fetchRecommendations(): Promise<Recommendation[]> {
-  const userId = await ensureUserId()
-
-  const { data: enrollments } = await supabase
-    .from('enrollments')
-    .select('id')
-    .eq('user_id', userId)
-    .neq('status', 'dropped')
-
-  const enrollmentIds = (enrollments || []).map((e) => e.id)
-
-  if (enrollmentIds.length === 0) return []
-
-  const { data: recs } = await supabase
-    .from('recommendations')
-    .select(`
-      id, difficulty_tier, trigger_reason,
-      recommended_lesson_id,
-      lessons!inner(id, title)
-    `)
-    .in('enrollment_id', enrollmentIds)
-    .eq('is_acknowledged', false)
-    .limit(3)
-
-  return (recs || []).map((r: Record<string, unknown>) => {
-    const lesson = r.lessons as { id: string; title: string }
-    return {
-      lesson_id: lesson.id,
-      lesson_title: lesson.title,
-      difficulty_tier: r.difficulty_tier as string,
-      trigger_reason: r.trigger_reason as string,
-    }
-  })
+  const res = await fetch('/api/recommendations/generate', { method: 'POST' })
+  if (!res.ok) return []
+  const data: ApiResponse = await res.json()
+  return data.recommendations || []
 }
 
 // ─── Learner Settings ──────────────────────────────────────────────────
@@ -1288,4 +1281,321 @@ export async function fetchLessonIdsInCourse(courseId: string): Promise<string[]
 
   if (error) throw error
   return (data || []).map((l) => l.id)
+}
+
+// ─── Enhanced Certificate API ──────────────────────────────────────────
+
+export interface FullCertificate {
+  id: string
+  learner_name: string
+  course_title: string
+  educator_name: string
+  institution_name: string
+  completion_date: string
+  reference_code: string
+  verification_url: string
+  skills_earned: string[]
+  course_duration_hours: number
+  status: string
+  issued_at: string
+  template_id: string
+  enrollment_id: string
+}
+
+export async function fetchCertificateDetail(certId: string): Promise<FullCertificate | null> {
+  const userId = await ensureUserId()
+  const { data, error } = await supabase
+    .from('certificates')
+    .select('*')
+    .eq('id', certId)
+    .single()
+
+  if (error || !data) return null
+
+  // Security: only the owner or educator/admin can view
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('user_id, course_id')
+    .eq('id', data.enrollment_id)
+    .single()
+
+  if (!enrollment) return null
+
+  const { data: course } = await supabase
+    .from('courses')
+    .select('created_by')
+    .eq('id', enrollment.course_id)
+    .single()
+
+  const isOwner = enrollment.user_id === userId
+  const isEducator = course?.created_by === userId
+  const { data: user } = await supabase.auth.getUser()
+  const isAdmin = user.user?.role === 'admin' // this won't work directly, need to check users table
+
+  if (!isOwner && !isEducator) {
+    // Check admin
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single()
+    if (!userData || userData.role !== 'admin') return null
+  }
+
+  return {
+    id: data.id,
+    learner_name: data.learner_name || 'Learner',
+    course_title: data.course_title || 'Course',
+    educator_name: data.educator_name || 'Educator',
+    institution_name: data.institution_name || 'ACESS Platform',
+    completion_date: data.completion_date || data.issued_at,
+    reference_code: data.reference_code,
+    verification_url: data.verification_url || '',
+    skills_earned: data.skills_earned || [],
+    course_duration_hours: data.course_duration_hours || 0,
+    status: data.status,
+    issued_at: data.issued_at,
+    template_id: data.template_id || 'default',
+    enrollment_id: data.enrollment_id,
+  }
+}
+
+export async function checkCourseCertificateEligibility(courseId: string): Promise<{
+  eligible: boolean
+  reason?: string
+  completed?: number
+  total?: number
+}> {
+  const userId = await ensureUserId()
+
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id, status')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .neq('status', 'dropped')
+    .maybeSingle()
+
+  if (!enrollment) return { eligible: false, reason: 'Not enrolled' }
+
+  // Check if course has certificates enabled
+  const { data: course } = await supabase
+    .from('courses')
+    .select('certificate_enabled, certificate_settings')
+    .eq('id', courseId)
+    .single()
+
+  if (!course?.certificate_enabled) return { eligible: false, reason: 'Certificates not enabled for this course' }
+
+  // Check existing certificate
+  const { data: existing } = await supabase
+    .from('certificates')
+    .select('id, status')
+    .eq('enrollment_id', enrollment.id)
+    .maybeSingle()
+
+  if (existing && existing.status === 'issued') return { eligible: true, reason: 'Certificate already issued' }
+
+  // Count lessons
+  const { count: totalLessons } = await supabase
+    .from('lessons')
+    .select('id', { count: 'exact', head: true })
+    .eq('course_id', courseId)
+    .eq('status', 'published')
+
+  const { count: completedLessons } = await supabase
+    .from('lesson_progress')
+    .select('id', { count: 'exact', head: true })
+    .eq('enrollment_id', enrollment.id)
+    .eq('is_viewed', true)
+
+  if (completedLessons < totalLessons) {
+    return {
+      eligible: false,
+      reason: `Complete all lessons (${completedLessons}/${totalLessons})`,
+      completed: completedLessons,
+      total: totalLessons,
+    }
+  }
+
+  // Check quiz thresholds
+  const settings = course.certificate_settings as Record<string, unknown> | null
+  const quizThreshold = (settings?.completion_rules as Record<string, unknown>)?.quiz_threshold_pct as number || 80
+
+  const { data: quizzes } = await supabase
+    .from('quizzes')
+    .select('id')
+    .in('lesson_id', (
+      await supabase.from('lessons').select('id').eq('course_id', courseId)
+    ).data?.map(l => l.id) || [])
+
+  if (quizzes && quizzes.length > 0) {
+    const quizIds = quizzes.map(q => q.id)
+    const { data: attempts } = await supabase
+      .from('quiz_attempts')
+      .select('quiz_id, score_pct')
+      .in('quiz_id', quizIds)
+      .eq('enrollment_id', enrollment.id)
+      .eq('result', 'pass')
+
+    const passedQuizIds = new Set((attempts || []).map(a => a.quiz_id))
+    const passRate = Math.round((passedQuizIds.size / quizzes.length) * 100)
+
+    if (passRate < quizThreshold) {
+      return {
+        eligible: false,
+        reason: `Quiz pass rate ${passRate}% below threshold ${quizThreshold}%`,
+        completed: completedLessons,
+        total: totalLessons,
+      }
+    }
+  }
+
+  return { eligible: true, completed: completedLessons, total: totalLessons }
+}
+
+export async function claimCertificate(courseId: string): Promise<{
+  id: string
+  referenceCode: string
+} | null> {
+  const userId = await ensureUserId()
+
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .neq('status', 'dropped')
+    .maybeSingle()
+
+  if (!enrollment) return null
+
+  // Check eligibility
+  const eligibility = await checkCourseCertificateEligibility(courseId)
+  if (!eligibility.eligible) return null
+
+  // Get course and user data
+  const [{ data: course }, { data: userData }] = await Promise.all([
+    supabase.from('courses').select('title, certificate_settings, created_by').eq('id', courseId).single(),
+    supabase.from('users').select('full_name').eq('id', userId).single(),
+  ])
+
+  if (!course || !userData) return null
+
+  // Get educator name
+  const { data: educator } = await supabase
+    .from('users')
+    .select('full_name')
+    .eq('id', course.created_by)
+    .single()
+
+  const settings = course.certificate_settings as Record<string, unknown> | null || {}
+  const completionRules = settings.completion_rules as Record<string, unknown> || {}
+
+  // Call issueCertificate via educator-api logic — but we call it inline
+  // to avoid circular dependency, call supabase directly
+  const refCode = await (async function genCode(): Promise<string> {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    const segs = [4, 4, 4]
+    let c = ''
+    for (const l of segs) {
+      if (c) c += '-'
+      for (let i = 0; i < l; i++) c += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    const { data: exist } = await supabase.from('certificates').select('id').eq('reference_code', c).maybeSingle()
+    if (exist) return genCode()
+    return c
+  })()
+
+  const verificationUrl = `${window.location.origin}/verify/${refCode}`
+
+  // Create signed token
+  const tokenData = `${refCode}:${Date.now()}:acess-cert`
+  const encoder = new TextEncoder()
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(tokenData))
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const signedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32)
+
+  const skills = (settings.skills as string[]) || []
+
+  const { data: cert, error } = await supabase
+    .from('certificates')
+    .insert({
+      enrollment_id: enrollment.id,
+      course_id: courseId,
+      user_id: userId,
+      learner_name: userData.full_name || 'Learner',
+      course_title: course.title,
+      educator_name: educator?.full_name || 'Educator',
+      reference_code: refCode,
+      status: 'issued',
+      issued_at: new Date().toISOString(),
+      completion_date: new Date().toISOString(),
+      verification_url: verificationUrl,
+      skills_earned: skills,
+      course_duration_hours: (settings.course_duration_hours as number) || 0,
+      signed_token: signedToken,
+    })
+    .select('id, reference_code')
+    .single()
+
+  if (error) throw error
+
+  // Update enrollment status
+  await supabase
+    .from('enrollments')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('id', enrollment.id)
+
+  return { id: cert.id, referenceCode: cert.reference_code }
+}
+
+// ─── Public Certificate Verification ───────────────────────────────────
+
+export interface VerificationData {
+  valid: boolean
+  revoked: boolean
+  learner_name?: string
+  course_title?: string
+  educator_name?: string
+  institution_name?: string
+  issue_date?: string
+  completion_date?: string
+  reference_code?: string
+  skills_earned?: string[]
+}
+
+export async function verifyCertificateByCode(code: string): Promise<VerificationData> {
+  const { data, error } = await supabase
+    .from('certificates')
+    .select('*')
+    .eq('reference_code', code)
+    .maybeSingle()
+
+  if (error || !data) {
+    return { valid: false, revoked: false }
+  }
+
+  if (data.status === 'revoked') {
+    return {
+      valid: true,
+      revoked: true,
+      learner_name: data.learner_name,
+      course_title: data.course_title,
+      reference_code: data.reference_code,
+    }
+  }
+
+  return {
+    valid: true,
+    revoked: false,
+    learner_name: data.learner_name,
+    course_title: data.course_title,
+    educator_name: data.educator_name,
+    institution_name: data.institution_name,
+    issue_date: data.issued_at,
+    completion_date: data.completion_date,
+    reference_code: data.reference_code,
+    skills_earned: data.skills_earned,
+  }
 }

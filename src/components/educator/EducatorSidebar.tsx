@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, BookOpen, Plus, BarChart3, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Plus, BarChart3, Users, LogOut, Award } from 'lucide-react';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { Logo } from '@/components/ui/Logo';
 
@@ -16,6 +16,7 @@ export function EducatorSidebar({ activeView, onNavigate }: EducatorSidebarProps
     { id: 'create', label: 'Create Course', icon: Plus },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'students', label: 'Students Progress', icon: Users },
+    { id: 'certificates', label: 'Certificates', icon: Award },
   ];
 
   return (

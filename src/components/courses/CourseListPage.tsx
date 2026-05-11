@@ -6,7 +6,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Search, Filter, BookOpen, Loader2, Heart, ImageIcon, Shield } from 'lucide-react';
+import { Search, Filter, BookOpen, Loader2, Heart, ImageIcon, Shield, Award } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { fetchAvailableCourses, fetchEnrolledCourses, toggleFavorite, fetchFavoriteCourseIds } from '@/lib/learner-api';
 import type { AvailableCourse, EnrolledCourse } from '@/lib/learner-api';
@@ -143,6 +143,8 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
             const diffKey = course.difficulty_level?.toLowerCase() || 'beginner';
             const isFav = favoriteIds.has(course.id);
             const isSys = course.system_course;
+            const hasCert = course.certificate_enabled;
+            const earnedCert = isEnrolled && (course as EnrolledCourse).has_certificate;
 
             return (
               <Card
@@ -188,6 +190,16 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                       <Shield className="w-3 h-3" /> Official
                     </Badge>
                   )}
+                  {hasCert && !earnedCert && (
+                    <Badge className="bg-amber-100 text-amber-700 border-amber-200 flex items-center gap-1">
+                      <Award className="w-3 h-3" /> Earn Certificate
+                    </Badge>
+                  )}
+                  {earnedCert && (
+                    <Badge className="bg-green-100 text-green-700 border-green-200 flex items-center gap-1">
+                      <Award className="w-3 h-3" /> Certified
+                    </Badge>
+                  )}
                 </div>
 
                 <h3 className="text-xl font-semibold text-gray-900 mb-3 leading-snug">
@@ -214,6 +226,20 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                       </span>
                     </div>
                     <Progress value={progress} className="h-2" />
+                    {hasCert && !earnedCert && (
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <Award className="w-3 h-3 text-amber-500" />
+                        <span className="text-[10px] text-amber-600 font-medium">
+                          {progress >= 100 ? 'Ready to claim certificate' : 'Certificate at 100% completion'}
+                        </span>
+                      </div>
+                    )}
+                    {earnedCert && (
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <Award className="w-3 h-3 text-green-600" />
+                        <span className="text-[10px] text-green-600 font-medium">Certificate earned</span>
+                      </div>
+                    )}
                   </div>
                 )}
 

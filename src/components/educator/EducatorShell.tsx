@@ -13,12 +13,14 @@ const viewMeta: Record<string, { title: string; subtitle: string }> = {
   courses: { title: 'My Courses', subtitle: 'Manage your course content' },
   students: { title: 'Students Progress', subtitle: 'Monitor student progress' },
   analytics: { title: 'Analytics', subtitle: 'Track performance metrics' },
+  certificates: { title: 'Certificates', subtitle: 'Manage course completion certificates' },
 };
 
 const pathnameToView = (pathname: string): keyof typeof viewMeta => {
   if (pathname.startsWith('/educator/courses')) return 'courses';
   if (pathname.startsWith('/educator/students')) return 'students';
   if (pathname.startsWith('/educator/analytics')) return 'analytics';
+  if (pathname.startsWith('/educator/certificates')) return 'certificates';
   return 'dashboard';
 };
 
@@ -56,6 +58,7 @@ export function EducatorShell({ children }: { children: React.ReactNode }) {
     if (nextView === 'courses') router.push('/educator/courses');
     if (nextView === 'students') router.push('/educator/students');
     if (nextView === 'analytics') router.push('/educator/analytics');
+    if (nextView === 'certificates') router.push('/educator/certificates');
     if (nextView === 'dashboard') router.push('/educator');
   };
 

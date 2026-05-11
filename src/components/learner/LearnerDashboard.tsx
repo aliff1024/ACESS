@@ -69,8 +69,9 @@ export function LearnerDashboard() {
     setCurrentView('courseDetail');
   };
 
-  const handleStartLesson = (lessonId: string) => {
+  const handleStartLesson = (lessonId: string, courseId?: string) => {
     setSelectedLesson(lessonId);
+    if (courseId) setSelectedCourse(courseId);
     setCurrentView('lesson');
   };
 
@@ -269,7 +270,7 @@ export function LearnerDashboard() {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
             <WelcomeSection />
-            <AdaptiveRecommendations onStartLesson={() => handleViewCourse('1')} />
+            <AdaptiveRecommendations onStartLesson={handleStartLesson} />
             <MyCoursesSection onContinue={(courseTitle) => handleViewCourse('1')} />
             <ProgressOverview />
             <QuickActions onBrowseCourses={handleBrowseCourses} />

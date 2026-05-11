@@ -13,12 +13,14 @@ interface EducatorDashboardOverviewProps {
   onCreateCourse: () => void;
   onViewCourses: () => void;
   onViewStudents: () => void;
+  onViewCertificates?: () => void;
 }
 
 export function EducatorDashboardOverview({
   onCreateCourse,
   onViewCourses,
   onViewStudents,
+  onViewCertificates,
 }: EducatorDashboardOverviewProps) {
   const router = useRouter();
   const [profile, setProfile] = useState<{ full_name: string } | null>(null);

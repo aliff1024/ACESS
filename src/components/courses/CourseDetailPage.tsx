@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { BookOpen, Clock, Check, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, TrendingUp, Zap, ChevronRight, Sparkles, ListChecks, AlertTriangle } from 'lucide-react';
+import { BookOpen, Clock, Check, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, TrendingUp, Zap, ChevronRight, Sparkles, ListChecks, AlertTriangle, Award } from 'lucide-react';
 import { ConfirmAction } from '../ui/ConfirmAction';
-import { fetchCourseDetail, enrollInCourse, unenrollFromCourse, toggleFavorite, checkIsFavorited, fetchSystemCourseProgress } from '@/lib/learner-api';
+import { fetchCourseDetail, enrollInCourse, unenrollFromCourse, toggleFavorite, checkIsFavorited, fetchSystemCourseProgress, checkCourseCertificateEligibility, claimCertificate } from '@/lib/learner-api';
 import type { CourseDetail, SystemCourseProgress } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
 import { toast } from 'sonner';
@@ -26,12 +27,16 @@ const difficultyColors: Record<string, string> = {
 
 export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDetailPageProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [sysProgress, setSysProgress] = useState<SystemCourseProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [isFav, setIsFav] = useState(false);
   const [unenrolling, setUnenrolling] = useState(false);
+  const [certEligible, setCertEligible] = useState<{ eligible: boolean; reason?: string } | null>(null);
+  const [claimingCert, setClaimingCert] = useState(false);
+  const [certClaimed, setCertClaimed] = useState(false);
 
   const isSystem = course?.system_course === true;
   const isGuided = isSystem && course?.guided_learning_enabled;
@@ -41,16 +46,40 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
       fetchCourseDetail(courseId),
       checkIsFavorited(courseId),
     ])
-      .then(([c, fav]) => {
+      .then(async ([c, fav]) => {
         setCourse(c);
         setIsFav(fav);
-        if (c?.system_course && c?.enrollment_id) {
-          fetchSystemCourseProgress(courseId).then(setSysProgress).catch(() => {});
+        if (c?.enrollment_id) {
+          if (c?.system_course) {
+            fetchSystemCourseProgress(courseId).then(setSysProgress).catch(() => {});
+          }
+          // Check certificate eligibility
+          try {
+            const elig = await checkCourseCertificateEligibility(courseId);
+            setCertEligible(elig);
+          } catch {}
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [courseId]);
+
+  const handleClaimCertificate = async () => {
+    setClaimingCert(true);
+    try {
+      const result = await claimCertificate(courseId);
+      if (result) {
+        setCertClaimed(true);
+        toast.success('Certificate issued!');
+      } else {
+        toast.error('Not eligible for certificate yet');
+      }
+    } catch {
+      toast.error('Failed to claim certificate');
+    } finally {
+      setClaimingCert(false);
+    }
+  };
 
   const handleEnroll = async () => {
     setEnrolling(true);
@@ -177,6 +206,11 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
                   {course.recommended_age_group && (
                     <Badge variant="outline" className="text-gray-600 border-gray-300">
                       Ages {course.recommended_age_group}
+                    </Badge>
+                  )}
+                  {course.certificate_enabled && (
+                    <Badge className="bg-amber-100 text-amber-700 border-amber-200 flex items-center gap-1">
+                      <Award className="w-3 h-3" /> Certificate
                     </Badge>
                   )}
                 </div>
@@ -426,6 +460,11 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
                     {course.category}
                   </Badge>
                 )}
+                {course.certificate_enabled && (
+                  <Badge className="bg-amber-100 text-amber-700 border-amber-200 flex items-center gap-1">
+                    <Award className="w-3 h-3" /> Certificate
+                  </Badge>
+                )}
               </div>
 
               <div className="flex items-start justify-between gap-4">
@@ -469,6 +508,59 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
                   {course.completed_lessons} of {course.total_lessons} lessons completed
                 </p>
               </div>
+
+              {/* Certificate claim section */}
+              {certEligible?.eligible && !certClaimed && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+                  <div className="flex items-start gap-3">
+                    <Award className="w-6 h-6 text-amber-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">Certificate Available</p>
+                      <p className="text-sm text-gray-600 mt-1">You've completed all requirements. Claim your certificate now!</p>
+                      <Button
+                        onClick={handleClaimCertificate}
+                        disabled={claimingCert}
+                        className="mt-3 bg-amber-600 hover:bg-amber-700 text-white"
+                      >
+                        {claimingCert ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Award className="w-4 h-4 mr-2" />}
+                        Claim Certificate
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {certClaimed && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-5">
+                  <div className="flex items-start gap-3">
+                    <Award className="w-6 h-6 text-green-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-green-900">Certificate Earned!</p>
+                      <p className="text-sm text-green-700 mt-1">View and download your certificate from your profile.</p>
+                      <Button
+                        onClick={() => router.push('/learner/certificates')}
+                        variant="outline"
+                        className="mt-3 border-green-600 text-green-600"
+                      >
+                        <Award className="w-4 h-4 mr-2" /> View Certificate
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {certEligible && !certEligible.eligible && !certClaimed && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-start gap-2">
+                    <Award className="w-4 h-4 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Certificate Progress</p>
+                      <p className="text-xs text-blue-700 mt-0.5">{certEligible.reason}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <ConfirmAction
                 title="Unenroll from Course"
                 description="Are you sure you want to unenroll from this course? You can re-enroll anytime."
