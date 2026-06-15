@@ -1,25 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
-  ArrowLeft, BookOpen, Clock, User, Shield, FileText, HelpCircle, Loader2,
+  ArrowLeft, BookOpen, User, Shield, FileText, HelpCircle, Loader2,
   Settings, CheckCircle, Users, TrendingUp, Target, Archive, Plus, Copy, Trash2,
-  ListChecks, Eye, EyeOff, ChevronUp, ChevronDown,   Globe, Lock,
+  ListChecks, Eye, EyeOff, ChevronUp, ChevronDown, Globe, Lock,
   Calendar, Layers, Zap, Trophy, Sparkles, Save, Video, FileQuestion,
-  BookMarked, GraduationCap, BrainCircuit, AlertTriangle
+  BookMarked, GraduationCap, BrainCircuit, Edit, Pencil, X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { ConfirmAction } from '../ui/ConfirmAction';
+import { RichTextEditor } from '../ui/RichTextEditor';
+import { ThumbnailPicker } from './ThumbnailPicker';
+import { SystemLessonEditor } from './SystemLessonEditor';
+import { uploadContentImage, uploadThumbnail } from '@/lib/educator-api';
+import { COURSE_CATEGORIES } from '@/lib/course-thumbnails';
+import { COURSE_TEMPLATES, applyCourseTemplate } from '@/lib/course-templates';
 import {
   archiveSystemCourse, updateSystemCourse,
-  fetchChapters, createChapter, updateChapter, deleteChapter, reorderChapters,
-  fetchLessonTemplates, createLessonTemplate, deleteLessonTemplate,
+  fetchChapters, createChapter, deleteChapter, reorderChapters,
+  fetchLessonTemplates, createLessonTemplate,
   fetchCourseMilestones, createCourseMilestone, deleteCourseMilestone,
-  fetchLessonCheckpoints, createLessonCheckpoint, deleteLessonCheckpoint, updateLessonCheckpoint,
 } from '@/lib/admin-api';
-import type { ChapterItem, LessonTemplate, CourseMilestone, LessonCheckpoint } from '@/lib/admin-api';
+import type { ChapterItem, LessonTemplate, CourseMilestone } from '@/lib/admin-api';
 import { toast } from 'sonner';
 
 interface LessonItem {
@@ -70,15 +76,39 @@ interface AdminCourseDetailProps {
   onBack: () => void;
 }
 
-type TabId = 'overview' | 'lessons' | 'settings' | 'milestones' | 'templates';
+type TabId = 'overview' | 'content' | 'engagement' | 'admin';
+
+const VALID_TABS: TabId[] = ['overview', 'content', 'engagement', 'admin'];
 
 export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetailProps) {
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab');
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [chapters, setChapters] = useState<ChapterItem[]>([]);
   const [templates, setTemplates] = useState<LessonTemplate[]>([]);
   const [milestones, setMilestones] = useState<CourseMilestone[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+
+  // Lesson content editor
+  const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+
+  // Inline overview editing
+  const [editingOverview, setEditingOverview] = useState(false);
+  const [overviewDraft, setOverviewDraft] = useState({
+    title: '',
+    description: '',
+    category: '',
+    difficulty: '',
+    thumbnail: '',
+    tags: [] as string[],
+  });
+  const [tagInput, setTagInput] = useState('');
+  const [savingOverview, setSavingOverview] = useState(false);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [applyingCourseTemplate, setApplyingCourseTemplate] = useState(false);
+  const contentScopeId = useMemo(() => courseId, [courseId]);
 
   // Confirm dialogs
   const [confirmDeleteLessonId, setConfirmDeleteLessonId] = useState<string | null>(null);
@@ -100,7 +130,7 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
   const [showAddChapter, setShowAddChapter] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState('');
   const [newChapterDesc, setNewChapterDesc] = useState('');
-  const [editingChapter, setEditingChapter] = useState<string | null>(null);
+
 
   // Milestones
   const [showAddMilestone, setShowAddMilestone] = useState(false);
@@ -111,6 +141,12 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
   // Templates
   const [showSaveTemplate, setShowSaveTemplate] = useState<string | null>(null);
   const [templateTitle, setTemplateTitle] = useState('');
+
+  useEffect(() => {
+    if (initialTab && VALID_TABS.includes(initialTab as TabId)) {
+      setActiveTab(initialTab as TabId);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     const load = async () => {
@@ -443,6 +479,83 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
     }
   };
 
+  const handleApplyCourseTemplate = async (templateId: string) => {
+    if (!course || templateId === 'blank') return;
+    setApplyingCourseTemplate(true);
+    try {
+      await applyCourseTemplate(courseId, templateId);
+      toast.success('Course template applied');
+      await reloadLessons();
+      if (course.chapter_organization_enabled === false) {
+        const tpl = COURSE_TEMPLATES.find((t) => t.id === templateId);
+        if (tpl?.chapter_organization_enabled) {
+          await updateSystemCourse(courseId, { chapter_organization_enabled: true } as Record<string, unknown>);
+          setCourse({ ...course, chapter_organization_enabled: true });
+          fetchChapters(courseId).then(setChapters).catch(() => {});
+        }
+      } else {
+        fetchChapters(courseId).then(setChapters).catch(() => {});
+      }
+    } catch {
+      toast.error('Failed to apply course template');
+    } finally {
+      setApplyingCourseTemplate(false);
+    }
+  };
+
+  const startOverviewEdit = () => {
+    if (!course) return;
+    setOverviewDraft({
+      title: course.title,
+      description: course.description,
+      category: course.category || 'Accessibility',
+      difficulty: course.difficulty_level || 'beginner',
+      thumbnail: course.thumbnail_url || '',
+      tags: [...course.tags],
+    });
+    setEditingOverview(true);
+  };
+
+  const saveOverviewEdit = async () => {
+    if (!course) return;
+    setSavingOverview(true);
+    try {
+      await updateSystemCourse(courseId, {
+        title: overviewDraft.title,
+        description: overviewDraft.description,
+        category: overviewDraft.category,
+        difficulty_level: overviewDraft.difficulty,
+        thumbnail_url: overviewDraft.thumbnail || undefined,
+      });
+      await supabase.from('course_tags').delete().eq('course_id', courseId);
+      if (overviewDraft.tags.length > 0) {
+        await supabase.from('course_tags').insert(
+          overviewDraft.tags.map((tag) => ({ course_id: courseId, tag })),
+        );
+      }
+      setCourse({
+        ...course,
+        title: overviewDraft.title,
+        description: overviewDraft.description,
+        category: overviewDraft.category,
+        difficulty_level: overviewDraft.difficulty,
+        thumbnail_url: overviewDraft.thumbnail || null,
+        tags: overviewDraft.tags,
+      });
+      setEditingOverview(false);
+      toast.success('Course details updated');
+    } catch {
+      toast.error('Failed to update course');
+    } finally {
+      setSavingOverview(false);
+    }
+  };
+
+  const openLessonEditor = (lessonId: string) => {
+    setEditingLessonId(lessonId);
+    setLessonEditorOpen(true);
+  };
+
   // ─── Settings Handlers ──────────────────────────────────────────────
 
   const handleToggleField = async (field: string, value: boolean) => {
@@ -561,10 +674,9 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
   const tabs: { id: TabId; label: string; icon: React.ElementType; count?: number }[] = [
     { id: 'overview', label: 'Overview', icon: BookOpen },
     ...(isSystem ? [
-      { id: 'lessons' as const, label: 'Lessons', icon: ListChecks, count: course.lessons.length },
-      { id: 'milestones' as const, label: 'Milestones', icon: Trophy, count: milestones.length },
-      { id: 'templates' as const, label: 'Templates', icon: Save, count: templates.length },
-      { id: 'settings' as const, label: 'Settings', icon: Settings },
+      { id: 'content' as const, label: 'Content', icon: ListChecks, count: course.lessons.length },
+      { id: 'engagement' as const, label: 'Engagement', icon: Trophy, count: milestones.length },
+      { id: 'admin' as const, label: 'Admin', icon: Settings },
     ] : []),
   ];
 
@@ -604,12 +716,127 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
         {/* ── Overview Tab ── */}
         {activeTab === 'overview' && (
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            {course.thumbnail_url && (
+            {(editingOverview ? overviewDraft.thumbnail : course.thumbnail_url) && (
               <div className="h-48 bg-blue-100 flex items-center justify-center">
-                <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={editingOverview ? overviewDraft.thumbnail : course.thumbnail_url!}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
             )}
             <div className="p-8">
+              {editingOverview && isSystem ? (
+                <div className="space-y-5 mb-8">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <Pencil className="w-5 h-5 text-purple-600" /> Edit Course Details
+                    </h2>
+                    <button type="button" onClick={() => setEditingOverview(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={overviewDraft.title}
+                      onChange={(e) => setOverviewDraft({ ...overviewDraft, title: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">Description</label>
+                    <RichTextEditor
+                      content={overviewDraft.description}
+                      onChange={(html) => setOverviewDraft({ ...overviewDraft, description: html })}
+                      minHeight="180px"
+                      onImageUpload={(file) => uploadContentImage(file, contentScopeId)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Category</label>
+                      <select
+                        value={overviewDraft.category}
+                        onChange={(e) => setOverviewDraft({ ...overviewDraft, category: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+                      >
+                        {COURSE_CATEGORIES.map((cat) => (
+                          <option key={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Difficulty</label>
+                      <select
+                        value={overviewDraft.difficulty}
+                        onChange={(e) => setOverviewDraft({ ...overviewDraft, difficulty: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+                      >
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Thumbnail</label>
+                    <ThumbnailPicker
+                      value={overviewDraft.thumbnail}
+                      onChange={(url) => setOverviewDraft({ ...overviewDraft, thumbnail: url })}
+                      onFileSelect={async (file) => {
+                        setUploadingThumbnail(true);
+                        try {
+                          const url = await uploadThumbnail(file, courseId);
+                          setOverviewDraft({ ...overviewDraft, thumbnail: url });
+                        } finally {
+                          setUploadingThumbnail(false);
+                        }
+                      }}
+                      uploading={uploadingThumbnail}
+                      accent="purple"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">Tags</label>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const tag = tagInput.trim();
+                            if (tag && !overviewDraft.tags.includes(tag)) {
+                              setOverviewDraft({ ...overviewDraft, tags: [...overviewDraft.tags, tag] });
+                              setTagInput('');
+                            }
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="Add tag"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {overviewDraft.tags.map((tag) => (
+                        <span key={tag} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs flex items-center gap-1">
+                          {tag}
+                          <button type="button" onClick={() => setOverviewDraft({ ...overviewDraft, tags: overviewDraft.tags.filter((t) => t !== tag) })}>×</button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={saveOverviewEdit} disabled={savingOverview} className="bg-purple-700 hover:bg-purple-800 text-white">
+                      {savingOverview ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Button variant="outline" onClick={() => setEditingOverview(false)}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (
               <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -618,7 +845,10 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
                       {isSystem ? 'System Course' : 'Educator Course'}
                     </Badge>
                   </div>
-                  <p className="text-gray-600">{course.description}</p>
+                  <div
+                    className="text-gray-600 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: course.description || '<p>No description</p>' }}
+                  />
                   <div className="flex flex-wrap gap-2 mt-3">
                     {course.recommended_age_group && (
                       <Badge variant="outline" className="text-gray-600 border-gray-300">
@@ -639,10 +869,18 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
                     )}
                   </div>
                 </div>
-                <span className={`px-4 py-2 rounded-full text-sm font-medium shrink-0 ${statusBadge(course.status)}`}>
-                  {course.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isSystem && !editingOverview && (
+                    <Button variant="outline" size="sm" onClick={startOverviewEdit} className="border-purple-300 text-purple-700">
+                      <Edit className="w-4 h-4 mr-1" /> Edit
+                    </Button>
+                  )}
+                  <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusBadge(course.status)}`}>
+                    {course.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </span>
+                </div>
               </div>
+              )}
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
@@ -728,8 +966,31 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
         )}
 
         {/* ── Lessons Tab ── */}
-        {activeTab === 'lessons' && isSystem && (
+        {activeTab === 'content' && isSystem && (
           <div className="space-y-6">
+            {/* ── Course Templates ── */}
+            <div className="bg-white rounded-xl border-2 border-indigo-100 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-indigo-600" />
+                Course Templates
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">Quickly add a pre-built lesson structure to this course.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {COURSE_TEMPLATES.filter((t) => t.id !== 'blank').map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    disabled={applyingCourseTemplate}
+                    onClick={() => handleApplyCourseTemplate(template.id)}
+                    className="p-4 rounded-xl border-2 border-gray-200 hover:border-indigo-400 text-left transition-all disabled:opacity-50"
+                  >
+                    <p className="font-semibold text-gray-900 text-sm">{template.title}</p>
+                    <p className="text-xs text-gray-500 mt-1">{template.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* ── Chapter Management ── */}
             <div className="bg-white rounded-xl border-2 border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
@@ -981,7 +1242,7 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
         )}
 
         {/* ── Milestones Tab ── */}
-        {activeTab === 'milestones' && isSystem && (
+        {activeTab === 'engagement' && isSystem && (
           <div className="bg-white rounded-xl border-2 border-amber-100 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -1067,51 +1328,37 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
           </div>
         )}
 
-        {/* ── Templates Tab ── */}
-        {activeTab === 'templates' && isSystem && (
-          <div className="bg-white rounded-xl border-2 border-blue-100 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+        {activeTab === 'admin' && isSystem && (
+          <div className="space-y-6">
+            {/* ── Lesson Templates ── */}
+            <div className="bg-white rounded-xl border-2 border-blue-100 p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Save className="w-5 h-5 text-blue-500" />
-                Lesson Templates
+                Saved Lesson Templates
               </h2>
-            </div>
-
-            {templates.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {templates.map((t) => (
-                  <div key={t.id} className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{t.title}</h3>
-                        {t.description && <p className="text-sm text-gray-500">{t.description}</p>}
+              {templates.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {templates.map((t) => (
+                    <div key={t.id} className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{t.title}</h3>
+                          {t.description && <p className="text-sm text-gray-500">{t.description}</p>}
+                        </div>
+                        <Badge variant="secondary" className="text-xs">{t.lesson_type}</Badge>
                       </div>
-                      <Badge variant="secondary" className="text-xs">{t.lesson_type}</Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                      <span>{t.estimated_duration ? `${t.estimated_duration} min` : 'No duration'}</span>
-                      {t.is_public && <span className="text-blue-600 flex items-center gap-1"><Globe className="w-3 h-3" /> Public</span>}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleApplyTemplate(t)} className="text-blue-700 border-blue-300">
+                      <Button size="sm" variant="outline" onClick={() => { setActiveTab('content'); handleApplyTemplate(t); }} className="text-blue-700 border-blue-300">
                         <Plus className="w-3 h-3 mr-1" /> Apply to Course
                       </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Save className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 mb-4">No templates yet. Save a lesson as a template from the Lessons tab.</p>
-              </div>
-            )}
-          </div>
-        )}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">Save lessons as templates from the Content tab to reuse them later.</p>
+              )}
+            </div>
 
-        {/* ── Settings Tab ── */}
-        {activeTab === 'settings' && isSystem && (
-          <div className="bg-white rounded-xl border-2 border-purple-100 p-8">
+            <div className="bg-white rounded-xl border-2 border-purple-100 p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
               <Settings className="w-6 h-6 text-purple-600" />
               System Course Settings
@@ -1246,9 +1493,18 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
               </div>
             </div>
           </div>
+          </div>
         )}
       </div>
       {TemplateSaveModal}
+
+      <SystemLessonEditor
+        open={lessonEditorOpen}
+        onOpenChange={setLessonEditorOpen}
+        courseId={courseId}
+        lessonId={editingLessonId}
+        onSaved={reloadLessons}
+      />
 
       {/* Confirm Delete Lesson */}
       <ConfirmAction
@@ -1294,6 +1550,7 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
     const allLessonIds = course?.lessons.map(l => l.id) || [];
     const idx = allLessonIds.indexOf(lesson.id);
     const isLocked = lesson.prerequisite_lesson_id && course?.lessons.find(l => l.id === lesson.prerequisite_lesson_id)?.status !== 'published';
+    if (isLocked) {}
 
     return (
       <div
@@ -1354,6 +1611,13 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
           {lesson.status}
         </span>
         <div className="flex items-center gap-0.5">
+          <button
+            onClick={() => openLessonEditor(lesson.id)}
+            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+            title="Edit content"
+          >
+            <Edit className="w-3.5 h-3.5" />
+          </button>
           <button
             onClick={() => handleToggleVisibility(lesson.id, lesson.visibility_status || 'visible')}
             className="p-1.5 text-gray-500 hover:bg-gray-100 rounded transition-colors"

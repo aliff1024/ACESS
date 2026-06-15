@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, BookOpen, Loader2, ArrowLeft } from 'lucide-react';
+import { Heart, Loader2, ArrowLeft } from 'lucide-react';
 import { fetchFavoriteCourses } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
 
 export default function FavoritesPage() {
   const { t } = useTranslation();
   const router = useRouter();
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<Array<{ id: string; title: string; description: string; thumbnail_url: string | null; difficulty_level: string; category: string | null }>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,6 +59,7 @@ export default function FavoritesPage() {
               <Card key={course.id} className="p-6 rounded-2xl border-2 border-gray-200 hover:border-red-300 hover:shadow-lg transition-all duration-200 flex flex-col cursor-pointer"
                 onClick={() => router.push(`/learner/courses/${course.id}`)}>
                 {course.thumbnail_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={course.thumbnail_url} alt={course.title} className="w-full h-40 object-cover rounded-lg mb-4" />
                 ) : (
                   <div className="w-full h-40 bg-red-100 rounded-lg mb-4 flex items-center justify-center">

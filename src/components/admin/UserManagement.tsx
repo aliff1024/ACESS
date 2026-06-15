@@ -20,7 +20,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [dropdownUserId, setDropdownUserId] = useState<string | null>(null);
   const [confirmToggleUserId, setConfirmToggleUserId] = useState<string | null>(null);

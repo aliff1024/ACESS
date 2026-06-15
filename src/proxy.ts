@@ -2,7 +2,9 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Role } from '@/lib/auth-types';
 
-const PUBLIC_ROUTES = ['/', '/login', '/signup', '/access-denied', '/forgot-password', '/reset-password', '/api/auth/forgot-password', '/api/auth/reset-password'];
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/access-denied', '/forgot-password', '/reset-password', '/contact', '/become-instructor', '/auth/callback', '/api/auth/forgot-password', '/api/auth/reset-password'];
+
+const PREFIX_PUBLIC_ROUTES = ['/verify'];
 
 const ROLE_PREFIXES: Record<string, Role> = {
   '/learner': 'learner',
@@ -13,7 +15,7 @@ const ROLE_PREFIXES: Record<string, Role> = {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (PUBLIC_ROUTES.includes(pathname)) {
+  if (PUBLIC_ROUTES.includes(pathname) || PREFIX_PUBLIC_ROUTES.some((p) => pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
 

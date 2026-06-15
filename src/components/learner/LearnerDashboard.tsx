@@ -44,7 +44,7 @@ export function LearnerDashboard() {
   const [quizAnswers, setQuizAnswers] = useState<{ questionId: string; selectedAnswer: string }[]>([]);
   const [showQuizResult, setShowQuizResult] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
-  const [selectedCertificate, setSelectedCertificate] = useState<string | null>(null);
+  const [, setSelectedCertificate] = useState<string | null>(null);
 
   const handleSidebarNavigate = (view: string) => {
     setSidebarView(view);
@@ -73,10 +73,6 @@ export function LearnerDashboard() {
     setSelectedLesson(lessonId);
     if (courseId) setSelectedCourse(courseId);
     setCurrentView('lesson');
-  };
-
-  const handleTakeQuiz = () => {
-    setCurrentView('quiz');
   };
 
   const handleQuizSubmit = (score: number, answers: { questionId: string; selectedAnswer: string }[]) => {
@@ -271,7 +267,7 @@ export function LearnerDashboard() {
           <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
             <WelcomeSection />
             <AdaptiveRecommendations onStartLesson={handleStartLesson} />
-            <MyCoursesSection onContinue={(courseTitle) => handleViewCourse('1')} />
+            <MyCoursesSection onContinue={() => handleViewCourse('1')} />
             <ProgressOverview />
             <QuickActions onBrowseCourses={handleBrowseCourses} />
           </div>

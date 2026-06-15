@@ -131,7 +131,7 @@ export function CourseProgressDetailPage({
           <div className="border-t-2 border-gray-200 pt-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Lesson Breakdown</h2>
             <div className="space-y-3">
-              {course.lessons.map((lesson, index) => (
+              {course.lessons.map((lesson) => (
                 <div
                   key={lesson.id}
                   className={`p-4 rounded-xl border-2 flex items-center gap-4 ${

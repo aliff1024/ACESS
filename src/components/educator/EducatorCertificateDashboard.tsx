@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
 import {
-  Award, Search, Eye, XCircle, Download, Loader2, FileText,
-  TrendingUp, Users, CheckCircle, AlertTriangle, ExternalLink,
+  Award, Search, XCircle, Loader2,
+  TrendingUp, Users, CheckCircle, ExternalLink,
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,7 +17,6 @@ import {
 import type { EducatorCertificate } from '@/lib/educator-api';
 
 export default function EducatorCertificateDashboard() {
-  const router = useRouter();
   const [certs, setCerts] = useState<EducatorCertificate[]>([]);
   const [stats, setStats] = useState({
     totalIssued: 0,

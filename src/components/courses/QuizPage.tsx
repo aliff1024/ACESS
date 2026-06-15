@@ -12,9 +12,17 @@ interface QuizPageProps {
   courseId: string;
   onBack: () => void;
   onSubmit: (score: number, answers: { questionId: string; selectedAnswer: string }[]) => void;
+  adaptiveLearningEnabled?: boolean;
+  simplifiedSummary?: string | null;
+  onSuggestReview?: () => void;
 }
 
-export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps) {
+export function QuizPage({
+  lessonId, courseId, onBack, onSubmit,
+  adaptiveLearningEnabled = false,
+  simplifiedSummary = null,
+  onSuggestReview,
+}: QuizPageProps) {
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState<{ reason: string } | null>(null);
@@ -24,6 +32,7 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
   const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [adaptiveHint, setAdaptiveHint] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoSubmitRef = useRef<() => void>(() => {});
   const answersRef = useRef(answers);
@@ -85,8 +94,10 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
     return () => clearTimer();
   }, [lessonId, courseId, clearTimer]);
 
+  const isTimerActive = timeRemaining !== null && timeRemaining > 0;
+
   useEffect(() => {
-    if (timeRemaining === null || timeRemaining <= 0) return;
+    if (!isTimerActive) return;
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev === null || prev <= 1) {
@@ -98,10 +109,11 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
       });
     }, 1000);
     return () => clearTimer();
-  }, [timeRemaining !== null, clearTimer]);
+  }, [isTimerActive, clearTimer]);
 
   const handleSelectOption = (optionId: string) => {
     setSelectedOption(optionId);
+    setAdaptiveHint(null);
   };
 
   const navigateToQuestion = (index: number) => {
@@ -120,9 +132,22 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
   const handleNext = () => {
     if (!quizData) return;
     if (selectedOption !== null) {
+      const question = quizData.questions[currentQuestionIndex];
+      const correctOption = question.options.find((o) => o.is_correct);
+      const isWrong = correctOption && correctOption.id !== selectedOption;
+
+      if (adaptiveLearningEnabled && isWrong) {
+        const hint = simplifiedSummary
+          ? `That answer wasn't quite right. Re-read the simplified summary: "${simplifiedSummary.slice(0, 160)}${simplifiedSummary.length > 160 ? '…' : ''}"`
+          : 'That answer wasn\'t quite right. Try reviewing the lesson section related to this question before continuing.';
+        setAdaptiveHint(hint);
+        return;
+      }
+
+      setAdaptiveHint(null);
       const updatedAnswers = [
-        ...answers.filter((a) => a.questionId !== quizData.questions[currentQuestionIndex].id),
-        { questionId: quizData.questions[currentQuestionIndex].id, selectedAnswer: selectedOption },
+        ...answers.filter((a) => a.questionId !== question.id),
+        { questionId: question.id, selectedAnswer: selectedOption },
       ];
       setAnswers(updatedAnswers);
 
@@ -232,7 +257,7 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
         <h1 className="text-lg font-semibold text-gray-900 truncate mx-4">{quizData.title}</h1>
         <div className="flex items-center gap-3 shrink-0">
           {timeRemaining !== null ? (
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
+            <div className={`quiz-timer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
               timeLow ? 'bg-red-50 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700'
             }`}>
               <Clock className="w-4 h-4" />
@@ -249,7 +274,7 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
 
       <div className="flex-1 flex overflow-hidden">
         {/* ── Left sidebar ── */}
-        <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
+        <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0 question-sidebar simplifiable">
           <div className="p-4 border-b border-gray-100">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Questions</p>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -320,7 +345,7 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
                   variant="ghost"
                   size="sm"
                   onClick={toggleMarkForReview}
-                  className={`text-sm gap-1.5 ${
+                  className={`flag-for-review text-sm gap-1.5 ${
                     markedForReview.has(currentQuestion.id)
                       ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
                       : 'text-gray-500 hover:text-gray-700'
@@ -333,6 +358,15 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
               <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
                 {currentQuestion.question_text}
               </h2>
+              {currentQuestion.image_url && (
+                <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                  <img
+                    src={currentQuestion.image_url}
+                    alt="Question illustration"
+                    className="w-full max-h-64 object-contain"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Options */}
@@ -360,10 +394,29 @@ export function QuizPage({ lessonId, courseId, onBack, onSubmit }: QuizPageProps
                       )}
                     </div>
                     <span className="text-base text-gray-900">{option.option_text}</span>
+                    {option.image_url && (
+                      <img
+                        src={option.image_url}
+                        alt=""
+                        className="w-10 h-10 rounded-lg object-cover ml-auto shrink-0"
+                      />
+                    )}
                   </div>
                 </button>
               ))}
             </div>
+
+            {adaptiveHint && (
+              <Card className="p-4 mb-4 border-2 border-violet-200 bg-violet-50">
+                <p className="text-sm font-semibold text-violet-900 mb-1">Try again</p>
+                <p className="text-sm text-violet-800 mb-3">{adaptiveHint}</p>
+                {onSuggestReview && (
+                  <Button type="button" variant="outline" size="sm" onClick={onSuggestReview} className="border-violet-300 text-violet-800">
+                    Review lesson content
+                  </Button>
+                )}
+              </Card>
+            )}
 
             {/* Navigation */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">

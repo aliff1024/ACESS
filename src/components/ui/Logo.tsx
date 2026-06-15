@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 
 interface LogoProps {
@@ -16,15 +17,21 @@ export function Logo({ className = '', href, showSubtitle, subtitle, size = 'md'
   const imgSize = sizeMap[size];
   const img = (
     <>
-      <img
+      <Image
         src="/light_logo.png"
         alt="ACESS"
+        width={2312}
+        height={628}
         className={`${imgSize} w-auto block dark:hidden`}
+        priority
       />
-      <img
+      <Image
         src="/dark_logo.png"
         alt="ACESS"
+        width={2300}
+        height={652}
         className={`${imgSize} w-auto hidden dark:block`}
+        priority
       />
     </>
   );

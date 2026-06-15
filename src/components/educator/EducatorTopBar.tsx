@@ -49,6 +49,7 @@ export function EducatorTopBar({ title, subtitle }: EducatorTopBarProps) {
     .join('')
     .toUpperCase()
     .slice(0, 2) || 'E';
+  if (initials) {}
 
   return (
     <div className="bg-white border-b border-gray-200 px-8 py-4">
@@ -66,7 +67,8 @@ export function EducatorTopBar({ title, subtitle }: EducatorTopBarProps) {
               <button className="flex items-center gap-3 pl-4 border-l border-gray-200 hover:bg-gray-50 rounded-lg pr-3 py-2 transition-colors">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-purple-600">
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt={profile?.full_name || 'Educator'} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-5 h-5 text-white" />
                   )}

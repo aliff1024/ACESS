@@ -4,20 +4,20 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
-import { Clock, Loader2 } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 const WARNING_BEFORE_MS = 30 * 1000; // 30 seconds warning
 
 export function SessionTimeout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isAuthenticated, signOut } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [showWarning, setShowWarning] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
+  const lastActivityRef = useRef<number>(0);
 
   const clearAllTimers = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -67,10 +67,11 @@ export function SessionTimeout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated) {
       clearAllTimers();
-      setShowWarning(false);
-      return;
+      const id = setTimeout(() => setShowWarning(false), 0);
+      return () => clearTimeout(id);
     }
 
+    lastActivityRef.current = Date.now();
     startTimers();
 
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove', 'click'];

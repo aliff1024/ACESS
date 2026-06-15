@@ -6,7 +6,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { BookOpen, Clock, Check, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, TrendingUp, Zap, ChevronRight, Sparkles, ListChecks, AlertTriangle, Award } from 'lucide-react';
+import { BookOpen, Check, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, Zap, ChevronRight, ListChecks, AlertTriangle, Award, User, Clock, Users } from 'lucide-react';
 import { ConfirmAction } from '../ui/ConfirmAction';
 import { fetchCourseDetail, enrollInCourse, unenrollFromCourse, toggleFavorite, checkIsFavorited, fetchSystemCourseProgress, checkCourseCertificateEligibility, claimCertificate } from '@/lib/learner-api';
 import type { CourseDetail, SystemCourseProgress } from '@/lib/learner-api';
@@ -60,7 +60,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
           } catch {}
         }
       })
-      .catch(() => {})
+      .catch((err) => { console.error('CourseDetailPage load error:', err); })
       .finally(() => setLoading(false));
   }, [courseId]);
 
@@ -186,6 +186,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
           <div className="bg-white rounded-xl shadow-md border-l-4 border-purple-500 p-8 mb-6">
             <div className="flex items-start gap-6 mb-6">
               {course.thumbnail_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={course.thumbnail_url} alt={course.title} className="w-28 h-28 rounded-xl object-cover flex-shrink-0 shadow-sm border border-gray-200" />
               ) : (
                 <div className="w-28 h-28 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0 border border-purple-200 shadow-sm">
@@ -213,17 +214,32 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
                       <Award className="w-3 h-3" /> Certificate
                     </Badge>
                   )}
+                  {course.updated_at && (
+                    <Badge variant="outline" className="text-gray-500 border-gray-300 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> Updated {new Date(course.updated_at).toLocaleDateString()}
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <h1 className="text-4xl font-bold text-gray-900 mb-3">{course.title}</h1>
                     <p className="text-lg text-gray-600 leading-relaxed mb-4">{course.description}</p>
-                    <div className="flex items-center gap-6 text-gray-600">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-600">
                       <div className="flex items-center gap-2">
                         <BookOpen className="w-5 h-5" />
                         <span>{course.total_lessons} {t('course.lessons')}</span>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <User className="w-5 h-5" />
+                        <span>{course.creator_name || 'Educator'}</span>
+                      </div>
+                      {course.total_duration && course.total_duration > 0 && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-5 h-5" />
+                          <span>{course.total_duration >= 60 ? `${Math.round(course.total_duration / 60)}h` : `${course.total_duration}m`}</span>
+                        </div>
+                      )}
                       {sysProgress && (
                         <div className="flex items-center gap-2">
                           <Zap className="w-5 h-5 text-amber-500" />
@@ -360,7 +376,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
             </h2>
 
             <div className="space-y-4">
-              {course.lessons.map((lesson, index) => (
+              {course.lessons.map((lesson) => (
                 <Card
                   key={lesson.id}
                   className={`p-5 rounded-xl border-2 transition-all duration-200 ${
@@ -443,6 +459,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
           <div className="flex items-start gap-6 mb-6">
             {course.thumbnail_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={course.thumbnail_url} alt={course.title} className="w-24 h-24 rounded-xl object-cover flex-shrink-0" />
             ) : (
               <div className="w-24 h-24 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -465,17 +482,32 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
                     <Award className="w-3 h-3" /> Certificate
                   </Badge>
                 )}
+                {course.updated_at && (
+                  <Badge variant="outline" className="text-gray-500 border-gray-300 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Updated {new Date(course.updated_at).toLocaleDateString()}
+                  </Badge>
+                )}
               </div>
 
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <h1 className="text-4xl font-bold text-gray-900 mb-3">{course.title}</h1>
                   <p className="text-xl text-gray-600 leading-relaxed mb-4">{course.description}</p>
-                  <div className="flex items-center gap-6 text-gray-600">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-600">
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-5 h-5" />
                       <span>{course.total_lessons} {t('course.lessons')}</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      <span>{course.creator_name || 'Educator'}</span>
+                    </div>
+                    {course.total_duration && course.total_duration > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5" />
+                        <span>{course.total_duration >= 60 ? `${Math.round(course.total_duration / 60)}h` : `${course.total_duration}m`}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <button
@@ -516,7 +548,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
                     <Award className="w-6 h-6 text-amber-600 mt-0.5" />
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900">Certificate Available</p>
-                      <p className="text-sm text-gray-600 mt-1">You've completed all requirements. Claim your certificate now!</p>
+                      <p className="text-sm text-gray-600 mt-1">You&apos;ve completed all requirements. Claim your certificate now!</p>
                       <Button
                         onClick={handleClaimCertificate}
                         disabled={claimingCert}
@@ -594,7 +626,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
           <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('course.lessonsLabel')}</h2>
 
           <div className="space-y-3">
-            {course.lessons.map((lesson, index) => (
+            {course.lessons.map((lesson) => (
               <Card
                 key={lesson.id}
                 className={`p-5 rounded-xl border-2 transition-all duration-200 ${

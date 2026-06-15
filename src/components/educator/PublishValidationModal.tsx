@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, XCircle, AlertCircle, BookOpen, FileText, BarChart } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ValidationCheck {

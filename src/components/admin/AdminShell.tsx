@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, BookOpen, Award, BarChart3, FileText, LogOut, ChevronDown, Loader2, User } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, Award, BarChart3, FileText, LogOut, ChevronDown, Loader2, User, School, MessageSquare } from 'lucide-react';
 import NotificationPanel from '@/components/ui/NotificationPanel';
 import { useEffect, useState } from 'react';
 import {
@@ -20,6 +20,8 @@ const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
   { id: 'users', label: 'User Management', icon: Users, path: '/admin/users' },
   { id: 'courses', label: 'Course Management', icon: BookOpen, path: '/admin/courses' },
+  { id: 'instructor-applications', label: 'Educators', icon: School, path: '/admin/instructor-applications' },
+  { id: 'contact-messages', label: 'Contact Messages', icon: MessageSquare, path: '/admin/contact-messages' },
   { id: 'certificates', label: 'Certificates', icon: Award, path: '/admin/certificates' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
   { id: 'reports', label: 'Reports', icon: FileText, path: '/admin/reports' },
@@ -129,7 +131,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   <button className="flex items-center gap-3 pl-4 border-l border-gray-200 hover:bg-gray-50 rounded-lg pr-3 py-2 transition-colors">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-blue-600">
                       {avatarUrl ? (
-                        <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={avatarUrl} alt={adminName} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-white font-semibold">{initials}</span>
                       )}

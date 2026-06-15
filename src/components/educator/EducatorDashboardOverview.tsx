@@ -20,7 +20,6 @@ export function EducatorDashboardOverview({
   onCreateCourse,
   onViewCourses,
   onViewStudents,
-  onViewCertificates,
 }: EducatorDashboardOverviewProps) {
   const router = useRouter();
   const [profile, setProfile] = useState<{ full_name: string } | null>(null);

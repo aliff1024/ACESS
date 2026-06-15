@@ -99,6 +99,7 @@ export default function EducatorCoursePreviewPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
           <div className="flex items-start gap-6 mb-6">
             {course.thumbnail_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={course.thumbnail_url}
                 alt={course.title}

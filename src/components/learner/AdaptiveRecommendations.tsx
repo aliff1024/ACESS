@@ -75,7 +75,7 @@ export function AdaptiveRecommendations({ onStartLesson }: AdaptiveRecommendatio
           const Icon = config.icon;
           return (
             <Card
-              key={rec.lesson_id || index}
+              key={`${rec.lesson_id || 'rec'}-${index}`}
               className="p-6 rounded-2xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 flex flex-col"
             >
               <div className="flex items-start justify-between mb-4">

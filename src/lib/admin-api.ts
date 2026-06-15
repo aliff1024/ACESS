@@ -399,6 +399,95 @@ export async function fetchRecentActivity(): Promise<RecentActivity[]> {
   return activities.slice(0, 10)
 }
 
+// ─── Completion Trends ────────────────────────────────────────────────
+
+export interface CompletionTrend {
+  month: string
+  rate: number
+  total: number
+  completed: number
+}
+
+export async function fetchCompletionTrends(): Promise<CompletionTrend[]> {
+  const twelveMonthsAgo = new Date()
+  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11)
+  twelveMonthsAgo.setDate(1)
+  const startDate = twelveMonthsAgo.toISOString()
+
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select('enrolled_at, status')
+    .gte('enrolled_at', startDate)
+    .order('enrolled_at', { ascending: true })
+
+  if (error) throw error
+
+  const monthMap = new Map<string, { total: number; completed: number }>()
+  for (const e of data || []) {
+    const key = new Date(e.enrolled_at).toISOString().slice(0, 7)
+    const entry = monthMap.get(key) || { total: 0, completed: 0 }
+    entry.total++
+    if (e.status === 'completed') entry.completed++
+    monthMap.set(key, entry)
+  }
+
+  const trends: CompletionTrend[] = []
+  const d = new Date(twelveMonthsAgo)
+  for (let i = 0; i < 12; i++) {
+    const key = d.toISOString().slice(0, 7)
+    const monthName = d.toLocaleString('en-US', { month: 'short', year: '2-digit' })
+    const entry = monthMap.get(key) || { total: 0, completed: 0 }
+    trends.push({
+      month: monthName,
+      rate: entry.total > 0 ? Math.round((entry.completed / entry.total) * 100) : 0,
+      total: entry.total,
+      completed: entry.completed,
+    })
+    d.setMonth(d.getMonth() + 1)
+  }
+
+  return trends
+}
+
+// ─── Enrollment Trends ───────────────────────────────────────────────
+
+export interface EnrollmentTrend {
+  month: string
+  count: number
+}
+
+export async function fetchEnrollmentTrends(): Promise<EnrollmentTrend[]> {
+  const twelveMonthsAgo = new Date()
+  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11)
+  twelveMonthsAgo.setDate(1)
+  const startDate = twelveMonthsAgo.toISOString()
+
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select('enrolled_at')
+    .gte('enrolled_at', startDate)
+    .order('enrolled_at', { ascending: true })
+
+  if (error) throw error
+
+  const monthMap = new Map<string, number>()
+  for (const e of data || []) {
+    const key = new Date(e.enrolled_at).toISOString().slice(0, 7)
+    monthMap.set(key, (monthMap.get(key) || 0) + 1)
+  }
+
+  const trends: EnrollmentTrend[] = []
+  const d = new Date(twelveMonthsAgo)
+  for (let i = 0; i < 12; i++) {
+    const key = d.toISOString().slice(0, 7)
+    const monthName = d.toLocaleString('en-US', { month: 'short', year: '2-digit' })
+    trends.push({ month: monthName, count: monthMap.get(key) || 0 })
+    d.setMonth(d.getMonth() + 1)
+  }
+
+  return trends
+}
+
 // ─── Analytics ───────────────────────────────────────────────────────
 
 export async function fetchAdminAnalytics(): Promise<AdminAnalytics> {
@@ -747,6 +836,204 @@ export async function updateLessonCheckpoint(checkpointId: string, updates: {
 
 // ─── Reports ──────────────────────────────────────────────────────────
 
+// ─── Instructor Application Management ───────────────────────────────
+
+export interface InstructorApplication {
+  id: string
+  user_id: string | null
+  full_name: string
+  email: string
+  experience: string | null
+  reason: string | null
+  portfolio_links: string | null
+  referral_code: string | null
+  status: 'pending' | 'approved' | 'rejected' | 'request_info'
+  admin_notes: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
+}
+
+export async function fetchInstructorApplications(statusFilter?: string): Promise<InstructorApplication[]> {
+  let query = supabase
+    .from('instructor_applications')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (statusFilter && statusFilter !== 'all') {
+    query = query.eq('status', statusFilter)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
+
+export async function updateInstructorApplication(
+  applicationId: string,
+  updates: {
+    status: 'approved' | 'rejected' | 'request_info'
+    admin_notes?: string
+  }
+): Promise<void> {
+  const admin = await supabase.auth.getUser()
+  const { error } = await supabase
+    .from('instructor_applications')
+    .update({
+      status: updates.status,
+      admin_notes: updates.admin_notes || null,
+      reviewed_by: admin.data.user?.id,
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', applicationId)
+
+  if (error) throw error
+
+  // If approved, update the user's role to educator
+  if (updates.status === 'approved') {
+    const { data: app } = await supabase
+      .from('instructor_applications')
+      .select('user_id, email')
+      .eq('id', applicationId)
+      .single()
+
+    if (app?.user_id) {
+      await supabase
+        .from('users')
+        .update({
+          role: 'educator',
+          instructor_application_status: 'approved',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', app.user_id)
+    }
+  }
+}
+
+export async function getInstructorApplicationStats() {
+  const { data, error } = await supabase
+    .from('instructor_applications')
+    .select('status')
+
+  if (error) throw error
+
+  const total = data?.length || 0
+  const pending = data?.filter(a => a.status === 'pending').length || 0
+  const approved = data?.filter(a => a.status === 'approved').length || 0
+  const rejected = data?.filter(a => a.status === 'rejected').length || 0
+
+  return { total, pending, approved, rejected }
+}
+
+// ─── Contact Messages Management ─────────────────────────────────────
+
+export interface ContactMessage {
+  id: string
+  name: string
+  email: string
+  category: string
+  subject: string
+  message: string
+  status: 'unread' | 'read' | 'replied'
+  created_at: string
+}
+
+export async function fetchContactMessages(statusFilter?: string): Promise<ContactMessage[]> {
+  let query = supabase
+    .from('contact_messages')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (statusFilter && statusFilter !== 'all') {
+    query = query.eq('status', statusFilter)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data || []
+}
+
+export async function updateContactMessageStatus(
+  messageId: string,
+  status: 'read' | 'replied'
+): Promise<void> {
+  const { error } = await supabase
+    .from('contact_messages')
+    .update({ status })
+    .eq('id', messageId)
+
+  if (error) throw error
+}
+
+export async function getContactStats() {
+  const { data, error } = await supabase
+    .from('contact_messages')
+    .select('status, category')
+
+  if (error) throw error
+
+  const unread = data?.filter(m => m.status === 'unread').length || 0
+  const total = data?.length || 0
+  const categories = new Map<string, number>()
+  for (const m of data || []) {
+    categories.set(m.category, (categories.get(m.category) || 0) + 1)
+  }
+
+  return { total, unread, categories: Object.fromEntries(categories) }
+}
+
+// ─── Referral Code Management ────────────────────────────────────────
+
+export interface ReferralCode {
+  id: string
+  code: string
+  user_id: string
+  usage_count: number
+  max_uses: number
+  is_active: boolean
+  created_at: string
+  user_name?: string
+}
+
+export async function fetchReferralCodes(): Promise<ReferralCode[]> {
+  const { data, error } = await supabase
+    .from('referral_codes')
+    .select('*, users!referral_codes_user_id_fkey(full_name)')
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data || []).map((r: Record<string, unknown>) => {
+    const userData = r.users as { full_name?: string } | null
+    return {
+      id: r.id as string,
+      code: r.code as string,
+      user_id: r.user_id as string,
+      usage_count: r.usage_count as number,
+      max_uses: r.max_uses as number,
+      is_active: r.is_active as boolean,
+      created_at: r.created_at as string,
+      user_name: userData?.full_name || 'Unknown',
+    }
+  })
+}
+
+export async function generateReferralCode(userId: string): Promise<string> {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let code = 'REF-'
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+
+  const { error } = await supabase
+    .from('referral_codes')
+    .insert({ code, user_id: userId })
+
+  if (error) throw error
+  return code
+}
+
 export async function generateReport(reportType: string): Promise<ReportDefinition> {
   switch (reportType) {
     case 'user_activity': {
@@ -848,4 +1135,37 @@ export async function generateReport(reportType: string): Promise<ReportDefiniti
         data: [],
       }
   }
+}
+
+// ─── Course Thumbnails ─────────────────────────────────────────────────
+
+const COURSE_THUMBNAILS = [
+  'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=225&fit=crop',
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop',
+  'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=225&fit=crop',
+  'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=400&h=225&fit=crop',
+  'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=225&fit=crop',
+  'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=225&fit=crop',
+  'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=225&fit=crop',
+  'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=225&fit=crop',
+]
+
+export async function assignCourseThumbnails(): Promise<number> {
+  const { data: courses } = await supabase
+    .from('courses')
+    .select('id')
+    .is('thumbnail_url', null)
+    .is('deleted_at', null)
+
+  if (!courses || courses.length === 0) return 0
+
+  for (let i = 0; i < courses.length; i++) {
+    const url = COURSE_THUMBNAILS[i % COURSE_THUMBNAILS.length]
+    await supabase
+      .from('courses')
+      .update({ thumbnail_url: url, updated_at: new Date().toISOString() })
+      .eq('id', courses[i].id)
+  }
+
+  return courses.length
 }

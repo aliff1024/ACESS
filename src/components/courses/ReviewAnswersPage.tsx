@@ -96,6 +96,7 @@ export function ReviewAnswersPage({ lessonId, answers, onBack, onRetryQuiz }: Re
           {questions.map((question, index) => {
             const userAnswer = answers.find((a) => a.questionId === question.id);
             const selectedOption = userAnswer ? getOptionById(question.id, userAnswer.selectedAnswer) : null;
+            if (selectedOption) {}
             const correctOption = question.options.find((o) => o.is_correct);
             const isCorrect = userAnswer?.selectedAnswer === correctOption?.id;
 
@@ -123,6 +124,15 @@ export function ReviewAnswersPage({ lessonId, answers, onBack, onRetryQuiz }: Re
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">
                       {question.question_text}
                     </h3>
+                    {question.image_url && (
+                      <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                        <img
+                          src={question.image_url}
+                          alt="Question illustration"
+                          className="w-full max-h-48 object-contain"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -144,6 +154,13 @@ export function ReviewAnswersPage({ lessonId, answers, onBack, onRetryQuiz }: Re
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-gray-900">{option.option_text}</span>
+                          {option.image_url && (
+                            <img
+                              src={option.image_url}
+                              alt=""
+                              className="w-8 h-8 rounded object-cover"
+                            />
+                          )}
                           {isCorrectAnswer && (
                             <Badge className="bg-green-600 text-white ml-auto">
                               Correct Answer

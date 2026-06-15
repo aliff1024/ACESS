@@ -278,6 +278,7 @@ export default function CreateCoursePage() {
                 />
                 {courseData.thumbnail ? (
                   <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={courseData.thumbnail} alt="Thumbnail preview" className="w-full h-48 object-cover" />
                     <button
                       onClick={() => {

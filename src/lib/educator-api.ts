@@ -20,6 +20,26 @@ export interface LessonFields {
   transcript?: string
   sequence_order: number
   status: 'draft' | 'published'
+  lesson_type?: 'standard' | 'video' | 'quiz' | 'practice' | 'reading' | 'assessment'
+  estimated_duration?: number
+  learning_objectives?: string
+  accessibility_notes?: string
+  has_video?: boolean
+  has_pdf?: boolean
+  has_quiz?: boolean
+  has_transcript?: boolean
+  has_summary_activity?: boolean
+  summary_source?: 'video' | 'pdf' | 'lesson_text' | 'entire_lesson'
+  summary_word_target?: number
+  summary_key_points?: string[]
+  summary_reflection_questions?: string[]
+  summary_ai_feedback_enabled?: boolean
+  lesson_layout?: 'standard' | 'focus' | 'two_column' | 'wide'
+  simplified_summary?: string
+  focus_mode_enabled?: boolean
+  chunked_content_enabled?: boolean
+  checkpoints_enabled?: boolean
+  adaptive_learning_enabled?: boolean
 }
 
 export interface QuizFields {
@@ -223,7 +243,16 @@ async function guardSystemCourse(courseId: string) {
 export async function fetchLessons(courseId: string) {
   const { data, error } = await supabase
     .from('lessons')
-    .select('id, title, content_html, video_url, transcript, sequence_order, status, created_at, updated_at')
+    .select(`
+      id, title, content_html, video_url, transcript, sequence_order, status,
+      lesson_type, estimated_duration, learning_objectives, accessibility_notes,
+      has_video, has_pdf, has_quiz, has_transcript, has_summary_activity,
+      summary_source, summary_word_target, summary_key_points, summary_reflection_questions,
+      summary_ai_feedback_enabled, lesson_layout,
+      simplified_summary, focus_mode_enabled, chunked_content_enabled,
+      checkpoints_enabled,
+      created_at, updated_at
+    `)
     .eq('course_id', courseId)
     .order('sequence_order', { ascending: true })
 
@@ -232,17 +261,36 @@ export async function fetchLessons(courseId: string) {
 }
 
 export async function createLesson(educatorId: string, fields: LessonFields) {
+  const insertFields: Record<string, unknown> = {
+    course_id: fields.course_id,
+    title: fields.title,
+    content_html: fields.content_html,
+    video_url: fields.video_url || null,
+    transcript: fields.transcript || null,
+    sequence_order: fields.sequence_order,
+    status: fields.status,
+  }
+
+  const optionalFields = [
+    'lesson_type', 'estimated_duration', 'learning_objectives', 'accessibility_notes',
+    'has_video', 'has_pdf', 'has_quiz', 'has_transcript', 'has_summary_activity',
+    'summary_source', 'summary_word_target',
+    'summary_ai_feedback_enabled', 'lesson_layout',
+    'simplified_summary', 'focus_mode_enabled', 'chunked_content_enabled',
+    'checkpoints_enabled', 'adaptive_learning_enabled',
+  ] as const
+
+  for (const key of optionalFields) {
+    const val = (fields as unknown as Record<string, unknown>)[key]
+    if (val !== undefined) insertFields[key] = val
+  }
+
+  if (fields.summary_key_points) insertFields.summary_key_points = JSON.stringify(fields.summary_key_points)
+  if (fields.summary_reflection_questions) insertFields.summary_reflection_questions = JSON.stringify(fields.summary_reflection_questions)
+
   const { data, error } = await supabase
     .from('lessons')
-    .insert({
-      course_id: fields.course_id,
-      title: fields.title,
-      content_html: fields.content_html,
-      video_url: fields.video_url || null,
-      transcript: fields.transcript || null,
-      sequence_order: fields.sequence_order,
-      status: fields.status,
-    })
+    .insert(insertFields)
     .select()
     .single()
 
@@ -653,6 +701,24 @@ export async function uploadThumbnail(file: File, courseId: string): Promise<str
   return signedUrlData?.signedUrl ?? ''
 }
 
+export async function uploadContentImage(file: File, scopeId: string): Promise<string> {
+  const ext = file.name.split('.').pop() || 'png'
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const filePath = `courses/${scopeId}/content/${fileName}`
+
+  const { error: uploadError } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(filePath, file, { upsert: false })
+
+  if (uploadError) throw uploadError
+
+  const { data: signedUrlData } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10)
+
+  return signedUrlData?.signedUrl ?? ''
+}
+
 // ─── Lesson Assets ──────────────────────────────────────────────────────
 
 export interface LessonAsset {
@@ -700,7 +766,16 @@ export async function deleteLessonAsset(assetId: string): Promise<void> {
 export async function fetchLessonById(lessonId: string) {
   const { data, error } = await supabase
     .from('lessons')
-    .select('id, title, content_html, video_url, transcript, sequence_order, status, course_id, created_at, updated_at')
+    .select(`
+      id, title, content_html, video_url, transcript, sequence_order, status, course_id,
+      lesson_type, estimated_duration, learning_objectives, accessibility_notes,
+      has_video, has_pdf, has_quiz, has_transcript, has_summary_activity,
+      summary_source, summary_word_target, summary_key_points, summary_reflection_questions,
+      summary_ai_feedback_enabled, lesson_layout,
+      simplified_summary, focus_mode_enabled, chunked_content_enabled,
+      checkpoints_enabled, adaptive_learning_enabled,
+      created_at, updated_at
+    `)
     .eq('id', lessonId)
     .single()
 
@@ -999,6 +1074,25 @@ export async function issueCertificate(params: {
     return { id: existing.id, referenceCode: existing.reference_code }
   }
 
+  // Validate all lessons are completed before issuing
+  const { count: totalLessons } = await supabase
+    .from('lessons')
+    .select('id', { count: 'exact', head: true })
+    .eq('course_id', params.courseId)
+    .eq('status', 'published')
+
+  const { count: completedLessons } = await supabase
+    .from('lesson_progress')
+    .select('id', { count: 'exact', head: true })
+    .eq('enrollment_id', params.enrollmentId)
+    .eq('is_viewed', true)
+
+  if (completedLessons < totalLessons) {
+    throw new Error(
+      `Cannot issue certificate: learner has only completed ${completedLessons}/${totalLessons} lessons`
+    )
+  }
+
   // Generate reference code
   const refCode = await generateReferenceCode()
 
@@ -1056,10 +1150,169 @@ async function generateReferenceCode(): Promise<string> {
   return code
 }
 
+// ─── Instructor Application ───────────────────────────────────────────
+
+export interface InstructorApplicationFields {
+  full_name: string
+  email: string
+  experience: string
+  reason: string
+  portfolio_links?: string
+  referral_code?: string
+}
+
+export async function submitInstructorApplication(fields: InstructorApplicationFields): Promise<void> {
+  const user = await supabase.auth.getUser()
+  const userId = user.data.user?.id || null
+
+  const { error } = await supabase
+    .from('instructor_applications')
+    .insert({
+      user_id: userId,
+      full_name: fields.full_name,
+      email: fields.email,
+      experience: fields.experience,
+      reason: fields.reason,
+      portfolio_links: fields.portfolio_links || null,
+      referral_code: fields.referral_code || null,
+      status: 'pending',
+    })
+
+  if (error) throw error
+
+  // Update the user's application status
+  if (userId) {
+    await supabase
+      .from('users')
+      .update({ instructor_application_status: 'pending' })
+      .eq('id', userId)
+  }
+}
+
+export async function fetchMyApplication(): Promise<{ status: string } | null> {
+  const user = await supabase.auth.getUser()
+  if (!user.data.user?.id) return null
+
+  const { data, error } = await supabase
+    .from('instructor_applications')
+    .select('status')
+    .eq('user_id', user.data.user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
+
+// ─── Contact Messages ─────────────────────────────────────────────────
+
+export async function submitContactMessage(fields: {
+  name: string
+  email: string
+  category: string
+  subject: string
+  message: string
+}): Promise<void> {
+  const { error } = await supabase
+    .from('contact_messages')
+    .insert({
+      name: fields.name,
+      email: fields.email,
+      category: fields.category,
+      subject: fields.subject,
+      message: fields.message,
+    })
+
+  if (error) throw error
+}
+
+// ─── Referral Codes ──────────────────────────────────────────────────
+
+export async function fetchMyReferralCodes(): Promise<{ code: string; usage_count: number; max_uses: number }[]> {
+  const user = await supabase.auth.getUser()
+  if (!user.data.user?.id) return []
+
+  const { data, error } = await supabase
+    .from('referral_codes')
+    .select('code, usage_count, max_uses')
+    .eq('user_id', user.data.user.id)
+    .eq('is_active', true)
+
+  if (error) throw error
+  return data || []
+}
+
+export async function generateMyReferralCode(): Promise<string> {
+  const user = await supabase.auth.getUser()
+  if (!user.data.user?.id) throw new Error('Not authenticated')
+
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let code = 'REF-'
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+
+  const { error } = await supabase
+    .from('referral_codes')
+    .insert({ code, user_id: user.data.user.id })
+
+  if (error) throw error
+  return code
+}
+
 async function generateSignedToken(refCode: string): Promise<string> {
   const data = `${refCode}:${Date.now()}:acess-cert`
   const encoder = new TextEncoder()
   const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data))
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32)
+}
+
+// ─── Lesson Checkpoints (educator) ─────────────────────────────────────
+
+export interface LessonCheckpoint {
+  id: string
+  lesson_id: string
+  title: string
+  description: string | null
+  checkpoint_type: string
+  sequence_order: number
+  required: boolean
+}
+
+export async function fetchLessonCheckpoints(lessonId: string): Promise<LessonCheckpoint[]> {
+  const { data, error } = await supabase
+    .from('lesson_checkpoints')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function createLessonCheckpoint(lessonId: string, checkpoint: {
+  title: string; description?: string; checkpoint_type?: string; required?: boolean
+}): Promise<LessonCheckpoint> {
+  const { data: max } = await supabase
+    .from('lesson_checkpoints')
+    .select('sequence_order')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: false })
+    .limit(1)
+  const { data, error } = await supabase.from('lesson_checkpoints').insert({
+    lesson_id: lessonId,
+    title: checkpoint.title,
+    description: checkpoint.description || null,
+    checkpoint_type: checkpoint.checkpoint_type || 'reflection',
+    required: checkpoint.required ?? true,
+    sequence_order: (max?.[0]?.sequence_order ?? -1) + 1,
+  }).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteLessonCheckpoint(checkpointId: string): Promise<void> {
+  const { error } = await supabase.from('lesson_checkpoints').delete().eq('id', checkpointId)
+  if (error) throw error
 }

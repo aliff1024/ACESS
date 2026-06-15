@@ -6,7 +6,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Search, Filter, BookOpen, Loader2, Heart, ImageIcon, Shield, Award } from 'lucide-react';
+import { Search, Filter, BookOpen, Loader2, Heart, Shield, Award, Crown, Star, User, Clock, Users } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { fetchAvailableCourses, fetchEnrolledCourses, toggleFavorite, fetchFavoriteCourseIds } from '@/lib/learner-api';
 import type { AvailableCourse, EnrolledCourse } from '@/lib/learner-api';
@@ -149,12 +149,15 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
             return (
               <Card
                 key={course.id}
-                className={`p-6 rounded-2xl border-2 transition-all duration-200 flex flex-col relative ${
+                className={`p-6 rounded-2xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden ${
                   isSys
-                    ? 'border-purple-200 hover:border-purple-400 hover:shadow-lg bg-white'
+                    ? 'border-indigo-300 hover:border-indigo-400 hover:shadow-xl bg-gradient-to-br from-white to-indigo-50/40'
                     : 'border-gray-200 hover:border-blue-300 hover:shadow-lg'
                 }`}
               >
+                {isSys && (
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course.id); }}
                   disabled={toggling === course.id}
@@ -164,16 +167,17 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                 </button>
 
                 {'thumbnail_url' in course && course.thumbnail_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={course.thumbnail_url} alt={course.title} className="w-full h-40 object-cover rounded-lg mb-4" />
                 ) : (
                   <div className={`w-full h-40 rounded-lg mb-4 flex items-center justify-center ${
-                    isSys ? 'bg-purple-100' : 'bg-blue-100'
+                    isSys ? 'bg-gradient-to-br from-indigo-100 to-purple-100' : 'bg-blue-100'
                   }`}>
-                    {isSys ? <Shield className="w-16 h-16 text-purple-600" /> : <BookOpen className="w-16 h-16 text-blue-600" />}
+                    {isSys ? <Crown className="w-16 h-16 text-indigo-600" /> : <BookOpen className="w-16 h-16 text-blue-600" />}
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <Badge className={`${difficultyColors[diffKey] || difficultyColors.beginner} border`}>
                     {course.difficulty_level || 'Beginner'}
                   </Badge>
@@ -186,8 +190,8 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                     <Badge className="bg-blue-600 text-white">{t('course.enrolled')}</Badge>
                   )}
                   {isSys && (
-                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 flex items-center gap-1">
-                      <Shield className="w-3 h-3" /> Official
+                    <Badge className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center gap-1 shadow-sm">
+                      <Star className="w-3 h-3" /> Featured
                     </Badge>
                   )}
                   {hasCert && !earnedCert && (
@@ -210,12 +214,39 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                   {course.description}
                 </p>
 
-                <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-4">
                   <div className="flex items-center gap-1">
                     <BookOpen className="w-4 h-4" />
                     <span>{lessonCount} {t('course.lessons')}</span>
                   </div>
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    <span>{course.creator_name || 'Educator'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    <span>{course.student_count ?? 0} enrolled</span>
+                  </div>
+                  {course.updated_at && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      <span>Updated {new Date(course.updated_at).toLocaleDateString()}</span>
+                    </div>
+                  )}
                 </div>
+
+                {'tags' in course && course.tags && course.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {course.tags.slice(0, 3).map((tag: string) => (
+                      <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                    {course.tags.length > 3 && (
+                      <span className="text-xs text-gray-400">+{course.tags.length - 3}</span>
+                    )}
+                  </div>
+                )}
 
                 {progress !== undefined && (
                   <div className="mb-4">
@@ -248,7 +279,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                     onClick={() => onViewCourse(course.id)}
                     className={`w-full text-white ${
                       isSys
-                        ? 'bg-purple-700 hover:bg-purple-800'
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md'
                         : 'bg-blue-600 hover:bg-blue-700'
                     }`}
                   >

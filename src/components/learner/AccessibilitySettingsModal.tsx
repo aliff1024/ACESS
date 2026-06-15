@@ -5,10 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
-import { Type, Eye, AlignLeft, Volume2, FileText, Sparkles, Globe } from 'lucide-react';
+import { Type, Eye, AlignLeft, Volume2, FileText, Sparkles, Globe, BookOpen } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useTranslation } from '@/lib/useTranslation';
 import type { AccessibilitySettingsData } from '@/lib/learner-api';
+import { dedupeSpeechVoices, mergeEasyReadSettings, shouldAutoEnableEasyRead, TTS_SPEED_OPTIONS } from '@/lib/accessibility-utils';
 
 interface AccessibilitySettingsModalProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ interface AccessibilitySettingsModalProps {
 }
 
 const fontSizes = ['small', 'medium', 'large', 'xlarge'] as const;
-const themes = ['light', 'soft', 'dark', 'high_contrast'] as const;
+
 const lineSpacings = ['normal', 'relaxed', 'loose'] as const;
 const fontTypes = ['default', 'serif', 'sans_serif', 'dyslexia'] as const;
 
@@ -25,27 +26,63 @@ export function AccessibilitySettingsModal({
   onClose,
 }: AccessibilitySettingsModalProps) {
   const { settings, updateSettings } = useAccessibility();
-  const { t, locale, setLocale } = useTranslation();
+  const { t, setLocale } = useTranslation();
 
-  const [preferred_font_size, setPreferredFontSize] = useState<string>('medium');
-  const [preferred_theme, setPreferredTheme] = useState<string>('light');
-  const [line_spacing, setLineSpacing] = useState<string>('normal');
-  const [tts_enabled, setTtsEnabled] = useState(false);
-  const [preferred_font, setPreferredFont] = useState<string>('default');
-  const [reduced_motion, setReducedMotion] = useState(false);
-  const [preferred_language, setPreferredLanguage] = useState<string>('en');
+  const [preferred_font_size, setPreferredFontSize] = useState<string>(() => settings.preferred_font_size || 'medium');
+  const [preferred_theme, setPreferredTheme] = useState<string>(() => settings.preferred_theme || 'light');
+  const [line_spacing, setLineSpacing] = useState<string>(() => settings.line_spacing || 'normal');
+  const [tts_enabled, setTtsEnabled] = useState<boolean>(() => !!settings.tts_enabled);
+  const [preferred_font, setPreferredFont] = useState<string>(() => settings.preferred_font || 'default');
+  const [reduced_motion, setReducedMotion] = useState<boolean>(() => !!settings.reduced_motion);
+  const [preferred_language, setPreferredLanguage] = useState<string>(() => settings.preferred_language || 'en');
+  const [captions_enabled, setCaptionsEnabled] = useState<boolean>(() => !!settings.captions_enabled);
+  const [screen_reader_optimized, setScreenReaderOptimized] = useState<boolean>(() => !!settings.screen_reader_optimized);
+  const [keyboard_navigation_enabled, setKeyboardNavigationEnabled] = useState<boolean>(() => !!settings.keyboard_navigation_enabled);
+  const [simplified_ui, setSimplifiedUi] = useState<boolean>(() => !!settings.simplified_ui);
+  const [preferred_reading_level, setPreferredReadingLevel] = useState<string>(() => settings.preferred_reading_level || 'standard');
+  const [tts_rate, setTtsRate] = useState<number>(() => settings.tts_rate ?? 1);
+  const [tts_voice_uri, setTtsVoiceUri] = useState<string>(() => settings.tts_voice_uri || '');
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
-      setPreferredFontSize(settings.preferred_font_size || 'medium');
-      setPreferredTheme(settings.preferred_theme || 'light');
-      setLineSpacing(settings.line_spacing || 'normal');
-      setTtsEnabled(!!settings.tts_enabled);
-      setPreferredFont(settings.preferred_font || 'default');
-      setReducedMotion(!!settings.reduced_motion);
-      setPreferredLanguage(settings.preferred_language || 'en');
+    if (!isOpen || typeof window === 'undefined' || !window.speechSynthesis) return;
+    const loadVoices = () => setAvailableVoices(dedupeSpeechVoices(window.speechSynthesis.getVoices()));
+    loadVoices();
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+  }, [isOpen]);
+
+  const handleEasyReadToggle = (enabled: boolean) => {
+    if (enabled) {
+      const merged = mergeEasyReadSettings(
+        {
+          ...settings,
+          preferred_font_size: preferred_font_size as AccessibilitySettingsData['preferred_font_size'],
+          preferred_theme: preferred_theme as AccessibilitySettingsData['preferred_theme'],
+          line_spacing: line_spacing as AccessibilitySettingsData['line_spacing'],
+          preferred_font: preferred_font as AccessibilitySettingsData['preferred_font'],
+          reduced_motion,
+          simplified_ui,
+        },
+        true,
+      );
+      setSimplifiedUi(true);
+      setPreferredFontSize(merged.preferred_font_size || 'xlarge');
+      setPreferredTheme(merged.preferred_theme || 'high_contrast');
+      setLineSpacing(merged.line_spacing || 'loose');
+      setPreferredFont(merged.preferred_font || 'dyslexia');
+      setReducedMotion(true);
+    } else {
+      setSimplifiedUi(false);
     }
-  }, [isOpen, settings]);
+  };
+
+  const handleReadingLevelChange = (level: string) => {
+    setPreferredReadingLevel(level);
+    if (shouldAutoEnableEasyRead(level)) {
+      handleEasyReadToggle(true);
+    }
+  };
 
   const handleSave = async () => {
     setLocale(preferred_language as 'en' | 'ms');
@@ -55,15 +92,22 @@ export function AccessibilitySettingsModal({
       preferred_theme: preferred_theme as AccessibilitySettingsData['preferred_theme'],
       line_spacing: line_spacing as AccessibilitySettingsData['line_spacing'],
       tts_enabled,
+      captions_enabled,
+      screen_reader_optimized,
+      keyboard_navigation_enabled,
       preferred_font: preferred_font as AccessibilitySettingsData['preferred_font'],
       preferred_language: preferred_language as AccessibilitySettingsData['preferred_language'],
       reduced_motion,
+      simplified_ui,
+      preferred_reading_level: preferred_reading_level || null,
+      tts_rate,
+      tts_voice_uri: tts_voice_uri || null,
     });
     onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog key={isOpen ? 'open' : 'closed'} open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
           <DialogTitle className="text-2xl">{t('accessibility.title')}</DialogTitle>
@@ -73,6 +117,49 @@ export function AccessibilitySettingsModal({
         </DialogHeader>
 
         <div className="overflow-y-auto max-h-[65vh] px-6 py-5 space-y-4">
+          {/* Easy Read Mode */}
+          <div className="border-2 border-yellow-400 bg-yellow-50 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 bg-yellow-200 rounded-lg flex items-center justify-center shrink-0">
+                  <BookOpen className="w-4 h-4 text-yellow-700" />
+                </div>
+                <div className="min-w-0">
+                  <Label className="text-sm font-bold text-yellow-900">Easy Read Mode</Label>
+                  <p className="text-xs text-yellow-700">
+                    One tap to enable all cognitive support features: large text, high contrast, dyslexia font, wide spacing, simplified UI, and reduced motion
+                  </p>
+                </div>
+              </div>
+              <Switch checked={simplified_ui} onCheckedChange={handleEasyReadToggle} />
+            </div>
+          </div>
+
+          {/* Reading Level */}
+          <div className="border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                <BookOpen className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="min-w-0">
+                <Label className="text-sm font-semibold">{t('accessibility.readingLevel')}</Label>
+                <p className="text-xs text-gray-500">{t('accessibility.readingLevelDesc')}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {(['basic', 'standard', 'advanced'] as const).map((level) => (
+                <Button
+                  key={level}
+                  variant={preferred_reading_level === level ? 'default' : 'outline'}
+                  onClick={() => handleReadingLevelChange(level)}
+                  className="h-auto py-1.5 text-sm capitalize"
+                >
+                  {level === 'basic' ? t('accessibility.readingBasic') : level === 'standard' ? t('accessibility.readingStandard') : t('accessibility.readingAdvanced')}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           {/* Font Size */}
           <div className="border border-gray-200 rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
@@ -246,6 +333,44 @@ export function AccessibilitySettingsModal({
               </div>
               <Switch checked={tts_enabled} onCheckedChange={setTtsEnabled} />
             </div>
+            {tts_enabled && (
+              <div className="mt-4 space-y-3 pt-3 border-t border-gray-100">
+                <div>
+                  <Label className="text-xs text-gray-600 mb-2 block">{t('accessibility.ttsSpeed')}</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {TTS_SPEED_OPTIONS.map((opt) => (
+                      <Button
+                        key={opt.value}
+                        type="button"
+                        variant={tts_rate === opt.value ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setTtsRate(opt.value)}
+                        className="h-auto py-1 text-xs"
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                {availableVoices.length > 0 && (
+                  <div>
+                    <Label className="text-xs text-gray-600 mb-2 block">{t('accessibility.ttsVoice')}</Label>
+                    <select
+                      value={tts_voice_uri}
+                      onChange={(e) => setTtsVoiceUri(e.target.value)}
+                      className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white"
+                    >
+                      <option value="">System default</option>
+                      {availableVoices.map((voice) => (
+                        <option key={voice.voiceURI} value={voice.voiceURI}>
+                          {voice.name} ({voice.lang})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Reduced Motion */}
@@ -261,6 +386,54 @@ export function AccessibilitySettingsModal({
                 </div>
               </div>
               <Switch checked={reduced_motion} onCheckedChange={setReducedMotion} />
+            </div>
+          </div>
+
+          {/* Captions */}
+          <div className="border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="min-w-0">
+                  <Label className="text-sm font-semibold">{t('accessibility.captions')}</Label>
+                  <p className="text-xs text-gray-500">{t('accessibility.captionsDesc')}</p>
+                </div>
+              </div>
+              <Switch checked={captions_enabled} onCheckedChange={setCaptionsEnabled} />
+            </div>
+          </div>
+
+          {/* Screen Reader Optimized */}
+          <div className="border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 bg-cyan-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Eye className="w-4 h-4 text-cyan-600" />
+                </div>
+                <div className="min-w-0">
+                  <Label className="text-sm font-semibold">{t('accessibility.screenReader')}</Label>
+                  <p className="text-xs text-gray-500">{t('accessibility.screenReaderDesc')}</p>
+                </div>
+              </div>
+              <Switch checked={screen_reader_optimized} onCheckedChange={setScreenReaderOptimized} />
+            </div>
+          </div>
+
+          {/* Keyboard Navigation */}
+          <div className="border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
+                  <Type className="w-4 h-4 text-violet-600" />
+                </div>
+                <div className="min-w-0">
+                  <Label className="text-sm font-semibold">{t('accessibility.keyboardNav')}</Label>
+                  <p className="text-xs text-gray-500">{t('accessibility.keyboardNavDesc')}</p>
+                </div>
+              </div>
+              <Switch checked={keyboard_navigation_enabled} onCheckedChange={setKeyboardNavigationEnabled} />
             </div>
           </div>
         </div>

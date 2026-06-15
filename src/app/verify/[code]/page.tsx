@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Award, CheckCircle, XCircle, Shield, Calendar, Hash, Loader2, ExternalLink } from 'lucide-react';
+import { Award, CheckCircle, XCircle, Shield, Calendar, Hash, Loader2 } from 'lucide-react';
 import { verifyCertificateByCode } from '@/lib/learner-api';
 import type { VerificationData } from '@/lib/learner-api';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/Logo';
 

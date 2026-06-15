@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, FileText, Calendar, Filter, Loader2 } from 'lucide-react';
+import { Download, FileText, Filter, Loader2 } from 'lucide-react';
 import { generateReport } from '@/lib/admin-api';
 import type { ReportDefinition } from '@/lib/admin-api';
 

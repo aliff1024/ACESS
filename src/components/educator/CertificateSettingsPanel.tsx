@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Switch } from '../ui/switch';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
-import { Award, Loader2, Eye, Download, Shield, AlertTriangle, Check, X, FileText } from 'lucide-react';
+import { Award, Loader2, Eye, Download, Shield, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import {
@@ -43,11 +42,7 @@ export default function CertificateSettingsPanel({
   const [previewOpen, setPreviewOpen] = useState(false)
   const [downloading, setDownloading] = useState(false)
 
-  useEffect(() => {
-    loadSettings()
-  }, [courseId])
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const data = await fetchCourseCertSettings(courseId)
       setEnabled(data.certificate_enabled)
@@ -63,7 +58,11 @@ export default function CertificateSettingsPanel({
     } finally {
       setLoading(false)
     }
-  }
+  }, [courseId])
+
+  useEffect(() => {
+    loadSettings()
+  }, [courseId, loadSettings])
 
   const handleSave = async () => {
     setSaving(true)

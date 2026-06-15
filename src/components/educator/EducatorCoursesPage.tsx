@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Search, Plus, MoreVertical, Users, Calendar, BookOpen, Loader2, Edit2, Eye, Trash2, Globe, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/providers/AuthProvider';
 import { fetchCourses, deleteCourse, updateCourseStatus } from '@/lib/educator-api';
 import type { CourseSummary, CourseStatus } from '@/lib/educator-api';
 import {
@@ -22,7 +21,6 @@ import {
 
 export function EducatorCoursesPage() {
   const router = useRouter();
-  const { enterPreview } = useAuth();
   const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -189,6 +187,7 @@ export function EducatorCoursesPage() {
               >
                 <div className="h-48 overflow-hidden bg-gray-100 relative">
                   {course.thumbnail_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={course.thumbnail_url}
                       alt={course.title}

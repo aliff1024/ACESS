@@ -1,7 +1,6 @@
 'use client';
 
 import { jsPDF } from 'jspdf';
-import type { FullCertificate } from './learner-api';
 
 export interface CertificateRenderData {
   learnerName: string
@@ -24,7 +23,7 @@ export function formatDate(dateStr: string): string {
   })
 }
 
-export function generateCertificateId(length = 12): string {
+export function generateCertificateId(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   const segments = [4, 4, 4]
   return segments.map(len => {

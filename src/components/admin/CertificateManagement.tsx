@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Eye, XCircle, Award, Download, Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { fetchAdminCertificates, revokeCertificate } from '@/lib/admin-api';
 import type { AdminCertificate } from '@/lib/admin-api';
 
@@ -12,6 +14,7 @@ export default function CertificateManagement() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [viewCert, setViewCert] = useState<AdminCertificate | null>(null);
 
   const loadCertificates = async () => {
     setLoading(true);
@@ -40,6 +43,27 @@ export default function CertificateManagement() {
       toast.error('Failed to revoke certificate');
     }
   };
+
+  const handleExportCSV = () => {
+    const headers = ['Learner Name', 'Course', 'Certificate Code', 'Issue Date', 'Status', 'Revoked Date']
+    const rows = certificates.map(c => [
+      c.learner_name,
+      c.course_title,
+      c.certificate_code,
+      new Date(c.issued_at).toLocaleDateString(),
+      c.status,
+      c.revoked_at ? new Date(c.revoked_at).toLocaleDateString() : '',
+    ])
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `certificates-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Certificates exported')
+  }
 
   const getFilteredCertificates = () => {
     return certificates.filter(cert => {
@@ -127,7 +151,7 @@ export default function CertificateManagement() {
               <option value="issued">Valid</option>
               <option value="revoked">Revoked</option>
             </select>
-            <button className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
+            <button onClick={handleExportCSV} className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
               <Download className="w-4 h-4" />
               Export CSV
             </button>
@@ -182,7 +206,7 @@ export default function CertificateManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1">
+                      <button onClick={() => setViewCert(cert)} className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1">
                         <Eye className="w-4 h-4" />
                         View
                       </button>
@@ -211,6 +235,40 @@ export default function CertificateManagement() {
           </div>
         )}
       </div>
+
+      <Dialog open={!!viewCert} onOpenChange={(o) => { if (!o) setViewCert(null) }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Certificate Details</DialogTitle>
+          </DialogHeader>
+          {viewCert && (
+            <div className="space-y-4">
+              <div className="border rounded-lg p-6 bg-gray-50 text-center">
+                <Award className="w-16 h-16 text-blue-600 mx-auto mb-3" />
+                <h3 className="text-xl font-bold text-gray-900">{viewCert.learner_name}</h3>
+                <p className="text-gray-600 mt-1">has successfully completed</p>
+                <p className="text-lg font-semibold text-gray-900 mt-1">{viewCert.course_title}</p>
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-500">Certificate Code</p>
+                  <code className="text-sm font-mono bg-white px-3 py-1.5 rounded border">{viewCert.certificate_code}</code>
+                </div>
+                <p className="text-xs text-gray-400 mt-3">
+                  Issued: {new Date(viewCert.issued_at).toLocaleDateString()}
+                  {viewCert.revoked_at && <> | Revoked: {new Date(viewCert.revoked_at).toLocaleDateString()}</>}
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  Print Certificate
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

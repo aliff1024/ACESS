@@ -36,6 +36,7 @@ import type {
   NotificationSettingsData,
 } from '@/lib/learner-api';
 import { toast } from 'sonner';
+import { useAccessibility } from '@/providers/AccessibilityProvider';
 
 interface ProfileDialogProps {
   open: boolean;
@@ -43,6 +44,7 @@ interface ProfileDialogProps {
 }
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
+  const { updateSettings } = useAccessibility();
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -191,6 +193,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         preferred_content_format: preferredContentFormat || null,
       };
       await saveAccessibilitySettings(data);
+      await updateSettings(data);
       toast.success('Accessibility settings saved');
     } catch {
       toast.error('Failed to save accessibility settings');
@@ -243,6 +246,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               <div className="relative group flex-shrink-0">
                 <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden">
                   {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     initials

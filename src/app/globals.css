@@ -249,9 +249,81 @@ html[data-reduced-motion="true"] *::after {
   scroll-behavior: auto !important;
 }
 
-/* ─── Accessibility: Simplified UI ───────────────────────────────────── */
+/* ─── Accessibility: Simplified UI (calm mode — hide decorative chrome, keep learning scaffolds) ─ */
 html[data-simplified-ui="true"] .simplifiable {
   display: none !important;
+}
+
+html[data-simplified-ui="true"] .tab-bar {
+  display: none !important;
+}
+
+html[data-simplified-ui="true"] .bottom-lesson-nav .previous-btn {
+  display: none !important;
+}
+
+html[data-simplified-ui="true"] .quiz-timer {
+  display: none !important;
+}
+
+html[data-simplified-ui="true"] .question-sidebar {
+  display: none !important;
+}
+
+html[data-simplified-ui="true"] .flag-for-review {
+  display: none !important;
+}
+
+html[data-simplified-ui="true"] .calm-mode-nav {
+  display: flex !important;
+}
+
+.calm-mode-nav {
+  display: none;
+}
+
+/* ─── Accessibility: Keyboard Navigation ─────────────────────────────── */
+html[data-keyboard-nav="true"] *:focus-visible {
+  outline: 3px solid #2563eb !important;
+  outline-offset: 2px !important;
+}
+
+html[data-keyboard-nav="true"] button:focus-visible,
+html[data-keyboard-nav="true"] a:focus-visible,
+html[data-keyboard-nav="true"] [role="button"]:focus-visible {
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+}
+
+/* ─── Accessibility: Screen Reader Optimized ─────────────────────────── */
+html[data-screen-reader="true"] main,
+html[data-screen-reader="true"] #lesson-main-content {
+  scroll-margin-top: 1.5rem;
+}
+
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.skip-to-main:focus {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  padding: 0.75rem 1.25rem;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

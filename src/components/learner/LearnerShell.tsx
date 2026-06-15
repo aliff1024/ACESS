@@ -8,15 +8,15 @@ import { useTranslation } from '@/lib/useTranslation';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { AccessibilitySettingsModal } from './AccessibilitySettingsModal';
+import { EasyReadIndicator } from '@/components/accessibility/EasyReadIndicator';
 import { Toaster } from '../ui/sonner';
 
-function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAccessibilitySettings, isPreview, exitPreview }: {
+function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAccessibilitySettings, isPreview }: {
   children: React.ReactNode;
   onNavigate: (view: string) => void;
   showAccessibilitySettings: boolean;
   setShowAccessibilitySettings: (v: boolean) => void;
   isPreview: boolean;
-  exitPreview: () => void;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,8 +37,9 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
     <>
       <Sidebar activeView={activeView} onNavigate={onNavigate} onAccessibilityClick={() => setShowAccessibilitySettings(true)} />
       <div className={`flex-1 flex flex-col overflow-hidden ${isPreview ? 'mt-10' : ''}`}>
+        <EasyReadIndicator dismissible />
         <TopBar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main id="main-content" className="flex-1 overflow-y-auto" tabIndex={-1}>{children}</main>
       </div>
       <AccessibilitySettingsModal isOpen={showAccessibilitySettings} onClose={() => setShowAccessibilitySettings(false)} />
     </>
@@ -47,7 +48,7 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
 
 export function LearnerShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isLoading, isAuthenticated, user, preview, exitPreview } = useAuth();
+  const { isLoading, isAuthenticated, preview, exitPreview } = useAuth();
   const role = useRole();
   const { t } = useTranslation();
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
@@ -103,7 +104,6 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
           showAccessibilitySettings={showAccessibilitySettings}
           setShowAccessibilitySettings={setShowAccessibilitySettings}
           isPreview={isPreview}
-          exitPreview={exitPreview}
         >
           {children}
         </ShellInner>

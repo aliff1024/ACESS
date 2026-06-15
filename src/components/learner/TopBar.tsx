@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { User, Settings, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
@@ -19,7 +18,6 @@ import { useTranslation } from '@/lib/useTranslation';
 
 export function TopBar() {
   const { t } = useTranslation();
-  const router = useRouter();
   const [profile, setProfile] = useState<{ full_name: string; email: string } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -56,7 +54,8 @@ export function TopBar() {
               <button className="flex items-center gap-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors">
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt={profile?.full_name || 'Learner'} className="w-full h-full object-cover" />
                   ) : (
                     initial
                   )}

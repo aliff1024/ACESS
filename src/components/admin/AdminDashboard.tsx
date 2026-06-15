@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, BookOpen, Award, Activity, TrendingUp, ArrowRight, Loader2 } from 'lucide-react';
-import { fetchAdminDashboardStats, fetchRecentActivity } from '@/lib/admin-api';
+import { Users, BookOpen, Award, Activity, TrendingUp, ArrowRight, Loader2, School } from 'lucide-react';
+import { fetchAdminDashboardStats, fetchRecentActivity, getInstructorApplicationStats } from '@/lib/admin-api';
 import type { AdminDashboardStats, RecentActivity } from '@/lib/admin-api';
 
 interface AdminDashboardProps {
@@ -12,13 +12,17 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [activities, setActivities] = useState<RecentActivity[]>([]);
+  const [instructorStats, setInstructorStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    Promise.all([fetchAdminDashboardStats(), fetchRecentActivity()])
-      .then(([s, a]) => { setStats(s); setActivities(a); })
+    const id = setInterval(() => { setNow(Date.now()); }, 60000);
+    Promise.all([fetchAdminDashboardStats(), fetchRecentActivity(), getInstructorApplicationStats()])
+      .then(([s, a, i]) => { setStats(s); setActivities(a); setInstructorStats(i); })
       .catch(console.error)
       .finally(() => setLoading(false));
+    return () => clearInterval(id);
   }, []);
 
   if (loading) {
@@ -98,7 +102,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   };
 
   const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const diff = now - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 60) return `${mins}m ago`;
     const hours = Math.floor(mins / 60);
@@ -141,7 +145,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
@@ -161,6 +165,28 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 </button>
               );
             })}
+            <button
+              onClick={() => onNavigate('instructor-applications')}
+              className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:shadow-lg transition-all group"
+            >
+              <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-4">
+                <School className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2 flex items-center justify-between">
+                Educator Applications
+                {instructorStats.pending > 0 && (
+                  <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
+                    {instructorStats.pending} pending
+                  </span>
+                )}
+                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+              </h4>
+              <p className="text-sm text-gray-600">
+                {instructorStats.pending > 0
+                  ? `${instructorStats.pending} applications need review`
+                  : 'No pending applications'}
+              </p>
+            </button>
           </div>
         </div>
 

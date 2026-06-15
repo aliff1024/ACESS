@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useState, useCallback, useMemo, useEffect, type ReactNode } from 'react';
+import { createContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import { en } from '@/locales/en';
 import { ms } from '@/locales/ms';
 import { useAccessibility } from './AccessibilityProvider';
@@ -22,17 +22,14 @@ export const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('en');
-  const [mounted, setMounted] = useState(false);
-  const { settings, updateSettings } = useAccessibility();
-
-  useEffect(() => {
-    const stored = localStorage.getItem('preferred_language') as Locale | null;
-    if (stored === 'en' || stored === 'ms') {
-      setLocaleState(stored);
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('preferred_language') as Locale | null;
+      if (stored === 'en' || stored === 'ms') return stored;
     }
-    setMounted(true);
-  }, []);
+    return 'en';
+  });
+  const { settings, updateSettings } = useAccessibility();
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);

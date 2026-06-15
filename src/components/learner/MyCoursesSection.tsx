@@ -4,7 +4,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { BookOpen, Clock, Loader2, ImageIcon, Shield } from 'lucide-react';
+import { BookOpen, Clock, Loader2, Shield, Crown, Star } from 'lucide-react';
 import { fetchEnrolledCourses } from '@/lib/learner-api';
 import type { EnrolledCourse } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
@@ -62,28 +62,32 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
             return (
             <Card
               key={course.id}
-              className={`p-6 rounded-2xl border-2 transition-all duration-200 flex flex-col ${
+              className={`p-6 rounded-2xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden ${
                 isSys
-                  ? 'border-purple-200 hover:border-purple-400 hover:shadow-lg bg-white'
+                  ? 'border-indigo-300 hover:border-indigo-400 hover:shadow-xl bg-gradient-to-br from-white to-indigo-50/40'
                   : 'border-gray-200 hover:border-blue-300 hover:shadow-lg'
               }`}
             >
+              {isSys && (
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+              )}
               <div className="mb-4">
                 {course.thumbnail_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={course.thumbnail_url} alt={course.title} className="w-full h-32 object-cover rounded-lg mb-4" />
                 ) : (
                   <div className={`w-full h-32 rounded-lg mb-4 flex items-center justify-center ${
-                    isSys ? 'bg-purple-100' : 'bg-blue-100'
+                    isSys ? 'bg-gradient-to-br from-indigo-100 to-purple-100' : 'bg-blue-100'
                   }`}>
-                    {isSys ? <Shield className="w-12 h-12 text-purple-600" /> : <BookOpen className="w-12 h-12 text-blue-600" />}
+                    {isSys ? <Crown className="w-12 h-12 text-indigo-600" /> : <BookOpen className="w-12 h-12 text-blue-600" />}
                   </div>
                 )}
 
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 leading-snug flex items-center gap-2 flex-wrap">
                   {course.title}
                   {isSys && (
-                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs flex items-center gap-1">
-                      <Shield className="w-3 h-3" /> Official Course
+                    <Badge className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs flex items-center gap-1 shadow-sm">
+                      <Star className="w-3 h-3" /> Featured
                     </Badge>
                   )}
                   {isSys && course.guided_learning_enabled && (
@@ -113,13 +117,13 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">{t('course.progress')}</span>
-                    <span className={`text-sm font-semibold ${isSys ? 'text-purple-700' : 'text-gray-900'}`}>
+                    <span className={`text-sm font-semibold ${isSys ? 'text-indigo-700' : 'text-gray-900'}`}>
                       {course.progress}%
                     </span>
                   </div>
                   <Progress
                     value={course.progress}
-                    className={`h-2 ${isSys ? 'bg-purple-100' : ''}`}
+                    className={`h-2 ${isSys ? 'bg-indigo-100' : ''}`}
                   />
                 </div>
 
@@ -127,7 +131,7 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
                   onClick={() => onContinue(course.id)}
                   className={`w-full text-white ${
                     isSys
-                      ? 'bg-purple-700 hover:bg-purple-800'
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md'
                       : 'bg-blue-600 hover:bg-blue-700'
                   }`}
                 >

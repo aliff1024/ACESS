@@ -6,8 +6,8 @@ import { AnimatePresence, motion, Reorder } from 'framer-motion';
 import {
   ArrowLeft, BookOpen, FileText, Users, Settings, Plus, Loader2,
   Globe, EyeOff, Eye, ChevronUp, ChevronDown,
-  Edit, Trash2, Upload, FileText as FileIcon, X, Download,
-  CheckCircle, FileType, Video, GripVertical, Clock, Copy, ExternalLink, AlertTriangle, Award, Shield,
+  Edit, Trash2, Upload, FileText as FileIcon, X,
+  CheckCircle, FileType, Video, GripVertical, Copy, ExternalLink, AlertTriangle, Award, Shield,
 } from 'lucide-react';
 import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,10 @@ import {
   fetchLessonById,
 } from '@/lib/educator-api';
 import type { LessonWithQuiz, LessonAsset, CourseStatus, LessonFields } from '@/lib/educator-api';
+import { RichTextEditor } from '@/components/ui/RichTextEditor';
+import { LessonComponentToggles } from '@/components/educator/LessonComponentToggles';
+import { LessonSummarySettings } from '@/components/educator/LessonSummarySettings';
+import { LessonAccessibilitySettings } from '@/components/educator/LessonAccessibilitySettings';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -166,7 +170,7 @@ function PdfUploadButton({ lessonId, uploadingPdfFor, onUpload }: {
   );
 }
 
-function LessonCard({ lesson, assets, onEdit, onDelete, onMoveUp, onMoveDown, onPdfUpload, onAssetDelete, onQuizEdit, onQuizDelete, onQuizAdd, uploadingPdfFor, isFirst, isLast }: {
+function LessonCard({ lesson, assets, onEdit, onDelete, onMoveUp, onMoveDown, onPdfUpload, onQuizEdit, onQuizAdd, uploadingPdfFor, isFirst, isLast }: {
   lesson: LessonWithQuiz;
   assets: LessonAsset[];
   onEdit: () => void;
@@ -174,9 +178,7 @@ function LessonCard({ lesson, assets, onEdit, onDelete, onMoveUp, onMoveDown, on
   onMoveUp: () => void;
   onMoveDown: () => void;
   onPdfUpload: (file: File) => void;
-  onAssetDelete: (assetId: string) => void;
   onQuizEdit: () => void;
-  onQuizDelete: () => void;
   onQuizAdd: () => void;
   uploadingPdfFor: string | null;
   isFirst: boolean;
@@ -238,6 +240,27 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   const [lessonTranscript, setLessonTranscript] = useState('');
   const [lessonStatus, setLessonStatus] = useState<'draft' | 'published'>('published');
 
+  // Lesson flexible components
+  const [hasVideo, setHasVideo] = useState(true);
+  const [hasPdf, setHasPdf] = useState(true);
+  const [hasQuiz, setHasQuiz] = useState(true);
+  const [hasTranscript, setHasTranscript] = useState(true);
+  const [hasSummaryActivity, setHasSummaryActivity] = useState(false);
+  const [lessonLayout, setLessonLayout] = useState<'standard' | 'focus' | 'two_column' | 'wide'>('standard');
+  const [summarySource, setSummarySource] = useState<'video' | 'pdf' | 'lesson_text' | 'entire_lesson'>('entire_lesson');
+  const [summaryWordTarget, setSummaryWordTarget] = useState(100);
+  const [summaryKeyPoints, setSummaryKeyPoints] = useState<string[]>([]);
+  const [summaryReflectionQuestions, setSummaryReflectionQuestions] = useState<string[]>([]);
+  const [summaryAiFeedbackEnabled, setSummaryAiFeedbackEnabled] = useState(false);
+
+  // Accessibility & learning support
+  const [simplifiedSummary, setSimplifiedSummary] = useState('');
+  const [focusModeEnabled, setFocusModeEnabled] = useState(false);
+  const [chunkedContentEnabled, setChunkedContentEnabled] = useState(false);
+  const [checkpointsEnabled, setCheckpointsEnabled] = useState(false);
+  const [adaptiveLearningEnabled, setAdaptiveLearningEnabled] = useState(false);
+  const [estimatedDuration, setEstimatedDuration] = useState(10);
+
   // Lesson detail view
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [selectedLessonData, setSelectedLessonData] = useState<{
@@ -270,7 +293,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   // Confirm dialogs
   const [confirmDeleteLessonId, setConfirmDeleteLessonId] = useState<string | null>(null);
   const [confirmDeleteQuizLessonId, setConfirmDeleteQuizLessonId] = useState<string | null>(null);
-  const [confirmArchive, setConfirmArchive] = useState(false);
+
 
   // Quiz modal
   const [quizModalOpen, setQuizModalOpen] = useState(false);
@@ -338,6 +361,22 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
     setLessonVideoUrl('');
     setLessonTranscript('');
     setLessonStatus('published');
+    setHasVideo(true);
+    setHasPdf(true);
+    setHasQuiz(true);
+    setHasTranscript(true);
+    setHasSummaryActivity(false);
+    setLessonLayout('standard');
+    setSummarySource('entire_lesson');
+    setSummaryWordTarget(100);
+    setSummaryKeyPoints([]);
+    setSummaryReflectionQuestions([]);
+    setSummaryAiFeedbackEnabled(false);
+    setSimplifiedSummary('');
+    setFocusModeEnabled(false);
+    setChunkedContentEnabled(false);
+    setCheckpointsEnabled(false);
+    setEstimatedDuration(10);
     setLessonModalOpen(true);
   };
 
@@ -350,9 +389,48 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
       setLessonVideoUrl(lesson.video_url || '');
       setLessonTranscript(lesson.transcript || '');
       setLessonStatus(lesson.status || 'draft');
+      setHasVideo(lesson.has_video ?? true);
+      setHasPdf(lesson.has_pdf ?? true);
+      setHasQuiz(lesson.has_quiz ?? true);
+      setHasTranscript(lesson.has_transcript ?? true);
+      setHasSummaryActivity(lesson.has_summary_activity ?? false);
+      setLessonLayout(lesson.lesson_layout || 'standard');
+      setSummarySource(lesson.summary_source || 'entire_lesson');
+      setSummaryWordTarget(lesson.summary_word_target ?? 100);
+      setSummaryKeyPoints(Array.isArray(lesson.summary_key_points) ? lesson.summary_key_points : []);
+      setSummaryReflectionQuestions(Array.isArray(lesson.summary_reflection_questions) ? lesson.summary_reflection_questions : []);
+      setSummaryAiFeedbackEnabled(lesson.summary_ai_feedback_enabled ?? false);
+      setSimplifiedSummary(lesson.simplified_summary || '');
+      setFocusModeEnabled(lesson.focus_mode_enabled ?? false);
+      setChunkedContentEnabled(lesson.chunked_content_enabled ?? false);
+      setCheckpointsEnabled(lesson.checkpoints_enabled ?? false);
+      setAdaptiveLearningEnabled(lesson.adaptive_learning_enabled ?? false);
+      setEstimatedDuration(lesson.estimated_duration ?? 10);
       setLessonModalOpen(true);
     } catch {
       toast.error('Failed to load lesson');
+    }
+  };
+
+  const handleComponentChange = (field: string, value: unknown) => {
+    switch (field) {
+      case 'hasVideo': setHasVideo(value as boolean); break;
+      case 'hasPdf': setHasPdf(value as boolean); break;
+      case 'hasQuiz': setHasQuiz(value as boolean); break;
+      case 'hasTranscript': setHasTranscript(value as boolean); break;
+      case 'hasSummaryActivity': setHasSummaryActivity(value as boolean); break;
+      case 'lessonLayout': setLessonLayout(value as 'standard' | 'focus' | 'two_column' | 'wide'); break;
+      case 'summary_source': setSummarySource(value as 'video' | 'pdf' | 'lesson_text' | 'entire_lesson'); break;
+      case 'summary_word_target': setSummaryWordTarget(value as number); break;
+      case 'summary_key_points': setSummaryKeyPoints(value as string[]); break;
+      case 'summary_reflection_questions': setSummaryReflectionQuestions(value as string[]); break;
+      case 'summary_ai_feedback_enabled': setSummaryAiFeedbackEnabled(value as boolean); break;
+      case 'focusModeEnabled': setFocusModeEnabled(value as boolean); break;
+      case 'chunkedContentEnabled': setChunkedContentEnabled(value as boolean); break;
+      case 'checkpointsEnabled': setCheckpointsEnabled(value as boolean); break;
+      case 'adaptiveLearningEnabled': setAdaptiveLearningEnabled(value as boolean); break;
+      case 'simplified_summary': setSimplifiedSummary(value as string); break;
+      case 'estimated_duration': setEstimatedDuration(value as number); break;
     }
   };
 
@@ -362,26 +440,42 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Not authenticated');
+      const lessonFields: Partial<LessonFields> = {
+        title: lessonTitle,
+        content_html: lessonContent,
+        video_url: lessonVideoUrl || null,
+        transcript: lessonTranscript || null,
+        status: lessonStatus,
+        has_video: hasVideo,
+        has_pdf: hasPdf,
+        has_quiz: hasQuiz,
+        has_transcript: hasTranscript,
+        has_summary_activity: hasSummaryActivity,
+        lesson_layout: lessonLayout,
+      };
+      if (hasSummaryActivity) {
+        lessonFields.summary_source = summarySource as 'video' | 'pdf' | 'lesson_text' | 'entire_lesson';
+        lessonFields.summary_word_target = summaryWordTarget;
+        lessonFields.summary_key_points = summaryKeyPoints;
+        lessonFields.summary_reflection_questions = summaryReflectionQuestions;
+        lessonFields.summary_ai_feedback_enabled = summaryAiFeedbackEnabled;
+      }
+      lessonFields.simplified_summary = simplifiedSummary || null;
+      lessonFields.focus_mode_enabled = focusModeEnabled;
+      lessonFields.chunked_content_enabled = chunkedContentEnabled;
+      lessonFields.checkpoints_enabled = checkpointsEnabled;
+      lessonFields.adaptive_learning_enabled = adaptiveLearningEnabled;
+      lessonFields.estimated_duration = estimatedDuration;
       if (editingLessonId) {
-        await updateLesson(editingLessonId, {
-          title: lessonTitle,
-          content_html: lessonContent,
-          video_url: lessonVideoUrl || null,
-          transcript: lessonTranscript || null,
-          status: lessonStatus,
-        } as Partial<LessonFields>);
+        await updateLesson(editingLessonId, lessonFields);
         toast.success('Lesson updated');
       } else {
         const seq = await getNextSequenceOrder(courseId);
         await createLesson(user.user.id, {
+          ...lessonFields,
           course_id: courseId,
-          title: lessonTitle,
-          content_html: lessonContent,
-          video_url: lessonVideoUrl || null,
-          transcript: lessonTranscript || null,
           sequence_order: seq,
-          status: lessonStatus,
-        });
+        } as LessonFields);
         toast.success('Lesson added');
       }
       setLessonModalOpen(false);
@@ -673,6 +767,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
                 />
                 {course.thumbnail_url ? (
                   <div className="relative rounded-lg overflow-hidden border border-gray-200 mb-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={course.thumbnail_url} alt="Thumbnail" className="w-full h-48 object-cover" />
                     <button
                       onClick={async () => {
@@ -1042,8 +1137,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
                               onDelete={() => setConfirmDeleteLessonId(lesson.id)}
                               onMoveUp={() => moveLesson(lesson.id, 'up')} onMoveDown={() => moveLesson(lesson.id, 'down')}
                               onPdfUpload={(file) => handlePdfUpload(lesson.id, file)}
-                              onAssetDelete={(assetId) => handleDeleteAsset(assetId, lesson.id)}
-                              onQuizEdit={() => openEditQuiz(lesson.id)} onQuizDelete={() => setConfirmDeleteQuizLessonId(lesson.id)}
+                              onQuizEdit={() => openEditQuiz(lesson.id)}
                               onQuizAdd={() => openNewQuiz(lesson.id)} uploadingPdfFor={uploadingPdfFor}
                               isFirst={lesson.sequence_order === 1} isLast={lesson.sequence_order === lessons.length} />
                           </motion.div>
@@ -1128,7 +1222,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
 
       {/* ─── Lesson Modal ─────────────────────────────────────────────── */}
       <Dialog open={lessonModalOpen} onOpenChange={setLessonModalOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingLessonId ? 'Edit Lesson' : 'Add New Lesson'}</DialogTitle>
             <DialogDescription>Create educational content for your course</DialogDescription>
@@ -1138,11 +1232,46 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
               <label className="block text-sm font-semibold text-gray-900 mb-2">Lesson Title *</label>
               <Input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} placeholder="e.g., What is Web Accessibility?" className="text-lg py-6" />
             </div>
+
+            <LessonComponentToggles
+              hasVideo={hasVideo}
+              hasPdf={hasPdf}
+              hasQuiz={hasQuiz}
+              hasTranscript={hasTranscript}
+              hasSummaryActivity={hasSummaryActivity}
+              lessonLayout={lessonLayout}
+              onChange={handleComponentChange}
+            />
+
+            <LessonSummarySettings
+              enabled={hasSummaryActivity}
+              source={summarySource}
+              wordTarget={summaryWordTarget}
+              keyPoints={summaryKeyPoints}
+              reflectionQuestions={summaryReflectionQuestions}
+              aiFeedbackEnabled={summaryAiFeedbackEnabled}
+              onChange={handleComponentChange}
+            />
+
+            <LessonAccessibilitySettings
+              lessonId={editingLessonId}
+              simplifiedSummary={simplifiedSummary}
+              focusModeEnabled={focusModeEnabled}
+              chunkedContentEnabled={chunkedContentEnabled}
+              checkpointsEnabled={checkpointsEnabled}
+              adaptiveLearningEnabled={adaptiveLearningEnabled}
+              estimatedDuration={estimatedDuration}
+              onChange={handleComponentChange}
+            />
+
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">Lesson Content</label>
-              <Textarea value={lessonContent} onChange={(e) => setLessonContent(e.target.value)}
-                placeholder="Write your lesson content here. You can use basic HTML formatting like <strong>bold</strong>, <em>italic</em>, and <br> for line breaks."
-                rows={12} className="text-base font-mono" />
+              <RichTextEditor
+                content={lessonContent}
+                onChange={setLessonContent}
+                placeholder="Start building your lesson content here..."
+                minHeight="300px"
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1161,15 +1290,12 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                   <FileText className="w-3.5 h-3.5 inline mr-1" /> Transcript
                 </label>
-                <Textarea
-                  value={lessonTranscript}
-                  onChange={(e) => setLessonTranscript(e.target.value)}
+                <RichTextEditor
+                  content={lessonTranscript}
+                  onChange={setLessonTranscript}
                   placeholder="Paste or write the text transcript of your video content here for accessibility..."
-                  rows={4}
-                  className="text-base" />
-                <p className="text-sm text-gray-500 mt-1">
-                  Use double line breaks between paragraphs. Transcripts help learners who prefer reading or use screen readers.
-                </p>
+                  minHeight="150px"
+                />
               </div>
             </div>
 

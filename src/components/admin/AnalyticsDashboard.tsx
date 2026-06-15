@@ -2,16 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { Download, TrendingUp, AlertTriangle, Users, Award, Loader2 } from 'lucide-react';
-import { fetchAdminAnalytics } from '@/lib/admin-api';
-import type { AdminAnalytics } from '@/lib/admin-api';
+import { fetchAdminAnalytics, fetchEnrollmentTrends, fetchCompletionTrends } from '@/lib/admin-api';
+import type { AdminAnalytics, EnrollmentTrend, CompletionTrend } from '@/lib/admin-api';
 
 export default function AnalyticsDashboard() {
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
+  const [trends, setTrends] = useState<EnrollmentTrend[]>([]);
+  const [completionTrends, setCompletionTrends] = useState<CompletionTrend[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAdminAnalytics()
-      .then(setAnalytics)
+    Promise.all([
+      fetchAdminAnalytics(),
+      fetchEnrollmentTrends(),
+      fetchCompletionTrends(),
+    ])
+      .then(([a, t, c]) => { setAnalytics(a); setTrends(t); setCompletionTrends(c); })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -83,21 +89,57 @@ export default function AnalyticsDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Course Enrollment Trends</h3>
-            <div className="h-80 bg-blue-50 rounded-lg flex items-center justify-center border border-gray-200">
-              <div className="text-center">
-                <p className="text-gray-600 font-medium">Bar Chart Visualization</p>
-                <p className="text-sm text-gray-500 mt-2">Enrollment trends over time</p>
+            {trends.length > 0 ? (
+              <div className="h-80 flex items-end gap-2">
+                {trends.map((t) => {
+                  const maxCount = Math.max(...trends.map(x => x.count), 1)
+                  const heightPct = Math.max((t.count / maxCount) * 100, 4)
+                  return (
+                    <div key={t.month} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                      <span className="text-[10px] font-medium text-gray-500">{t.count}</span>
+                      <div
+                        className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer"
+                        style={{ height: `${heightPct}%`, minHeight: '4px' }}
+                        title={`${t.month}: ${t.count} enrollments`}
+                      />
+                      <span className="text-[10px] text-gray-500 -rotate-45 origin-left whitespace-nowrap">{t.month}</span>
+                    </div>
+                  )
+                })}
               </div>
-            </div>
+            ) : (
+              <div className="h-80 bg-blue-50 rounded-lg flex items-center justify-center border border-gray-200">
+                <div className="text-center">
+                  <p className="text-gray-600 font-medium">Bar Chart Visualization</p>
+                  <p className="text-sm text-gray-500 mt-2">Enrollment trends over time</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Completion Rate Over Time</h3>
-            <div className="h-80 bg-blue-50 rounded-lg flex items-center justify-center border border-gray-200">
-              <div className="text-center">
-                <p className="text-gray-600 font-medium">Line Chart Visualization</p>
-                <p className="text-sm text-gray-500 mt-2">Course completion trends</p>
+            {completionTrends.length > 0 ? (
+              <div className="h-80 flex items-end gap-2">
+                {completionTrends.map((t) => (
+                  <div key={t.month} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                    <span className="text-[10px] font-medium text-gray-500">{t.rate}%</span>
+                    <div
+                      className="w-full bg-green-500 rounded-t hover:bg-green-600 transition-colors cursor-pointer relative group"
+                      style={{ height: `${Math.max(t.rate, 4)}%`, minHeight: '4px' }}
+                      title={`${t.month}: ${t.rate}% (${t.completed}/${t.total})`}
+                    />
+                    <span className="text-[10px] text-gray-500 -rotate-45 origin-left whitespace-nowrap">{t.month}</span>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="h-80 bg-blue-50 rounded-lg flex items-center justify-center border border-gray-200">
+                <div className="text-center">
+                  <p className="text-gray-600 font-medium">Bar Chart Visualization</p>
+                  <p className="text-sm text-gray-500 mt-2">Course completion trends</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

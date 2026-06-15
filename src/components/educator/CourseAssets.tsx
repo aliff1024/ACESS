@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, FileText, FileType, Trash2, Download, Eye, Loader2, Upload } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, FileText, FileType, Trash2, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -13,12 +13,12 @@ interface CourseAssetsProps {
 }
 
 export default function CourseAssets({ courseId }: CourseAssetsProps) {
-  const [lessons, setLessons] = useState<LessonWithQuiz[]>([]);
+  const [, setLessons] = useState<LessonWithQuiz[]>([]);
   const [allAssets, setAllAssets] = useState<(LessonAsset & { lessonTitle: string; lessonOrder: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const l = await fetchLessonsWithQuizzes(courseId);
       setLessons(l);
@@ -33,11 +33,11 @@ export default function CourseAssets({ courseId }: CourseAssetsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
 
-  useEffect(() => { load() }, [courseId]);
+  useEffect(() => { load() }, [courseId, load]);
 
-  const handleDelete = async (assetId: string, lessonId: string) => {
+  const handleDelete = async (assetId: string) => {
     try {
       await deleteLessonAsset(assetId);
       toast.success('Asset removed');
@@ -105,7 +105,7 @@ export default function CourseAssets({ courseId }: CourseAssetsProps) {
                     <Button variant="outline" size="sm" onClick={() => window.open(asset.url, '_blank')}>
                       <Download className="w-3 h-3 mr-1" /> Download
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(asset.id, asset.lesson_id)} className="text-red-600">
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(asset.id)} className="text-red-600">
                       <Trash2 className="w-3 h-3 mr-1" /> Remove
                     </Button>
                   </div>

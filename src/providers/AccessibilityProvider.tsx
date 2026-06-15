@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { fetchFullProfile, saveAccessibilitySettings, type AccessibilitySettingsData } from '@/lib/learner-api';
 import { useAuth } from './AuthProvider';
+import { applyReadingLevelDefaults } from '@/lib/accessibility-utils';
 
 interface AccessibilityContextType {
   settings: AccessibilitySettingsData;
@@ -23,6 +24,8 @@ const defaultSettings: AccessibilitySettingsData = {
   dyslexia_friendly_font: false,
   preferred_font: 'default',
   preferred_language: 'en',
+  tts_rate: 1,
+  tts_voice_uri: null,
 };
 
 function applySettings(settings: AccessibilitySettingsData) {
@@ -38,6 +41,8 @@ function applySettings(settings: AccessibilitySettingsData) {
   root.setAttribute('data-font-type', fontType);
   root.setAttribute('data-reduced-motion', String(!!settings.reduced_motion));
   root.setAttribute('data-simplified-ui', String(!!settings.simplified_ui));
+  root.setAttribute('data-screen-reader', String(!!settings.screen_reader_optimized));
+  root.setAttribute('data-keyboard-nav', String(!!settings.keyboard_navigation_enabled));
 
   if (theme === 'dark') {
     root.classList.add('dark');
@@ -59,17 +64,21 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [settings, setSettings] = useState<AccessibilitySettingsData>(defaultSettings);
   const [loading, setLoading] = useState(true);
+  const fetched = useRef(false);
 
   useEffect(() => {
     if (!user) {
-      setLoading(false);
-      return;
+      const id = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(id);
     }
+
+    if (fetched.current) return;
+    fetched.current = true;
 
     fetchFullProfile()
       .then((profile) => {
         if (profile.accessibility) {
-          const s = profile.accessibility;
+          const s = applyReadingLevelDefaults(profile.accessibility);
           setSettings(s);
           applySettings(s);
         } else {

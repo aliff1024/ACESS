@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import ApprovalModal from './ApprovalModal';
 import RejectionModal from './RejectionModal';
 import { useRouter } from 'next/navigation';
+import { ADMIN_CREATE_SYSTEM_COURSE_PATH } from '@/lib/admin-routes';
 import { fetchSystemCourses, fetchSystemCourseStats, archiveSystemCourse, duplicateSystemCourse } from '@/lib/admin-api';
 import type { SystemCourseItem, SystemCourseStats } from '@/lib/admin-api';
 
@@ -133,7 +134,7 @@ export default function CourseManagement() {
     }
   };
 
-  const handleReject = async (courseId: string, reason: string) => {
+  const handleReject = async (courseId: string) => {
     try {
       const { error } = await supabase
         .from('courses')
@@ -224,18 +225,11 @@ export default function CourseManagement() {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => router.push('/admin/courses/create?type=system')}
+              onClick={() => router.push(ADMIN_CREATE_SYSTEM_COURSE_PATH)}
               className="px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
             >
               <Shield className="w-4 h-4" />
               Create System Course
-            </button>
-            <button
-              onClick={() => router.push('/admin/courses/create')}
-              className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Create Course
             </button>
           </div>
         </div>
@@ -382,7 +376,8 @@ export default function CourseManagement() {
                     <tr key={course.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/admin/courses/${course.id}`)}>
                       <td className="px-6 py-4">
                         {course.thumbnail_url ? (
-                          <img src={course.thumbnail_url} alt="" className="w-16 h-10 rounded object-cover" />
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={course.thumbnail_url} alt={course.title} className="w-16 h-10 rounded object-cover" />
                         ) : (
                           <div className="w-16 h-10 rounded bg-gray-100 flex items-center justify-center">
                             <span className="text-xs text-gray-400">N/A</span>
@@ -469,7 +464,8 @@ export default function CourseManagement() {
                     <tr key={course.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/admin/courses/${course.id}`)}>
                       <td className="px-6 py-4">
                         {course.thumbnail_url ? (
-                          <img src={course.thumbnail_url} alt="" className="w-16 h-10 rounded object-cover" />
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={course.thumbnail_url} alt={course.title} className="w-16 h-10 rounded object-cover" />
                         ) : (
                           <div className="w-16 h-10 rounded bg-purple-100 flex items-center justify-center">
                             <Shield className="w-5 h-5 text-purple-600" />
@@ -594,7 +590,7 @@ export default function CourseManagement() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No system courses yet</h3>
             <p className="text-gray-600 mb-4">Create official built-in courses for the platform</p>
             <button
-              onClick={() => router.push('/admin/courses/create?type=system')}
+              onClick={() => router.push(ADMIN_CREATE_SYSTEM_COURSE_PATH)}
               className="px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors inline-flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />

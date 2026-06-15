@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Loader2, Sparkles, ArrowRight } from 'lucide-react';
 import { fetchFullProfile, saveUserProfile, saveAccessibilitySettings } from '@/lib/learner-api';
 import type { AccessibilitySettingsData } from '@/lib/learner-api';
+import { mergeEasyReadSettings, shouldAutoEnableEasyRead } from '@/lib/accessibility-utils';
 import { toast } from 'sonner';
 
 export default function OnboardingPage() {
@@ -24,6 +25,7 @@ export default function OnboardingPage() {
   const [preferredTheme, setPreferredTheme] = useState('light');
   const [lineSpacing, setLineSpacing] = useState('normal');
   const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [easyReadEnabled, setEasyReadEnabled] = useState(false);
   const [dyslexiaFriendlyFont, setDyslexiaFriendlyFont] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [preferredReadingLevel, setPreferredReadingLevel] = useState('');
@@ -39,6 +41,7 @@ export default function OnboardingPage() {
           setPreferredTheme(a.preferred_theme || 'light');
           setLineSpacing(a.line_spacing || 'normal');
           setTtsEnabled(a.tts_enabled ?? false);
+          setEasyReadEnabled(a.simplified_ui ?? false);
           setDyslexiaFriendlyFont(a.dyslexia_friendly_font ?? false);
           setReducedMotion(a.reduced_motion ?? false);
           setPreferredReadingLevel(a.preferred_reading_level || '');
@@ -56,7 +59,7 @@ export default function OnboardingPage() {
     setSaving(true);
     try {
       await saveUserProfile({ bio: `Learning preferences: ${disabilityType || 'none'}` });
-      const data: AccessibilitySettingsData = {
+      let data: AccessibilitySettingsData = {
         disability_type: disabilityType || null,
         preferred_font_size: preferredFontSize,
         preferred_theme: preferredTheme,
@@ -66,7 +69,11 @@ export default function OnboardingPage() {
         reduced_motion: reducedMotion,
         preferred_reading_level: preferredReadingLevel || null,
         preferred_content_format: preferredContentFormat || null,
+        simplified_ui: easyReadEnabled || shouldAutoEnableEasyRead(preferredReadingLevel),
       };
+      if (data.simplified_ui) {
+        data = mergeEasyReadSettings(data, true);
+      }
       await saveAccessibilitySettings(data);
       toast.success('Your preferences have been saved!');
       router.push('/learner');
@@ -211,6 +218,14 @@ export default function OnboardingPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div>
+                  <Label className="font-medium">Easy Read Mode</Label>
+                  <p className="text-sm text-gray-600">Large text, high contrast, simplified layout — saved for every visit</p>
+                </div>
+                <Switch checked={easyReadEnabled} onCheckedChange={setEasyReadEnabled} />
               </div>
 
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">

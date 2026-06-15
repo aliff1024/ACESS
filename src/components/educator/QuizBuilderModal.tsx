@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { Plus, X, CheckCircle, HelpCircle } from 'lucide-react';
+import { Plus, X, CheckCircle, HelpCircle, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { createFullQuiz } from '@/lib/educator-api';
 
