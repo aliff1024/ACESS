@@ -36,6 +36,7 @@ export function SystemLessonEditor({
   const [lessonType, setLessonType] = useState('standard');
   const [estimatedDuration, setEstimatedDuration] = useState('');
   const [learningObjectives, setLearningObjectives] = useState('');
+  const [lessonLayout, setLessonLayout] = useState('standard');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export function SystemLessonEditor({
     setLoading(true);
     supabase
       .from('lessons')
-      .select('title, content_html, video_url, transcript, lesson_type, estimated_duration, learning_objectives, status')
+      .select('title, content_html, video_url, transcript, lesson_type, estimated_duration, learning_objectives, status, lesson_layout')
       .eq('id', lessonId)
       .single()
       .then(({ data, error }) => {
@@ -58,6 +59,7 @@ export function SystemLessonEditor({
         setLessonType(data.lesson_type || 'standard');
         setEstimatedDuration(data.estimated_duration ? String(data.estimated_duration) : '');
         setLearningObjectives(data.learning_objectives || '');
+        setLessonLayout(data.lesson_layout || 'standard');
         setStatus(data.status === 'published' ? 'published' : 'draft');
       })
       .finally(() => setLoading(false));
@@ -75,6 +77,7 @@ export function SystemLessonEditor({
         lesson_type: lessonType,
         estimated_duration: estimatedDuration ? parseInt(estimatedDuration, 10) : null,
         learning_objectives: learningObjectives || null,
+        lesson_layout: lessonLayout,
         status,
         updated_at: new Date().toISOString(),
       }).eq('id', lessonId);
@@ -124,6 +127,20 @@ export function SystemLessonEditor({
                   <option value="practice">Practice</option>
                   <option value="quiz">Quiz</option>
                   <option value="assessment">Assessment</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Lesson Layout</label>
+                <select
+                  value={lessonLayout}
+                  onChange={(e) => setLessonLayout(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                >
+                  <option value="standard">Standard</option>
+                  <option value="focus">Focus</option>
+                  <option value="two_column">Two Column</option>
+                  <option value="wide">Wide</option>
+                  <option value="slideshow">Slideshow</option>
                 </select>
               </div>
               <div>

@@ -16,6 +16,7 @@ import { ConfirmAction } from '../ui/ConfirmAction';
 import { RichTextEditor } from '../ui/RichTextEditor';
 import { ThumbnailPicker } from './ThumbnailPicker';
 import { SystemLessonEditor } from './SystemLessonEditor';
+import { QuizBuilderModal } from '../educator/QuizBuilderModal';
 import { uploadContentImage, uploadThumbnail } from '@/lib/educator-api';
 import { COURSE_CATEGORIES } from '@/lib/course-thumbnails';
 import { COURSE_TEMPLATES, applyCourseTemplate } from '@/lib/course-templates';
@@ -40,6 +41,9 @@ interface LessonItem {
   chapter_id: string | null;
   scheduled_release_at: string | null;
   learning_objectives: string | null;
+  quiz_id?: string | null;
+  quiz_title?: string | null;
+  quiz_question_count?: number;
 }
 
 interface CourseDetail {
@@ -94,6 +98,9 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
   const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
 
+  // Quiz editor
+  const [quizEditorLessonId, setQuizEditorLessonId] = useState<string | null>(null);
+
   // Inline overview editing
   const [editingOverview, setEditingOverview] = useState(false);
   const [overviewDraft, setOverviewDraft] = useState({
@@ -123,6 +130,7 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
   const [newLessonDuration, setNewLessonDuration] = useState('');
   const [newLessonPrereq, setNewLessonPrereq] = useState('');
   const [newLessonObjectives, setNewLessonObjectives] = useState('');
+  const [newLessonLayout, setNewLessonLayout] = useState('standard');
   const [newLessonVisibility, setNewLessonVisibility] = useState('visible');
   const [savingLesson, setSavingLesson] = useState(false);
 
@@ -176,6 +184,8 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
           .eq('course_id', courseId)
           .neq('status', 'dropped');
 
+        const sortedLessons = (courseData.lessons || []).sort((a: LessonItem, b: LessonItem) => a.sequence_order - b.sequence_order);
+        const lessonsWithQuizzes = await attachQuizIds(sortedLessons);
         setCourse({
           id: courseData.id,
           title: courseData.title,
@@ -189,7 +199,7 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
           creator_name: usersData?.full_name || 'Unknown',
           creator_email: usersData?.email || '',
           tags: (courseData.course_tags || []).map((t: { tag: string }) => t.tag),
-          lessons: (courseData.lessons || []).sort((a: LessonItem, b: LessonItem) => a.sequence_order - b.sequence_order),
+          lessons: lessonsWithQuizzes,
           quizCount: quizCount ?? 0,
           course_type: courseData.course_type || 'educator',
           system_course: courseData.system_course || false,
@@ -223,6 +233,32 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
 
   const isSystem = course?.course_type === 'system';
 
+  const attachQuizIds = async (lessons: LessonItem[]): Promise<LessonItem[]> => {
+    if (lessons.length === 0) return lessons;
+    const lessonIds = lessons.map(l => l.id);
+    const { data: quizzes } = await supabase
+      .from('quizzes')
+      .select('id, lesson_id, title')
+      .in('lesson_id', lessonIds);
+    const quizMap = new Map<string, { id: string; title: string | null; question_count: number }>();
+    for (const q of quizzes || []) {
+      const { count } = await supabase
+        .from('quiz_questions')
+        .select('id', { count: 'exact', head: true })
+        .eq('quiz_id', q.id);
+      quizMap.set(q.lesson_id, { id: q.id, title: q.title, question_count: count ?? 0 });
+    }
+    return lessons.map(l => {
+      const quiz = quizMap.get(l.id);
+      return {
+        ...l,
+        quiz_id: quiz?.id || null,
+        quiz_title: quiz?.title || null,
+        quiz_question_count: quiz?.question_count || 0,
+      };
+    });
+  };
+
   const reloadLessons = async () => {
     const { data: lessonsData } = await supabase
       .from('lessons')
@@ -230,7 +266,8 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
       .eq('course_id', courseId)
       .order('sequence_order', { ascending: true });
     if (lessonsData && course) {
-      setCourse({ ...course, lessons: lessonsData as LessonItem[] });
+      const withQuizzes = await attachQuizIds(lessonsData as LessonItem[]);
+      setCourse({ ...course, lessons: withQuizzes });
     }
   };
 
@@ -253,11 +290,13 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
         prerequisite_lesson_id: newLessonPrereq || null,
         learning_objectives: newLessonObjectives || null,
         visibility_status: newLessonVisibility,
+        lesson_layout: newLessonLayout,
       });
       if (error) throw error;
       toast.success('Lesson added');
       setNewLessonTitle('');
       setNewLessonType('standard');
+      setNewLessonLayout('standard');
       setNewLessonChapter('');
       setNewLessonDuration('');
       setNewLessonPrereq('');
@@ -1126,6 +1165,20 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
                       </select>
                     </div>
                     <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Lesson Layout</label>
+                      <select
+                        value={newLessonLayout}
+                        onChange={(e) => setNewLessonLayout(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                      >
+                        <option value="standard">Standard</option>
+                        <option value="focus">Focus</option>
+                        <option value="two_column">Two Column</option>
+                        <option value="wide">Wide</option>
+                        <option value="slideshow">Slideshow</option>
+                      </select>
+                    </div>
+                    <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Estimated Duration (min)</label>
                       <input
                         type="number"
@@ -1456,8 +1509,10 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
                   {course.status !== 'published' && (
                     <Button onClick={async () => {
                       await supabase.from('courses').update({ status: 'published', published_at: new Date().toISOString() }).eq('id', course.id);
+                      await supabase.from('lessons').update({ status: 'published' }).eq('course_id', course.id).eq('status', 'draft');
                       setCourse({ ...course, status: 'published' });
-                      toast.success('Course published');
+                      await reloadLessons();
+                      toast.success('Course and lessons published');
                     }} className="bg-green-600 hover:bg-green-700 text-white">
                       <CheckCircle className="w-4 h-4 mr-1" /> Publish
                     </Button>
@@ -1504,6 +1559,14 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
         courseId={courseId}
         lessonId={editingLessonId}
         onSaved={reloadLessons}
+      />
+
+      <QuizBuilderModal
+        isOpen={quizEditorLessonId !== null}
+        onClose={() => setQuizEditorLessonId(null)}
+        onSave={() => { setQuizEditorLessonId(null); reloadLessons(); }}
+        lessonId={quizEditorLessonId || undefined}
+        courseId={courseId}
       />
 
       {/* Confirm Delete Lesson */}
@@ -1593,6 +1656,11 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
                 <Lock className="w-2.5 h-2.5" /> Prerequisite
               </Badge>
             )}
+            {lesson.quiz_id && (
+              <Badge className="bg-blue-100 text-blue-700 text-xs px-1.5 py-0 flex items-center gap-1">
+                <HelpCircle className="w-2.5 h-2.5" /> Quiz: {lesson.quiz_title || 'Untitled'} ({lesson.quiz_question_count || 0} q)
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-3 text-xs text-gray-500">
             <span>{lesson.lesson_type || 'standard'}</span>
@@ -1617,6 +1685,15 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
             title="Edit content"
           >
             <Edit className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setQuizEditorLessonId(lesson.id)}
+            className={`p-1.5 rounded transition-colors ${
+              lesson.quiz_id ? 'text-blue-600 hover:bg-blue-50' : 'text-amber-600 hover:bg-amber-50'
+            }`}
+            title={lesson.quiz_id ? 'Edit quiz' : 'Add quiz'}
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => handleToggleVisibility(lesson.id, lesson.visibility_status || 'visible')}

@@ -7,7 +7,7 @@ import {
   ArrowLeft, BookOpen, FileText, Users, Settings, Plus, Loader2,
   Globe, EyeOff, Eye, ChevronUp, ChevronDown,
   Edit, Trash2, Upload, FileText as FileIcon, X,
-  CheckCircle, FileType, Video, GripVertical, Copy, ExternalLink, AlertTriangle, Award, Shield,
+  CheckCircle, FileType, Video, GripVertical, Copy, ExternalLink, AlertTriangle, Award, Shield, Image as ImageIcon,
 } from 'lucide-react';
 import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ import {
   fetchLessonById,
 } from '@/lib/educator-api';
 import type { LessonWithQuiz, LessonAsset, CourseStatus, LessonFields } from '@/lib/educator-api';
+import { uploadContentImage } from '@/lib/educator-api';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { LessonComponentToggles } from '@/components/educator/LessonComponentToggles';
 import { LessonSummarySettings } from '@/components/educator/LessonSummarySettings';
@@ -74,6 +75,8 @@ interface QuizQuestionForm {
   options: string[];
   correctAnswer: number;
   explanation: string;
+  imageUrl?: string;
+  optionImages: string[];
 }
 
 interface QuizOptionData {
@@ -81,6 +84,7 @@ interface QuizOptionData {
   option_text: string;
   is_correct: boolean;
   sequence_order: number;
+  image_url?: string | null;
 }
 
 interface QuizQuestionData {
@@ -88,6 +92,7 @@ interface QuizQuestionData {
   question_text: string;
   question_type: string;
   sequence_order: number;
+  image_url?: string | null;
   quiz_options: QuizOptionData[];
 }
 
@@ -246,7 +251,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   const [hasQuiz, setHasQuiz] = useState(true);
   const [hasTranscript, setHasTranscript] = useState(true);
   const [hasSummaryActivity, setHasSummaryActivity] = useState(false);
-  const [lessonLayout, setLessonLayout] = useState<'standard' | 'focus' | 'two_column' | 'wide'>('standard');
+  const [lessonLayout, setLessonLayout] = useState('standard');
   const [summarySource, setSummarySource] = useState<'video' | 'pdf' | 'lesson_text' | 'entire_lesson'>('entire_lesson');
   const [summaryWordTarget, setSummaryWordTarget] = useState(100);
   const [summaryKeyPoints, setSummaryKeyPoints] = useState<string[]>([]);
@@ -302,6 +307,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   const [quizTitle, setQuizTitle] = useState('');
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestionForm[]>([]);
   const [quizSaving, setQuizSaving] = useState(false);
+  const [uploadingQuizImage, setUploadingQuizImage] = useState<{ questionId: string; optionIndex?: number } | null>(null);
   const [lessonSaving, setLessonSaving] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
 
@@ -419,7 +425,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
       case 'hasQuiz': setHasQuiz(value as boolean); break;
       case 'hasTranscript': setHasTranscript(value as boolean); break;
       case 'hasSummaryActivity': setHasSummaryActivity(value as boolean); break;
-      case 'lessonLayout': setLessonLayout(value as 'standard' | 'focus' | 'two_column' | 'wide'); break;
+      case 'lessonLayout': setLessonLayout(value as string); break;
       case 'summary_source': setSummarySource(value as 'video' | 'pdf' | 'lesson_text' | 'entire_lesson'); break;
       case 'summary_word_target': setSummaryWordTarget(value as number); break;
       case 'summary_key_points': setSummaryKeyPoints(value as string[]); break;
@@ -451,7 +457,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
         has_quiz: hasQuiz,
         has_transcript: hasTranscript,
         has_summary_activity: hasSummaryActivity,
-        lesson_layout: lessonLayout,
+        lesson_layout: lessonLayout as LessonFields['lesson_layout'],
       };
       if (hasSummaryActivity) {
         lessonFields.summary_source = summarySource as 'video' | 'pdf' | 'lesson_text' | 'entire_lesson';
@@ -543,7 +549,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
     setQuizId(null);
     setQuizLessonId(lessonId);
     setQuizTitle(`Quiz for ${lessons.find((l) => l.id === lessonId)?.title || 'Lesson'}`);
-    setQuizQuestions([{ id: '1', question: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '' }]);
+    setQuizQuestions([{ id: '1', question: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '', optionImages: ['', '', '', ''] }]);
     setQuizModalOpen(true);
   };
 
@@ -560,6 +566,8 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
         options: [...question.quiz_options.sort((a, b) => a.sequence_order - b.sequence_order).map((opt) => opt.option_text), '', '', '', ''].slice(0, 4),
         correctAnswer: question.quiz_options.findIndex((opt) => opt.is_correct) ?? 0,
         explanation: '',
+        imageUrl: question.image_url || '',
+        optionImages: [...question.quiz_options.sort((a, b) => a.sequence_order - b.sequence_order).map((opt) => opt.image_url || ''), '', '', '', ''].slice(0, 4),
       })));
       setQuizModalOpen(true);
     } catch { openNewQuiz(lessonId) }
@@ -580,7 +588,11 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
       if (existingQuizId) await deleteQuiz(existingQuizId);
       await createFullQuiz({ lesson_id: quizLessonId, title: quizTitle }, validQuestions.map((q: QuizQuestionForm, i: number) => ({
         question_text: q.question, question_type: 'multiple_choice', sequence_order: i + 1,
-        options: q.options.filter((o: string) => o.trim()).map((opt: string, oi: number) => ({ option_text: opt, is_correct: oi === q.correctAnswer, sequence_order: oi + 1 })),
+        image_url: q.imageUrl || null,
+        options: q.options.filter((o: string) => o.trim()).map((opt: string, oi: number) => ({
+          option_text: opt, is_correct: oi === q.correctAnswer, sequence_order: oi + 1,
+          image_url: q.optionImages?.[oi] || null,
+        })),
       })));
       toast.success('Quiz saved!');
       setQuizModalOpen(false);
@@ -1274,6 +1286,35 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
               />
             </div>
 
+            {lessonLayout === 'slideshow' && (() => {
+              const slides = lessonContent.split(/<hr\s*\/?>/i).filter(s => s.trim());
+              return (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-2">
+                    Slide Preview &mdash; use <code className="text-purple-600 bg-purple-50 px-1 rounded">{'<hr>'}</code> to separate slides
+                  </label>
+                  {slides.length > 0 ? (
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {slides.map((slide, i) => (
+                        <div key={i} className="flex-shrink-0 w-48 border border-gray-200 rounded-xl p-3 bg-white shadow-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-gray-400">Slide {i + 1}/{slides.length}</span>
+                          </div>
+                          <div className="text-xs text-gray-700 leading-relaxed line-clamp-6 [&_img]:max-h-12 [&_img]:rounded [&_img]:mx-auto [&_img]:block"
+                            dangerouslySetInnerHTML={{ __html: slide }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                      <p className="text-xs text-gray-500">Add horizontal rules ({'<hr>'}) to create slides</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1362,21 +1403,95 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Question</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Question Text</label>
                     <Textarea value={q.question} onChange={(e) => { const n = [...quizQuestions]; n[qi] = { ...n[qi], question: e.target.value }; setQuizQuestions(n) }}
                       placeholder="Enter your question here..." rows={2} className="border-gray-300" />
                   </div>
+
+                  {/* Question image */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Question Image (optional)</label>
+                    {q.imageUrl ? (
+                      <div className="relative inline-block rounded-lg overflow-hidden border border-gray-300">
+                        <img src={q.imageUrl} alt="" className="max-h-24 object-contain" />
+                        <button type="button" onClick={() => { const n = [...quizQuestions]; n[qi] = { ...n[qi], imageUrl: '' }; setQuizQuestions(n) }}
+                          className="absolute top-1 right-1 p-0.5 bg-white/90 rounded-full hover:bg-white shadow-sm">
+                          <X className="w-3.5 h-3.5 text-red-600" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" disabled={uploadingQuizImage?.questionId === q.id && uploadingQuizImage?.optionIndex === undefined}
+                        onClick={async () => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+                          input.onchange = async (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (!file) return;
+                            setUploadingQuizImage({ questionId: q.id });
+                            try {
+                              const url = await uploadContentImage(file, `${courseId}/quiz`);
+                              const n = [...quizQuestions]; n[qi] = { ...n[qi], imageUrl: url }; setQuizQuestions(n);
+                            } finally { setUploadingQuizImage(null); }
+                          };
+                          input.click();
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                      >
+                        {uploadingQuizImage?.questionId === q.id && uploadingQuizImage?.optionIndex === undefined ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : <ImageIcon className="w-3.5 h-3.5" />}
+                        Add Image
+                      </button>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Answer Options</label>
                     <div className="space-y-2">
                       {q.options.map((opt: string, oi: number) => (
-                        <div key={oi} className="flex items-center gap-3">
+                        <div key={oi} className="flex items-center gap-2">
                           <input type="radio" name={`q-${q.id}`} checked={q.correctAnswer === oi}
                             onChange={() => { const n = [...quizQuestions]; n[qi] = { ...n[qi], correctAnswer: oi }; setQuizQuestions(n) }}
-                            className="w-5 h-5 text-green-600 focus:ring-green-500" />
+                            className="w-5 h-5 text-green-600 focus:ring-green-500 shrink-0" />
                           <Input value={opt} onChange={(e) => { const n = [...quizQuestions]; const opts = [...n[qi].options]; opts[oi] = e.target.value; n[qi] = { ...n[qi], options: opts }; setQuizQuestions(n) }}
                             placeholder={`Option ${String.fromCharCode(65 + oi)}`} className="flex-1" />
                           {q.correctAnswer === oi && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />}
+
+                          {/* Option image */}
+                          {q.optionImages?.[oi] ? (
+                            <div className="relative shrink-0">
+                              <img src={q.optionImages[oi]} alt="" className="w-8 h-8 rounded object-cover border border-gray-300" />
+                              <button type="button" onClick={() => { const n = [...quizQuestions]; const imgs = [...n[qi].optionImages]; imgs[oi] = ''; n[qi] = { ...n[qi], optionImages: imgs }; setQuizQuestions(n) }}
+                                className="absolute -top-1 -right-1 p-0.5 bg-white/90 rounded-full shadow-sm">
+                                <X className="w-3 h-3 text-red-600" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button type="button" disabled={uploadingQuizImage?.questionId === q.id && uploadingQuizImage?.optionIndex === oi}
+                              onClick={async () => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+                                input.onchange = async (e) => {
+                                  const file = (e.target as HTMLInputElement).files?.[0];
+                                  if (!file) return;
+                                  setUploadingQuizImage({ questionId: q.id, optionIndex: oi });
+                                  try {
+                                    const url = await uploadContentImage(file, `${courseId}/quiz`);
+                                    const n = [...quizQuestions]; const imgs = [...(n[qi].optionImages || ['', '', '', ''])]; imgs[oi] = url; n[qi] = { ...n[qi], optionImages: imgs }; setQuizQuestions(n);
+                                  } finally { setUploadingQuizImage(null); }
+                                };
+                                input.click();
+                              }}
+                              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 shrink-0"
+                              title="Add option image"
+                            >
+                              {uploadingQuizImage?.questionId === q.id && uploadingQuizImage?.optionIndex === oi
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : <ImageIcon className="w-4 h-4" />}
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1384,7 +1499,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
                 </div>
               </div>
             ))}
-            <Button variant="outline" onClick={() => setQuizQuestions([...quizQuestions, { id: Date.now().toString(), question: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '' }])}
+            <Button variant="outline" onClick={() => setQuizQuestions([...quizQuestions, { id: Date.now().toString(), question: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '', optionImages: ['', '', '', ''] }])}
               className="w-full border-dashed border-blue-600 text-blue-600">
               <Plus className="w-4 h-4 mr-2" /> Add Question
             </Button>

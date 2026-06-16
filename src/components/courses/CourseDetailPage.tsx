@@ -74,8 +74,9 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
       } else {
         toast.error('Not eligible for certificate yet');
       }
-    } catch {
-      toast.error('Failed to claim certificate');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to claim certificate';
+      toast.error(msg);
     } finally {
       setClaimingCert(false);
     }

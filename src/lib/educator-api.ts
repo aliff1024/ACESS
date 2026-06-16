@@ -34,7 +34,7 @@ export interface LessonFields {
   summary_key_points?: string[]
   summary_reflection_questions?: string[]
   summary_ai_feedback_enabled?: boolean
-  lesson_layout?: 'standard' | 'focus' | 'two_column' | 'wide'
+  lesson_layout?: 'standard' | 'focus' | 'two_column' | 'wide' | 'slideshow'
   simplified_summary?: string
   focus_mode_enabled?: boolean
   chunked_content_enabled?: boolean
@@ -54,7 +54,8 @@ export interface QuestionFields {
   question_text: string
   question_type: 'multiple_choice' | 'scenario'
   sequence_order: number
-  options: { option_text: string; is_correct: boolean; sequence_order: number }[]
+  image_url?: string | null
+  options: { option_text: string; is_correct: boolean; sequence_order: number; image_url?: string | null }[]
 }
 
 export interface CourseSummary {
@@ -313,7 +314,10 @@ export async function createFullQuiz(quiz: QuizFields, questions: QuestionFields
     .select()
     .single()
 
-  if (quizError) throw quizError
+  if (quizError) {
+    console.error('[createFullQuiz] quiz insert error:', JSON.stringify(quizError, Object.getOwnPropertyNames(quizError)))
+    throw new Error(`Quiz insert failed: ${quizError.message || 'unknown'}`)
+  }
 
   for (const q of questions) {
     const { data: questionData, error: questionError } = await supabase
@@ -323,11 +327,15 @@ export async function createFullQuiz(quiz: QuizFields, questions: QuestionFields
         question_text: q.question_text,
         question_type: q.question_type,
         sequence_order: q.sequence_order,
+        image_url: q.image_url || null,
       })
       .select()
       .single()
 
-    if (questionError) throw questionError
+    if (questionError) {
+      console.error('[createFullQuiz] question insert error:', JSON.stringify(questionError, Object.getOwnPropertyNames(questionError)))
+      throw new Error(`Question insert failed: ${questionError.message || 'unknown'}`)
+    }
 
     if (q.options.length > 0) {
       const optionsWithQuestionId = q.options.map((opt) => ({
@@ -335,13 +343,17 @@ export async function createFullQuiz(quiz: QuizFields, questions: QuestionFields
         option_text: opt.option_text,
         is_correct: opt.is_correct,
         sequence_order: opt.sequence_order,
+        image_url: opt.image_url || null,
       }))
 
       const { error: optionsError } = await supabase
         .from('quiz_options')
         .insert(optionsWithQuestionId)
 
-      if (optionsError) throw optionsError
+      if (optionsError) {
+        console.error('[createFullQuiz] options insert error:', JSON.stringify(optionsError, Object.getOwnPropertyNames(optionsError)))
+        throw new Error(`Options insert failed: ${optionsError.message || 'unknown'}`)
+      }
     }
   }
 
@@ -752,7 +764,10 @@ export async function fetchLessonAssets(lessonId: string): Promise<LessonAsset[]
     .eq('lesson_id', lessonId)
     .order('created_at', { ascending: true })
 
-  if (error) throw error
+  if (error) {
+    console.error('fetchLessonAssets error:', error)
+    return []
+  }
   return data || []
 }
 
@@ -886,14 +901,17 @@ export async function fetchQuizWithQuestions(lessonId: string) {
     .select(
       `id, title, lesson_id, time_limit_seconds, max_attempts, pass_threshold_pct,
       quiz_questions (
-        id, question_text, question_type, sequence_order,
-        quiz_options (id, option_text, is_correct, sequence_order)
+        id, question_text, question_type, sequence_order, image_url,
+        quiz_options (id, option_text, is_correct, sequence_order, image_url)
       )`
     )
     .eq('lesson_id', lessonId)
     .maybeSingle()
 
-  if (error) throw error
+  if (error) {
+    console.error('fetchQuizWithQuestions error:', error)
+    return null
+  }
   return data
 }
 

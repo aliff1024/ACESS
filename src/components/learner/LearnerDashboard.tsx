@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { WelcomeSection } from './WelcomeSection';
@@ -20,6 +20,8 @@ import { CertificatePage } from '../certificates/CertificatePage';
 import { CertificateListPage } from '../certificates/CertificateListPage';
 import { Toaster } from '../ui/sonner';
 import { toast } from 'sonner';
+import { fetchCertificateDetail } from '@/lib/learner-api';
+import type { FullCertificate } from '@/lib/learner-api';
 
 type View =
   | 'dashboard'
@@ -44,7 +46,18 @@ export function LearnerDashboard() {
   const [quizAnswers, setQuizAnswers] = useState<{ questionId: string; selectedAnswer: string }[]>([]);
   const [showQuizResult, setShowQuizResult] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
-  const [, setSelectedCertificate] = useState<string | null>(null);
+  const [selectedCertificate, setSelectedCertificate] = useState<string | null>(null);
+  const [certificateData, setCertificateData] = useState<FullCertificate | null>(null);
+  const [certDataLoading, setCertDataLoading] = useState(false);
+
+  useEffect(() => {
+    if (currentView !== 'certificateView' || !selectedCertificate) return;
+    setCertDataLoading(true);
+    fetchCertificateDetail(selectedCertificate)
+      .then((data) => setCertificateData(data))
+      .catch(() => {})
+      .finally(() => setCertDataLoading(false));
+  }, [currentView, selectedCertificate]);
 
   const handleSidebarNavigate = (view: string) => {
     setSidebarView(view);
@@ -110,9 +123,9 @@ export function LearnerDashboard() {
   const handleViewCertificate = (certificateId?: string) => {
     if (certificateId) {
       setSelectedCertificate(certificateId);
+      setCurrentView('certificateView');
     }
     setShowCertificateModal(false);
-    setCurrentView('certificateView');
   };
 
   const handleDownloadCertificate = () => {
@@ -239,12 +252,28 @@ export function LearnerDashboard() {
   }
 
   if (currentView === 'certificateView') {
+    if (certDataLoading) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+        </div>
+      );
+    }
+    if (!certificateData) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+          <p className="text-gray-600">Certificate not found</p>
+        </div>
+      );
+    }
     return (
       <CertificatePage
-        courseTitle="Introduction to Web Accessibility"
-        learnerName="Learner"
-        completionDate="March 15, 2026"
-        certificateCode="ACESS-2026-00123"
+        courseTitle={certificateData.course_title}
+        learnerName={certificateData.learner_name}
+        completionDate={new Date(certificateData.completion_date).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        })}
+        certificateCode={certificateData.reference_code}
         onBack={handleBackToDashboard}
         onDownload={handleDownloadCertificate}
         onShare={handleShareCertificate}
@@ -290,12 +319,11 @@ export function LearnerDashboard() {
 
       <CertificateGenerationModal
         isOpen={showCertificateModal}
-        courseTitle="Introduction to Web Accessibility"
+        courseId={selectedCourse || ''}
+        courseTitle="Course"
         learnerName="Learner"
-        completionDate="March 15, 2026"
-        certificateCode="ACESS-2026-00123"
         onClose={() => setShowCertificateModal(false)}
-        onViewCertificate={() => handleViewCertificate()}
+        onViewCertificate={(certId) => handleViewCertificate(certId)}
         onDownload={handleDownloadCertificate}
       />
 

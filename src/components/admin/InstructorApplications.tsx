@@ -71,15 +71,26 @@ export function InstructorApplications() {
   const handleAction = async (appId: string, status: 'approved' | 'rejected' | 'request_info') => {
     setActionLoading(true)
     try {
-      await updateInstructorApplication(appId, { status, admin_notes: adminNotes })
-      toast.success(`Application ${status} successfully`)
+      if (status === 'approved') {
+        const res = await fetch('/api/admin/approve-instructor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ applicationId: appId, admin_notes: adminNotes }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Approval failed')
+        toast.success('Application approved! Email sent to applicant.')
+      } else {
+        await updateInstructorApplication(appId, { status, admin_notes: adminNotes })
+        toast.success(`Application ${status} successfully`)
+      }
       setApproveDialogOpen(false)
       setRejectDialogOpen(false)
       setSelectedApp(null)
       setAdminNotes('')
       refetch()
-    } catch {
-      toast.error(`Failed to ${status} application`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : `Failed to ${status} application`)
     } finally {
       setActionLoading(false)
     }
@@ -282,14 +293,14 @@ export function InstructorApplications() {
 
       {/* Confirm Approve Dialog */}
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Approval</DialogTitle>
-            <DialogDescription>This will activate the educator account.</DialogDescription>
+            <DialogDescription>This will activate the educator account and send an email.</DialogDescription>
           </DialogHeader>
           <p className="text-sm text-gray-600">
             Are you sure you want to approve <strong>{selectedApp?.full_name}</strong> as an educator?
-            They will receive educator access and can start creating courses.
+            An approval email with login instructions will be sent to <strong>{selectedApp?.email}</strong>.
           </p>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>Cancel</Button>

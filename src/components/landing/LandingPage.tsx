@@ -29,6 +29,8 @@ export default function LandingPage() {
       } else {
         setChecking(false);
       }
+    }).catch(() => {
+      setChecking(false);
     });
   }, [router]);
 
@@ -45,7 +47,7 @@ export default function LandingPage() {
   if (checking) return null;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
+    <div className="min-h-screen bg-white dark:bg-gray-950" style={{ scrollBehavior: 'smooth' }}>
       <Navbar onTryDemo={() => setIsDemoModalOpen(true)} />
 
       <main>

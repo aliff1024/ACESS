@@ -22,14 +22,13 @@ export default function ProgressClientPage({ selectedCourse }: { selectedCourse?
 
         <CertificateGenerationModal
           isOpen={showCertificateModal}
-          courseTitle="Introduction to Web Accessibility"
+          courseId={selectedCourse}
+          courseTitle="Course"
           learnerName="Learner"
-          completionDate="March 15, 2026"
-          certificateCode="ACESS-2026-00123"
           onClose={() => setShowCertificateModal(false)}
-          onViewCertificate={() => {
+          onViewCertificate={(certId) => {
             setShowCertificateModal(false);
-            router.push('/learner/certificates');
+            router.push(`/learner/certificates?id=${certId}`);
           }}
           onDownload={() => setShowCertificateModal(false)}
         />

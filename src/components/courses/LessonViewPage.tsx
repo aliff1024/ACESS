@@ -6,7 +6,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbP
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock } from 'lucide-react';
+import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint } from '@/lib/learner-api';
 import type { LessonContent, QuizData, LearnerLessonCheckpoint } from '@/lib/learner-api';
@@ -273,11 +273,14 @@ export function LessonViewPage({
   const [showQuizResult, setShowQuizResult] = useState(false);
   const [isReviewingAnswers, setIsReviewingAnswers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [quizResetKey, setQuizResetKey] = useState(0);
 
   const { settings } = useAccessibility();
 
   // Focus mode local toggle (learner can override lesson setting)
   const [focusMode, setFocusMode] = useState(false);
+  // View mode: slide (split by <hr>) or scroll (continuous)
+  const [viewMode, setViewMode] = useState<'slide' | 'scroll' | null>(null);
   // Chunked content navigation
   const [currentChunk, setCurrentChunk] = useState(0);
   // TTS ref and state
@@ -350,7 +353,7 @@ export function LessonViewPage({
             .then(({ count }) => setCompletedLessons(count ?? 0)).catch(() => {});
         }).catch(() => {});
     }).catch(() => {});
-    supabase.from('lessons').select('title').eq('course_id', courseId).eq('status', 'published').order('sequence_order', { ascending: true })
+    supabase.from('lessons').select('title').eq('course_id', courseId).or('visibility_status.eq.visible,visibility_status.is.null').order('sequence_order', { ascending: true })
       .then(({ data }) => {
         if (!data) return;
         const idx = data.findIndex((l) => l.id === lessonId);
@@ -428,11 +431,17 @@ export function LessonViewPage({
   useEffect(() => {
     if (!lesson) return;
     const contentHtml = lesson.content_html || '';
-    const lessonChunks = !lesson.chunked_content_enabled || !contentHtml
+    const educatorLayoutSetting = lesson.lesson_layout || 'standard';
+    const slideshowActive = viewMode !== null ? viewMode === 'slide' : educatorLayoutSetting === 'slideshow';
+    const lessonChunks = !contentHtml
       ? null
-      : contentHtml.split(/<h2\b[^>]*>/i).filter((p) => p.trim());
+      : slideshowActive
+        ? contentHtml.split(/<hr\s*\/?>/i).filter((p) => p.trim())
+        : !lesson.chunked_content_enabled
+          ? null
+          : contentHtml.split(/<h2\b[^>]*>/i).filter((p) => p.trim());
     const chunkHtml = lessonChunks && lessonChunks.length > 0
-      ? (currentChunk === 0 ? lessonChunks[0] : `<h2>${lessonChunks[currentChunk]}`)
+      ? (currentChunk === 0 ? lessonChunks[0] : slideshowActive ? lessonChunks[currentChunk] : `<h2>${lessonChunks[currentChunk]}`)
       : contentHtml;
     ttsTextRef.current = chunkHtml.replace(/<[^>]*>/g, '').trim();
 
@@ -442,6 +451,17 @@ export function LessonViewPage({
       return () => clearTimeout(timer);
     }
   }, [lesson, currentChunk, settings.tts_enabled, speak]);
+
+  // Keyboard navigation for slideshow mode
+  useEffect(() => {
+    if (!lesson || !isSlideMode) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goToPrevChunk(); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); goToNextChunk(); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  });
 
   const handlePlayTTS = useCallback(() => {
     if (ttsPlaying) {
@@ -534,20 +554,26 @@ export function LessonViewPage({
   const contentFontSize = fontSizeMap[settings.preferred_font_size ?? 'medium'] || 'text-base';
 
   const contentHtml = lesson.content_html || '';
+  const educatorLayout = lesson.lesson_layout || 'standard';
+  const isSlideMode = viewMode !== null ? viewMode === 'slide' : educatorLayout === 'slideshow';
 
-  const chunks = !lesson.chunked_content_enabled || !contentHtml
+  const chunks = !contentHtml
     ? null
-    : contentHtml.split(/<h2\b[^>]*>/i).filter(p => p.trim());
+    : isSlideMode
+      ? contentHtml.split(/<hr\s*\/?>/i).filter(p => p.trim())
+      : !lesson.chunked_content_enabled
+        ? null
+        : contentHtml.split(/<h2\b[^>]*>/i).filter(p => p.trim());
 
   const currentChunkHtml = chunks && chunks.length > 0
-    ? (currentChunk === 0 ? chunks[0] : `<h2>${chunks[currentChunk]}`)
+    ? (currentChunk === 0 ? chunks[0] : isSlideMode ? chunks[currentChunk] : `<h2>${chunks[currentChunk]}`)
     : contentHtml;
 
   const totalChunks = chunks?.length ?? 0;
   const showChunkNav = totalChunks > 1;
 
-  const guidedMode = !effectiveFocusMode && showChunkNav && (lesson.chunked_content_enabled || simplifiedMode);
-  const requireCheckpoint = !!lesson.checkpoints_enabled && showChunkNav && !effectiveFocusMode;
+  const guidedMode = !isSlideMode && !effectiveFocusMode && showChunkNav && (lesson.chunked_content_enabled || simplifiedMode);
+  const requireCheckpoint = !isSlideMode && !!lesson.checkpoints_enabled && showChunkNav && !effectiveFocusMode;
   const currentDbCheckpoint = lessonCheckpoints.length > 0
     ? (lessonCheckpoints.find((cp) => cp.sequence_order === currentChunk) ?? lessonCheckpoints[currentChunk] ?? null)
     : null;
@@ -892,7 +918,27 @@ export function LessonViewPage({
             )}
 
             {/* ── Lesson Content ── */}
-            {showChunkNav && !effectiveFocusMode && (
+            {/* View mode toggle */}
+            {contentHtml && (
+              <div className="flex items-center justify-end gap-2 mb-3">
+                <button
+                  onClick={() => setViewMode(isSlideMode ? 'scroll' : 'slide')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    isSlideMode
+                      ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {isSlideMode ? (
+                    <><FileText className="w-3.5 h-3.5" /> Scroll View</>
+                  ) : (
+                    <><Layout className="w-3.5 h-3.5" /> Slide View</>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {showChunkNav && !effectiveFocusMode && !isSlideMode && (
               <ChunkNavigation
                 currentChunk={currentChunk}
                 totalChunks={totalChunks}
@@ -905,26 +951,130 @@ export function LessonViewPage({
               />
             )}
 
-            <CollapsibleCard
-              icon={<BookOpen className="w-4 h-4 text-blue-600" />}
-              title={showChunkNav ? (guidedMode ? `Section ${currentChunk + 1} of ${totalChunks}` : `Lesson Content (${totalChunks} sections)`) : 'Lesson Content'}
-              defaultOpen={true}
-              badge={currentChunkHtml ? 'ready' : undefined}
-            >
-              {currentChunkHtml ? (
+            {isSlideMode ? (
+              /* ── Slideshow View ── */
+              <div className="space-y-4">
+                {showChunkNav && (
+                  <>
+                    {/* Progress bar */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-gray-500 whitespace-nowrap">
+                        Slide {currentChunk + 1} of {totalChunks}
+                      </span>
+                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                          style={{ width: `${((currentChunk + 1) / totalChunks) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Slide content */}
                 <div
-                  className={`prose max-w-none text-gray-900 ${contentLineSpacing} ${contentFontSize} ${
-                    simplifiedMode ? 'prose-xl prose-amber' : 'prose-lg'
-                  }`}
-                  dangerouslySetInnerHTML={{ __html: currentChunkHtml }}
-                />
-              ) : (
-                <div className="text-center py-6">
-                  <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No content for this lesson yet</p>
+                  className="relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
+                  role="region"
+                  aria-roledescription="slide"
+                  aria-label={`Slide ${currentChunk + 1} of ${totalChunks}`}
+                  aria-live="polite"
+                >
+                  <h2 className="sr-only">Slide {currentChunk + 1}</h2>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentChunk}
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -30 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="p-8 md:p-12"
+                    >
+                      {currentChunkHtml ? (
+                        <div
+                          className={`prose max-w-4xl mx-auto text-gray-900 ${contentLineSpacing} ${contentFontSize} ${
+                            simplifiedMode ? 'prose-xl prose-amber' : 'prose-lg'
+                          } [&_img]:max-h-[50vh] [&_img]:w-auto [&_img]:mx-auto [&_img]:rounded-xl [&_img]:shadow-md`}
+                          dangerouslySetInnerHTML={{ __html: currentChunkHtml }}
+                        />
+                      ) : (
+                        <div className="text-center py-12">
+                          <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                          <p className="text-gray-500">This slide is empty</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {showChunkNav && (
+                    <>
+                      {/* Slide navigation arrows */}
+                      <div className="absolute inset-y-0 left-0 flex items-center">
+                        {currentChunk > 0 && (
+                          <button
+                            onClick={goToPrevChunk}
+                            className="ml-2 p-2 rounded-full bg-white/90 shadow-md border border-gray-200 hover:bg-white hover:shadow-lg transition-all text-gray-600 hover:text-gray-900"
+                            aria-label="Previous slide"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="absolute inset-y-0 right-0 flex items-center">
+                        {currentChunk < totalChunks - 1 && (
+                          <button
+                            onClick={goToNextChunk}
+                            className="mr-2 p-2 rounded-full bg-white/90 shadow-md border border-gray-200 hover:bg-white hover:shadow-lg transition-all text-gray-600 hover:text-gray-900"
+                            aria-label="Next slide"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
-              )}
-            </CollapsibleCard>
+
+                {showChunkNav && (
+                  /* Slide dots */
+                  <div className="flex justify-center gap-1.5">
+                    {Array.from({ length: totalChunks }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentChunk(i)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          i === currentChunk
+                            ? 'bg-blue-600 w-4'
+                            : 'bg-gray-300 hover:bg-gray-400'
+                        }`}
+                        aria-label={`Go to slide ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Standard Content View ── */
+              <CollapsibleCard
+                icon={<BookOpen className="w-4 h-4 text-blue-600" />}
+                title={showChunkNav ? (guidedMode ? `Section ${currentChunk + 1} of ${totalChunks}` : `Lesson Content (${totalChunks} sections)`) : 'Lesson Content'}
+                defaultOpen={true}
+                badge={currentChunkHtml ? 'ready' : undefined}
+              >
+                {currentChunkHtml ? (
+                  <div
+                    className={`prose max-w-none text-gray-900 ${contentLineSpacing} ${contentFontSize} ${
+                      simplifiedMode ? 'prose-xl prose-amber' : 'prose-lg'
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: currentChunkHtml }}
+                  />
+                ) : (
+                  <div className="text-center py-6">
+                    <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">No content for this lesson yet</p>
+                  </div>
+                )}
+              </CollapsibleCard>
+            )}
 
             {adaptiveHint && (
               <Card className="p-4 border-2 border-violet-200 bg-violet-50">
@@ -988,7 +1138,7 @@ export function LessonViewPage({
             )}
 
             {/* ── Chunk Navigation (bottom of content) ── */}
-            {showChunkNav && !effectiveFocusMode && (
+            {showChunkNav && !effectiveFocusMode && !isSlideMode && (
               <ChunkNavigation
                 currentChunk={currentChunk}
                 totalChunks={totalChunks}
@@ -1000,6 +1150,7 @@ export function LessonViewPage({
                 position="bottom"
               />
             )}
+
 
             {/* ── Transcript (optional) ── */}
             {lesson.transcript && lesson.has_transcript !== false && !effectiveFocusMode && (
@@ -1114,6 +1265,7 @@ export function LessonViewPage({
             </div>
           ) : (
             <QuizPage
+              key={quizResetKey}
               lessonId={lessonId}
               courseId={courseId}
               onBack={() => setActiveTab('content')}
@@ -1178,6 +1330,7 @@ export function LessonViewPage({
         onRetryQuiz={() => {
           setShowQuizResult(false);
           setQuizAnswers([]);
+          setQuizResetKey((k) => k + 1);
         }}
         onContinueLearning={() => {
           setShowQuizResult(false);

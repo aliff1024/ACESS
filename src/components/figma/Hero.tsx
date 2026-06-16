@@ -1,10 +1,35 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { BookOpen, Users, TrendingUp } from 'lucide-react';
 
+interface SiteStats {
+  courses: number;
+  learners: number;
+  completionRate: number;
+}
+
 export function Hero() {
+  const [stats, setStats] = useState<SiteStats>({ courses: 0, learners: 0, completionRate: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch('/api/public-stats');
+        const data = await res.json();
+        setStats(data);
+      } catch {
+        setStats({ courses: 0, learners: 0, completionRate: 0 });
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
+
   return (
     <section className="bg-blue-50 dark:bg-gray-900 py-20 px-6">
       <div className="max-w-7xl mx-auto">
@@ -25,7 +50,6 @@ export function Hero() {
             >
               <Link href="/signup">Explore Courses</Link>
             </Button>
-
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
@@ -33,7 +57,9 @@ export function Hero() {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                 <BookOpen className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">200+ Courses</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {loading ? '...' : `${stats.courses}+`} Courses
+              </h3>
               <p className="text-gray-600">Accessible learning content</p>
             </div>
 
@@ -41,7 +67,9 @@ export function Hero() {
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                 <Users className="w-8 h-8 text-purple-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">10,000+ Learners</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {loading ? '...' : `${stats.learners.toLocaleString()}+`} Learners
+              </h3>
               <p className="text-gray-600">Active community members</p>
             </div>
 
@@ -49,7 +77,9 @@ export function Hero() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <TrendingUp className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">95% Success Rate</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {loading ? '...' : `${stats.completionRate}%`} Success Rate
+              </h3>
               <p className="text-gray-600">Course completion average</p>
             </div>
           </div>

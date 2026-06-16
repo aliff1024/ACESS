@@ -28,6 +28,7 @@ const layouts = [
   { value: 'focus', label: 'Focus', desc: 'Full-width content, minimal distractions' },
   { value: 'two_column', label: 'Two Column', desc: 'Content + sidebar for video/transcript' },
   { value: 'wide', label: 'Wide', desc: 'Expanded content area' },
+  { value: 'slideshow', label: 'Slideshow', desc: 'One slide at a time, split by horizontal rules' },
 ]
 
 export function LessonComponentToggles({ hasVideo, hasPdf, hasQuiz, hasTranscript, hasSummaryActivity, lessonLayout, onChange }: ComponentTogglesProps) {

@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import { School, Send, Loader2, CheckCircle, Link as LinkIcon, Gift } from 'lucide-react'
 import { toast } from 'sonner'
-import { submitInstructorApplication } from '@/lib/educator-api'
 
 export function InstructorApplicationForm() {
   const [step, setStep] = useState<'form' | 'submitted'>('form')
@@ -25,14 +24,22 @@ export function InstructorApplicationForm() {
     e.preventDefault()
     setSubmitting(true)
     try {
-      await submitInstructorApplication({
-        full_name: formData.fullName,
-        email: formData.email,
-        experience: formData.experience,
-        reason: formData.reason,
-        portfolio_links: formData.portfolioLinks || undefined,
-        referral_code: formData.referralCode || undefined,
+      const res = await fetch('/api/instructor-applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: formData.fullName,
+          email: formData.email,
+          experience: formData.experience,
+          reason: formData.reason,
+          portfolio_links: formData.portfolioLinks || undefined,
+          referral_code: formData.referralCode || undefined,
+        }),
       })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed to submit')
+      }
       setStep('submitted')
       toast.success('Application submitted successfully!')
     } catch (err) {

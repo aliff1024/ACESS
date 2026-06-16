@@ -147,7 +147,7 @@ export default function SignupPage() {
 
             <button
               type="button"
-              onClick={() => router.push('/contact?category=instructor_application')}
+              onClick={() => router.push('/become-instructor/apply')}
               className="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-300 bg-white hover:border-purple-400 hover:bg-purple-50 transition-all text-left group"
             >
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-gray-100 group-hover:bg-purple-100 transition-colors">
@@ -231,11 +231,11 @@ export default function SignupPage() {
             </div>
             <h3 className="text-lg font-bold text-purple-900 mb-2">Become an Instructor</h3>
             <p className="text-sm text-purple-700 mb-4">
-              To apply as an instructor, please contact our team through the inquiry form. We will review your application and get back to you.
+              Ready to share your knowledge? Submit your instructor application and start creating accessible courses.
             </p>
-            <Button onClick={() => router.push('/contact?category=instructor_application')}
+            <Button onClick={() => router.push('/become-instructor/apply')}
               className="bg-purple-600 hover:bg-purple-700 text-white px-6">
-              <MessageSquare className="w-4 h-4 mr-2" /> Contact Us About Teaching
+              <School className="w-4 h-4 mr-2" /> Apply to Become an Instructor
             </Button>
             <button
               type="button"

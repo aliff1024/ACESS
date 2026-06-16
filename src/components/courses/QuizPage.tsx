@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { Clock, CheckCircle, Loader2, Flag, AlertTriangle, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
-import { fetchQuizData, checkQuizAttempts } from '@/lib/learner-api';
+import { Clock, CheckCircle, Loader2, Flag, AlertTriangle, ChevronLeft, ChevronRight, HelpCircle, BarChart3, RotateCcw } from 'lucide-react';
+import { fetchQuizData, checkQuizAttempts, fetchQuizAttemptHistory } from '@/lib/learner-api';
 import type { QuizData } from '@/lib/learner-api';
 
 interface QuizPageProps {
@@ -17,6 +17,11 @@ interface QuizPageProps {
   onSuggestReview?: () => void;
 }
 
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 export function QuizPage({
   lessonId, courseId, onBack, onSubmit,
   adaptiveLearningEnabled = false,
@@ -26,6 +31,10 @@ export function QuizPage({
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState<{ reason: string } | null>(null);
+  const [showStartScreen, setShowStartScreen] = useState(true);
+  const [attemptHistory, setAttemptHistory] = useState<{ attempt_number: number; score_pct: number; result: string; created_at: string }[]>([]);
+  const [usedAttempts, setUsedAttempts] = useState(0);
+  const [maxAttempts, setMaxAttempts] = useState<number | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ questionId: string; selectedAnswer: string }[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -73,8 +82,9 @@ export function QuizPage({
     Promise.all([
       fetchQuizData(lessonId),
       checkQuizAttempts(lessonId, courseId),
+      fetchQuizAttemptHistory(lessonId, courseId),
     ])
-      .then(([quiz, attemptCheck]) => {
+      .then(([quiz, attemptCheck, history]) => {
         if (!quiz || quiz.questions.length === 0) {
           setBlocked({ reason: 'no_quiz' });
           return;
@@ -84,6 +94,9 @@ export function QuizPage({
           return;
         }
         setQuizData(quiz);
+        setAttemptHistory(history.attempts);
+        setUsedAttempts(history.usedAttempts);
+        setMaxAttempts(history.maxAttempts);
         if (quiz.time_limit_seconds && quiz.time_limit_seconds > 0) {
           setTimeRemaining(quiz.time_limit_seconds);
         }
@@ -241,10 +254,178 @@ export function QuizPage({
   if (!quizData) return null;
 
   const questions = quizData.questions;
+  const timeLow = timeRemaining !== null && timeRemaining <= 120;
+
+  if (showStartScreen) {
+    const bestScore = attemptHistory.length > 0 ? Math.max(...attemptHistory.map(a => a.score_pct)) : null;
+    const avgScore = attemptHistory.length > 0 ? Math.round(attemptHistory.reduce((sum, a) => sum + a.score_pct, 0) / attemptHistory.length) : null;
+    const passedCount = attemptHistory.filter(a => a.result === 'pass').length;
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-start justify-center p-6 pt-10">
+        <div className="max-w-2xl w-full space-y-6">
+          {/* Quiz header card */}
+          <Card className="p-8">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-1">{quizData.title}</h1>
+                <p className="text-gray-500">{questions.length} question{questions.length !== 1 ? 's' : ''}</p>
+              </div>
+              {bestScore !== null && (
+                <div className="text-right">
+                  <p className="text-sm text-gray-500 mb-0.5">Best Score</p>
+                  <p className={`text-3xl font-bold ${bestScore >= (quizData.pass_threshold_pct ?? 80) ? 'text-green-600' : 'text-amber-600'}`}>
+                    {bestScore}%
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              <div className="bg-blue-50 rounded-xl p-4">
+                <p className="text-xs text-blue-600 font-medium mb-1">Questions</p>
+                <p className="text-2xl font-bold text-blue-900">{questions.length}</p>
+              </div>
+              <div className="bg-purple-50 rounded-xl p-4">
+                <p className="text-xs text-purple-600 font-medium mb-1">Time Limit</p>
+                <p className="text-2xl font-bold text-purple-900">
+                  {quizData.time_limit_seconds ? `${Math.round(quizData.time_limit_seconds / 60)} min` : 'None'}
+                </p>
+              </div>
+              <div className="bg-amber-50 rounded-xl p-4">
+                <p className="text-xs text-amber-600 font-medium mb-1">Pass Threshold</p>
+                <p className="text-2xl font-bold text-amber-900">{quizData.pass_threshold_pct ?? 80}%</p>
+              </div>
+              <div className="bg-green-50 rounded-xl p-4">
+                <p className="text-xs text-green-600 font-medium mb-1">Attempts</p>
+                <p className="text-2xl font-bold text-green-900">
+                  {usedAttempts}{maxAttempts ? ` / ${maxAttempts}` : ''}
+                </p>
+              </div>
+            </div>
+
+            {attemptHistory.length > 0 && (
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="bg-gray-50 rounded-xl p-3 text-center">
+                  <p className="text-xs text-gray-500 font-medium">Average</p>
+                  <p className={`text-lg font-bold ${avgScore !== null && avgScore >= (quizData.pass_threshold_pct ?? 80) ? 'text-green-600' : 'text-amber-600'}`}>
+                    {avgScore !== null ? `${avgScore}%` : '-'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3 text-center">
+                  <p className="text-xs text-gray-500 font-medium">Passed</p>
+                  <p className="text-lg font-bold text-green-600">{passedCount}/{attemptHistory.length}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3 text-center">
+                  <p className="text-xs text-gray-500 font-medium">Highest</p>
+                  <p className={`text-lg font-bold ${bestScore !== null && bestScore >= (quizData.pass_threshold_pct ?? 80) ? 'text-green-600' : 'text-amber-600'}`}>
+                    {bestScore !== null ? `${bestScore}%` : '-'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {maxAttempts && usedAttempts >= maxAttempts ? (
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6 text-center">
+                <AlertTriangle className="w-6 h-6 text-red-500 mx-auto mb-2" />
+                <p className="text-red-800 font-semibold">No attempts remaining</p>
+                <p className="text-red-600 text-sm mt-1">You have used all {maxAttempts} allowed attempts for this quiz.</p>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowStartScreen(false)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg flex-1"
+                >
+                  Start Attempt
+                </Button>
+                <Button
+                  onClick={onBack}
+                  variant="outline"
+                  className="px-6 py-6 text-lg"
+                >
+                  Back to Lesson
+                </Button>
+              </div>
+            )}
+          </Card>
+
+          {/* Attempt history with score bars */}
+          {attemptHistory.length > 0 && (
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-gray-500" />
+                Attempt History
+              </h2>
+              <div className="space-y-2">
+                {attemptHistory.map((attempt) => {
+                  const passThreshold = quizData.pass_threshold_pct ?? 80;
+                  return (
+                    <div
+                      key={attempt.attempt_number}
+                      className="p-4 rounded-xl border border-gray-200 bg-white"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            attempt.result === 'pass' ? 'bg-green-100' : 'bg-red-100'
+                          }`}>
+                            <RotateCcw className={`w-4 h-4 ${attempt.result === 'pass' ? 'text-green-600' : 'text-red-600'}`} />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 text-sm">Attempt {attempt.attempt_number}</p>
+                            <p className="text-xs text-gray-500">{formatDate(attempt.created_at)}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-lg font-bold ${
+                            attempt.result === 'pass' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {attempt.score_pct}%
+                          </p>
+                          <p className={`text-xs font-medium ${
+                            attempt.result === 'pass' ? 'text-green-500' : 'text-red-500'
+                          }`}>
+                            {attempt.result === 'pass' ? 'Passed' : 'Failed'}
+                          </p>
+                        </div>
+                      </div>
+                      {/* Score bar */}
+                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            attempt.result === 'pass' ? 'bg-green-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${attempt.score_pct}%` }}
+                        />
+                      </div>
+                      {/* Pass threshold marker */}
+                      <div className="relative h-0">
+                        <div
+                          className="absolute top-1 w-0.5 h-3 bg-gray-400"
+                          style={{ left: `${passThreshold}%` }}
+                          title={`Pass threshold: ${passThreshold}%`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {maxAttempts && (
+                <p className="text-xs text-gray-400 mt-4 text-center">
+                  {usedAttempts} of {maxAttempts} attempt{maxAttempts > 1 ? 's' : ''} used
+                </p>
+              )}
+            </Card>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
   const isFirstQuestion = currentQuestionIndex === 0;
-  const timeLow = timeRemaining !== null && timeRemaining <= 120;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -362,8 +543,9 @@ export function QuizPage({
                 <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
                   <img
                     src={currentQuestion.image_url}
-                    alt="Question illustration"
+                    alt=""
                     className="w-full max-h-64 object-contain"
+                    role="presentation"
                   />
                 </div>
               )}
@@ -398,7 +580,8 @@ export function QuizPage({
                       <img
                         src={option.image_url}
                         alt=""
-                        className="w-10 h-10 rounded-lg object-cover ml-auto shrink-0"
+                        className="w-24 h-24 rounded-xl object-cover ml-auto shrink-0 border border-gray-200"
+                        role="presentation"
                       />
                     )}
                   </div>

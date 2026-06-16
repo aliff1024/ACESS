@@ -128,8 +128,9 @@ export function ReviewAnswersPage({ lessonId, answers, onBack, onRetryQuiz }: Re
                       <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
                         <img
                           src={question.image_url}
-                          alt="Question illustration"
+                          alt=""
                           className="w-full max-h-48 object-contain"
+                          role="presentation"
                         />
                       </div>
                     )}
@@ -158,7 +159,8 @@ export function ReviewAnswersPage({ lessonId, answers, onBack, onRetryQuiz }: Re
                             <img
                               src={option.image_url}
                               alt=""
-                              className="w-8 h-8 rounded object-cover"
+                              className="w-24 h-24 rounded-xl object-cover border border-gray-200"
+                              role="presentation"
                             />
                           )}
                           {isCorrectAnswer && (

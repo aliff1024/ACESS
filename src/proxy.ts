@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Role } from '@/lib/auth-types';
 
-const PUBLIC_ROUTES = ['/', '/login', '/signup', '/access-denied', '/forgot-password', '/reset-password', '/contact', '/become-instructor', '/auth/callback', '/api/auth/forgot-password', '/api/auth/reset-password'];
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/access-denied', '/forgot-password', '/reset-password', '/contact', '/become-instructor', '/become-instructor/apply', '/auth/callback', '/api/auth/forgot-password', '/api/auth/reset-password', '/api/public-stats', '/api/instructor-applications'];
 
 const PREFIX_PUBLIC_ROUTES = ['/verify'];
 

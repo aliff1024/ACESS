@@ -266,7 +266,7 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
     }
 
     const [{ data: lessons }, { data: certs }] = await Promise.all([
-      supabase.from('lessons').select('id, course_id').in('course_id', courseIds).eq('status', 'published'),
+      supabase.from('lessons').select('id, course_id').in('course_id', courseIds).or('visibility_status.eq.visible,visibility_status.is.null'),
       supabase.from('certificates').select('enrollment_id').in('enrollment_id', enrollmentsArr.map(e => e.id)).eq('status', 'issued'),
     ])
 
@@ -445,12 +445,20 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
     .from('lessons')
     .select('id, title, sequence_order, estimated_duration')
     .eq('course_id', courseId)
-    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
     .order('sequence_order', { ascending: true })
 
   if (lessonsError) {
     console.error('fetchCourseDetail lessons error:', JSON.stringify(lessonsError))
     return null
+  }
+
+  if ((lessons || []).length === 0) {
+    const { count: draftCount } = await supabase
+      .from('lessons')
+      .select('id', { count: 'exact', head: true })
+      .eq('course_id', courseId)
+    console.warn(`fetchCourseDetail: 0 visible lessons for course ${courseId}, but ${draftCount ?? '?'} total lessons exist in DB`)
   }
 
   const { data: enrollment } = await supabase
@@ -546,7 +554,7 @@ export async function fetchLessonContent(lessonId: string): Promise<LessonConten
     .from('lessons')
     .select('id', { count: 'exact', head: true })
     .eq('course_id', lesson.course_id)
-    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
 
   return {
     id: lesson.id,
@@ -744,7 +752,7 @@ export async function fetchSystemCourseProgress(courseId: string): Promise<Syste
     .from('lessons')
     .select('id, title, sequence_order')
     .eq('course_id', courseId)
-    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
     .order('sequence_order', { ascending: true })
 
   const totalLessons = lessons?.length ?? 0
@@ -783,7 +791,7 @@ export async function fetchSystemCourseProgress(courseId: string): Promise<Syste
         .from('quiz_attempts')
         .select('quiz_id, score_pct')
         .in('quiz_id', quizIds)
-        .eq('user_id', userId)
+        .eq('enrollment_id', enrollment.id)
         .neq('result', 'in_progress')
 
       const bestScore = new Map<string, number>()
@@ -831,9 +839,9 @@ export async function fetchSystemCourseProgress(courseId: string): Promise<Syste
     .sort()
   const lastActivity = datesWithActivity.length > 0 ? datesWithActivity[datesWithActivity.length - 1] : null
 
-  // Milestones
+  // Milestones — auto-progress + admin-created
   const pct = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
-  const milestones = [
+  const milestones: { label: string; achieved: boolean; achieved_at: string | null }[] = [
     { label: 'Started', achieved: completedLessons > 0, achieved_at: lastActivity },
     { label: '25% Complete', achieved: pct >= 25, achieved_at: null },
     { label: '50% Complete', achieved: pct >= 50, achieved_at: null },
@@ -842,6 +850,23 @@ export async function fetchSystemCourseProgress(courseId: string): Promise<Syste
     { label: 'First Quiz Passed', achieved: quizScores.some(q => q.score >= 60), achieved_at: null },
     { label: '7-Day Streak', achieved: streak >= 7, achieved_at: null },
   ]
+
+  // Fetch admin-created course milestones
+  const { data: courseMilestones } = await supabase
+    .from('course_milestones')
+    .select('title, required_completion_pct')
+    .eq('course_id', courseId)
+    .order('sequence_order', { ascending: true })
+
+  if (courseMilestones) {
+    for (const cm of courseMilestones) {
+      milestones.push({
+        label: cm.title,
+        achieved: pct >= (cm.required_completion_pct ?? 100),
+        achieved_at: null,
+      })
+    }
+  }
 
   return {
     completed_lessons: completedLessons,
@@ -865,44 +890,49 @@ export async function checkQuizAttempts(lessonId: string, courseId: string): Pro
   maxAttempts: number | null
   message?: string
 }> {
-  const userId = await ensureUserId()
+  let userId: string
+  try { userId = await ensureUserId() } catch { return { canAttempt: true, usedAttempts: 0, maxAttempts: 0 } }
 
-  const { data: quiz } = await supabase
-    .from('quizzes')
-    .select('id, max_attempts')
-    .eq('lesson_id', lessonId)
-    .maybeSingle()
+  try {
+    const { data: quiz } = await supabase
+      .from('quizzes')
+      .select('id, max_attempts')
+      .eq('lesson_id', lessonId)
+      .maybeSingle()
 
-  if (!quiz) return { canAttempt: false, usedAttempts: 0, maxAttempts: null, message: 'No quiz found' }
+    if (!quiz) return { canAttempt: false, usedAttempts: 0, maxAttempts: null, message: 'No quiz found' }
 
-  const max = quiz.max_attempts ?? 0
+    const max = quiz.max_attempts ?? 0
 
-  if (max <= 0) return { canAttempt: true, usedAttempts: 0, maxAttempts: 0 }
+    if (max <= 0) return { canAttempt: true, usedAttempts: 0, maxAttempts: 0 }
 
-  const { data: enrollment } = await supabase
-    .from('enrollments')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('course_id', courseId)
-    .neq('status', 'dropped')
-    .maybeSingle()
+    const { data: enrollment } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('course_id', courseId)
+      .neq('status', 'dropped')
+      .maybeSingle()
 
-  if (!enrollment) return { canAttempt: true, usedAttempts: 0, maxAttempts: max }
+    if (!enrollment) return { canAttempt: true, usedAttempts: 0, maxAttempts: max }
 
-  const { count } = await supabase
-    .from('quiz_attempts')
-    .select('*', { count: 'exact', head: true })
-    .eq('enrollment_id', enrollment.id)
-    .eq('quiz_id', quiz.id)
+    const { count } = await supabase
+      .from('quiz_attempts')
+      .select('*', { count: 'exact', head: true })
+      .eq('enrollment_id', enrollment.id)
+      .eq('quiz_id', quiz.id)
 
-  const used = count ?? 0
-  const canAttempt = used < max
+    const used = count ?? 0
+    const canAttempt = used < max
 
-  return {
-    canAttempt,
-    usedAttempts: used,
-    maxAttempts: max,
-    message: canAttempt ? undefined : `You have used all ${max} allowed attempt${max > 1 ? 's' : ''} for this quiz.`,
+    return {
+      canAttempt,
+      usedAttempts: used,
+      maxAttempts: max,
+      message: canAttempt ? undefined : `You have used all ${max} allowed attempt${max > 1 ? 's' : ''} for this quiz.`,
+    }
+  } catch {
+    return { canAttempt: true, usedAttempts: 0, maxAttempts: 0 }
   }
 }
 
@@ -913,26 +943,35 @@ export async function fetchQuizData(lessonId: string): Promise<QuizData | null> 
     .eq('lesson_id', lessonId)
     .maybeSingle()
 
-  if (quizError) throw quizError
+  if (quizError) {
+    console.error('fetchQuizData quiz error:', quizError)
+    return null
+  }
   if (!quiz) return null
 
   const { data: questions, error: qError } = await supabase
     .from('quiz_questions')
-    .select('id, question_text, question_type, sequence_order')
+    .select('id, question_text, question_type, sequence_order, image_url')
     .eq('quiz_id', quiz.id)
     .order('sequence_order', { ascending: true })
 
-  if (qError) throw qError
+  if (qError) {
+    console.error('fetchQuizData questions error:', qError)
+    return null
+  }
 
   const questionIds = (questions || []).map((q) => q.id)
 
   const { data: options, error: oError } = await supabase
     .from('quiz_options')
-    .select('id, question_id, option_text, is_correct, sequence_order')
+    .select('id, question_id, option_text, is_correct, sequence_order, image_url')
     .in('question_id', questionIds)
     .order('sequence_order', { ascending: true })
 
-  if (oError) throw oError
+  if (oError) {
+    console.error('fetchQuizData options error:', oError)
+    return null
+  }
 
   const optionsByQuestion = new Map<string, QuizOption[]>()
   for (const opt of options || []) {
@@ -942,6 +981,7 @@ export async function fetchQuizData(lessonId: string): Promise<QuizData | null> 
       option_text: opt.option_text,
       is_correct: opt.is_correct,
       sequence_order: opt.sequence_order,
+      image_url: opt.image_url,
     })
     optionsByQuestion.set(opt.question_id, arr)
   }
@@ -957,6 +997,7 @@ export async function fetchQuizData(lessonId: string): Promise<QuizData | null> 
       question_text: q.question_text,
       question_type: q.question_type,
       sequence_order: q.sequence_order,
+      image_url: q.image_url,
       options: optionsByQuestion.get(q.id) || [],
     })),
   }
@@ -1034,6 +1075,49 @@ export async function submitQuizAttempt(params: {
   return { score, passed, attemptId: attempt.id }
 }
 
+export async function fetchQuizAttemptHistory(lessonId: string, courseId: string): Promise<{
+  attempts: { attempt_number: number; score_pct: number; result: string; created_at: string }[]
+  usedAttempts: number
+  maxAttempts: number | null
+}> {
+  try {
+    const { data: quiz, error: quizError } = await supabase
+      .from('quizzes')
+      .select('id, max_attempts')
+      .eq('lesson_id', lessonId)
+      .maybeSingle()
+    if (quizError || !quiz) return { attempts: [], usedAttempts: 0, maxAttempts: null }
+
+    let userId: string
+    try { userId = await ensureUserId() } catch { return { attempts: [], usedAttempts: 0, maxAttempts: quiz.max_attempts } }
+
+    const { data: enrollment, error: enrError } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('course_id', courseId)
+      .neq('status', 'dropped')
+      .maybeSingle()
+    if (enrError || !enrollment) return { attempts: [], usedAttempts: 0, maxAttempts: quiz.max_attempts }
+
+    const { data: attempts, error: attError } = await supabase
+      .from('quiz_attempts')
+      .select('attempt_number, score_pct, result, created_at')
+      .eq('enrollment_id', enrollment.id)
+      .eq('quiz_id', quiz.id)
+      .order('attempt_number', { ascending: false })
+    if (attError) return { attempts: [], usedAttempts: 0, maxAttempts: quiz.max_attempts }
+
+    return {
+      attempts: attempts || [],
+      usedAttempts: attempts?.length || 0,
+      maxAttempts: quiz.max_attempts,
+    }
+  } catch {
+    return { attempts: [], usedAttempts: 0, maxAttempts: null }
+  }
+}
+
 // ─── Learner Stats ─────────────────────────────────────────────────────
 
 export async function fetchLearnerStats(): Promise<LearnerStats> {
@@ -1098,7 +1182,7 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
     .from('lessons')
     .select('id, title, sequence_order')
     .eq('course_id', courseId)
-    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
     .order('sequence_order', { ascending: true })
 
   if (lError) throw lError
@@ -1187,28 +1271,41 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
 export async function fetchCertificates(): Promise<Certificate[]> {
   const userId = await ensureUserId()
 
-  const { data: enrollments } = await supabase
+  const { data: enrollments, error: enrollErr } = await supabase
     .from('enrollments')
     .select('id, course_id')
     .eq('user_id', userId)
     .eq('status', 'completed')
 
+  if (enrollErr) {
+    console.error('fetchCertificates enrollments error:', enrollErr)
+    return []
+  }
+
   const enrollmentIds = (enrollments || []).map((e) => e.id)
 
   if (enrollmentIds.length === 0) return []
 
-  const { data: certs } = await supabase
+  const { data: certs, error: certErr } = await supabase
     .from('certificates')
     .select('id, enrollment_id, reference_code, issued_at, pdf_url')
     .in('enrollment_id', enrollmentIds)
     .eq('status', 'issued')
 
+  if (certErr) {
+    console.error('fetchCertificates certs error:', certErr)
+    return []
+  }
+  if (!certs || certs.length === 0) return []
+
   const courseMap = new Map((enrollments || []).map((e) => [e.id, e.course_id]))
 
-  const { data: courses } = await supabase
+  const { data: courses, error: courseErr } = await supabase
     .from('courses')
     .select('id, title')
     .in('id', [...new Set((enrollments || []).map((e) => e.course_id))])
+
+  if (courseErr) console.error('fetchCertificates courses error:', courseErr)
 
   const titleMap = new Map((courses || []).map((c) => [c.id, c.title]))
 
@@ -1223,7 +1320,7 @@ export async function fetchCertificates(): Promise<Certificate[]> {
     if (a.score_pct > existing) bestScores.set(a.enrollment_id, a.score_pct)
   }
 
-  return (certs || []).map((c) => {
+  return certs.map((c) => {
     const courseId = courseMap.get(c.enrollment_id)
     return {
       id: c.id,
@@ -1617,7 +1714,7 @@ export async function fetchLessonIdsInCourse(courseId: string): Promise<string[]
     .from('lessons')
     .select('id')
     .eq('course_id', courseId)
-    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
     .order('sequence_order', { ascending: true })
 
   if (error) throw error
@@ -1739,7 +1836,7 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
     .from('lessons')
     .select('id', { count: 'exact', head: true })
     .eq('course_id', courseId)
-    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
 
   const { count: completedLessons } = await supabase
     .from('lesson_progress')
@@ -1810,7 +1907,10 @@ export async function claimCertificate(courseId: string): Promise<{
 
   // Check eligibility
   const eligibility = await checkCourseCertificateEligibility(courseId)
-  if (!eligibility.eligible) return null
+  if (!eligibility.eligible) {
+    console.warn('claimCertificate: eligibility check failed', eligibility.reason, eligibility)
+    throw new Error(eligibility.reason || 'Not eligible for certificate')
+  }
 
   // Get course and user data
   const [{ data: course }, { data: userData }] = await Promise.all([
