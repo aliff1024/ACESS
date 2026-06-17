@@ -6,14 +6,16 @@ import { Badge } from '../ui/badge';
 import {
   Award, Search, XCircle, Loader2,
   TrendingUp, Users, CheckCircle, ExternalLink,
-  RefreshCw,
+  RefreshCw, Upload, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   fetchEducatorCertificates,
   fetchEducatorCertStats,
   revokeEducatorCertificate,
+  uploadEducatorCustomCertificate
 } from '@/lib/educator-api';
+import { supabase } from '@/lib/supabase';
 import type { EducatorCertificate } from '@/lib/educator-api';
 
 export default function EducatorCertificateDashboard() {
@@ -31,13 +33,16 @@ export default function EducatorCertificateDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
       const [certsData, statsData] = await Promise.all([
-        fetchEducatorCertificates(''),
-        fetchEducatorCertStats(''),
+        fetchEducatorCertificates(user.user.id),
+        fetchEducatorCertStats(user.user.id),
       ]);
       setCerts(certsData);
       setStats(statsData);
@@ -62,6 +67,24 @@ export default function EducatorCertificateDashboard() {
       toast.error('Failed to revoke certificate');
     } finally {
       setRevokingId(null);
+    }
+  };
+
+  const handleUpload = async (certId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingId(certId);
+    try {
+      await uploadEducatorCustomCertificate(certId, file);
+      toast.success('Custom certificate uploaded successfully');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to upload custom certificate');
+    } finally {
+      setUploadingId(null);
+      // Reset input value so the same file can be selected again if needed
+      event.target.value = '';
     }
   };
 
@@ -203,30 +226,60 @@ export default function EducatorCertificateDashboard() {
                     </Badge>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(`/verify/${cert.certificate_code}`, '_blank')}
-                        className="h-8 text-xs"
-                      >
-                        <ExternalLink className="w-3 h-3 mr-1" /> Verify
-                      </Button>
-                      {cert.status === 'issued' && (
+                    <div className="flex items-center justify-end gap-2 flex-wrap">
+                      {cert.pdf_url && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRevoke(cert)}
-                          disabled={revokingId === cert.id}
-                          className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => window.open(cert.pdf_url, '_blank')}
+                          className="h-8 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
-                          {revokingId === cert.id ? (
-                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          ) : (
-                            <XCircle className="w-3 h-3 mr-1" />
-                          )}
-                          Revoke
+                          <FileText className="w-3 h-3 mr-1" /> View Custom
                         </Button>
+                      )}
+                      
+                      {cert.status === 'issued' && (
+                        <>
+                          <label className={`inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer ${uploadingId === cert.id ? 'opacity-50 pointer-events-none' : ''}`}>
+                            {uploadingId === cert.id ? (
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            ) : (
+                              <Upload className="w-3 h-3 mr-1" />
+                            )}
+                            {cert.pdf_url ? 'Replace' : 'Upload'}
+                            <input
+                              type="file"
+                              accept="image/*,.pdf"
+                              className="hidden"
+                              onChange={(e) => handleUpload(cert.id, e)}
+                              disabled={uploadingId === cert.id}
+                            />
+                          </label>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(`/verify/${cert.certificate_code}`, '_blank')}
+                            className="h-8 text-xs"
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" /> Verify
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRevoke(cert)}
+                            disabled={revokingId === cert.id}
+                            className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            {revokingId === cert.id ? (
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            ) : (
+                              <XCircle className="w-3 h-3 mr-1" />
+                            )}
+                            Revoke
+                          </Button>
+                        </>
                       )}
                     </div>
                   </td>

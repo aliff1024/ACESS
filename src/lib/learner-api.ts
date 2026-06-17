@@ -2113,3 +2113,56 @@ export async function fetchCoursesAccessibilityCategories(
   }
   return result
 }
+
+// ─── H5P Content (Learner) ──────────────────────────────────────────
+
+export interface LearnerH5PContent {
+  id: string
+  lesson_id: string
+  title: string
+  embed_url: string
+  source_url?: string | null
+  description?: string | null
+  width?: string
+  height?: string
+  sequence_order: number
+  created_at: string
+  updated_at: string
+  thumbnail_url?: string | null
+  h5p_mode: 'external' | 'self_hosted'
+  library_name?: string | null
+  content_json?: Record<string, any> | null
+  folder_path?: string | null
+}
+
+export async function fetchLessonH5PContent(lessonId: string): Promise<LearnerH5PContent[]> {
+  const { data, error } = await supabase
+    .from('h5p_contents')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function submitH5PResponse(
+  userId: string,
+  h5pContentId: string,
+  score: number | null,
+  maxScore: number | null,
+  completed: boolean,
+  rawStatement: any
+): Promise<void> {
+  const { error } = await supabase
+    .from('h5p_responses')
+    .insert({
+      user_id: userId,
+      h5p_content_id: h5pContentId,
+      score,
+      max_score: maxScore,
+      completed,
+      raw_statement: rawStatement
+    })
+  if (error) throw error
+}
+

@@ -600,6 +600,75 @@ export async function fetchStudentsWithProgress(educatorId: string): Promise<Stu
   return Array.from(studentMap.values())
 }
 
+export interface CourseStudentProgress {
+  enrollmentId: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  enrolledAt: string;
+  status: string;
+  completedLessons: number;
+  totalLessons: number;
+  progressPercent: number;
+}
+
+export async function fetchCourseStudentsProgress(courseId: string): Promise<CourseStudentProgress[]> {
+  const { data: enrollments, error: enrollError } = await supabase
+    .from('enrollments')
+    .select(`
+      id, status, enrolled_at, user_id,
+      users:user_id (id, full_name, email)
+    `)
+    .eq('course_id', courseId)
+    .order('enrolled_at', { ascending: false });
+
+  if (enrollError) throw enrollError;
+  if (!enrollments || enrollments.length === 0) return [];
+
+  // Get total lessons
+  const { data: lessons, error: lessonsError } = await supabase
+    .from('lessons')
+    .select('id')
+    .eq('course_id', courseId)
+    .eq('status', 'published');
+
+  if (lessonsError) throw lessonsError;
+  const totalLessons = lessons?.length || 0;
+
+  const enrollmentIds = enrollments.map(e => e.id);
+
+  // Get progress for these enrollments
+  const { data: progressData, error: progressError } = await supabase
+    .from('lesson_progress')
+    .select('enrollment_id, is_viewed')
+    .in('enrollment_id', enrollmentIds)
+    .eq('is_viewed', true);
+
+  if (progressError) throw progressError;
+
+  const progressMap = new Map<string, number>();
+  for (const p of progressData || []) {
+    progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
+  }
+
+  return enrollments.map((raw: any) => {
+    const completed = progressMap.get(raw.id) || 0;
+    const progressPercent = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
+    
+    return {
+      enrollmentId: raw.id,
+      studentId: raw.user_id,
+      studentName: raw.users?.full_name || 'Unknown',
+      studentEmail: raw.users?.email || '',
+      enrolledAt: raw.enrolled_at,
+      status: raw.status,
+      completedLessons: Math.min(completed, totalLessons), // Just in case
+      totalLessons,
+      progressPercent
+    };
+  });
+}
+
 // ─── Analytics ─────────────────────────────────────────────────────────
 
 export async function fetchCourseAnalytics(educatorId: string) {
@@ -1014,6 +1083,7 @@ export interface CertificateSettings {
   institution_name: string
   course_duration_hours: number
   skills: string[]
+  allow_custom_certificates?: boolean
 }
 
 export interface EducatorCertificate {
@@ -1026,6 +1096,8 @@ export interface EducatorCertificate {
   revoked_at?: string
   verification_url?: string
   enrollment_id: string
+  pdf_url?: string
+  metadata?: any
 }
 
 export async function fetchCourseCertSettings(courseId: string) {
@@ -1069,7 +1141,7 @@ export async function fetchEducatorCertificates(educatorId: string): Promise<Edu
     .from('certificates')
     .select(`
       id, reference_code, status, issued_at, revoked_at, verification_url, enrollment_id,
-      learner_name, course_title
+      learner_name, course_title, pdf_url, metadata
     `)
     .in('course_id', (
       await supabase.from('courses').select('id').eq('created_by', educatorId).is('deleted_at', null)
@@ -1088,7 +1160,56 @@ export async function fetchEducatorCertificates(educatorId: string): Promise<Edu
     revoked_at: c.revoked_at || undefined,
     verification_url: c.verification_url || undefined,
     enrollment_id: c.enrollment_id,
+    pdf_url: c.pdf_url || undefined,
+    metadata: c.metadata || undefined,
   }))
+}
+
+export async function uploadEducatorCustomCertificate(certId: string, file: File) {
+  const fileExt = file.name.split('.').pop()
+  const filePath = `custom_certs/${certId}-${Date.now()}.${fileExt}`
+
+  // Upload the file to the 'certificates' storage bucket
+  const { error: uploadError } = await supabase.storage
+    .from('certificates')
+    .upload(filePath, file)
+
+  if (uploadError) {
+    throw new Error(`Upload failed: ${uploadError.message}`)
+  }
+
+  // Get the public URL for the uploaded file
+  const { data: publicUrlData } = supabase.storage
+    .from('certificates')
+    .getPublicUrl(filePath)
+
+  const pdfUrl = publicUrlData.publicUrl
+
+  // Update the certificate row in the database
+  const { data: certInfo, error: fetchError } = await supabase
+    .from('certificates')
+    .select('metadata')
+    .eq('id', certId)
+    .single()
+    
+  if (fetchError) throw fetchError
+
+  const newMetadata = {
+    ...(certInfo?.metadata || {}),
+    is_custom: true
+  }
+
+  const { error: updateError } = await supabase
+    .from('certificates')
+    .update({
+      pdf_url: pdfUrl,
+      metadata: newMetadata
+    })
+    .eq('id', certId)
+
+  if (updateError) throw updateError
+
+  return pdfUrl
 }
 
 export async function fetchEducatorCertStats(educatorId: string) {
@@ -1233,6 +1354,74 @@ async function generateReferenceCode(): Promise<string> {
     .maybeSingle()
   if (data) return generateReferenceCode() // retry
   return code
+}
+
+export async function uploadCustomCertificate(
+  enrollmentId: string,
+  courseId: string,
+  userId: string,
+  file: File
+): Promise<string> {
+  const ext = file.name.split('.').pop() || 'pdf'
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const filePath = `certificates/${courseId}/${enrollmentId}/${fileName}`
+
+  // Upload to course-assets bucket (or similar)
+  const { error: uploadError } = await supabase.storage
+    .from('course-assets')
+    .upload(filePath, file, { upsert: true })
+
+  if (uploadError) throw uploadError
+
+  const { data: urlData } = await supabase.storage
+    .from('course-assets')
+    .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10) // 10 years
+
+  const customUrl = urlData?.signedUrl ?? ''
+
+  // Now upsert into certificates table
+  // If we don't have a specific column, we'll store it in verification_url or update status
+  // We'll see if there's an existing certificate
+  const { data: existing } = await supabase
+    .from('certificates')
+    .select('id')
+    .eq('enrollment_id', enrollmentId)
+    .maybeSingle()
+
+  if (existing) {
+    const { error } = await supabase
+      .from('certificates')
+      .update({
+        status: 'issued',
+        verification_url: customUrl, // reusing verification_url as the custom link for simplicity
+      })
+      .eq('id', existing.id)
+    if (error) throw error
+  } else {
+    // We need learner name and course title
+    const { data: enrollment } = await supabase
+      .from('enrollments')
+      .select('course_id, user_id, users(full_name), courses(title)')
+      .eq('id', enrollmentId)
+      .single()
+
+    const { error } = await supabase
+      .from('certificates')
+      .insert({
+        enrollment_id: enrollmentId,
+        course_id: courseId,
+        user_id: userId,
+        learner_name: (enrollment as any)?.users?.full_name || 'Unknown Learner',
+        course_title: (enrollment as any)?.courses?.title || 'Course',
+        reference_code: `CUSTOM-${Date.now()}`,
+        status: 'issued',
+        issued_at: new Date().toISOString(),
+        verification_url: customUrl
+      })
+    if (error) throw error
+  }
+
+  return customUrl
 }
 
 // ─── Instructor Application ───────────────────────────────────────────
@@ -1561,3 +1750,114 @@ export async function deleteVideoQuestion(questionId: string): Promise<void> {
     .eq('id', questionId)
   if (error) throw error
 }
+
+// ─── H5P Content (Educator) ──────────────────────────────────────────
+
+export interface H5PContent {
+  id: string
+  lesson_id: string
+  title: string
+  embed_url: string
+  source_url?: string | null
+  description?: string | null
+  width?: string
+  height?: string
+  sequence_order: number
+  created_at: string
+  updated_at: string
+  thumbnail_url?: string | null
+  h5p_mode: 'external' | 'self_hosted'
+  library_name?: string | null
+  content_json?: Record<string, any> | null
+  folder_path?: string | null
+}
+
+export interface H5PContentFields {
+  title: string
+  embed_url: string
+  source_url?: string | null
+  description?: string | null
+  width?: string
+  height?: string
+  sequence_order?: number
+  thumbnail_url?: string | null
+  h5p_mode?: 'external' | 'self_hosted'
+  library_name?: string | null
+  content_json?: Record<string, any> | null
+  folder_path?: string | null
+}
+
+export async function fetchLessonH5PContent(lessonId: string): Promise<H5PContent[]> {
+  const { data, error } = await supabase
+    .from('h5p_contents')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function createH5PContent(
+  lessonId: string,
+  fields: H5PContentFields,
+): Promise<H5PContent> {
+  const { data, error } = await supabase
+    .from('h5p_contents')
+    .insert({
+      lesson_id: lessonId,
+      title: fields.title,
+      embed_url: fields.embed_url,
+      source_url: fields.source_url,
+      description: fields.description,
+      width: fields.width ?? '100%',
+      height: fields.height ?? '500px',
+      sequence_order: fields.sequence_order ?? 0,
+      thumbnail_url: fields.thumbnail_url,
+      h5p_mode: fields.h5p_mode ?? 'external',
+      library_name: fields.library_name,
+      content_json: fields.content_json,
+      folder_path: fields.folder_path,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateH5PContent(
+  id: string,
+  fields: Partial<H5PContentFields>,
+): Promise<H5PContent> {
+  const { data, error } = await supabase
+    .from('h5p_contents')
+    .update(fields)
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteH5PContent(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('h5p_contents')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function reorderH5PContent(
+  items: { id: string; sequence_order: number }[],
+): Promise<void> {
+  const updates = items.map((item) =>
+    supabase
+      .from('h5p_contents')
+      .update({ sequence_order: item.sequence_order })
+      .eq('id', item.id),
+  )
+  const results = await Promise.all(updates)
+  for (const result of results) {
+    if (result.error) throw result.error
+  }
+}
+

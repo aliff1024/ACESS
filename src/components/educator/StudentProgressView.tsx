@@ -5,14 +5,7 @@ import { Search, Eye, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
-
-interface EnrolledStudent {
-  id: string;
-  status: string;
-  created_at: string;
-  user_id: string;
-  users: { full_name: string; email: string } | null;
-}
+import { fetchCourseStudentsProgress, type CourseStudentProgress } from '@/lib/educator-api';
 
 interface StudentProgressViewProps {
   courseId: string;
@@ -20,21 +13,16 @@ interface StudentProgressViewProps {
 }
 
 export default function StudentProgressView({ courseId, courseTitle }: StudentProgressViewProps) {
-  const [enrollments, setEnrollments] = useState<EnrolledStudent[]>([]);
+  const [enrollments, setEnrollments] = useState<CourseStudentProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<EnrolledStudent | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<CourseStudentProgress | null>(null);
 
   useEffect(() => {
     const loadEnrollments = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const { data } = await supabase
-          .from('enrollments')
-          .select('*, users!left(*)')
-          .eq('course_id', courseId);
-        setEnrollments(data || []);
+        const data = await fetchCourseStudentsProgress(courseId);
+        setEnrollments(data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -45,7 +33,7 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
   }, [courseId]);
 
   const filtered = enrollments.filter((e) => {
-    const name = (e.users?.full_name || '').toLowerCase();
+    const name = (e.studentName || '').toLowerCase();
     return name.includes(searchQuery.toLowerCase());
   });
 
@@ -54,7 +42,7 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="w-[96%] max-w-[1500px] mx-auto">
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Student Progress</h2>
         <p className="text-sm text-gray-600">{courseTitle}</p>
@@ -90,28 +78,41 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filtered.map((enrollment: EnrolledStudent) => (
-                <tr key={enrollment.id} className="hover:bg-gray-50">
+              {filtered.map((enrollment: CourseStudentProgress) => (
+                <tr key={enrollment.enrollmentId} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-white font-semibold text-sm">
-                          {(enrollment.users?.full_name || '??').split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                          {(enrollment.studentName || '??').split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="font-medium text-gray-900">{enrollment.users?.full_name || 'Unknown'}</div>
-                        <div className="text-sm text-gray-500">{enrollment.users?.email || ''}</div>
+                        <div className="font-medium text-gray-900">{enrollment.studentName || 'Unknown'}</div>
+                        <div className="text-sm text-gray-500">{enrollment.studentEmail || ''}</div>
                       </div>
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${enrollment.progressPercent === 100 ? 'bg-green-500' : 'bg-blue-600'}`} 
+                          style={{ width: `${enrollment.progressPercent}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">{enrollment.progressPercent}%</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">{enrollment.completedLessons} / {enrollment.totalLessons} lessons</p>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {enrollment.created_at ? new Date(enrollment.created_at).toLocaleDateString() : '-'}
+                    {enrollment.enrolledAt ? new Date(enrollment.enrolledAt).toLocaleDateString() : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <Button variant="ghost" size="sm" onClick={() => setSelectedStudent(enrollment)}>
@@ -137,17 +138,29 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
             <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold text-xl">
-                  {(selectedStudent.users?.full_name || '??').split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                  {(selectedStudent.studentName || '??').split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                 </span>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">{selectedStudent.users?.full_name || 'Unknown'}</h3>
-                <p className="text-gray-600">{selectedStudent.users?.email || ''}</p>
+                <h3 className="text-xl font-bold text-gray-900">{selectedStudent.studentName || 'Unknown'}</h3>
+                <p className="text-gray-600">{selectedStudent.studentEmail || ''}</p>
               </div>
             </div>
             <div className="space-y-3 text-sm text-gray-700">
-              <div><strong>Joined:</strong> {selectedStudent.created_at ? new Date(selectedStudent.created_at).toLocaleDateString() : '-'}</div>
-              <div><strong>Enrollment ID:</strong> <span className="font-mono">{selectedStudent.id}</span></div>
+              <div><strong>Joined:</strong> {selectedStudent.enrolledAt ? new Date(selectedStudent.enrolledAt).toLocaleDateString() : '-'}</div>
+              <div><strong>Enrollment ID:</strong> <span className="font-mono">{selectedStudent.enrollmentId}</span></div>
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-1">
+                  <strong>Course Progress</strong>
+                  <span>{selectedStudent.progressPercent}% ({selectedStudent.completedLessons}/{selectedStudent.totalLessons})</span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full ${selectedStudent.progressPercent === 100 ? 'bg-green-500' : 'bg-blue-600'}`} 
+                    style={{ width: `${selectedStudent.progressPercent}%` }}
+                  />
+                </div>
+              </div>
             </div>
             <div className="mt-6 pt-4 border-t flex justify-end">
               <Button onClick={() => setSelectedStudent(null)} variant="outline">Close</Button>

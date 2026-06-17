@@ -38,8 +38,9 @@ import {
   updateCourseAccessibilityCategories,
   fetchLessonInteractiveContent,
   fetchVideoQuestions,
+  fetchLessonH5PContent,
 } from '@/lib/educator-api';
-import type { LessonWithQuiz, LessonAsset, CourseStatus, LessonFields, InteractiveContent, VideoQuestion } from '@/lib/educator-api';
+import type { LessonWithQuiz, LessonAsset, CourseStatus, LessonFields, InteractiveContent, VideoQuestion, H5PContent } from '@/lib/educator-api';
 import { uploadContentImage } from '@/lib/educator-api';
 import { LessonRenderer } from '@/components/lesson/LessonRenderer';
 import { LessonEditor } from '@/components/educator/LessonEditor';
@@ -198,6 +199,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [lessonInteractiveItems, setLessonInteractiveItems] = useState<InteractiveContent[]>([]);
   const [lessonVideoQuestions, setLessonVideoQuestions] = useState<VideoQuestion[]>([]);
+  const [lessonH5PContents, setLessonH5PContents] = useState<H5PContent[]>([]);
   const detailRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -264,17 +266,25 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   useEffect(() => { load() }, [load]);
 
   useEffect(() => {
-    if (!selectedLessonId) { setSelectedLessonData(null); setLessonInteractiveItems([]); setLessonVideoQuestions([]); return; }
+    if (!selectedLessonId) {
+      setSelectedLessonData(null);
+      setLessonInteractiveItems([]);
+      setLessonVideoQuestions([]);
+      setLessonH5PContents([]);
+      return;
+    }
     setLoadingDetail(true);
     Promise.all([
       fetchLessonById(selectedLessonId),
       fetchLessonInteractiveContent(selectedLessonId).catch(() => [] as InteractiveContent[]),
       fetchVideoQuestions(selectedLessonId).catch(() => [] as VideoQuestion[]),
+      fetchLessonH5PContent(selectedLessonId).catch(() => [] as H5PContent[]),
     ])
-      .then(([lessonData, items, vqs]) => {
+      .then(([lessonData, items, vqs, h5ps]) => {
         setSelectedLessonData(lessonData);
         setLessonInteractiveItems(items);
         setLessonVideoQuestions(vqs);
+        setLessonH5PContents(h5ps);
       })
       .catch(() => toast.error('Failed to load lesson details'))
       .finally(() => setLoadingDetail(false));
@@ -551,7 +561,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
       <div className="p-8">
         {/* ─── Overview Tab ─────────────────────────────────────────── */}
         {activeTab === 'overview' && (
-          <div className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8">
+          <div className="w-[96%] max-w-[1500px] mx-auto bg-white rounded-lg border border-gray-200 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Course Overview</h2>
             {course.certification_locked && (
               <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
@@ -626,7 +636,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
 
         {/* ─── Lessons Tab ──────────────────────────────────────────── */}
         {activeTab === 'lessons' && (
-          <div className="max-w-7xl mx-auto">
+          <div className="w-[96%] max-w-[1500px] mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -774,6 +784,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
                             assets={assets[selectedLessonId] || []}
                             videoQuestions={lessonVideoQuestions}
                             interactiveItems={lessonInteractiveItems}
+                            h5pContents={lessonH5PContents}
                             hasQuiz={!!lessons.find(l => l.id === selectedLessonId)?.has_quiz}
                             lessonId={selectedLessonId}
                             educatorProps={{
@@ -886,7 +897,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
 
         {/* ─── Settings Tab ─────────────────────────────────────────── */}
         {activeTab === 'settings' && (
-          <div className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8">
+          <div className="w-[96%] max-w-[1500px] mx-auto bg-white rounded-lg border border-gray-200 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Course Settings</h2>
             <div className="space-y-6">
               {/* ── Accessibility Categories ── */}

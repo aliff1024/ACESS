@@ -1,11 +1,13 @@
 'use client';
 
-import { FileText, Video, Play, Layout, CheckCircle, Upload } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Video, Play, Layout, CheckCircle, Upload, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { InteractiveActivityViewer } from '@/components/interactive/InteractiveActivityViewer';
 import type { InteractiveActivityData, InteractiveContentType } from '@/lib/interactive-types';
+import { H5PViewer } from '@/components/h5p/H5PViewer';
 
 function getYouTubeId(url: string): string | null {
   const patterns = [
@@ -38,6 +40,16 @@ interface LessonRendererInteractiveItem {
   sequence_order: number;
 }
 
+interface LessonRendererH5PItem {
+  id: string;
+  title: string;
+  embed_url: string;
+  width?: string;
+  height?: string;
+  h5p_mode: 'external' | 'self_hosted';
+  library_name?: string | null;
+}
+
 type LessonRendererMode = 'educator' | 'learner';
 
 interface LessonRendererProps {
@@ -50,6 +62,7 @@ interface LessonRendererProps {
   assets: LessonRendererAsset[];
   videoQuestions: LessonRendererVideoQuestion[];
   interactiveItems: LessonRendererInteractiveItem[];
+  h5pContents?: LessonRendererH5PItem[];
   hasQuiz: boolean;
   lessonId: string;
 
@@ -64,9 +77,10 @@ interface LessonRendererProps {
 
 }
 
-export function LessonRenderer({ mode, lesson, assets, videoQuestions, interactiveItems, hasQuiz, lessonId, educatorProps }: LessonRendererProps) {
+export function LessonRenderer({ mode, lesson, assets, videoQuestions, interactiveItems, h5pContents = [], hasQuiz, lessonId, educatorProps }: LessonRendererProps) {
   const isEducator = mode === 'educator';
   const ytId = lesson.video_url ? getYouTubeId(lesson.video_url) : null;
+  const [selectedActivityTabId, setSelectedActivityTabId] = useState<string | null>(null);
 
   return (
     <div className="space-y-5">
@@ -219,20 +233,41 @@ export function LessonRenderer({ mode, lesson, assets, videoQuestions, interacti
           defaultOpen={interactiveItems.length > 0}
           badge={interactiveItems.length > 0 ? `${interactiveItems.length} activity${interactiveItems.length > 1 ? 'ies' : 'y'}` : undefined}
         >
-          {interactiveItems.length > 0 ? (
-            <div className="space-y-4">
-              {interactiveItems
-                .sort((a, b) => a.sequence_order - b.sequence_order)
-                .map((item) => (
+          {interactiveItems.length > 0 ? (() => {
+            const sorted = [...interactiveItems].sort((a, b) => a.sequence_order - b.sequence_order);
+            const activeId = selectedActivityTabId && sorted.some(i => i.id === selectedActivityTabId) ? selectedActivityTabId : sorted[0].id;
+            const activeItem = sorted.find(i => i.id === activeId)!;
+            return (
+              <div className="space-y-3">
+                {sorted.length > 1 && (
+                  <div className="flex border-b border-gray-200 overflow-x-auto">
+                    {sorted.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setSelectedActivityTabId(item.id)}
+                        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
+                          activeId === item.id
+                            ? 'border-indigo-500 text-indigo-700'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        <span className={`uppercase ${activeId === item.id ? 'text-indigo-600' : 'text-gray-400'}`}>{item.content_type.replace('_', ' ')}</span>
+                        <span className="text-gray-400 truncate max-w-[120px]">{item.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="border border-gray-200 rounded-xl bg-white overflow-hidden p-4">
                   <InteractiveActivityViewer
-                    key={item.id}
-                    contentType={item.content_type as InteractiveContentType}
-                    title={item.title}
-                    data={item.content_data as InteractiveActivityData}
+                    key={activeItem.id}
+                    contentType={activeItem.content_type as InteractiveContentType}
+                    title={activeItem.title}
+                    data={activeItem.content_data as InteractiveActivityData}
                   />
-                ))}
-            </div>
-          ) : (
+                </div>
+              </div>
+            );
+          })() : (
             <div className="text-center py-6">
               <Layout className="w-8 h-8 text-gray-300 mx-auto mb-2" />
               <p className="text-sm text-gray-500">No interactive activities yet</p>
@@ -245,6 +280,22 @@ export function LessonRenderer({ mode, lesson, assets, videoQuestions, interacti
           )}
         </CollapsibleCard>
       ) : null}
+
+      {/* ── H5P Interactive Activities ── */}
+      {h5pContents.length > 0 && (
+        <CollapsibleCard
+          icon={<Layers className="w-4 h-4 text-indigo-500" />}
+          title="Interactive Activities (H5P)"
+          defaultOpen={true}
+          badge={`${h5pContents.length} activity${h5pContents.length > 1 ? 'ies' : 'y'}`}
+        >
+          <div className="space-y-4">
+            {h5pContents.map((item) => (
+              <H5PViewer key={item.id} content={item} />
+            ))}
+          </div>
+        </CollapsibleCard>
+      )}
 
       {/* ── Quiz ── */}
       <CollapsibleCard

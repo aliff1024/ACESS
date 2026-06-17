@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { BookOpen, Loader2, Video, FileText, Plus, Trash2, GripVertical, Layout, FileEdit, Play, Shield, ChevronDown, Clock } from 'lucide-react';
+import { BookOpen, Loader2, Video, FileText, Plus, Trash2, GripVertical, Layout, FileEdit, Play, Shield, ChevronDown, Clock, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { createLesson, updateLesson, fetchLessonById, getNextSequenceOrder, fetchLessonInteractiveContent, createInteractiveContent, updateInteractiveContent, deleteInteractiveContent, fetchVideoQuestions, createVideoQuestion, deleteVideoQuestion } from '@/lib/educator-api';

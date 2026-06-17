@@ -22,8 +22,9 @@ import { ReviewAnswersPage } from './ReviewAnswersPage';
 import { StudentSummary } from '@/components/learner/StudentSummary';
 import { InteractiveActivityViewer } from '@/components/interactive/InteractiveActivityViewer';
 import type { InteractiveActivityData } from '@/lib/interactive-types';
-import { fetchLessonInteractiveContent, fetchLessonVideoQuestions } from '@/lib/learner-api';
-import type { LearnerInteractiveContent, LearnerVideoQuestion } from '@/lib/learner-api';
+import { fetchLessonInteractiveContent, fetchLessonVideoQuestions, fetchLessonH5PContent } from '@/lib/learner-api';
+import type { LearnerInteractiveContent, LearnerVideoQuestion, LearnerH5PContent } from '@/lib/learner-api';
+import { H5PViewer } from '@/components/h5p/H5PViewer';
 import { toast } from 'sonner';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 
@@ -199,6 +200,7 @@ export function LessonViewPage({
   const [lesson, setLesson] = useState<LessonContent | null>(null);
   const [assets, setAssets] = useState<LessonAsset[]>([]);
   const [interactiveContent, setInteractiveContent] = useState<LearnerInteractiveContent[]>([]);
+  const [h5pContent, setH5pContent] = useState<LearnerH5PContent[]>([]);
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>('content');
@@ -290,8 +292,9 @@ export function LessonViewPage({
       fetchQuizData(lessonId),
       fetchLessonInteractiveContent(lessonId).catch(() => []),
       fetchLessonVideoQuestions(lessonId).catch(() => []),
+      fetchLessonH5PContent(lessonId).catch(() => []),
     ])
-      .then(([lessonData, assetData, quizResult, interactiveData, vqData]) => {
+      .then(([lessonData, assetData, quizResult, interactiveData, vqData, h5pData]) => {
         if (lessonData) {
           setLesson(lessonData);
           markLessonViewed(lessonId, courseId).catch(() => {});
@@ -299,6 +302,7 @@ export function LessonViewPage({
         setAssets(assetData);
         setInteractiveContent(interactiveData);
         setVideoQuestions(vqData);
+        setH5pContent(h5pData);
         if (quizResult) {
           setQuizData(quizResult);
           setQuizId(quizResult.id);
@@ -1323,6 +1327,18 @@ export function LessonViewPage({
                 </div>
               );
             })()}
+
+            {/* ── H5P Activities ── */}
+            {h5pContent.length > 0 && (
+              <div className="space-y-4 mt-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-gray-800 text-sm">Interactive Activities (H5P)</h3>
+                </div>
+                {h5pContent.map((item) => (
+                  <H5PViewer key={item.id} content={item} />
+                ))}
+              </div>
+            )}
 
             {adaptiveHint && (
               <Card className="p-4 border-2 border-violet-200 bg-violet-50">

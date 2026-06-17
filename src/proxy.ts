@@ -4,7 +4,7 @@ import type { Role } from '@/lib/auth-types';
 
 const PUBLIC_ROUTES = ['/', '/login', '/signup', '/access-denied', '/forgot-password', '/reset-password', '/contact', '/become-instructor', '/become-instructor/apply', '/auth/callback', '/api/auth/forgot-password', '/api/auth/reset-password', '/api/public-stats', '/api/instructor-applications'];
 
-const PREFIX_PUBLIC_ROUTES = ['/verify'];
+const PREFIX_PUBLIC_ROUTES = ['/verify', '/api/h5p'];
 
 const ROLE_PREFIXES: Record<string, Role> = {
   '/learner': 'learner',

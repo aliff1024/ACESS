@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Plus, MoreVertical, Users, Calendar, BookOpen, Loader2, Edit2, Eye, Trash2, Globe, EyeOff } from 'lucide-react';
+import { Search, Plus, Users, BookOpen, Loader2, Edit2, Trash2, Globe, EyeOff, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { fetchCourses, deleteCourse, updateCourseStatus } from '@/lib/educator-api';
@@ -18,6 +18,9 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 
 export function EducatorCoursesPage() {
   const router = useRouter();
@@ -26,7 +29,6 @@ export function EducatorCoursesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published'>('all');
   const [sortBy, setSortBy] = useState<'latest' | 'enrollments' | 'alphabetical'>('latest');
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const loadCourses = async () => {
@@ -110,217 +112,196 @@ export function EducatorCoursesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+        <p className="text-gray-500 animate-pulse">Loading courses...</p>
       </div>
     );
   }
 
   const filteredCourses = getFilteredCourses();
 
+  // Gradients for visually distinct course banners
+  const gradients = [
+    'from-blue-500 to-indigo-600',
+    'from-purple-500 to-pink-600',
+    'from-emerald-400 to-teal-500',
+    'from-orange-400 to-rose-500',
+    'from-cyan-400 to-blue-500'
+  ];
+
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Courses</h1>
-            <p className="text-gray-600">Manage and organize your course content</p>
-          </div>
-          <button
-            onClick={() => router.push('/educator/courses/create')}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Create Course
-          </button>
+    <div className="p-8 max-w-7xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Courses</h1>
+          <p className="text-gray-500 mt-1">Design, manage, and monitor your educational content</p>
         </div>
+        <Button
+          onClick={() => router.push('/educator/courses/create')}
+          className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all hover:scale-105"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Create Course
+        </Button>
+      </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search courses..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'draft' | 'published')}
-                className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="all">All Courses</option>
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-              </select>
-
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'latest' | 'enrollments' | 'alphabetical')}
-                className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="latest">Latest</option>
-                <option value="enrollments">Most Enrollments</option>
-                <option value="alphabetical">Alphabetical</option>
-              </select>
-            </div>
+      {/* Filters and Search Area */}
+      <Card className="p-4 border-0 shadow-sm ring-1 ring-gray-200 bg-white rounded-2xl">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search courses by title or description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
+            >
+              <option value="all">All Statuses</option>
+              <option value="published">Published</option>
+              <option value="draft">Drafts</option>
+            </select>
+            
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
+            >
+              <option value="latest">Last Updated</option>
+              <option value="enrollments">Most Students</option>
+              <option value="alphabetical">Alphabetical</option>
+            </select>
           </div>
         </div>
+      </Card>
 
-        {/* Course Grid */}
-        {filteredCourses.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredCourses.map((course) => (
-              <div
-                key={course.id}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
-                onClick={() => router.push(`/educator/courses/${course.id}`)}
-              >
-                <div className="h-48 overflow-hidden bg-gray-100 relative">
-                  {course.thumbnail_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={course.thumbnail_url}
-                      alt={course.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-blue-100 flex items-center justify-center">
-                      <BookOpen className="w-16 h-16 text-blue-300" />
-                    </div>
-                  )}
-                  <div className="absolute top-4 right-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium shadow-lg ${
-                        course.status === 'published'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-amber-100 text-amber-700'
-                      }`}
-                    >
-                      {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
+      {/* Courses Grid */}
+      {filteredCourses.length === 0 ? (
+        <Card className="p-16 border-dashed border-2 border-gray-200 bg-gray-50/50 rounded-3xl text-center">
+          <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">No courses found</h3>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            {courses.length === 0 
+              ? "You haven't created any courses yet. Get started by building your first curriculum."
+              : "We couldn't find any courses matching your current filters."}
+          </p>
+          {courses.length === 0 ? (
+            <Button onClick={() => router.push('/educator/courses/create')} className="bg-blue-600 hover:bg-blue-700 text-white">
+              Create First Course
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}>
+              Clear Filters
+            </Button>
+          )}
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCourses.map((course, index) => {
+            const gradient = gradients[index % gradients.length];
+            return (
+              <Card key={course.id} className="border-0 shadow-sm ring-1 ring-gray-200 bg-white rounded-2xl overflow-hidden hover:shadow-xl hover:ring-blue-300 transition-all group flex flex-col h-full">
+                {/* Course Banner */}
+                <div className={`h-24 bg-gradient-to-r ${gradient} relative`}>
+                  <div className="absolute top-3 right-3">
+                    <Badge variant="secondary" className={`shadow-sm backdrop-blur-md bg-white/90 ${course.status === 'published' ? 'text-green-700' : 'text-yellow-700'}`}>
+                      {course.status === 'published' ? 'Live' : 'Draft'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Course Details */}
+                <div className="p-5 flex-1 flex flex-col">
+                  <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1" title={course.title}>
+                    {course.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">
+                    {course.description || "No description provided."}
+                  </p>
+                  
+                  <div className="flex items-center gap-4 text-sm font-medium text-gray-600 mb-4 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                    <span className="flex items-center gap-1.5" title="Students Enrolled">
+                      <Users className="w-4 h-4 text-blue-500" /> {course.students}
+                    </span>
+                    <div className="w-px h-4 bg-gray-300" />
+                    <span className="flex items-center gap-1.5" title="Total Lessons">
+                      <BookOpen className="w-4 h-4 text-purple-500" /> {course.lessons}
                     </span>
                   </div>
-                </div>
 
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-1 truncate">{course.title}</h3>
-                      <p className="text-sm text-gray-500">{course.difficulty_level}</p>
-                    </div>
-                    <div className="relative ml-2" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => setSelectedCourse(selectedCourse === course.id ? null : course.id)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <MoreVertical className="w-5 h-5 text-gray-600" />
-                      </button>
+                  <div className="flex items-center text-xs text-gray-400 mb-4">
+                    <Clock className="w-3 h-3 mr-1" /> Updated {formatDate(course.lastUpdated)}
+                  </div>
 
-                      {selectedCourse === course.id && (
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
-                          <button
-                            onClick={() => { setSelectedCourse(null); router.push(`/educator/courses/${course.id}`); }}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                            Manage Course
-                          </button>
-                          <button
-                            onClick={() => { setSelectedCourse(null); router.push(`/educator/courses/${course.id}/preview`); }}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                          >
-                            <Eye className="w-4 h-4" />
-                            Preview Course
-                          </button>
-                          <button
-                            onClick={() => { setSelectedCourse(null); handleTogglePublish(course.id, course.status); }}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                          >
-                            {course.status === 'published' ? <EyeOff className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
-                            {course.status === 'published' ? 'Unpublish' : 'Publish'}
-                          </button>
-                          <hr className="my-2" />
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Course</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure? This will archive the course. Students will lose access.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => { setDeleteId(course.id); handleDelete(); }} className="bg-red-600 hover:bg-red-700 text-white">
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
+                  {/* Actions Grid */}
+                  <div className="grid grid-cols-2 gap-2 mt-auto">
+                    <Button 
+                      variant="outline" 
+                      className="border-gray-200 text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
+                      onClick={() => router.push(`/educator/courses/${course.id}`)}
+                    >
+                      <Edit2 className="w-4 h-4 mr-1.5" /> Edit
+                    </Button>
+
+                    <Button 
+                      variant="outline" 
+                      className={`border-gray-200 ${course.status === 'published' ? 'text-orange-600 hover:bg-orange-50 hover:border-orange-200' : 'text-green-600 hover:bg-green-50 hover:border-green-200'}`}
+                      onClick={() => handleTogglePublish(course.id, course.status)}
+                    >
+                      {course.status === 'published' ? (
+                        <><EyeOff className="w-4 h-4 mr-1.5" /> Unpublish</>
+                      ) : (
+                        <><Globe className="w-4 h-4 mr-1.5" /> Publish</>
                       )}
-                    </div>
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" className="col-span-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8">
+                          <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete Course
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="rounded-2xl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Course</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete <strong>{course.title}</strong>? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => {
+                              setDeleteId(course.id);
+                              // We use a small timeout to allow the modal to close before state update triggers re-render 
+                              // which sometimes interrupts the animation
+                              setTimeout(handleDelete, 10);
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                          >
+                            Yes, delete course
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{course.description}</p>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        <span>{course.students}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <BookOpen className="w-4 h-4" />
-                        <span>{course.lessons} lessons</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDate(course.lastUpdated)}</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {searchQuery || statusFilter !== 'all' ? 'No courses found' : 'No courses yet'}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {searchQuery || statusFilter !== 'all'
-                ? 'Try adjusting your search or filters'
-                : 'Create your first course to get started'}
-            </p>
-            {!searchQuery && statusFilter === 'all' && (
-              <button
-                onClick={() => router.push('/educator/courses/create')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium inline-flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                Create Your First Course
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

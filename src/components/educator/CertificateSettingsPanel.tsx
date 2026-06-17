@@ -5,13 +5,16 @@ import { Switch } from '../ui/switch';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Award, Loader2, Eye, Download, Shield, AlertTriangle } from 'lucide-react';
+import { Award, Loader2, Eye, Download, Shield, AlertTriangle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import {
   fetchCourseCertSettings,
   updateCertificateSettings,
   lockCertification,
+  fetchCourseStudentsProgress,
+  uploadCustomCertificate,
+  type CourseStudentProgress
 } from '@/lib/educator-api';
 import { generatePDFCertificate, MOCK_PREVIEW_DATA, formatDate, type CertificateRenderData } from '@/lib/certificate-utils';
 
@@ -39,8 +42,12 @@ export default function CertificateSettingsPanel({
   const [courseDurationHours, setCourseDurationHours] = useState(0)
   const [skillsText, setSkillsText] = useState('')
   const [passThreshold, setPassThreshold] = useState(80)
+  const [allowCustom, setAllowCustom] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [downloading, setDownloading] = useState(false)
+
+  const [eligibleStudents, setEligibleStudents] = useState<CourseStudentProgress[]>([])
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null)
 
   const loadSettings = useCallback(async () => {
     try {
@@ -53,6 +60,12 @@ export default function CertificateSettingsPanel({
       setCourseDurationHours((settings.course_duration_hours as number) || 0)
       setSkillsText(((settings.skills as string[]) || []).join(', '))
       setPassThreshold(((settings.completion_rules as Record<string, unknown>)?.quiz_threshold_pct as number) || 80)
+      setAllowCustom((settings.allow_custom_certificates as boolean) || false)
+
+      if (data.certificate_enabled || (settings.allow_custom_certificates as boolean)) {
+        const students = await fetchCourseStudentsProgress(courseId)
+        setEligibleStudents(students.filter(s => s.progressPercent >= (((settings.completion_rules as Record<string, unknown>)?.quiz_threshold_pct as number) || 80)))
+      }
     } catch {
       toast.error('Failed to load certificate settings')
     } finally {
@@ -82,6 +95,7 @@ export default function CertificateSettingsPanel({
           minimum_progress_pct: 100,
           mandatory_activities: true,
         },
+        allow_custom_certificates: allowCustom,
       })
 
       // Lock certification if publishing or has enrollments
@@ -125,14 +139,14 @@ export default function CertificateSettingsPanel({
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8 flex items-center justify-center min-h-[300px]">
+      <div className="w-[96%] max-w-[1500px] mx-auto bg-white rounded-lg border border-gray-200 p-8 flex items-center justify-center min-h-[300px]">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8">
+    <div className="w-[96%] max-w-[1500px] mx-auto bg-white rounded-lg border border-gray-200 p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Certificate Settings</h2>
@@ -174,7 +188,22 @@ export default function CertificateSettingsPanel({
           />
         </div>
 
-        {enabled && (
+        {/* Allow Custom toggle */}
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-start gap-3">
+            <Award className="w-5 h-5 text-purple-600 mt-0.5" />
+            <div>
+              <p className="font-semibold text-gray-900">Allow Custom Certificates</p>
+              <p className="text-xs text-gray-600">Upload unique certificates for eligible students</p>
+            </div>
+          </div>
+          <Switch
+            checked={allowCustom}
+            onCheckedChange={setAllowCustom}
+          />
+        </div>
+
+        {enabled && !allowCustom && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -259,7 +288,7 @@ export default function CertificateSettingsPanel({
         )}
 
         <div className="flex items-center gap-3 pt-4 border-t">
-          {enabled && (
+          {enabled && !allowCustom && (
             <>
               <Button
                 variant="outline"
@@ -291,6 +320,81 @@ export default function CertificateSettingsPanel({
           </Button>
         </div>
       </div>
+
+      {/* Eligible Students Custom Upload Section */}
+      {allowCustom && (
+        <div className="mt-8 pt-8 border-t border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Eligible Students ({eligibleStudents.length})</h3>
+          {eligibleStudents.length === 0 ? (
+            <p className="text-sm text-gray-500">No students are eligible for a certificate yet.</p>
+          ) : (
+            <div className="bg-white border rounded-lg overflow-hidden">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-gray-50 text-gray-600 font-medium">
+                  <tr>
+                    <th className="px-4 py-3 border-b">Student</th>
+                    <th className="px-4 py-3 border-b">Progress</th>
+                    <th className="px-4 py-3 border-b text-right">Upload Certificate</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {eligibleStudents.map((student) => (
+                    <tr key={student.enrollmentId} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-gray-900">{student.studentName}</div>
+                        <div className="text-xs text-gray-500">{student.studentEmail}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {student.progressPercent}% ({student.completedLessons}/{student.totalLessons})
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <input
+                            type="file"
+                            id={`cert-upload-${student.enrollmentId}`}
+                            className="hidden"
+                            accept=".pdf,image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              setUploadingFor(student.enrollmentId)
+                              try {
+                                await uploadCustomCertificate(student.enrollmentId, courseId, student.studentId, file)
+                                toast.success(`Certificate uploaded for ${student.studentName}`)
+                              } catch (err) {
+                                console.error(err)
+                                toast.error('Failed to upload certificate')
+                              } finally {
+                                setUploadingFor(null)
+                                // Reset input
+                                e.target.value = ''
+                              }
+                            }}
+                          />
+                          <label htmlFor={`cert-upload-${student.enrollmentId}`}>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="cursor-pointer"
+                              asChild
+                              disabled={uploadingFor === student.enrollmentId}
+                            >
+                              <span>
+                                {uploadingFor === student.enrollmentId ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+                                Upload
+                              </span>
+                            </Button>
+                          </label>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
