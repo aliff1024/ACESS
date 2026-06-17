@@ -33,7 +33,6 @@ export interface LessonFields {
   summary_word_target?: number
   summary_key_points?: string[]
   summary_reflection_questions?: string[]
-  summary_ai_feedback_enabled?: boolean
   lesson_layout?: 'standard' | 'focus' | 'two_column' | 'wide' | 'slideshow'
   simplified_summary?: string
   focus_mode_enabled?: boolean
@@ -169,7 +168,7 @@ export async function fetchCourseById(courseId: string) {
     `)
     .eq('id', courseId)
     .is('deleted_at', null)
-    .single()
+    .maybeSingle()
 
   if (error) throw error
   return data
@@ -192,14 +191,12 @@ export async function createCourse(educatorId: string, fields: CourseFields) {
       difficulty_level: fields.difficulty_level,
       category: fields.category || null,
       thumbnail_url: fields.thumbnail_url || null,
-      course_type: 'educator',
-      created_by_role: 'educator',
-      managed_by_admin: false,
     })
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) throw new Error('Course created but could not be retrieved. Check RLS policies.')
   return data
 }
 
@@ -237,6 +234,58 @@ async function guardSystemCourse(courseId: string) {
   if (course?.course_type === 'system') {
     throw new Error('System courses cannot be modified by educators')
   }
+}
+
+// ─── Accessibility Categories ─────────────────────────────────────────
+
+export async function fetchCourseAccessibilityCategories(courseId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('course_accessibility_categories')
+    .select('accessibility_category')
+    .eq('course_id', courseId)
+
+  if (error) throw error
+  return (data || []).map((r) => r.accessibility_category)
+}
+
+export async function updateCourseAccessibilityCategories(
+  courseId: string,
+  categories: string[],
+): Promise<void> {
+  await guardSystemCourse(courseId)
+  // Replace all categories for this course in one transaction
+  const { error: delError } = await supabase
+    .from('course_accessibility_categories')
+    .delete()
+    .eq('course_id', courseId)
+  if (delError) throw delError
+
+  if (categories.length === 0) return
+
+  const { error: insError } = await supabase
+    .from('course_accessibility_categories')
+    .insert(categories.map((cat) => ({ course_id: courseId, accessibility_category: cat })))
+  if (insError) throw insError
+}
+
+// ─── Accessibility Templates ──────────────────────────────────────────
+
+export interface AccessibilityTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  target_disability: string;
+  content_structure: { type: string; required: boolean; label: string }[];
+}
+
+export async function fetchAccessibilityTemplates(): Promise<AccessibilityTemplate[]> {
+  const { data, error } = await supabase
+    .from('accessibility_templates')
+    .select('*')
+    .order('name', { ascending: true })
+
+  if (error) throw error
+  return data || []
 }
 
 // ─── Lessons ───────────────────────────────────────────────────────────
@@ -717,6 +766,24 @@ export async function uploadContentImage(file: File, scopeId: string): Promise<s
   const ext = file.name.split('.').pop() || 'png'
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
   const filePath = `courses/${scopeId}/content/${fileName}`
+
+  const { error: uploadError } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(filePath, file, { upsert: false })
+
+  if (uploadError) throw uploadError
+
+  const { data: signedUrlData } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10)
+
+  return signedUrlData?.signedUrl ?? ''
+}
+
+export async function uploadMediaImage(courseId: string, file: File): Promise<string> {
+  const ext = file.name.split('.').pop() || 'png'
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const filePath = `courses/${courseId}/media/${fileName}`
 
   const { error: uploadError } = await supabase.storage
     .from(STORAGE_BUCKET)
@@ -1332,5 +1399,165 @@ export async function createLessonCheckpoint(lessonId: string, checkpoint: {
 
 export async function deleteLessonCheckpoint(checkpointId: string): Promise<void> {
   const { error } = await supabase.from('lesson_checkpoints').delete().eq('id', checkpointId)
+  if (error) throw error
+}
+
+// ─── Interactive Content ────────────────────────────────────────────
+
+export type InteractiveContentType = 'flashcards' | 'drag_drop' | 'fill_blanks' | 'memory_game' | 'timeline'
+
+export interface InteractiveContent {
+  id: string
+  lesson_id: string
+  content_type: InteractiveContentType
+  title: string
+  content_data: Record<string, unknown>
+  accessibility_settings: Record<string, unknown>
+  sequence_order: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface InteractiveContentFields {
+  content_type: InteractiveContentType
+  title: string
+  content_data: Record<string, unknown>
+  accessibility_settings?: Record<string, unknown>
+  sequence_order?: number
+}
+
+export async function fetchLessonInteractiveContent(lessonId: string): Promise<InteractiveContent[]> {
+  const { data, error } = await supabase
+    .from('lesson_interactive_content')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function createInteractiveContent(
+  lessonId: string,
+  fields: InteractiveContentFields,
+): Promise<InteractiveContent> {
+  const { data, error } = await supabase
+    .from('lesson_interactive_content')
+    .insert({
+      lesson_id: lessonId,
+      content_type: fields.content_type,
+      title: fields.title,
+      content_data: fields.content_data,
+      accessibility_settings: fields.accessibility_settings ?? {},
+      sequence_order: fields.sequence_order ?? 0,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateInteractiveContent(
+  id: string,
+  fields: Partial<InteractiveContentFields>,
+): Promise<InteractiveContent> {
+  const { data, error } = await supabase
+    .from('lesson_interactive_content')
+    .update({
+      ...fields,
+      sequence_order: fields.sequence_order ?? undefined,
+    })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteInteractiveContent(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('lesson_interactive_content')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function reorderInteractiveContent(
+  items: { id: string; sequence_order: number }[],
+): Promise<void> {
+  const updates = items.map((item) =>
+    supabase
+      .from('lesson_interactive_content')
+      .update({ sequence_order: item.sequence_order })
+      .eq('id', item.id),
+  )
+  const results = await Promise.all(updates)
+  for (const result of results) {
+    if (result.error) throw result.error
+  }
+}
+
+// ─── Video Questions ─────────────────────────────────────────────────
+
+export interface VideoQuestion {
+  id: string
+  lesson_id: string
+  title: string
+  timestamp_seconds: number
+  question_text: string
+  options: string[]
+  correct_option_index: number
+  sequence_order: number
+}
+
+export async function fetchVideoQuestions(lessonId: string): Promise<VideoQuestion[]> {
+  const { data, error } = await supabase
+    .from('video_questions')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('timestamp_seconds', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function createVideoQuestion(
+  lessonId: string,
+  fields: {
+    title: string
+    timestamp_seconds: number
+    question_text: string
+    options: string[]
+    correct_option_index: number
+  },
+): Promise<VideoQuestion> {
+  const { data: max } = await supabase
+    .from('video_questions')
+    .select('sequence_order')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: false })
+    .limit(1)
+
+  const { data, error } = await supabase
+    .from('video_questions')
+    .insert({
+      lesson_id: lessonId,
+      title: fields.title,
+      timestamp_seconds: fields.timestamp_seconds,
+      question_text: fields.question_text,
+      options: fields.options,
+      correct_option_index: fields.correct_option_index,
+      sequence_order: (max?.[0]?.sequence_order ?? -1) + 1,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteVideoQuestion(questionId: string): Promise<void> {
+  const { error } = await supabase
+    .from('video_questions')
+    .delete()
+    .eq('id', questionId)
   if (error) throw error
 }

@@ -8,7 +8,7 @@ import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Search, Filter, BookOpen, Loader2, Heart, Shield, Award, Crown, Star, User, Clock, Users } from 'lucide-react';
 import { Progress } from '../ui/progress';
-import { fetchAvailableCourses, fetchEnrolledCourses, toggleFavorite, fetchFavoriteCourseIds } from '@/lib/learner-api';
+import { fetchAvailableCourses, fetchEnrolledCourses, toggleFavorite, fetchFavoriteCourseIds, fetchCoursesAccessibilityCategories } from '@/lib/learner-api';
 import type { AvailableCourse, EnrolledCourse } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
 import { toast } from 'sonner';
@@ -35,6 +35,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [toggling, setToggling] = useState<string | null>(null);
+  const [courseCategories, setCourseCategories] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     Promise.all([
@@ -49,6 +50,10 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
         ]
         setAllCourses(combined);
         setFavoriteIds(new Set(ids));
+        const allIds = combined.map((c) => c.id);
+        if (allIds.length > 0) {
+          fetchCoursesAccessibilityCategories(allIds).then(setCourseCategories).catch(() => {});
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -203,6 +208,38 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                     <Badge className="bg-green-100 text-green-700 border-green-200 flex items-center gap-1">
                       <Award className="w-3 h-3" /> Certified
                     </Badge>
+                  )}
+                  {courseCategories[course.id]?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2 w-full">
+                      {courseCategories[course.id].map((cat) => {
+                        const labels: Record<string, string> = {
+                          cognitive: 'Cognitive',
+                          adhd: 'ADHD',
+                          dyslexia: 'Dyslexia',
+                          asd: 'ASD',
+                          visual: 'Visual',
+                          hearing: 'Hearing',
+                          motor: 'Motor',
+                        };
+                        const colors: Record<string, string> = {
+                          cognitive: 'bg-purple-100 text-purple-700 border-purple-200',
+                          adhd: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                          dyslexia: 'bg-blue-100 text-blue-700 border-blue-200',
+                          asd: 'bg-teal-100 text-teal-700 border-teal-200',
+                          visual: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                          hearing: 'bg-rose-100 text-rose-700 border-rose-200',
+                          motor: 'bg-orange-100 text-orange-700 border-orange-200',
+                        };
+                        return (
+                          <span
+                            key={cat}
+                            className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${colors[cat] || 'bg-gray-100 text-gray-600 border-gray-200'}`}
+                          >
+                            {labels[cat] || cat}
+                          </span>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 

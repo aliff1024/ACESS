@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { BookOpen, Plus, Trash2, Lightbulb } from 'lucide-react'
+import { BookOpen, Plus, Trash2 } from 'lucide-react'
 
 interface SummarySettingsProps {
   enabled: boolean
@@ -14,7 +14,6 @@ interface SummarySettingsProps {
   wordTarget: number
   keyPoints: string[]
   reflectionQuestions: string[]
-  aiFeedbackEnabled: boolean
   onChange: (field: string, value: unknown) => void
 }
 
@@ -26,7 +25,7 @@ const sources = [
 ]
 
 export function LessonSummarySettings({
-  enabled, source, wordTarget, keyPoints, reflectionQuestions, aiFeedbackEnabled, onChange,
+  enabled, source, wordTarget, keyPoints, reflectionQuestions, onChange,
 }: SummarySettingsProps) {
   const [newPoint, setNewPoint] = useState('')
   const [newQuestion, setNewQuestion] = useState('')
@@ -153,17 +152,6 @@ export function LessonSummarySettings({
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-start gap-2">
-              <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5" />
-              <div>
-                <Label className="text-sm font-medium">AI-Assisted Feedback</Label>
-                <p className="text-xs text-gray-500">Provide automated feedback on submitted summaries</p>
-              </div>
-            </div>
-            <Switch checked={aiFeedbackEnabled} onCheckedChange={(v) => onChange('summary_ai_feedback_enabled', v)} />
           </div>
         </div>
       )}

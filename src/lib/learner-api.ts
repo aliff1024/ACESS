@@ -643,6 +643,51 @@ export async function completeLearnerCheckpoint(checkpointId: string, enrollment
   if (error) throw error
 }
 
+// ─── Interactive Content (learner) ────────────────────────────────────────
+
+export interface LearnerInteractiveContent {
+  id: string
+  lesson_id: string
+  content_type: 'flashcards' | 'drag_drop' | 'fill_blanks' | 'memory_game' | 'timeline'
+  title: string
+  content_data: Record<string, unknown>
+  accessibility_settings: Record<string, unknown>
+  sequence_order: number
+}
+
+export async function fetchLessonInteractiveContent(lessonId: string): Promise<LearnerInteractiveContent[]> {
+  const { data, error } = await supabase
+    .from('lesson_interactive_content')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('sequence_order', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+// ─── Video Questions (learner) ──────────────────────────────────────────
+
+export interface LearnerVideoQuestion {
+  id: string
+  lesson_id: string
+  title: string
+  timestamp_seconds: number
+  question_text: string
+  options: string[]
+  correct_option_index: number
+  sequence_order: number
+}
+
+export async function fetchLessonVideoQuestions(lessonId: string): Promise<LearnerVideoQuestion[]> {
+  const { data, error } = await supabase
+    .from('video_questions')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('timestamp_seconds', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
 // ─── Mark Lesson Progress ──────────────────────────────────────────────
 
 export async function markLessonViewed(lessonId: string, courseId: string): Promise<void> {
@@ -1483,6 +1528,7 @@ export interface UserProfileData {
 
 export interface AccessibilitySettingsData {
   disability_type?: string | null
+  custom_notes?: string | null
   preferred_font_size?: string | null
   preferred_theme?: string | null
   line_spacing?: string | null
@@ -1551,6 +1597,7 @@ export async function fetchFullProfile(): Promise<FullProfile> {
     } : null,
     accessibility: a ? {
       disability_type: a.disability_type,
+      custom_notes: a.custom_notes ?? null,
       preferred_font_size: a.preferred_font_size,
       preferred_theme: a.preferred_theme,
       line_spacing: a.line_spacing,
@@ -2034,4 +2081,35 @@ export async function verifyCertificateByCode(code: string): Promise<Verificatio
     reference_code: data.reference_code,
     skills_earned: data.skills_earned,
   }
+}
+
+// ─── Accessibility Categories ──────────────────────────────────────────
+
+export async function fetchCourseAccessibilityCategoriesForLearner(courseId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('course_accessibility_categories')
+    .select('accessibility_category')
+    .eq('course_id', courseId)
+
+  if (error) throw error
+  return (data || []).map((r) => r.accessibility_category)
+}
+
+export async function fetchCoursesAccessibilityCategories(
+  courseIds: string[],
+): Promise<Record<string, string[]>> {
+  if (courseIds.length === 0) return {}
+  const { data, error } = await supabase
+    .from('course_accessibility_categories')
+    .select('course_id, accessibility_category')
+    .in('course_id', courseIds)
+
+  if (error) throw error
+
+  const result: Record<string, string[]> = {}
+  for (const row of data || []) {
+    if (!result[row.course_id]) result[row.course_id] = []
+    result[row.course_id].push(row.accessibility_category)
+  }
+  return result
 }

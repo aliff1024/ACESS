@@ -37,6 +37,7 @@ import type {
 } from '@/lib/learner-api';
 import { toast } from 'sonner';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
+import { dedupeSpeechVoices } from '@/lib/accessibility-utils';
 
 interface ProfileDialogProps {
   open: boolean;
@@ -72,6 +73,9 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [simplifiedUi, setSimplifiedUi] = useState(false);
   const [dyslexiaFriendlyFont, setDyslexiaFriendlyFont] = useState(false);
+  const [ttsRate, setTtsRate] = useState(1);
+  const [ttsVoiceUri, setTtsVoiceUri] = useState('');
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [preferredReadingLevel, setPreferredReadingLevel] = useState('');
   const [preferredContentFormat, setPreferredContentFormat] = useState('');
 
@@ -112,6 +116,8 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           setReducedMotion(a.reduced_motion ?? false);
           setSimplifiedUi(a.simplified_ui ?? false);
           setDyslexiaFriendlyFont(a.dyslexia_friendly_font ?? false);
+          setTtsRate(a.tts_rate ?? 1);
+          setTtsVoiceUri(a.tts_voice_uri || '');
           setPreferredReadingLevel(a.preferred_reading_level || '');
           setPreferredContentFormat(a.preferred_content_format || '');
         }
@@ -127,6 +133,17 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [open]);
+
+  // Load available speech voices for voice picker
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    const loadVoices = () => {
+      setAvailableVoices(dedupeSpeechVoices(window.speechSynthesis.getVoices()));
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -183,12 +200,15 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         preferred_theme: preferredTheme,
         line_spacing: lineSpacing,
         tts_enabled: ttsEnabled,
+        tts_rate: ttsRate,
+        tts_voice_uri: ttsVoiceUri || null,
         captions_enabled: captionsEnabled,
         screen_reader_optimized: screenReaderOptimized,
         keyboard_navigation_enabled: keyboardNavigationEnabled,
         reduced_motion: reducedMotion,
         simplified_ui: simplifiedUi,
         dyslexia_friendly_font: dyslexiaFriendlyFont,
+        preferred_font: dyslexiaFriendlyFont ? 'dyslexia' : (profile?.accessibility?.preferred_font || 'default'),
         preferred_reading_level: preferredReadingLevel || null,
         preferred_content_format: preferredContentFormat || null,
       };
@@ -347,13 +367,15 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                       <Select value={disabilityType} onValueChange={setDisabilityType}>
                         <SelectTrigger id="dlg-disability"><SelectValue placeholder="Select if applicable" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">None specified</SelectItem>
-                          <SelectItem value="dyslexia">Dyslexia</SelectItem>
+                          <SelectItem value="none">No accessibility support required</SelectItem>
+                          <SelectItem value="cognitive_impairment">Cognitive Impairment</SelectItem>
                           <SelectItem value="adhd">ADHD</SelectItem>
-                          <SelectItem value="mild_cognitive_impairment">Mild Cognitive Impairment</SelectItem>
+                          <SelectItem value="dyslexia">Dyslexia</SelectItem>
+                          <SelectItem value="asd">Autism Spectrum Disorder (ASD)</SelectItem>
                           <SelectItem value="visual_impairment">Visual Impairment</SelectItem>
                           <SelectItem value="hearing_impairment">Hearing Impairment</SelectItem>
                           <SelectItem value="motor_impairment">Motor Impairment</SelectItem>
+                          <SelectItem value="multiple_disabilities">Multiple Disabilities</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
@@ -425,6 +447,40 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                         <Switch checked={keyboardNavigationEnabled} onCheckedChange={setKeyboardNavigationEnabled} />
                       </div>
                     </div>
+                    {ttsEnabled && (
+                      <div className="p-3 bg-gray-50 rounded-lg space-y-2">
+                        <Label className="font-medium text-sm">TTS Speed</Label>
+                        <div className="flex gap-1.5">
+                          {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                            <button
+                              key={speed}
+                              onClick={() => setTtsRate(speed)}
+                              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                                ttsRate === speed
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                              }`}
+                            >
+                              {speed}x
+                            </button>
+                          ))}
+                        </div>
+                        <div className="space-y-1 pt-2">
+                          <Label className="font-medium text-sm">TTS Voice</Label>
+                          <Select value={ttsVoiceUri} onValueChange={setTtsVoiceUri}>
+                            <SelectTrigger><SelectValue placeholder="System default" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">System default</SelectItem>
+                              {availableVoices.map((voice) => (
+                                <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
+                                  {voice.name} ({voice.lang})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="border-t border-gray-200 pt-4" />
@@ -463,17 +519,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="dlg-contentFormat">Content Format</Label>
-                        <Select value={preferredContentFormat} onValueChange={setPreferredContentFormat}>
-                          <SelectTrigger id="dlg-contentFormat"><SelectValue placeholder="Select format" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text">Text</SelectItem>
-                            <SelectItem value="video">Video</SelectItem>
-                            <SelectItem value="audio">Audio</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+
                     </div>
                   </div>
 

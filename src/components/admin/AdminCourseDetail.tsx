@@ -15,7 +15,7 @@ import { Button } from '../ui/button';
 import { ConfirmAction } from '../ui/ConfirmAction';
 import { RichTextEditor } from '../ui/RichTextEditor';
 import { ThumbnailPicker } from './ThumbnailPicker';
-import { SystemLessonEditor } from './SystemLessonEditor';
+import { LessonEditor } from '../educator/LessonEditor';
 import { QuizBuilderModal } from '../educator/QuizBuilderModal';
 import { uploadContentImage, uploadThumbnail } from '@/lib/educator-api';
 import { COURSE_CATEGORIES } from '@/lib/course-thumbnails';
@@ -1553,12 +1553,12 @@ export default function AdminCourseDetail({ courseId, onBack }: AdminCourseDetai
       </div>
       {TemplateSaveModal}
 
-      <SystemLessonEditor
+      <LessonEditor
         open={lessonEditorOpen}
-        onOpenChange={setLessonEditorOpen}
+        onClose={() => setLessonEditorOpen(false)}
         courseId={courseId}
         lessonId={editingLessonId}
-        onSaved={reloadLessons}
+        onSaved={() => { reloadLessons(); setLessonEditorOpen(false); }}
       />
 
       <QuizBuilderModal

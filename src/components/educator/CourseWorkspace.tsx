@@ -6,8 +6,8 @@ import { AnimatePresence, motion, Reorder } from 'framer-motion';
 import {
   ArrowLeft, BookOpen, FileText, Users, Settings, Plus, Loader2,
   Globe, EyeOff, Eye, ChevronUp, ChevronDown,
-  Edit, Trash2, Upload, FileText as FileIcon, X,
-  CheckCircle, FileType, Video, GripVertical, Copy, ExternalLink, AlertTriangle, Award, Shield, Image as ImageIcon,
+  Edit, Trash2, Upload, X,
+  CheckCircle, FileType, GripVertical, Copy, AlertTriangle, Award, Shield, Image as ImageIcon, Accessibility,
 } from 'lucide-react';
 import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { Button } from '@/components/ui/button';
@@ -34,13 +34,15 @@ import {
   updateCourseStatus,
   getNextSequenceOrder,
   fetchLessonById,
+  fetchCourseAccessibilityCategories,
+  updateCourseAccessibilityCategories,
+  fetchLessonInteractiveContent,
+  fetchVideoQuestions,
 } from '@/lib/educator-api';
-import type { LessonWithQuiz, LessonAsset, CourseStatus, LessonFields } from '@/lib/educator-api';
+import type { LessonWithQuiz, LessonAsset, CourseStatus, LessonFields, InteractiveContent, VideoQuestion } from '@/lib/educator-api';
 import { uploadContentImage } from '@/lib/educator-api';
-import { RichTextEditor } from '@/components/ui/RichTextEditor';
-import { LessonComponentToggles } from '@/components/educator/LessonComponentToggles';
-import { LessonSummarySettings } from '@/components/educator/LessonSummarySettings';
-import { LessonAccessibilitySettings } from '@/components/educator/LessonAccessibilitySettings';
+import { LessonRenderer } from '@/components/lesson/LessonRenderer';
+import { LessonEditor } from '@/components/educator/LessonEditor';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -48,7 +50,6 @@ import CourseAssets from './CourseAssets';
 import PublishValidationModal from './PublishValidationModal';
 import StudentProgressView from './StudentProgressView';
 import CertificateSettingsPanel from './CertificateSettingsPanel';
-
 interface CourseWorkspaceProps {
   courseId: string;
   onBack: () => void;
@@ -96,64 +97,7 @@ interface QuizQuestionData {
   quiz_options: QuizOptionData[];
 }
 
-// ─── Utils ────────────────────────────────────────────────────────────────
-
-function getYouTubeId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-  ];
-  for (const p of patterns) {
-    const m = url.match(p);
-    if (m) return m[1];
-  }
-  return null;
-}
-
 // ─── Sub-components ──────────────────────────────────────────────────────
-
-function CollapsibleCard({ icon, title, defaultOpen, badge, action, children }: {
-  icon: React.ReactNode;
-  title: string;
-  defaultOpen: boolean;
-  badge?: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
-      <div className="flex items-center gap-3 px-5 py-4">
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          className="flex items-center gap-3 flex-1 text-left hover:bg-gray-50 transition-colors rounded-lg py-1 -ml-1 px-1"
-        >
-          <span className="shrink-0">{icon}</span>
-          <span className="flex-1 font-semibold text-sm text-gray-900">{title}</span>
-          {badge && <Badge variant="secondary" className="shrink-0 text-xs">{badge}</Badge>}
-          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-        </button>
-        {action && <span className="shrink-0">{action}</span>}
-      </div>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-5 border-t border-gray-100 pt-4">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function PdfUploadButton({ lessonId, uploadingPdfFor, onUpload }: {
   lessonId: string;
@@ -236,35 +180,13 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'settings'>('lessons');
 
-  // Lesson modal
-  const [lessonModalOpen, setLessonModalOpen] = useState(false);
-  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
-  const [lessonTitle, setLessonTitle] = useState('');
-  const [lessonContent, setLessonContent] = useState('');
-  const [lessonVideoUrl, setLessonVideoUrl] = useState('');
-  const [lessonTranscript, setLessonTranscript] = useState('');
-  const [lessonStatus, setLessonStatus] = useState<'draft' | 'published'>('published');
+  // Lesson editor modal
+  const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
+  const [lessonEditorLessonId, setLessonEditorLessonId] = useState<string | null>(null);
 
-  // Lesson flexible components
-  const [hasVideo, setHasVideo] = useState(true);
-  const [hasPdf, setHasPdf] = useState(true);
-  const [hasQuiz, setHasQuiz] = useState(true);
-  const [hasTranscript, setHasTranscript] = useState(true);
-  const [hasSummaryActivity, setHasSummaryActivity] = useState(false);
-  const [lessonLayout, setLessonLayout] = useState('standard');
-  const [summarySource, setSummarySource] = useState<'video' | 'pdf' | 'lesson_text' | 'entire_lesson'>('entire_lesson');
-  const [summaryWordTarget, setSummaryWordTarget] = useState(100);
-  const [summaryKeyPoints, setSummaryKeyPoints] = useState<string[]>([]);
-  const [summaryReflectionQuestions, setSummaryReflectionQuestions] = useState<string[]>([]);
-  const [summaryAiFeedbackEnabled, setSummaryAiFeedbackEnabled] = useState(false);
-
-  // Accessibility & learning support
-  const [simplifiedSummary, setSimplifiedSummary] = useState('');
-  const [focusModeEnabled, setFocusModeEnabled] = useState(false);
-  const [chunkedContentEnabled, setChunkedContentEnabled] = useState(false);
-  const [checkpointsEnabled, setCheckpointsEnabled] = useState(false);
-  const [adaptiveLearningEnabled, setAdaptiveLearningEnabled] = useState(false);
-  const [estimatedDuration, setEstimatedDuration] = useState(10);
+  // Course-level accessibility categories
+  const [accessibilityCategories, setAccessibilityCategories] = useState<string[]>([]);
+  const [savingAccessibilityCategories, setSavingAccessibilityCategories] = useState(false);
 
   // Lesson detail view
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
@@ -274,6 +196,8 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
     sequence_order: number; status: string; course_id: string;
   } | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [lessonInteractiveItems, setLessonInteractiveItems] = useState<InteractiveContent[]>([]);
+  const [lessonVideoQuestions, setLessonVideoQuestions] = useState<VideoQuestion[]>([]);
   const detailRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -308,9 +232,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestionForm[]>([]);
   const [quizSaving, setQuizSaving] = useState(false);
   const [uploadingQuizImage, setUploadingQuizImage] = useState<{ questionId: string; optionIndex?: number } | null>(null);
-  const [lessonSaving, setLessonSaving] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
-
   // Overview editing
   const [overviewTitle, setOverviewTitle] = useState('');
   const [overviewDesc, setOverviewDesc] = useState('');
@@ -320,14 +242,17 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
 
   const load = useCallback(async () => {
     try {
-      const [c, l] = await Promise.all([
+      const [c, l, cats] = await Promise.all([
         fetchCourseById(courseId),
         fetchLessonsWithQuizzes(courseId),
+        fetchCourseAccessibilityCategories(courseId).catch(() => [] as string[]),
       ]);
+      if (!c) throw new Error('Course not found');
       setCourse(c);
       setLessons(l);
       setOverviewTitle(c.title);
       setOverviewDesc(c.description);
+      setAccessibilityCategories(cats);
     } catch (err) {
       console.error(err);
       toast.error('Failed to load course');
@@ -339,10 +264,18 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   useEffect(() => { load() }, [load]);
 
   useEffect(() => {
-    if (!selectedLessonId) { setSelectedLessonData(null); return; }
+    if (!selectedLessonId) { setSelectedLessonData(null); setLessonInteractiveItems([]); setLessonVideoQuestions([]); return; }
     setLoadingDetail(true);
-    fetchLessonById(selectedLessonId)
-      .then((data) => setSelectedLessonData(data))
+    Promise.all([
+      fetchLessonById(selectedLessonId),
+      fetchLessonInteractiveContent(selectedLessonId).catch(() => [] as InteractiveContent[]),
+      fetchVideoQuestions(selectedLessonId).catch(() => [] as VideoQuestion[]),
+    ])
+      .then(([lessonData, items, vqs]) => {
+        setSelectedLessonData(lessonData);
+        setLessonInteractiveItems(items);
+        setLessonVideoQuestions(vqs);
+      })
       .catch(() => toast.error('Failed to load lesson details'))
       .finally(() => setLoadingDetail(false));
   }, [selectedLessonId]);
@@ -361,136 +294,13 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
   // ─── Lesson handlers ──────────────────────────────────────────────────
 
   const openNewLesson = () => {
-    setEditingLessonId(null);
-    setLessonTitle('');
-    setLessonContent('');
-    setLessonVideoUrl('');
-    setLessonTranscript('');
-    setLessonStatus('published');
-    setHasVideo(true);
-    setHasPdf(true);
-    setHasQuiz(true);
-    setHasTranscript(true);
-    setHasSummaryActivity(false);
-    setLessonLayout('standard');
-    setSummarySource('entire_lesson');
-    setSummaryWordTarget(100);
-    setSummaryKeyPoints([]);
-    setSummaryReflectionQuestions([]);
-    setSummaryAiFeedbackEnabled(false);
-    setSimplifiedSummary('');
-    setFocusModeEnabled(false);
-    setChunkedContentEnabled(false);
-    setCheckpointsEnabled(false);
-    setEstimatedDuration(10);
-    setLessonModalOpen(true);
+    setLessonEditorLessonId(null);
+    setLessonEditorOpen(true);
   };
 
-  const openEditLesson = async (lessonId: string) => {
-    try {
-      const lesson = await fetchLessonById(lessonId);
-      setEditingLessonId(lessonId);
-      setLessonTitle(lesson.title);
-      setLessonContent(lesson.content_html || '');
-      setLessonVideoUrl(lesson.video_url || '');
-      setLessonTranscript(lesson.transcript || '');
-      setLessonStatus(lesson.status || 'draft');
-      setHasVideo(lesson.has_video ?? true);
-      setHasPdf(lesson.has_pdf ?? true);
-      setHasQuiz(lesson.has_quiz ?? true);
-      setHasTranscript(lesson.has_transcript ?? true);
-      setHasSummaryActivity(lesson.has_summary_activity ?? false);
-      setLessonLayout(lesson.lesson_layout || 'standard');
-      setSummarySource(lesson.summary_source || 'entire_lesson');
-      setSummaryWordTarget(lesson.summary_word_target ?? 100);
-      setSummaryKeyPoints(Array.isArray(lesson.summary_key_points) ? lesson.summary_key_points : []);
-      setSummaryReflectionQuestions(Array.isArray(lesson.summary_reflection_questions) ? lesson.summary_reflection_questions : []);
-      setSummaryAiFeedbackEnabled(lesson.summary_ai_feedback_enabled ?? false);
-      setSimplifiedSummary(lesson.simplified_summary || '');
-      setFocusModeEnabled(lesson.focus_mode_enabled ?? false);
-      setChunkedContentEnabled(lesson.chunked_content_enabled ?? false);
-      setCheckpointsEnabled(lesson.checkpoints_enabled ?? false);
-      setAdaptiveLearningEnabled(lesson.adaptive_learning_enabled ?? false);
-      setEstimatedDuration(lesson.estimated_duration ?? 10);
-      setLessonModalOpen(true);
-    } catch {
-      toast.error('Failed to load lesson');
-    }
-  };
-
-  const handleComponentChange = (field: string, value: unknown) => {
-    switch (field) {
-      case 'hasVideo': setHasVideo(value as boolean); break;
-      case 'hasPdf': setHasPdf(value as boolean); break;
-      case 'hasQuiz': setHasQuiz(value as boolean); break;
-      case 'hasTranscript': setHasTranscript(value as boolean); break;
-      case 'hasSummaryActivity': setHasSummaryActivity(value as boolean); break;
-      case 'lessonLayout': setLessonLayout(value as string); break;
-      case 'summary_source': setSummarySource(value as 'video' | 'pdf' | 'lesson_text' | 'entire_lesson'); break;
-      case 'summary_word_target': setSummaryWordTarget(value as number); break;
-      case 'summary_key_points': setSummaryKeyPoints(value as string[]); break;
-      case 'summary_reflection_questions': setSummaryReflectionQuestions(value as string[]); break;
-      case 'summary_ai_feedback_enabled': setSummaryAiFeedbackEnabled(value as boolean); break;
-      case 'focusModeEnabled': setFocusModeEnabled(value as boolean); break;
-      case 'chunkedContentEnabled': setChunkedContentEnabled(value as boolean); break;
-      case 'checkpointsEnabled': setCheckpointsEnabled(value as boolean); break;
-      case 'adaptiveLearningEnabled': setAdaptiveLearningEnabled(value as boolean); break;
-      case 'simplified_summary': setSimplifiedSummary(value as string); break;
-      case 'estimated_duration': setEstimatedDuration(value as number); break;
-    }
-  };
-
-  const saveLesson = async () => {
-    if (!lessonTitle.trim()) { toast.error('Lesson title is required'); return }
-    setLessonSaving(true);
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('Not authenticated');
-      const lessonFields: Partial<LessonFields> = {
-        title: lessonTitle,
-        content_html: lessonContent,
-        video_url: lessonVideoUrl || null,
-        transcript: lessonTranscript || null,
-        status: lessonStatus,
-        has_video: hasVideo,
-        has_pdf: hasPdf,
-        has_quiz: hasQuiz,
-        has_transcript: hasTranscript,
-        has_summary_activity: hasSummaryActivity,
-        lesson_layout: lessonLayout as LessonFields['lesson_layout'],
-      };
-      if (hasSummaryActivity) {
-        lessonFields.summary_source = summarySource as 'video' | 'pdf' | 'lesson_text' | 'entire_lesson';
-        lessonFields.summary_word_target = summaryWordTarget;
-        lessonFields.summary_key_points = summaryKeyPoints;
-        lessonFields.summary_reflection_questions = summaryReflectionQuestions;
-        lessonFields.summary_ai_feedback_enabled = summaryAiFeedbackEnabled;
-      }
-      lessonFields.simplified_summary = simplifiedSummary || null;
-      lessonFields.focus_mode_enabled = focusModeEnabled;
-      lessonFields.chunked_content_enabled = chunkedContentEnabled;
-      lessonFields.checkpoints_enabled = checkpointsEnabled;
-      lessonFields.adaptive_learning_enabled = adaptiveLearningEnabled;
-      lessonFields.estimated_duration = estimatedDuration;
-      if (editingLessonId) {
-        await updateLesson(editingLessonId, lessonFields);
-        toast.success('Lesson updated');
-      } else {
-        const seq = await getNextSequenceOrder(courseId);
-        await createLesson(user.user.id, {
-          ...lessonFields,
-          course_id: courseId,
-          sequence_order: seq,
-        } as LessonFields);
-        toast.success('Lesson added');
-      }
-      setLessonModalOpen(false);
-      load();
-    } catch {
-      toast.error('Failed to save lesson');
-    } finally {
-      setLessonSaving(false);
-    }
+  const openEditLesson = (lessonId: string) => {
+    setLessonEditorLessonId(lessonId);
+    setLessonEditorOpen(true);
   };
 
   const handleDeleteLesson = async (lessonId: string) => {
@@ -958,147 +768,30 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
                         </div>
 
                         <div className="px-8 py-6 space-y-5">
-                          {/* ── 1. Video (with YouTube embed) ── */}
-                          <CollapsibleCard
-                            icon={<Video className="w-4 h-4 text-rose-600" />}
-                            title="Video"
-                            defaultOpen={!!selectedLessonData.video_url}
-                            badge={selectedLessonData.video_url ? '1 video' : undefined}
-                          >
-                            {selectedLessonData.video_url ? (() => {
-                              const ytId = getYouTubeId(selectedLessonData.video_url);
-                              return ytId ? (
-                                <div>
-                                  <div className="relative rounded-xl overflow-hidden bg-black mb-3" style={{ paddingBottom: '56.25%' }}>
-                                    <iframe
-                                      src={`https://www.youtube.com/embed/${ytId}`}
-                                      title="Lesson video"
-                                      className="absolute inset-0 w-full h-full"
-                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                      allowFullScreen
-                                    />
-                                  </div>
-                                  <a href={selectedLessonData.video_url} target="_blank" rel="noopener noreferrer"
-                                    className="text-xs text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors">
-                                    <ExternalLink className="w-3 h-3" /> Open in YouTube
-                                  </a>
-                                </div>
-                              ) : (
-                                <div>
-                                  <a href={selectedLessonData.video_url} target="_blank" rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-700 text-sm break-all underline underline-offset-2 flex items-center gap-1">
-                                    <ExternalLink className="w-3.5 h-3.5" /> {selectedLessonData.video_url}
-                                  </a>
-                                </div>
-                              );
-                            })() : (
-                              <div className="text-center py-6">
-                                <Video className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                                <p className="text-sm text-gray-500">No video URL set</p>
-                                <Button variant="outline" size="sm" onClick={() => openEditLesson(selectedLessonId)} className="mt-3 text-xs">
-                                  <Plus className="w-3 h-3 mr-1" /> Add Video
-                                </Button>
-                              </div>
-                            )}
-                          </CollapsibleCard>
-
-                          {/* ── 2. Lesson Content ── */}
-                          <CollapsibleCard
-                            icon={<FileText className="w-4 h-4 text-gray-600" />}
-                            title="Lesson Content"
-                            defaultOpen={!!selectedLessonData.content_html}
-                            badge={selectedLessonData.content_html ? 'ready' : undefined}
-                          >
-                            {selectedLessonData.content_html ? (
-                              <div className="prose prose-sm max-w-none text-gray-900 leading-relaxed"
-                                dangerouslySetInnerHTML={{ __html: selectedLessonData.content_html }} />
-                            ) : (
-                              <div className="text-center py-6">
-                                <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                                <p className="text-sm text-gray-500">No content written yet</p>
-                                <Button variant="outline" size="sm" onClick={() => openEditLesson(selectedLessonId)} className="mt-3 text-xs">
-                                  <Plus className="w-3 h-3 mr-1" /> Write Content
-                                </Button>
-                              </div>
-                            )}
-                          </CollapsibleCard>
-
-                          {/* ── 3. Resources / PDFs ── */}
-                          <CollapsibleCard
-                            icon={<FileIcon className="w-4 h-4 text-orange-600" />}
-                            title={`Resources ${(assets[selectedLessonId] || []).length > 0 ? `(${(assets[selectedLessonId] || []).length})` : ''}`}
-                            defaultOpen={(assets[selectedLessonId] || []).length > 0}
-                            badge={(assets[selectedLessonId] || []).length > 0 ? `${(assets[selectedLessonId] || []).length} file${(assets[selectedLessonId] || []).length > 1 ? 's' : ''}` : undefined}
-                            action={<PdfUploadButton lessonId={selectedLessonId} uploadingPdfFor={uploadingPdfFor} onUpload={(file) => handlePdfUpload(selectedLessonId, file)} />}
-                          >
-                            {(assets[selectedLessonId] || []).length > 0 ? (
-                              <div className="space-y-2">
-                                {(assets[selectedLessonId] || []).map((asset) => (
-                                  <div key={asset.id} className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg group/resource hover:bg-orange-100/50 transition-colors">
-                                    <div className="w-10 h-12 bg-orange-200 rounded flex items-center justify-center shrink-0 overflow-hidden">
-                                      <FileIcon className="w-5 h-5 text-orange-700" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-orange-900 truncate">{asset.title || 'Untitled PDF'}</p>
-                                      <p className="text-xs text-orange-600">PDF document</p>
-                                    </div>
-                                    <div className="flex gap-1 opacity-0 group-hover/resource:opacity-100 transition-opacity">
-                                      <Button variant="ghost" size="sm" onClick={() => window.open(asset.url, '_blank')} className="h-7 text-xs">
-                                        <ExternalLink className="w-3 h-3 mr-1" /> Open
-                                      </Button>
-                                      <Button variant="ghost" size="sm" onClick={() => handleDeleteAsset(asset.id, selectedLessonId)} className="h-7 text-xs text-red-600">
-                                        <X className="w-3 h-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl">
-                                <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                                <p className="text-sm text-gray-500">No files uploaded yet</p>
-                                <p className="text-xs text-gray-400 mt-1">Upload PDF resources for your learners</p>
-                              </div>
-                            )}
-                          </CollapsibleCard>
-
-                          {/* ── 4. Transcript ── */}
-                          {selectedLessonData.transcript ? (
-                            <CollapsibleCard
-                              icon={<FileText className="w-4 h-4 text-purple-600" />}
-                              title="Transcript"
-                              defaultOpen={false}
-                              badge="available"
-                            >
-                              <div className="text-sm text-gray-700 leading-relaxed max-h-52 overflow-y-auto whitespace-pre-line">
-                                {selectedLessonData.transcript}
-                              </div>
-                            </CollapsibleCard>
-                          ) : null}
-
-                          {/* ── 5. Quiz ── */}
-                          <CollapsibleCard
-                            icon={<CheckCircle className="w-4 h-4 text-blue-600" />}
-                            title="Quiz"
-                            defaultOpen={true}
-                            badge={lessons.find(l => l.id === selectedLessonId)?.has_quiz ? 'attached' : undefined}
-                          >
-                            {lessons.find(l => l.id === selectedLessonId)?.has_quiz ? (
-                              <div className="flex items-center gap-3">
-                                <Badge className="bg-blue-100 text-blue-800">Quiz attached</Badge>
-                                <Button variant="outline" size="sm" onClick={() => openEditQuiz(selectedLessonId)}>Edit Quiz</Button>
-                                <Button variant="outline" size="sm" onClick={() => setConfirmDeleteQuizLessonId(selectedLessonId)} className="text-red-600 border-red-200">Remove Quiz</Button>
-                              </div>
-                            ) : (
-                              <div className="text-center py-4">
-                                <CheckCircle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                                <p className="text-sm text-gray-500 mb-3">No quiz attached to this lesson</p>
-                                <Button variant="outline" size="sm" onClick={() => openNewQuiz(selectedLessonId)}>
-                                  <Plus className="w-4 h-4 mr-1" /> Add Quiz
-                                </Button>
-                              </div>
-                            )}
-                          </CollapsibleCard>
+                          <LessonRenderer
+                            mode="educator"
+                            lesson={selectedLessonData}
+                            assets={assets[selectedLessonId] || []}
+                            videoQuestions={lessonVideoQuestions}
+                            interactiveItems={lessonInteractiveItems}
+                            hasQuiz={!!lessons.find(l => l.id === selectedLessonId)?.has_quiz}
+                            lessonId={selectedLessonId}
+                            educatorProps={{
+                              onEditLesson: () => openEditLesson(selectedLessonId),
+                              onEditQuiz: () => {
+                                const lesson = lessons.find(l => l.id === selectedLessonId);
+                                if (lesson?.has_quiz) {
+                                  openEditQuiz(selectedLessonId);
+                                } else {
+                                  openNewQuiz(selectedLessonId);
+                                }
+                              },
+                              onRemoveQuiz: () => setConfirmDeleteQuizLessonId(selectedLessonId),
+                              onUploadPdf: (file) => handlePdfUpload(selectedLessonId, file),
+                              uploadingPdfFor,
+                              onDeleteAsset: (assetId) => handleDeleteAsset(assetId, selectedLessonId),
+                            }}
+                          />
                         </div>
                       </div>
                     ) : (
@@ -1196,6 +889,66 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
           <div className="max-w-4xl mx-auto bg-white rounded-lg border border-gray-200 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Course Settings</h2>
             <div className="space-y-6">
+              {/* ── Accessibility Categories ── */}
+              <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Accessibility className="w-5 h-5 text-purple-600" />
+                  <h3 className="font-semibold text-gray-900">Accessibility Categories</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Select the accessibility needs your course supports. Learners see these as badges on course cards.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[
+                    { value: 'cognitive', label: 'Cognitive' },
+                    { value: 'adhd', label: 'ADHD' },
+                    { value: 'dyslexia', label: 'Dyslexia' },
+                    { value: 'asd', label: 'ASD' },
+                    { value: 'visual', label: 'Visual' },
+                    { value: 'hearing', label: 'Hearing' },
+                    { value: 'motor', label: 'Motor' },
+                  ].map((cat) => {
+                    const selected = accessibilityCategories.includes(cat.value);
+                    return (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        onClick={() => {
+                          setAccessibilityCategories((prev) =>
+                            selected ? prev.filter((c) => c !== cat.value) : [...prev, cat.value],
+                          );
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                          selected
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <Button
+                  size="sm"
+                  disabled={savingAccessibilityCategories}
+                  onClick={async () => {
+                    setSavingAccessibilityCategories(true);
+                    try {
+                      await updateCourseAccessibilityCategories(courseId, accessibilityCategories);
+                      toast.success('Accessibility categories updated');
+                    } catch {
+                      toast.error('Failed to save accessibility categories');
+                    } finally {
+                      setSavingAccessibilityCategories(false);
+                    }
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  {savingAccessibilityCategories ? 'Saving...' : 'Save Categories'}
+                </Button>
+              </div>
+
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-2">Course Status</h3>
                 <div className="flex items-center gap-3">
@@ -1232,152 +985,14 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
         )}
       </div>
 
-      {/* ─── Lesson Modal ─────────────────────────────────────────────── */}
-      <Dialog open={lessonModalOpen} onOpenChange={setLessonModalOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingLessonId ? 'Edit Lesson' : 'Add New Lesson'}</DialogTitle>
-            <DialogDescription>Create educational content for your course</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Lesson Title *</label>
-              <Input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} placeholder="e.g., What is Web Accessibility?" className="text-lg py-6" />
-            </div>
-
-            <LessonComponentToggles
-              hasVideo={hasVideo}
-              hasPdf={hasPdf}
-              hasQuiz={hasQuiz}
-              hasTranscript={hasTranscript}
-              hasSummaryActivity={hasSummaryActivity}
-              lessonLayout={lessonLayout}
-              onChange={handleComponentChange}
-            />
-
-            <LessonSummarySettings
-              enabled={hasSummaryActivity}
-              source={summarySource}
-              wordTarget={summaryWordTarget}
-              keyPoints={summaryKeyPoints}
-              reflectionQuestions={summaryReflectionQuestions}
-              aiFeedbackEnabled={summaryAiFeedbackEnabled}
-              onChange={handleComponentChange}
-            />
-
-            <LessonAccessibilitySettings
-              lessonId={editingLessonId}
-              simplifiedSummary={simplifiedSummary}
-              focusModeEnabled={focusModeEnabled}
-              chunkedContentEnabled={chunkedContentEnabled}
-              checkpointsEnabled={checkpointsEnabled}
-              adaptiveLearningEnabled={adaptiveLearningEnabled}
-              estimatedDuration={estimatedDuration}
-              onChange={handleComponentChange}
-            />
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Lesson Content</label>
-              <RichTextEditor
-                content={lessonContent}
-                onChange={setLessonContent}
-                placeholder="Start building your lesson content here..."
-                minHeight="300px"
-              />
-            </div>
-
-            {lessonLayout === 'slideshow' && (() => {
-              const slides = lessonContent.split(/<hr\s*\/?>/i).filter(s => s.trim());
-              return (
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-2">
-                    Slide Preview &mdash; use <code className="text-purple-600 bg-purple-50 px-1 rounded">{'<hr>'}</code> to separate slides
-                  </label>
-                  {slides.length > 0 ? (
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {slides.map((slide, i) => (
-                        <div key={i} className="flex-shrink-0 w-48 border border-gray-200 rounded-xl p-3 bg-white shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold text-gray-400">Slide {i + 1}/{slides.length}</span>
-                          </div>
-                          <div className="text-xs text-gray-700 leading-relaxed line-clamp-6 [&_img]:max-h-12 [&_img]:rounded [&_img]:mx-auto [&_img]:block"
-                            dangerouslySetInnerHTML={{ __html: slide }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
-                      <p className="text-xs text-gray-500">Add horizontal rules ({'<hr>'}) to create slides</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  <Video className="w-3.5 h-3.5 inline mr-1" /> Video URL
-                </label>
-                <Input
-                  type="url"
-                  value={lessonVideoUrl}
-                  onChange={(e) => setLessonVideoUrl(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  <FileText className="w-3.5 h-3.5 inline mr-1" /> Transcript
-                </label>
-                <RichTextEditor
-                  content={lessonTranscript}
-                  onChange={setLessonTranscript}
-                  placeholder="Paste or write the text transcript of your video content here for accessibility..."
-                  minHeight="150px"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Status</label>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setLessonStatus('draft')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
-                    lessonStatus === 'draft'
-                      ? 'border-amber-500 bg-amber-50 text-amber-800'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  <div className={`w-3 h-3 rounded-full ${lessonStatus === 'draft' ? 'bg-amber-500' : 'bg-gray-300'}`} />
-                  Draft
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLessonStatus('published')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
-                    lessonStatus === 'published'
-                      ? 'border-green-500 bg-green-50 text-green-800'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  <div className={`w-3 h-3 rounded-full ${lessonStatus === 'published' ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  Published
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-3 pt-4 border-t">
-            <Button onClick={() => setLessonModalOpen(false)} variant="outline">Cancel</Button>
-            <Button onClick={saveLesson} disabled={lessonSaving || !lessonTitle.trim()} className="bg-blue-600 hover:bg-blue-700 text-white ml-auto">
-              {lessonSaving ? 'Saving...' : editingLessonId ? 'Update Lesson' : 'Save Lesson'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* ─── Lesson Editor Modal ──────────────────────────────────────── */}
+      <LessonEditor
+        open={lessonEditorOpen}
+        onClose={() => setLessonEditorOpen(false)}
+        courseId={courseId}
+        lessonId={lessonEditorLessonId}
+        onSaved={load}
+      />
 
       {/* ─── Quiz Modal ───────────────────────────────────────────────── */}
       <Dialog open={quizModalOpen} onOpenChange={setQuizModalOpen}>

@@ -1,4 +1,4 @@
-
+﻿
 
 
 SET statement_timeout = 0;
@@ -561,6 +561,10 @@ CREATE TABLE IF NOT EXISTS "public"."courses" (
     "certificate_enabled" boolean DEFAULT false,
     "certificate_settings" "jsonb" DEFAULT '{}'::"jsonb",
     "certification_locked" boolean DEFAULT false,
+    "supports_tts" boolean DEFAULT false,
+    "supports_transcripts" boolean DEFAULT false,
+    "supports_focus_mode" boolean DEFAULT false,
+    "supports_chunked_learning" boolean DEFAULT false,
     CONSTRAINT "courses_course_layout_type_check" CHECK (("course_layout_type" = ANY (ARRAY['standard'::"text", 'guided'::"text", 'simplified'::"text", 'focused'::"text"]))),
     CONSTRAINT "courses_course_type_check" CHECK (("course_type" = ANY (ARRAY['educator'::"text", 'system'::"text"]))),
     CONSTRAINT "courses_created_by_role_check" CHECK (("created_by_role" = ANY (ARRAY['educator'::"text", 'admin'::"text"]))),
@@ -570,6 +574,60 @@ CREATE TABLE IF NOT EXISTS "public"."courses" (
 
 
 ALTER TABLE "public"."courses" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."course_accessibility_categories" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "course_id" "uuid" NOT NULL,
+    "accessibility_category" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."course_accessibility_categories" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."course_accessibility_categories" IS 'Many-to-many: courses tagged with accessibility categories for discoverability';
+
+
+CREATE TABLE IF NOT EXISTS "public"."accessibility_templates" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "description" "text",
+    "target_disability" "text" NOT NULL,
+    "content_structure" "jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."accessibility_templates" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."accessibility_templates" IS 'Predefined lesson structure templates keyed to disability types';
+
+
+COMMENT ON COLUMN "public"."accessibility_templates"."content_structure" IS 'JSON array of typed sections';
+
+
+CREATE TABLE IF NOT EXISTS "public"."adaptive_interactions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "lesson_id" "uuid",
+    "course_id" "uuid",
+    "adaptation_used" "text" NOT NULL,
+    "session_id" "text",
+    "duration_seconds" integer,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."adaptive_interactions" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."adaptive_interactions" IS 'Analytics: tracks which accessibility adaptations learners actually use';
+
+
+COMMENT ON COLUMN "public"."adaptive_interactions"."adaptation_used" IS 'tts | focus_mode | chunked_content | simplified_summary | captions | slideshow | guided_mode';
 
 
 CREATE TABLE IF NOT EXISTS "public"."enrollments" (
@@ -780,6 +838,7 @@ CREATE TABLE IF NOT EXISTS "public"."lessons" (
     "summary_reflection_questions" "jsonb" DEFAULT '[]'::"jsonb",
     "summary_ai_feedback_enabled" boolean DEFAULT false,
     "lesson_layout" "text" DEFAULT 'standard'::"text",
+    "interactive_activity_type" "text",
     CONSTRAINT "lessons_lesson_layout_check" CHECK (("lesson_layout" = ANY (ARRAY['standard'::"text", 'focus'::"text", 'two_column'::"text", 'wide'::"text"]))),
     CONSTRAINT "lessons_lesson_type_check" CHECK (("lesson_type" = ANY (ARRAY['standard'::"text", 'video'::"text", 'quiz'::"text", 'practice'::"text", 'reading'::"text", 'assessment'::"text"]))),
     CONSTRAINT "lessons_sequence_order_check" CHECK (("sequence_order" > 0)),
@@ -965,8 +1024,10 @@ CREATE TABLE IF NOT EXISTS "public"."user_accessibility_settings" (
     "preferred_font" "text" DEFAULT 'default'::"text",
     "preferred_language" "text" DEFAULT 'en'::"text",
     "tts_rate" real DEFAULT 1.0,
-    "tts_voice_uri" "text"
+    "tts_voice_uri" "text",
+    "custom_notes" "text"
 );
+
 
 
 ALTER TABLE "public"."user_accessibility_settings" OWNER TO "postgres";
@@ -1008,7 +1069,7 @@ CREATE TABLE IF NOT EXISTS "public"."user_notification_settings" (
 ALTER TABLE "public"."user_notification_settings" OWNER TO "postgres";
 
 
-COMMENT ON TABLE "public"."user_notification_settings" IS 'Per-user notification preferences. All new — no conflicts with existing schema.';
+COMMENT ON TABLE "public"."user_notification_settings" IS 'Per-user notification preferences. All new â€” no conflicts with existing schema.';
 
 
 
@@ -1091,6 +1152,18 @@ ALTER TABLE ONLY "public"."course_chapters"
 ALTER TABLE ONLY "public"."course_chapters"
     ADD CONSTRAINT "course_chapters_pkey" PRIMARY KEY ("id");
 
+
+
+ALTER TABLE ONLY "public"."course_accessibility_categories"
+    ADD CONSTRAINT "course_accessibility_categories_pkey" PRIMARY KEY ("id");
+
+
+ALTER TABLE ONLY "public"."accessibility_templates"
+    ADD CONSTRAINT "accessibility_templates_pkey" PRIMARY KEY ("id");
+
+
+ALTER TABLE ONLY "public"."adaptive_interactions"
+    ADD CONSTRAINT "adaptive_interactions_pkey" PRIMARY KEY ("id");
 
 
 ALTER TABLE ONLY "public"."course_favorites"
@@ -1351,6 +1424,9 @@ ALTER TABLE ONLY "public"."users"
 ALTER TABLE ONLY "public"."users"
     ADD CONSTRAINT "users_pkey" PRIMARY KEY ("id");
 
+
+
+CREATE UNIQUE INDEX "idx_course_accessibility_categories_unique" ON "public"."course_accessibility_categories" USING "btree" ("course_id", "accessibility_category");
 
 
 CREATE INDEX "idx_accessibility_user_id" ON "public"."user_accessibility_settings" USING "btree" ("user_id");
@@ -1675,6 +1751,22 @@ ALTER TABLE ONLY "public"."course_chapters"
 
 
 ALTER TABLE ONLY "public"."course_favorites"
+    ADD CONSTRAINT "course_accessibility_categories_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("id") ON DELETE CASCADE;
+
+
+ALTER TABLE ONLY "public"."adaptive_interactions"
+    ADD CONSTRAINT "adaptive_interactions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
+
+
+ALTER TABLE ONLY "public"."adaptive_interactions"
+    ADD CONSTRAINT "adaptive_interactions_lesson_id_fkey" FOREIGN KEY ("lesson_id") REFERENCES "public"."lessons"("id") ON DELETE SET NULL;
+
+
+ALTER TABLE ONLY "public"."adaptive_interactions"
+    ADD CONSTRAINT "adaptive_interactions_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("id") ON DELETE SET NULL;
+
+
+ALTER TABLE ONLY "public"."course_favorites"
     ADD CONSTRAINT "course_favorites_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("id") ON DELETE CASCADE;
 
 
@@ -1926,6 +2018,16 @@ CREATE POLICY "Users can insert referral codes" ON "public"."referral_codes" FOR
 
 
 
+CREATE POLICY "users can view course accessibility categories" ON "public"."course_accessibility_categories" FOR SELECT USING (true);
+
+CREATE POLICY "educators can manage course accessibility categories" ON "public"."course_accessibility_categories" FOR ALL TO authenticated USING ((EXISTS (SELECT 1 FROM "public"."courses" WHERE (("courses"."id" = "course_accessibility_categories"."course_id") AND ("courses"."created_by" = "auth"."uid"()))))) WITH CHECK ((EXISTS (SELECT 1 FROM "public"."courses" WHERE (("courses"."id" = "course_accessibility_categories"."course_id") AND ("courses"."created_by" = "auth"."uid"())))));
+
+CREATE POLICY "users can insert own interactions" ON "public"."adaptive_interactions" FOR INSERT TO authenticated WITH CHECK ("user_id" = "auth"."uid"());
+
+CREATE POLICY "users can view own interactions" ON "public"."adaptive_interactions" FOR SELECT TO authenticated USING ("user_id" = "auth"."uid"());
+
+CREATE POLICY "educators can view course interactions" ON "public"."adaptive_interactions" FOR SELECT TO authenticated USING ((EXISTS (SELECT 1 FROM "public"."courses" WHERE (("courses"."id" = "adaptive_interactions"."course_id") AND (("courses"."created_by" = "auth"."uid"()) OR (EXISTS (SELECT 1 FROM "public"."users" WHERE (("users"."id" = "auth"."uid"()) AND (("users"."role")::"text" = 'admin'::"text")))))))));
+
 CREATE POLICY "Users can update own accessibility settings" ON "public"."user_accessibility_settings" FOR UPDATE USING (("auth"."uid"() = "user_id"));
 
 
@@ -2061,6 +2163,15 @@ ALTER TABLE "public"."notifications" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."referral_codes" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."course_accessibility_categories" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."accessibility_templates" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."adaptive_interactions" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."user_accessibility_settings" ENABLE ROW LEVEL SECURITY;
@@ -2513,6 +2624,18 @@ GRANT ALL ON TABLE "public"."user_accessibility_preferences" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."course_accessibility_categories" TO "anon";
+GRANT ALL ON TABLE "public"."course_accessibility_categories" TO "authenticated";
+GRANT ALL ON TABLE "public"."course_accessibility_categories" TO "service_role";
+
+GRANT ALL ON TABLE "public"."accessibility_templates" TO "anon";
+GRANT ALL ON TABLE "public"."accessibility_templates" TO "authenticated";
+GRANT ALL ON TABLE "public"."accessibility_templates" TO "service_role";
+
+GRANT ALL ON TABLE "public"."adaptive_interactions" TO "anon";
+GRANT ALL ON TABLE "public"."adaptive_interactions" TO "authenticated";
+GRANT ALL ON TABLE "public"."adaptive_interactions" TO "service_role";
+
 GRANT ALL ON TABLE "public"."user_accessibility_settings" TO "anon";
 GRANT ALL ON TABLE "public"."user_accessibility_settings" TO "authenticated";
 GRANT ALL ON TABLE "public"."user_accessibility_settings" TO "service_role";
@@ -2567,6 +2690,16 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
+
+
+
+
+
+
+
+
+
+
 
 
 

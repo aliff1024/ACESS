@@ -8,7 +8,7 @@ import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { BookOpen, Check, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, Zap, ChevronRight, ListChecks, AlertTriangle, Award, User, Clock, Users } from 'lucide-react';
 import { ConfirmAction } from '../ui/ConfirmAction';
-import { fetchCourseDetail, enrollInCourse, unenrollFromCourse, toggleFavorite, checkIsFavorited, fetchSystemCourseProgress, checkCourseCertificateEligibility, claimCertificate } from '@/lib/learner-api';
+import { fetchCourseDetail, enrollInCourse, unenrollFromCourse, toggleFavorite, checkIsFavorited, fetchSystemCourseProgress, checkCourseCertificateEligibility, claimCertificate, fetchCourseAccessibilityCategoriesForLearner } from '@/lib/learner-api';
 import type { CourseDetail, SystemCourseProgress } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
 import { toast } from 'sonner';
@@ -37,6 +37,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
   const [certEligible, setCertEligible] = useState<{ eligible: boolean; reason?: string } | null>(null);
   const [claimingCert, setClaimingCert] = useState(false);
   const [certClaimed, setCertClaimed] = useState(false);
+  const [accessibilityCategories, setAccessibilityCategories] = useState<string[]>([]);
 
   const isSystem = course?.system_course === true;
   const isGuided = isSystem && course?.guided_learning_enabled;
@@ -59,6 +60,11 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
             setCertEligible(elig);
           } catch {}
         }
+        // Fetch accessibility categories
+        try {
+          const cats = await fetchCourseAccessibilityCategoriesForLearner(courseId);
+          setAccessibilityCategories(cats);
+        } catch {}
       })
       .catch((err) => { console.error('CourseDetailPage load error:', err); })
       .finally(() => setLoading(false));
@@ -215,6 +221,31 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
                       <Award className="w-3 h-3" /> Certificate
                     </Badge>
                   )}
+                  {accessibilityCategories.map((cat) => {
+                    const labels: Record<string, string> = {
+                      cognitive: 'Cognitive',
+                      adhd: 'ADHD',
+                      dyslexia: 'Dyslexia',
+                      asd: 'ASD',
+                      visual: 'Visual',
+                      hearing: 'Hearing',
+                      motor: 'Motor',
+                    };
+                    const colors: Record<string, string> = {
+                      cognitive: 'bg-purple-100 text-purple-700 border-purple-200',
+                      adhd: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                      dyslexia: 'bg-blue-100 text-blue-700 border-blue-200',
+                      asd: 'bg-teal-100 text-teal-700 border-teal-200',
+                      visual: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                      hearing: 'bg-rose-100 text-rose-700 border-rose-200',
+                      motor: 'bg-orange-100 text-orange-700 border-orange-200',
+                    };
+                    return (
+                      <Badge key={cat} className={`${colors[cat] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                        {labels[cat] || cat}
+                      </Badge>
+                    );
+                  })}
                   {course.updated_at && (
                     <Badge variant="outline" className="text-gray-500 border-gray-300 flex items-center gap-1">
                       <Clock className="w-3 h-3" /> Updated {new Date(course.updated_at).toLocaleDateString()}

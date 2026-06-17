@@ -6,11 +6,12 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbP
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout } from 'lucide-react';
+import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint } from '@/lib/learner-api';
 import type { LessonContent, QuizData, LearnerLessonCheckpoint } from '@/lib/learner-api';
 import { shouldAutoEnableEasyRead } from '@/lib/accessibility-utils';
+import { trackAdaptation } from '@/lib/adaptive-engine';
 import { fetchLessonAssets } from '@/lib/educator-api';
 import { supabase } from '@/lib/supabase';
 import type { LessonAsset } from '@/lib/educator-api';
@@ -19,7 +20,12 @@ import { QuizPage } from './QuizPage';
 import { QuizResultModal } from './QuizResultModal';
 import { ReviewAnswersPage } from './ReviewAnswersPage';
 import { StudentSummary } from '@/components/learner/StudentSummary';
+import { InteractiveActivityViewer } from '@/components/interactive/InteractiveActivityViewer';
+import type { InteractiveActivityData } from '@/lib/interactive-types';
+import { fetchLessonInteractiveContent, fetchLessonVideoQuestions } from '@/lib/learner-api';
+import type { LearnerInteractiveContent, LearnerVideoQuestion } from '@/lib/learner-api';
 import { toast } from 'sonner';
+import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 
 // ─── Utils ────────────────────────────────────────────────────────────────
 
@@ -32,15 +38,6 @@ function getYouTubeId(url: string): string | null {
     if (m) return m[1];
   }
   return null;
-}
-
-function getYouTubeEmbedUrl(url: string, captionsEnabled: boolean): string {
-  const id = getYouTubeId(url);
-  if (!id) return url;
-  const params = new URLSearchParams();
-  if (captionsEnabled) params.set('cc_load_policy', '1');
-  const qs = params.toString();
-  return `https://www.youtube.com/embed/${id}${qs ? `?${qs}` : ''}`;
 }
 
 function computeReadTime(contentHtml: string, estimatedDuration?: number | null): { label: string; minutes: number } {
@@ -82,50 +79,6 @@ function CelebrationAnimation() {
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────
-
-function CollapsibleCard({ icon, title, defaultOpen, badge, action, children }: {
-  icon: React.ReactNode;
-  title: string;
-  defaultOpen: boolean;
-  badge?: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
-      <div className="flex items-center gap-3 px-5 py-4">
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          className="flex items-center gap-3 flex-1 text-left hover:bg-gray-50 transition-colors rounded-lg py-1 -ml-1 px-1"
-        >
-          <span className="shrink-0">{icon}</span>
-          <span className="flex-1 font-semibold text-sm text-gray-900">{title}</span>
-          {badge && <Badge variant="secondary" className="shrink-0 text-xs">{badge}</Badge>}
-          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-        </button>
-        {action && <span className="shrink-0">{action}</span>}
-      </div>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-5 border-t border-gray-100 pt-4">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function GuidedPathBanner({
   currentChunk,
@@ -245,9 +198,9 @@ export function LessonViewPage({
 }: LessonViewPageProps) {
   const [lesson, setLesson] = useState<LessonContent | null>(null);
   const [assets, setAssets] = useState<LessonAsset[]>([]);
+  const [interactiveContent, setInteractiveContent] = useState<LearnerInteractiveContent[]>([]);
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showTranscript, setShowTranscript] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('content');
   const [isSystemCourse, setIsSystemCourse] = useState(false);
   const [learningObjectives, setLearningObjectives] = useState<string | null>(null);
@@ -275,10 +228,12 @@ export function LessonViewPage({
   const [submitting, setSubmitting] = useState(false);
   const [quizResetKey, setQuizResetKey] = useState(0);
 
-  const { settings } = useAccessibility();
+  const { settings, adaptiveOverrides } = useAccessibility();
+  const adaptiveLessonModes = adaptiveOverrides.lesson_modes;
 
   // Focus mode local toggle (learner can override lesson setting)
   const [focusMode, setFocusMode] = useState(false);
+  const [focusStep, setFocusStep] = useState(0);
   // View mode: slide (split by <hr>) or scroll (continuous)
   const [viewMode, setViewMode] = useState<'slide' | 'scroll' | null>(null);
   // Chunked content navigation
@@ -289,6 +244,27 @@ export function LessonViewPage({
   const ttsAutoStarted = useRef(false);
   const [ttsPlaying, setTtsPlaying] = useState(false);
   const [ttsStatusMessage, setTtsStatusMessage] = useState('');
+  const [ttsRate, setTtsRate] = useState(settings.tts_rate ?? 1);
+  const ttsRateRef = useRef(ttsRate);
+  ttsRateRef.current = ttsRate;
+
+  // Video questions state
+  const [videoQuestions, setVideoQuestions] = useState<LearnerVideoQuestion[]>([]);
+  const [answeredQuestionIds, setAnsweredQuestionIds] = useState<Set<string>>(new Set());
+  const [vqCompletedIds, setVqCompletedIds] = useState<Set<string>>(new Set());
+  const [activeVideoQuestion, setActiveVideoQuestion] = useState<LearnerVideoQuestion | null>(null);
+  const [selectedVqOption, setSelectedVqOption] = useState<number | null>(null);
+  const [vqAnswerFeedback, setVqAnswerFeedback] = useState<{ correct: boolean; correctIndex: number } | null>(null);
+  const [selectedActivityTabId, setSelectedActivityTabId] = useState<string | null>(null);
+  const playerRef = useRef<YT.Player | null>(null);
+  const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ytApiReadyRef = useRef(false);
+  const answeredQuestionIdsRef = useRef(answeredQuestionIds);
+  answeredQuestionIdsRef.current = answeredQuestionIds;
+  const vqCompletedIdsRef = useRef(vqCompletedIds);
+  vqCompletedIdsRef.current = vqCompletedIds;
+  const activeVideoQuestionRef = useRef(activeVideoQuestion);
+  activeVideoQuestionRef.current = activeVideoQuestion;
 
   useEffect(() => {
     setLoading(true);
@@ -312,13 +288,17 @@ export function LessonViewPage({
       fetchLessonContent(lessonId),
       fetchLessonAssets(lessonId).catch(() => [] as LessonAsset[]),
       fetchQuizData(lessonId),
+      fetchLessonInteractiveContent(lessonId).catch(() => []),
+      fetchLessonVideoQuestions(lessonId).catch(() => []),
     ])
-      .then(([lessonData, assetData, quizResult]) => {
+      .then(([lessonData, assetData, quizResult, interactiveData, vqData]) => {
         if (lessonData) {
           setLesson(lessonData);
           markLessonViewed(lessonId, courseId).catch(() => {});
         }
         setAssets(assetData);
+        setInteractiveContent(interactiveData);
+        setVideoQuestions(vqData);
         if (quizResult) {
           setQuizData(quizResult);
           setQuizId(quizResult.id);
@@ -361,12 +341,84 @@ export function LessonViewPage({
       }).catch(() => {});
   }, [lessonId, courseId]);
 
+  // YouTube IFrame API + video questions polling
+  useEffect(() => {
+    const ytId = lesson ? getYouTubeId(lesson.video_url || '') : null;
+    if (!ytId || videoQuestions.length === 0) return;
+
+    let cancelled = false;
+
+    function onYouTubeIframeAPIReady() {
+      if (cancelled) return;
+      ytApiReadyRef.current = true;
+      playerRef.current = new YT.Player('youtube-player', {
+        videoId: ytId!,
+        playerVars: {
+          rel: 0,
+          modestbranding: 1,
+          cc_load_policy: settings.captions_enabled ? 1 : 0,
+        },
+        events: {
+          onReady: () => {
+            // Start polling for video questions
+            if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
+            checkIntervalRef.current = setInterval(() => {
+              if (!playerRef.current || activeVideoQuestionRef.current) return;
+              const currentTime = playerRef.current.getCurrentTime();
+              const unanswered = videoQuestions.filter(
+                (q) => !answeredQuestionIdsRef.current.has(q.id) && !vqCompletedIdsRef.current.has(q.id)
+              );
+              // Find the first unanswered question whose timestamp we've passed
+              const next = unanswered.find((q) => currentTime >= q.timestamp_seconds);
+              if (next) {
+                playerRef.current.pauseVideo();
+                setActiveVideoQuestion(next);
+                setSelectedVqOption(null);
+                setVqAnswerFeedback(null);
+              }
+            }, 500);
+          },
+          onStateChange: (event) => {
+            // Could use for future enhancements
+          },
+        },
+      });
+    }
+
+    // Load YouTube IFrame API if not already loaded
+    if (typeof YT === 'undefined' || !YT.Player) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      tag.onload = () => {
+        // The API calls onYouTubeIframeAPIReady when loaded
+      };
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode!.insertBefore(tag, firstScriptTag);
+      // Override the global callback
+      (window as unknown as Record<string, unknown>).onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+    } else {
+      onYouTubeIframeAPIReady();
+    }
+
+    return () => {
+      cancelled = true;
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+        checkIntervalRef.current = null;
+      }
+      if (playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
+    };
+  }, [lesson?.video_url, videoQuestions.length, settings.captions_enabled]);
+
   const speak = useCallback(() => {
     const text = ttsTextRef.current;
     if (!text) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = settings.tts_rate ?? 1;
+    utterance.rate = ttsRateRef.current;
     if (settings.tts_voice_uri) {
       const voice = window.speechSynthesis.getVoices().find((v) => v.voiceURI === settings.tts_voice_uri);
       if (voice) utterance.voice = voice;
@@ -385,7 +437,7 @@ export function LessonViewPage({
       setTtsStatusMessage('');
     };
     window.speechSynthesis.speak(utterance);
-  }, [settings.tts_rate, settings.tts_voice_uri]);
+  }, [settings.tts_voice_uri]);
 
   const stopTTS = useCallback(() => {
     window.speechSynthesis.cancel();
@@ -396,7 +448,6 @@ export function LessonViewPage({
 
   useEffect(() => {
     ttsAutoStarted.current = false;
-    setShowTranscript(false);
     setTtsStatusMessage('');
     setCurrentChunk(0);
     setAcknowledgedCheckpoints(new Set());
@@ -408,25 +459,25 @@ export function LessonViewPage({
   }, [lessonId, stopTTS]);
 
   useEffect(() => {
-    if (!lessonId || !lesson?.checkpoints_enabled) return;
+    if (!lessonId || !(lesson?.checkpoints_enabled || adaptiveLessonModes.checkpoints)) return;
     fetchLessonCheckpoints(lessonId)
       .then(setLessonCheckpoints)
       .catch(() => setLessonCheckpoints([]));
   }, [lessonId, lesson?.checkpoints_enabled]);
 
   useEffect(() => {
-    if (!enrollmentId || !lessonId || !lesson?.checkpoints_enabled) return;
+    if (!enrollmentId || !lessonId || !(lesson?.checkpoints_enabled || adaptiveLessonModes.checkpoints)) return;
     fetchCompletedCheckpointIds(enrollmentId, lessonId)
       .then(setCompletedCheckpointIds)
       .catch(() => setCompletedCheckpointIds(new Set()));
   }, [enrollmentId, lessonId, lesson?.checkpoints_enabled]);
 
+  // Auto-enable focus mode if adaptive engine recommends it and lesson supports it
   useEffect(() => {
-    if (!lesson) return;
-    if (settings.captions_enabled && lesson.transcript && lesson.has_transcript !== false) {
-      setShowTranscript(true);
+    if (lesson && adaptiveLessonModes.focus_mode && lesson.focus_mode_enabled) {
+      setFocusMode(true);
     }
-  }, [lesson, settings.captions_enabled]);
+  }, [lesson?.id, adaptiveLessonModes.focus_mode]);
 
   useEffect(() => {
     if (!lesson) return;
@@ -467,9 +518,10 @@ export function LessonViewPage({
     if (ttsPlaying) {
       stopTTS();
     } else {
+      trackAdaptation('tts', { lessonId, courseId });
       speak();
     }
-  }, [ttsPlaying, speak, stopTTS]);
+  }, [ttsPlaying, speak, stopTTS, lessonId, courseId]);
 
   const hasPdfAssets = assets.length > 0;
   if (hasPdfAssets) {}
@@ -542,6 +594,7 @@ export function LessonViewPage({
 
   const simplifiedMode = settings.simplified_ui ?? false;
   const effectiveFocusMode = focusMode;
+  const effectiveChunkedEnabled = lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content;
   const contentContainerClass = effectiveFocusMode
     ? 'max-w-3xl'
     : simplifiedMode
@@ -561,7 +614,7 @@ export function LessonViewPage({
     ? null
     : isSlideMode
       ? contentHtml.split(/<hr\s*\/?>/i).filter(p => p.trim())
-      : !lesson.chunked_content_enabled
+      : !effectiveChunkedEnabled
         ? null
         : contentHtml.split(/<h2\b[^>]*>/i).filter(p => p.trim());
 
@@ -572,8 +625,8 @@ export function LessonViewPage({
   const totalChunks = chunks?.length ?? 0;
   const showChunkNav = totalChunks > 1;
 
-  const guidedMode = !isSlideMode && !effectiveFocusMode && showChunkNav && (lesson.chunked_content_enabled || simplifiedMode);
-  const requireCheckpoint = !isSlideMode && !!lesson.checkpoints_enabled && showChunkNav && !effectiveFocusMode;
+  const guidedMode = !isSlideMode && !effectiveFocusMode && showChunkNav && (effectiveChunkedEnabled || simplifiedMode || adaptiveLessonModes.guided_mode);
+  const requireCheckpoint = !isSlideMode && (!!lesson.checkpoints_enabled || adaptiveLessonModes.checkpoints) && showChunkNav && !effectiveFocusMode;
   const currentDbCheckpoint = lessonCheckpoints.length > 0
     ? (lessonCheckpoints.find((cp) => cp.sequence_order === currentChunk) ?? lessonCheckpoints[currentChunk] ?? null)
     : null;
@@ -585,7 +638,15 @@ export function LessonViewPage({
   const canAdvanceChunk = !checkpointPending;
   const isLastChunk = currentChunk >= totalChunks - 1;
   const showEndOfLessonContent = !effectiveFocusMode && (!guidedMode || (isLastChunk && canAdvanceChunk));
-  const highlightSimplifiedSummary = simplifiedMode || shouldAutoEnableEasyRead(settings.preferred_reading_level);
+  const highlightSimplifiedSummary = simplifiedMode || shouldAutoEnableEasyRead(settings.preferred_reading_level) || adaptiveLessonModes.simplified_summary;
+
+  const focusSteps = [
+    ...(lesson.video_url && lesson.has_video !== false ? [{ id: 'video' as const, label: 'Video' }] : []),
+    ...(contentHtml ? [{ id: 'content' as const, label: 'Lesson Content' }] : []),
+    ...(interactiveContent.length > 0 ? [{ id: 'activities' as const, label: 'Activities' }] : []),
+    { id: 'summary' as const, label: 'Summary' },
+  ];
+  const currentFocusId = effectiveFocusMode && focusSteps.length > 0 ? focusSteps[Math.min(focusStep, focusSteps.length - 1)]?.id : null;
 
   const goToPrevChunk = () => {
     setCurrentChunk((c) => Math.max(0, c - 1));
@@ -607,6 +668,7 @@ export function LessonViewPage({
       return next;
     });
     setAdaptiveHint(null);
+    trackAdaptation('guided_mode', { lessonId, courseId });
     if (currentDbCheckpoint && enrollmentId) {
       try {
         await completeLearnerCheckpoint(currentDbCheckpoint.id, enrollmentId);
@@ -683,11 +745,28 @@ export function LessonViewPage({
 
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className={`font-bold text-gray-900 ${simplifiedMode ? 'text-4xl' : 'text-3xl'}`}>{lesson.title}</h1>
+              {!simplifiedMode && lesson.focus_mode_enabled && !effectiveFocusMode && (
+                <button
+                  onClick={() => {
+                    setFocusMode(true);
+                    setFocusStep(0);
+                    trackAdaptation('focus_mode', { lessonId, courseId });
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors shrink-0"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" /> Focus
+                </button>
+              )}
               {(() => (
                   <Badge variant="outline" className="text-gray-600 border-gray-300 text-xs flex items-center gap-1 shrink-0">
                     <Clock className="w-3 h-3" /> {durationLabel}
                   </Badge>
                 ))()}
+              {adaptiveOverrides.active_recommendation && (
+                <Badge className="bg-violet-100 text-violet-700 border-violet-200 text-xs flex items-center gap-1 shrink-0">
+                  <Sparkles className="w-3 h-3" /> Adaptive
+                </Badge>
+              )}
               {isSystemCourse && (
                 <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs flex items-center gap-1 shrink-0 simplifiable">
                   <Shield className="w-3 h-3" /> Official Course
@@ -720,7 +799,7 @@ export function LessonViewPage({
       )}
 
       {/* ── Learning Objectives (system courses) ── */}
-      {isSystemCourse && learningObjectives && !effectiveFocusMode && (
+      {isSystemCourse && learningObjectives && (!effectiveFocusMode || currentFocusId === 'summary') && (
           <div className={`${layoutContainer} mx-auto px-6 py-4 mt-2 simplifiable`}>
           <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-5">
             <h2 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
@@ -732,7 +811,7 @@ export function LessonViewPage({
       )}
 
       {/* ── Key Concepts ── */}
-      {lesson.summary_key_points && lesson.summary_key_points.length > 0 && !effectiveFocusMode && (
+      {lesson.summary_key_points && lesson.summary_key_points.length > 0 && (!effectiveFocusMode || currentFocusId === 'summary') && (
         <div className={`${layoutContainer} mx-auto px-6 py-4 mt-2`}>
           <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-5">
             <h2 className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-2">
@@ -750,64 +829,55 @@ export function LessonViewPage({
         </div>
       )}
 
-      {activeTab !== 'quiz' && !effectiveFocusMode && (
-          <div className={`${layoutContainer} mx-auto px-6 py-4 mt-2`}>
-          <div className={`bg-blue-50 border-blue-200 border-2 rounded-xl p-6`}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 accessibility-tools-header">Accessibility Tools</h2>
-              <div className="flex items-center gap-2">
-                {!simplifiedMode && lesson.focus_mode_enabled && (
-                  <button
-                    onClick={() => setFocusMode(!focusMode)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      focusMode
-                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {focusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                    {focusMode ? 'Exit Focus' : 'Focus Mode'}
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                onClick={handlePlayTTS}
-                className={`${ttsPlaying ? 'bg-blue-700' : 'bg-blue-600'} hover:bg-blue-700 text-white ${
-                  settings.tts_enabled && !ttsPlaying ? 'ring-2 ring-blue-400 ring-offset-2' : ''
-                }`}
-                aria-pressed={ttsPlaying}
+      {/* ── Focus Mode Slide Navigation ── */}
+      {focusMode && !simplifiedMode && focusSteps.length > 0 && (
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+            <h2 className="font-bold text-gray-900 text-sm truncate">{lesson.title}</h2>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[11px] text-gray-500 font-medium whitespace-nowrap">
+                {focusStep + 1} / {focusSteps.length}
+              </span>
+              <button
+                onClick={() => setFocusStep(Math.max(0, focusStep - 1))}
+                disabled={focusStep === 0}
+                className="p-1 rounded border border-gray-200 disabled:opacity-30 hover:bg-gray-100 transition-colors"
+                aria-label="Previous section"
               >
-                {ttsPlaying ? <VolumeX className="w-5 h-5 mr-2" /> : <Volume2 className="w-5 h-5 mr-2" />}
-                {ttsPlaying ? 'Stop TTS' : settings.tts_enabled ? 'Listen to Lesson' : 'Play TTS'}
-              </Button>
-              <Button
-                onClick={() => setShowTranscript(!showTranscript)}
-                variant="outline"
-                className={`border-blue-300 text-blue-700 hover:bg-blue-100 ${
-                  settings.captions_enabled && showTranscript ? 'ring-2 ring-blue-300 ring-offset-2' : ''
-                }`}
-                aria-pressed={showTranscript}
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setFocusStep(Math.min(focusSteps.length - 1, focusStep + 1))}
+                disabled={focusStep >= focusSteps.length - 1}
+                className="p-1 rounded border border-gray-200 disabled:opacity-30 hover:bg-gray-100 transition-colors"
+                aria-label="Next section"
               >
-                <FileText className="w-5 h-5 mr-2" />
-                {showTranscript ? 'Hide Transcript' : 'Show Transcript'}
-              </Button>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setFocusMode(false)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+              >
+                <Minimize2 className="w-3.5 h-3.5" /> Exit
+              </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {focusMode && !simplifiedMode && (
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-          <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
-            <h2 className="font-bold text-gray-900 text-lg truncate">{lesson.title}</h2>
-            <button
-              onClick={() => setFocusMode(false)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-            >
-              <Minimize2 className="w-4 h-4" /> Exit Focus
-            </button>
+          <div className="max-w-4xl mx-auto px-4 pb-1.5">
+            <div className="flex gap-1">
+              {focusSteps.map((step, i) => (
+                <button
+                  key={step.id}
+                  onClick={() => setFocusStep(i)}
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors ${
+                    i === focusStep
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {step.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -857,7 +927,7 @@ export function LessonViewPage({
         {activeTab === 'content' && (
           <div className={layout === 'two_column' && !effectiveFocusMode ? 'grid grid-cols-2 gap-6' : 'space-y-5'}>
             {/* ── Simplified Summary Card ── */}
-            {(simplifiedMode || highlightSimplifiedSummary) && lesson.simplified_summary && (
+            {(simplifiedMode || highlightSimplifiedSummary || (effectiveFocusMode && currentFocusId === 'summary')) && lesson.simplified_summary && (
               <Card className={`p-6 border-2 ${highlightSimplifiedSummary ? 'border-amber-400 ring-2 ring-amber-200' : 'border-amber-200'} bg-amber-50`}>
                 <div className="flex items-center gap-2 mb-3">
                   <BookOpen className="w-5 h-5 text-amber-600" />
@@ -882,26 +952,133 @@ export function LessonViewPage({
             )}
 
             {/* ── Video (optional) ── */}
-            {lesson.video_url && lesson.has_video !== false && !effectiveFocusMode && (
+            {lesson.video_url && lesson.has_video !== false && (!effectiveFocusMode || currentFocusId === 'video') && (
               <CollapsibleCard
                 icon={<Video className="w-4 h-4 text-rose-600" />}
                 title="Video"
                 defaultOpen={true}
-                badge="1 video"
+                badge={`1 video${videoQuestions.length > 0 ? ` · ${videoQuestions.length} question${videoQuestions.length === 1 ? '' : 's'}` : ''}`}
               >
                 {(() => {
                   const ytId = getYouTubeId(lesson.video_url!);
                   return ytId ? (
                     <div>
                       <div className="relative rounded-xl overflow-hidden bg-black mb-3" style={{ paddingBottom: '56.25%' }}>
-                        <iframe
-                          src={getYouTubeEmbedUrl(lesson.video_url!, !!settings.captions_enabled)}
-                          title="Lesson video"
-                          className="absolute inset-0 w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
+                        <div id="youtube-player" className="absolute inset-0 w-full h-full" />
+                        {!ytApiReadyRef.current && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                            <Loader2 className="w-8 h-8 animate-spin text-white" />
+                          </div>
+                        )}
+                        {/* ── Video Question Overlay ── */}
+                        {activeVideoQuestion && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm">
+                            <div className="w-full max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden">
+                              <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-rose-50 to-orange-50">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-rose-500" />
+                                  <span className="text-sm font-semibold text-gray-900">Video Question</span>
+                                  <span className="text-[10px] font-mono bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded ml-auto">
+                                    {activeVideoQuestion.timestamp_seconds}s
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">{activeVideoQuestion.title}</p>
+                              </div>
+                              <div className="px-4 py-3">
+                                <p className="text-sm font-medium text-gray-900 mb-3">{activeVideoQuestion.question_text}</p>
+                                <div className="space-y-2">
+                                  {activeVideoQuestion.options.map((opt, i) => (
+                                    <label
+                                      key={i}
+                                      className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                                        selectedVqOption === i
+                                          ? vqAnswerFeedback
+                                            ? i === activeVideoQuestion.correct_option_index
+                                              ? 'border-green-400 bg-green-50'
+                                              : 'border-red-400 bg-red-50'
+                                            : 'border-blue-400 bg-blue-50'
+                                          : vqAnswerFeedback && i === activeVideoQuestion.correct_option_index
+                                            ? 'border-green-400 bg-green-50'
+                                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                                      }`}
+                                    >
+                                      <input
+                                        type="radio"
+                                        name="vq_answer"
+                                        value={i}
+                                        checked={selectedVqOption === i}
+                                        onChange={() => !vqAnswerFeedback && setSelectedVqOption(i)}
+                                        disabled={!!vqAnswerFeedback}
+                                        className="shrink-0"
+                                      />
+                                      <span className={`text-sm ${vqAnswerFeedback && i === activeVideoQuestion.correct_option_index ? 'font-semibold text-green-800' : 'text-gray-700'}`}>
+                                        {opt}
+                                      </span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="px-4 py-2.5 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
+                                {vqAnswerFeedback ? (
+                                  <>
+                                    <span className={`text-xs font-medium ${vqAnswerFeedback.correct ? 'text-green-700' : 'text-red-700'}`}>
+                                      {vqAnswerFeedback.correct ? '✓ Correct!' : `✗ The correct answer was: ${activeVideoQuestion.options[activeVideoQuestion.correct_option_index]}`}
+                                    </span>
+                                    <button type="button" onClick={() => {
+                                      const timestamp = activeVideoQuestion.timestamp_seconds;
+                                      setActiveVideoQuestion(null);
+                                      setSelectedVqOption(null);
+                                      setVqAnswerFeedback(null);
+                                      playerRef.current?.seekTo(timestamp + 2, true);
+                                      playerRef.current?.playVideo();
+                                    }} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                                      Continue
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={selectedVqOption === null}
+                                    onClick={() => {
+                                      const correct = selectedVqOption === activeVideoQuestion.correct_option_index;
+                                      setVqAnswerFeedback({ correct, correctIndex: activeVideoQuestion.correct_option_index });
+                                      setVqCompletedIds((prev) => new Set(prev).add(activeVideoQuestion.id));
+                                      if (correct) {
+                                        setAnsweredQuestionIds((prev) => new Set(prev).add(activeVideoQuestion.id));
+                                      }
+                                    }}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                                      selectedVqOption === null
+                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    }`}
+                                  >
+                                    Submit Answer
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
+                      {/* Video Questions (shown below player) */}
+                      {videoQuestions.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {videoQuestions.map((q) => (
+                            <span
+                              key={q.id}
+                              className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                                answeredQuestionIds.has(q.id)
+                                  ? 'bg-green-50 text-green-700 border-green-200'
+                                  : 'bg-amber-50 text-amber-600 border-amber-200'
+                              }`}
+                            >
+                              {answeredQuestionIds.has(q.id) ? '✓ ' : '○ '}
+                              {q.timestamp_seconds}s — {q.title}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <a href={lesson.video_url} target="_blank" rel="noopener noreferrer"
                         className="text-xs text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors">
                         <ExternalLink className="w-3 h-3" /> Open in YouTube
@@ -919,10 +1096,13 @@ export function LessonViewPage({
 
             {/* ── Lesson Content ── */}
             {/* View mode toggle */}
-            {contentHtml && (
+            {(!effectiveFocusMode || currentFocusId === 'content') && contentHtml && (
               <div className="flex items-center justify-end gap-2 mb-3">
                 <button
-                  onClick={() => setViewMode(isSlideMode ? 'scroll' : 'slide')}
+                  onClick={() => {
+                    setViewMode(isSlideMode ? 'scroll' : 'slide');
+                    trackAdaptation('slideshow', { lessonId, courseId });
+                  }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     isSlideMode
                       ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
@@ -1060,6 +1240,38 @@ export function LessonViewPage({
                 defaultOpen={true}
                 badge={currentChunkHtml ? 'ready' : undefined}
               >
+                <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100">
+                  <button
+                    onClick={handlePlayTTS}
+                    aria-pressed={ttsPlaying}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      ttsPlaying
+                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {ttsPlaying ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                    {ttsPlaying ? 'Stop' : 'Listen'}
+                  </button>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">Speed</span>
+                  {([0.5, 0.75, 1, 1.25, 1.5, 2] as const).map((speed) => (
+                    <button
+                      key={speed}
+                      onClick={() => {
+                        ttsRateRef.current = speed;
+                        setTtsRate(speed);
+                        if (ttsPlaying) { stopTTS(); speak(); }
+                      }}
+                      className={`px-2 py-0.5 text-[10px] font-medium rounded-md transition-colors ${
+                        ttsRate === speed
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {speed}x
+                    </button>
+                  ))}
+                </div>
                 {currentChunkHtml ? (
                   <div
                     className={`prose max-w-none text-gray-900 ${contentLineSpacing} ${contentFontSize} ${
@@ -1075,6 +1287,42 @@ export function LessonViewPage({
                 )}
               </CollapsibleCard>
             )}
+
+            {/* ── Native Interactive Activities (tabbed) ── */}
+            {(!effectiveFocusMode || currentFocusId === 'activities') && interactiveContent.length > 0 && (() => {
+              const sorted = [...interactiveContent].sort((a, b) => a.sequence_order - b.sequence_order);
+              const activeId = selectedActivityTabId && sorted.some(i => i.id === selectedActivityTabId) ? selectedActivityTabId : sorted[0].id;
+              const activeItem = sorted.find(i => i.id === activeId)!;
+              return (
+                <div className="space-y-3">
+                  {sorted.length > 1 && (
+                    <div className="flex border-b border-gray-200 overflow-x-auto">
+                      {sorted.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => setSelectedActivityTabId(item.id)}
+                          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
+                            activeId === item.id
+                              ? 'border-blue-500 text-blue-700'
+                              : 'border-transparent text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          <span className={`uppercase ${activeId === item.id ? 'text-blue-600' : 'text-gray-400'}`}>{item.content_type.replace('_', ' ')}</span>
+                          <span className="text-gray-400 truncate max-w-[120px]">{item.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <InteractiveActivityViewer
+                    key={activeItem.id}
+                    contentType={activeItem.content_type}
+                    title={activeItem.title}
+                    data={activeItem.content_data as unknown as InteractiveActivityData}
+                    accessibilitySettings={activeItem.accessibility_settings}
+                  />
+                </div>
+              );
+            })()}
 
             {adaptiveHint && (
               <Card className="p-4 border-2 border-violet-200 bg-violet-50">
@@ -1150,26 +1398,8 @@ export function LessonViewPage({
                 position="bottom"
               />
             )}
-
-
-            {/* ── Transcript (optional) ── */}
-            {lesson.transcript && lesson.has_transcript !== false && !effectiveFocusMode && (
-              <CollapsibleCard
-                icon={<FileText className="w-4 h-4 text-purple-600" />}
-                title="Transcript"
-                defaultOpen={showTranscript}
-                badge="available"
-              >
-                <div className="text-gray-700 leading-relaxed space-y-4 text-sm max-h-[600px] overflow-y-auto">
-                  {lesson.transcript.split('\n\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
-                </div>
-              </CollapsibleCard>
-            )}
-
             {/* ── Student Summary (optional) ── */}
-            {lesson.has_summary_activity && showEndOfLessonContent && (
+            {lesson.has_summary_activity && (showEndOfLessonContent || (effectiveFocusMode && currentFocusId === 'summary')) && (
               <div>
                 {guidedMode && (
                   <div className="mb-3 flex items-center gap-2">
@@ -1190,7 +1420,7 @@ export function LessonViewPage({
             )}
 
             {/* ── End-of-lesson completion (when no summary activity) ── */}
-            {!lesson.has_summary_activity && showEndOfLessonContent && !lessonCompleted && (
+            {!lesson.has_summary_activity && (showEndOfLessonContent || (effectiveFocusMode && currentFocusId === 'summary')) && !lessonCompleted && (
               <Card className="p-6 rounded-xl border-2 border-blue-200 bg-white mt-6">
                 <div className="flex items-start gap-3 mb-4">
                   <CheckCircle className="w-6 h-6 text-blue-600 mt-0.5 shrink-0" />
@@ -1206,7 +1436,7 @@ export function LessonViewPage({
                 </Button>
               </Card>
             )}
-            {!lesson.has_summary_activity && showEndOfLessonContent && lessonCompleted && (
+            {!lesson.has_summary_activity && (showEndOfLessonContent || (effectiveFocusMode && currentFocusId === 'summary')) && lessonCompleted && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

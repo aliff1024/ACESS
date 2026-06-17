@@ -66,6 +66,7 @@ export default function OnboardingPage() {
         line_spacing: lineSpacing,
         tts_enabled: ttsEnabled,
         dyslexia_friendly_font: dyslexiaFriendlyFont,
+        preferred_font: dyslexiaFriendlyFont ? 'dyslexia' : 'default',
         reduced_motion: reducedMotion,
         preferred_reading_level: preferredReadingLevel || null,
         preferred_content_format: preferredContentFormat || null,
@@ -132,12 +133,15 @@ export default function OnboardingPage() {
                 <Select value={disabilityType} onValueChange={setDisabilityType}>
                   <SelectTrigger id="disability"><SelectValue placeholder="Select if applicable" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None specified</SelectItem>
-                    <SelectItem value="dyslexia">Dyslexia</SelectItem>
+                    <SelectItem value="none">No accessibility support required</SelectItem>
+                    <SelectItem value="cognitive_impairment">Cognitive Impairment</SelectItem>
                     <SelectItem value="adhd">ADHD</SelectItem>
-                    <SelectItem value="mild_cognitive_impairment">Mild Cognitive Impairment</SelectItem>
+                    <SelectItem value="dyslexia">Dyslexia</SelectItem>
+                    <SelectItem value="asd">Autism Spectrum Disorder (ASD)</SelectItem>
                     <SelectItem value="visual_impairment">Visual Impairment</SelectItem>
                     <SelectItem value="hearing_impairment">Hearing Impairment</SelectItem>
+                    <SelectItem value="motor_impairment">Motor Impairment</SelectItem>
+                    <SelectItem value="multiple_disabilities">Multiple Disabilities</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -155,17 +159,7 @@ export default function OnboardingPage() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="contentFormat">Preferred Content Format</Label>
-                <Select value={preferredContentFormat} onValueChange={setPreferredContentFormat}>
-                  <SelectTrigger id="contentFormat"><SelectValue placeholder="Select format" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="text">Text — read at my own pace</SelectItem>
-                    <SelectItem value="video">Video — watch and learn</SelectItem>
-                    <SelectItem value="audio">Audio — listen to content</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
 
               <div className="flex justify-end pt-4">
                 <Button onClick={() => setStep(2)} className="bg-blue-600 hover:bg-blue-700 text-white">
