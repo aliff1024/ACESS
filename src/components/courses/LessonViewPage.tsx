@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '../ui/breadcrumb';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout } from 'lucide-react';
+import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout, Image, Link, Gamepad2, List } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint } from '@/lib/learner-api';
 import type { LessonContent, QuizData, LearnerLessonCheckpoint } from '@/lib/learner-api';
@@ -186,6 +187,7 @@ interface LessonViewPageProps {
   onBack: () => void;
   onNextLesson?: () => void;
   onPreviousLesson?: () => void;
+  isPreview?: boolean;
 }
 
 type TabId = 'content' | 'pdf' | 'quiz';
@@ -196,6 +198,7 @@ export function LessonViewPage({
   onBack,
   onNextLesson,
   onPreviousLesson,
+  isPreview = false,
 }: LessonViewPageProps) {
   const [lesson, setLesson] = useState<LessonContent | null>(null);
   const [assets, setAssets] = useState<LessonAsset[]>([]);
@@ -230,6 +233,11 @@ export function LessonViewPage({
   const [submitting, setSubmitting] = useState(false);
   const [quizResetKey, setQuizResetKey] = useState(0);
 
+  // Completion Tracking
+  const [tracker, setTracker] = useState({ video: false, activity: false, scroll: false, quiz: false });
+  const [completedActivityIds, setCompletedActivityIds] = useState<Set<string>>(new Set());
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+
   const { settings, adaptiveOverrides } = useAccessibility();
   const adaptiveLessonModes = adaptiveOverrides.lesson_modes;
 
@@ -258,15 +266,16 @@ export function LessonViewPage({
   const [selectedVqOption, setSelectedVqOption] = useState<number | null>(null);
   const [vqAnswerFeedback, setVqAnswerFeedback] = useState<{ correct: boolean; correctIndex: number } | null>(null);
   const [selectedActivityTabId, setSelectedActivityTabId] = useState<string | null>(null);
+
+  // Lesson Helper Sidebar state
+  const [showHelperSidebar, setShowHelperSidebar] = useState(false);
+  const [courseModules, setCourseModules] = useState<{ id: string | null; title: string; lessons: any[] }[]>([]);
+  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+
   const playerRef = useRef<YT.Player | null>(null);
-  const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const ytApiReadyRef = useRef(false);
-  const answeredQuestionIdsRef = useRef(answeredQuestionIds);
-  answeredQuestionIdsRef.current = answeredQuestionIds;
-  const vqCompletedIdsRef = useRef(vqCompletedIds);
-  vqCompletedIdsRef.current = vqCompletedIds;
-  const activeVideoQuestionRef = useRef(activeVideoQuestion);
-  activeVideoQuestionRef.current = activeVideoQuestion;
+  const [ytApiLoaded, setYtApiLoaded] = useState(false);
+  const [viewingAsset, setViewingAsset] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -333,29 +342,60 @@ export function LessonViewPage({
       supabase.from('enrollments').select('id').eq('user_id', user.id).eq('course_id', courseId).neq('status', 'dropped').maybeSingle()
         .then(({ data: enrollment }) => {
           if (!enrollment) return;
-          supabase.from('lesson_progress').select('id', { count: 'exact', head: true }).eq('enrollment_id', enrollment.id).eq('is_viewed', true)
-            .then(({ count }) => setCompletedLessons(count ?? 0)).catch(() => {});
+          supabase.from('lesson_progress').select('lesson_id').eq('enrollment_id', enrollment.id).eq('is_viewed', true)
+            .then(({ data: lpData }) => {
+              if (lpData) {
+                setCompletedLessons(lpData.length);
+                setCompletedLessonIds(new Set(lpData.map(lp => lp.lesson_id)));
+              }
+            }).catch(() => {});
         }).catch(() => {});
     }).catch(() => {});
-    supabase.from('lessons').select('title').eq('course_id', courseId).or('visibility_status.eq.visible,visibility_status.is.null').order('sequence_order', { ascending: true })
-      .then(({ data }) => {
-        if (!data) return;
-        const idx = data.findIndex((l) => l.id === lessonId);
-        if (idx >= 0 && idx < data.length - 1) setNextLessonTitle(data[idx + 1].title);
-      }).catch(() => {});
+    Promise.all([
+      supabase.from('lessons').select('id, title, sequence_order, chapter_id').eq('course_id', courseId).eq('status', 'published').or('visibility_status.eq.visible,visibility_status.is.null').order('sequence_order', { ascending: true }),
+      supabase.from('course_chapters').select('id, title').eq('course_id', courseId).order('sequence_order', { ascending: true })
+    ]).then(([lessonsRes, chaptersRes]) => {
+      const data = lessonsRes.data;
+      const chaptersData = chaptersRes.data;
+      if (!data) return;
+
+      const chaptersMap = new Map();
+      if (chaptersData) {
+        chaptersData.forEach((c) => {
+          chaptersMap.set(c.id, { id: c.id, title: c.title, lessons: [] });
+        });
+      }
+
+      const noChapter: any[] = [];
+      data.forEach((l: any) => {
+        if (l.chapter_id && chaptersMap.has(l.chapter_id)) {
+          chaptersMap.get(l.chapter_id).lessons.push(l);
+        } else {
+          noChapter.push(l);
+        }
+      });
+      
+      const modules = Array.from(chaptersMap.values()).filter(m => m.lessons.length > 0);
+      if (noChapter.length > 0) modules.push({ id: null, title: 'Other Lessons', lessons: noChapter });
+      setCourseModules(modules);
+      
+      const idx = data.findIndex((l) => l.id === lessonId);
+      if (idx >= 0 && idx < data.length - 1) setNextLessonTitle(data[idx + 1].title);
+    }).catch(() => {});
   }, [lessonId, courseId]);
 
   // YouTube IFrame API + video questions polling
   useEffect(() => {
     const ytId = lesson ? getYouTubeId(lesson.video_url || '') : null;
-    if (!ytId || videoQuestions.length === 0) return;
+    if (!ytId) return;
 
     let cancelled = false;
 
     function onYouTubeIframeAPIReady() {
       if (cancelled) return;
       ytApiReadyRef.current = true;
-      playerRef.current = new YT.Player('youtube-player', {
+      setYtApiLoaded(true);
+      playerRef.current = new window.YT.Player('youtube-player', {
         videoId: ytId!,
         playerVars: {
           rel: 0,
@@ -364,58 +404,74 @@ export function LessonViewPage({
         },
         events: {
           onReady: () => {
-            // Start polling for video questions
-            if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
-            checkIntervalRef.current = setInterval(() => {
-              if (!playerRef.current || activeVideoQuestionRef.current) return;
-              const currentTime = playerRef.current.getCurrentTime();
-              const unanswered = videoQuestions.filter(
-                (q) => !answeredQuestionIdsRef.current.has(q.id) && !vqCompletedIdsRef.current.has(q.id)
-              );
-              // Find the first unanswered question whose timestamp we've passed
-              const next = unanswered.find((q) => currentTime >= q.timestamp_seconds);
-              if (next) {
-                playerRef.current.pauseVideo();
-                setActiveVideoQuestion(next);
-                setSelectedVqOption(null);
-                setVqAnswerFeedback(null);
-              }
-            }, 500);
+            // Player is ready, polling will be handled by the separate useEffect
           },
-          onStateChange: (event) => {
-            // Could use for future enhancements
+          onStateChange: (event: any) => {
+            if (event.data === window.YT.PlayerState.ENDED) {
+              setTracker((p) => ({ ...p, video: true }));
+            }
           },
         },
       });
     }
 
     // Load YouTube IFrame API if not already loaded
-    if (typeof YT === 'undefined' || !YT.Player) {
+    if (typeof window.YT === 'undefined' || !window.YT.Player) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       tag.onload = () => {
         // The API calls onYouTubeIframeAPIReady when loaded
       };
       const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode!.insertBefore(tag, firstScriptTag);
+      if (firstScriptTag && firstScriptTag.parentNode) {
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      } else {
+        document.head.appendChild(tag);
+      }
       // Override the global callback
-      (window as unknown as Record<string, unknown>).onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+      (window as any).onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
     } else {
       onYouTubeIframeAPIReady();
     }
 
     return () => {
       cancelled = true;
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-        checkIntervalRef.current = null;
-      }
       if (playerRef.current) {
         playerRef.current.destroy();
         playerRef.current = null;
       }
     };
-  }, [lesson?.video_url, videoQuestions.length, settings.captions_enabled]);
+  }, [lesson?.video_url, settings.captions_enabled]);
+
+  // Separate useEffect for video question polling to ensure fresh state
+  useEffect(() => {
+    if (!ytApiLoaded || !playerRef.current || videoQuestions.length === 0) return;
+
+    const intervalId = window.setInterval(() => {
+      if (!playerRef.current || activeVideoQuestion) return;
+      
+      try {
+        const currentTime = playerRef.current.getCurrentTime();
+        if (typeof currentTime !== 'number') return;
+        
+        const unanswered = videoQuestions.filter(
+          (q) => !answeredQuestionIds.has(q.id) && !vqCompletedIds.has(q.id)
+        );
+        
+        const next = unanswered.find((q) => currentTime >= q.timestamp_seconds);
+        if (next) {
+          playerRef.current.pauseVideo();
+          setActiveVideoQuestion(next);
+          setSelectedVqOption(null);
+          setVqAnswerFeedback(null);
+        }
+      } catch (e) {
+        // player might not be fully ready
+      }
+    }, 500);
+
+    return () => window.clearInterval(intervalId);
+  }, [ytApiLoaded, videoQuestions, answeredQuestionIds, vqCompletedIds, activeVideoQuestion]);
 
   const speak = useCallback(() => {
     const text = ttsTextRef.current;
@@ -460,7 +516,39 @@ export function LessonViewPage({
     setAdaptiveHint(null);
     setEnrollmentId(null);
     stopTTS();
+    setTracker({ video: false, activity: false, scroll: false, quiz: false });
+    setCompletedActivityIds(new Set());
+    setShowCompletionPopup(false);
   }, [lessonId, stopTTS]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 250) {
+        setTracker(p => ({ ...p, scroll: true }));
+      }
+    };
+    window.addEventListener('scroll', onScroll);
+    onScroll(); // Check initially
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Completion popup trigger
+  useEffect(() => {
+    if (!lesson || lessonCompleted) return;
+    const needsVideo = lesson.has_video && !!lesson.video_url;
+    const needsActivities = interactiveContent.length > 0;
+    const needsQuiz = lesson.has_quiz && quizData;
+    
+    if (
+      (!needsVideo || tracker.video) &&
+      (!needsActivities || tracker.activity) &&
+      (!needsQuiz || tracker.quiz) &&
+      tracker.scroll &&
+      !showCompletionPopup
+    ) {
+      setShowCompletionPopup(true);
+    }
+  }, [tracker, lesson, interactiveContent.length, quizData, lessonCompleted, showCompletionPopup]);
 
   useEffect(() => {
     if (!lessonId || !(lesson?.checkpoints_enabled || adaptiveLessonModes.checkpoints)) return;
@@ -526,17 +614,29 @@ export function LessonViewPage({
       speak();
     }
   }, [ttsPlaying, speak, stopTTS, lessonId, courseId]);
-
   const hasPdfAssets = assets.length > 0;
   if (hasPdfAssets) {}
   const hasQuiz = quizData !== null;
 
-  const handleCompleteLesson = async () => {
+  const handleCompleteLesson = useCallback(async () => {
+    if (isPreview) {
+      toast.info('Lesson completion simulated in Preview Mode');
+      setLessonCompleted(true);
+      return;
+    }
+    if (!lesson) return;
     await completeLesson(lessonId, courseId);
     setLessonCompleted(true);
-  };
+  }, [isPreview, lessonId, courseId, lesson]);
 
   const handleQuizSubmit = async (score: number, answers: { questionId: string; selectedAnswer: string }[]) => {
+    if (isPreview) {
+      toast.info('Quiz submission simulated in Preview Mode');
+      setQuizScore(score);
+      setQuizAnswers(answers);
+      setShowQuizResult(true);
+      return;
+    }
     if (!quizId || !courseId || submitting) return;
     setSubmitting(true);
     setQuizAnswers(answers);
@@ -549,6 +649,7 @@ export function LessonViewPage({
       setQuizScore(result.score);
       if (result.passed) {
         toast.success('Quiz passed!');
+        setTracker((p) => ({ ...p, quiz: true }));
       }
     } catch {
       setQuizScore(score);
@@ -606,9 +707,9 @@ export function LessonViewPage({
       : layoutContainer;
 
   const lineSpacingMap: Record<string, string> = { tight: 'leading-tight', normal: 'leading-normal', relaxed: 'leading-relaxed', wide: 'leading-loose', loose: 'leading-loose' };
-  const fontSizeMap: Record<string, string> = { small: 'text-sm', medium: 'text-base', large: 'text-lg', xlarge: 'text-xl' };
+  const fontSizeMap: Record<string, string> = { small: 'text-sm prose-sm', medium: 'text-base prose-base', large: 'text-lg prose-lg', xlarge: 'text-xl prose-xl' };
   const contentLineSpacing = lineSpacingMap[settings.line_spacing ?? 'normal'] || 'leading-normal';
-  const contentFontSize = fontSizeMap[settings.preferred_font_size ?? 'medium'] || 'text-base';
+  const contentFontSize = fontSizeMap[settings.preferred_font_size ?? 'medium'] || 'text-base prose-base';
 
   const contentHtml = lesson.content_html || '';
   const educatorLayout = lesson.lesson_layout || 'standard';
@@ -647,7 +748,7 @@ export function LessonViewPage({
   const focusSteps = [
     ...(lesson.video_url && lesson.has_video !== false ? [{ id: 'video' as const, label: 'Video' }] : []),
     ...(contentHtml ? [{ id: 'content' as const, label: 'Lesson Content' }] : []),
-    ...(interactiveContent.length > 0 ? [{ id: 'activities' as const, label: 'Activities' }] : []),
+    ...interactiveContent.map(activity => ({ id: `activity-${activity.id}` as const, label: activity.title || 'Activity' })),
     { id: 'summary' as const, label: 'Summary' },
   ];
   const currentFocusId = effectiveFocusMode && focusSteps.length > 0 ? focusSteps[Math.min(focusStep, focusSteps.length - 1)]?.id : null;
@@ -665,7 +766,13 @@ export function LessonViewPage({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const acknowledgeCheckpoint = async () => {
+  const handleCheckpointAcknowledge = async (cp: LearnerLessonCheckpoint) => {
+    if (isPreview) {
+      toast.info('Checkpoint completed in Preview Mode');
+      setAcknowledgedCheckpoints((prev) => new Set(prev).add(cp.sequence_order));
+      setCompletedCheckpointIds((prev) => new Set(prev).add(cp.id));
+      return;
+    }
     setAcknowledgedCheckpoints((prev) => {
       const next = new Set(prev);
       next.add(currentChunk);
@@ -700,7 +807,7 @@ export function LessonViewPage({
 
   const tabs: { id: TabId; label: string; icon: typeof BookOpen }[] = [
     { id: 'content', label: 'Lesson', icon: BookOpen },
-    ...(lesson.has_pdf !== false ? [{ id: 'pdf' as const, label: 'PDF Materials', icon: FileText }] : []),
+    ...(lesson.has_pdf !== false ? [{ id: 'pdf' as const, label: 'Resources & Material', icon: FileText }] : []),
     ...(lesson.has_quiz !== false ? [{ id: 'quiz' as const, label: 'Quiz', icon: HelpCircle }] : []),
   ];
 
@@ -745,6 +852,9 @@ export function LessonViewPage({
                 )}
                 Lesson {lesson.sequence_order} of {lesson.total_lessons}
               </div>
+              <Button variant="outline" size="sm" onClick={() => setShowHelperSidebar(true)} className="flex items-center gap-1.5 text-xs">
+                <List className="w-3.5 h-3.5" /> Course Outline
+              </Button>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
@@ -969,7 +1079,7 @@ export function LessonViewPage({
                     <div>
                       <div className="relative rounded-xl overflow-hidden bg-black mb-3" style={{ paddingBottom: '56.25%' }}>
                         <div id="youtube-player" className="absolute inset-0 w-full h-full" />
-                        {!ytApiReadyRef.current && (
+                        {!ytApiLoaded && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                             <Loader2 className="w-8 h-8 animate-spin text-white" />
                           </div>
@@ -1292,39 +1402,123 @@ export function LessonViewPage({
               </CollapsibleCard>
             )}
 
-            {/* ── Native Interactive Activities (tabbed) ── */}
-            {(!effectiveFocusMode || currentFocusId === 'activities') && interactiveContent.length > 0 && (() => {
+            {/* ── Native Interactive Activities (tabbed or focus) ── */}
+            {interactiveContent.length > 0 && (() => {
               const sorted = [...interactiveContent].sort((a, b) => a.sequence_order - b.sequence_order);
+              
+              if (effectiveFocusMode) {
+                // In focus mode, render only the active activity
+                const focusActivityId = currentFocusId?.replace('activity-', '');
+                const activeItem = sorted.find(i => i.id === focusActivityId);
+                
+                if (!activeItem) return null;
+                
+                return (
+                  <Card className="overflow-hidden border-2 border-indigo-100 shadow-sm mt-8">
+                    <div className="bg-indigo-50/50 p-4 border-b border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <h3 className="font-bold text-indigo-900 flex items-center gap-2">
+                          <Gamepad2 className="w-5 h-5 text-indigo-600" />
+                          Interactive Practice
+                        </h3>
+                        <p className="text-sm text-indigo-700/80 mt-1">Complete this activity to test your knowledge.</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm font-medium text-indigo-800 bg-white px-3 py-1.5 rounded-full shadow-sm">
+                        {completedActivityIds.has(activeItem.id) ? (
+                          <><CheckCircle className="w-4 h-4 text-green-500" /> Completed</>
+                        ) : (
+                          <><div className="w-4 h-4 rounded-full border-2 border-indigo-400" /> In Progress</>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-6 bg-white">
+                      <InteractiveActivityViewer
+                        key={activeItem.id}
+                        contentType={activeItem.content_type}
+                        title={activeItem.title}
+                        data={activeItem.content_data as unknown as InteractiveActivityData}
+                        accessibilitySettings={activeItem.accessibility_settings}
+                        onComplete={() => {
+                          setCompletedActivityIds((prev) => {
+                            const next = new Set(prev).add(activeItem.id);
+                            if (next.size === interactiveContent.length) {
+                              setTracker((p) => ({ ...p, activity: true }));
+                            }
+                            return next;
+                          });
+                        }}
+                      />
+                    </div>
+                  </Card>
+                );
+              }
+
+              // Standard tabbed mode
               const activeId = selectedActivityTabId && sorted.some(i => i.id === selectedActivityTabId) ? selectedActivityTabId : sorted[0].id;
               const activeItem = sorted.find(i => i.id === activeId)!;
               return (
-                <div className="space-y-3">
+                <Card className="overflow-hidden border-2 border-indigo-100 shadow-sm mt-8">
+                  <div className="bg-indigo-50/50 p-4 border-b border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-bold text-indigo-900 flex items-center gap-2">
+                        <Gamepad2 className="w-5 h-5 text-indigo-600" />
+                        Interactive Practice
+                      </h3>
+                      <p className="text-sm text-indigo-700/80 mt-1">Complete these activities to test your knowledge.</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-medium text-indigo-800 bg-white px-3 py-1.5 rounded-full shadow-sm">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      {completedActivityIds.size} / {sorted.length} Completed
+                    </div>
+                  </div>
+                  
                   {sorted.length > 1 && (
-                    <div className="flex border-b border-gray-200 overflow-x-auto">
-                      {sorted.map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => setSelectedActivityTabId(item.id)}
-                          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
-                            activeId === item.id
-                              ? 'border-blue-500 text-blue-700'
-                              : 'border-transparent text-gray-500 hover:text-gray-700'
-                          }`}
-                        >
-                          <span className={`uppercase ${activeId === item.id ? 'text-blue-600' : 'text-gray-400'}`}>{item.content_type.replace('_', ' ')}</span>
-                          <span className="text-gray-400 truncate max-w-[120px]">{item.title}</span>
-                        </button>
-                      ))}
+                    <div className="bg-gray-50 border-b border-gray-200 p-3 overflow-x-auto">
+                      <div className="flex gap-2 min-w-max">
+                        {sorted.map((item) => {
+                          const isDone = completedActivityIds.has(item.id);
+                          const isActive = activeId === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => setSelectedActivityTabId(item.id)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                isActive 
+                                  ? 'bg-white shadow-sm ring-1 ring-gray-200 text-indigo-700' 
+                                  : 'text-gray-600 hover:bg-gray-200/50 hover:text-gray-900'
+                              }`}
+                            >
+                              {isDone ? (
+                                <CheckCircle className={`w-4 h-4 ${isActive ? 'text-green-500' : 'text-green-600'}`} />
+                              ) : (
+                                <div className={`w-4 h-4 rounded-full border-2 ${isActive ? 'border-indigo-400' : 'border-gray-300'}`} />
+                              )}
+                              <span className="truncate max-w-[150px]">{item.title}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
-                  <InteractiveActivityViewer
-                    key={activeItem.id}
-                    contentType={activeItem.content_type}
-                    title={activeItem.title}
-                    data={activeItem.content_data as unknown as InteractiveActivityData}
-                    accessibilitySettings={activeItem.accessibility_settings}
-                  />
-                </div>
+                  <div className="p-6 bg-white">
+                    <InteractiveActivityViewer
+                      key={activeItem.id}
+                      contentType={activeItem.content_type}
+                      title={activeItem.title}
+                      data={activeItem.content_data as unknown as InteractiveActivityData}
+                      accessibilitySettings={activeItem.accessibility_settings}
+                      onComplete={() => {
+                        setCompletedActivityIds((prev) => {
+                          const next = new Set(prev).add(activeItem.id);
+                          if (next.size === interactiveContent.length) {
+                            setTracker((p) => ({ ...p, activity: true }));
+                          }
+                          return next;
+                        });
+                      }}
+                    />
+                  </div>
+                </Card>
               );
             })()}
 
@@ -1379,7 +1573,15 @@ export function LessonViewPage({
                 )}
                 <div className="flex gap-3">
                   <Button
-                    onClick={acknowledgeCheckpoint}
+                    onClick={() => {
+                      if (currentDbCheckpoint) {
+                        handleCheckpointAcknowledge(currentDbCheckpoint);
+                      } else {
+                        const newSet = new Set(acknowledgedCheckpoints);
+                        newSet.add(currentChunk);
+                        setAcknowledgedCheckpoints(newSet);
+                      }
+                    }}
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     Yes, I understand — continue
@@ -1486,18 +1688,70 @@ export function LessonViewPage({
           </div>
         )}
 
-        {/* ── PDF Tab (optional) ── */}
+        {/* ── Resources Tab ── */}
         {activeTab === 'pdf' && lesson.has_pdf !== false && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {assets.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No PDF resources for this lesson</p>
+                <p className="text-gray-500">No resources for this lesson</p>
               </div>
             ) : (
-              assets.map((asset) => (
-                <PdfViewer key={asset.id} url={asset.url} title={asset.title || 'PDF Document'} />
-              ))
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assets.map((asset) => {
+                  let Icon = FileText;
+                  let bg = "bg-orange-100";
+                  let text = "text-orange-700";
+                  let desc = "Document";
+                  
+                  if (asset.kind === 'image') {
+                    Icon = Image;
+                    bg = "bg-blue-100";
+                    text = "text-blue-700";
+                    desc = "Image file";
+                  } else if (asset.kind === 'video') {
+                    Icon = Video;
+                    bg = "bg-rose-100";
+                    text = "text-rose-700";
+                    desc = "Video file";
+                  } else if (asset.kind === 'link') {
+                    Icon = Link;
+                    bg = "bg-emerald-100";
+                    text = "text-emerald-700";
+                    desc = "External link";
+                  } else if (asset.kind === 'pdf') {
+                    desc = "PDF document";
+                  }
+
+                  const isPdf = asset.kind === 'pdf' || asset.url.toLowerCase().endsWith('.pdf');
+                  const isPptx = asset.url.toLowerCase().endsWith('.pptx');
+                  
+                  return (
+                    <div key={asset.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                      <div className="flex items-start gap-4">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${bg} ${text}`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 mb-1 truncate">{asset.title || 'Untitled Asset'}</h3>
+                          <p className="text-sm text-gray-500 mb-4">{desc}</p>
+                          <div className="flex gap-2">
+                            {(isPdf || isPptx) ? (
+                              <Button variant="outline" size="sm" className="w-full" onClick={() => setViewingAsset(viewingAsset === asset.id ? null : asset.id)}>
+                                {viewingAsset === asset.id ? 'Close Viewer' : 'View Resource'}
+                              </Button>
+                            ) : (
+                              <Button variant="outline" size="sm" className="w-full" onClick={() => window.open(asset.url, '_blank')}>
+                                {asset.kind === 'link' ? 'Open Link' : 'Open Resource'}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
@@ -1583,6 +1837,125 @@ export function LessonViewPage({
           setActiveTab('content');
         }}
       />
+
+      <AnimatePresence>
+        {showHelperSidebar && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowHelperSidebar(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-2xl z-50 flex flex-col border-l border-gray-200"
+            >
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <List className="w-5 h-5 text-indigo-600" />
+                  Course Outline
+                </h3>
+                <button onClick={() => setShowHelperSidebar(false)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                {courseModules.map((module, i) => (
+                  <div key={module.id || `other-${i}`}>
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <Layers className="w-3.5 h-3.5" />
+                      {module.title}
+                    </h4>
+                    <div className="space-y-1">
+                      {module.lessons.map((l) => {
+                        const isCurrent = l.id === lessonId;
+                        const isDone = completedLessonIds.has(l.id);
+                        return (
+                          <div
+                            key={l.id}
+                            className={`flex items-start gap-2 p-2 rounded-lg text-sm transition-colors ${
+                              isCurrent ? 'bg-indigo-50 border border-indigo-100' : 'hover:bg-gray-50 border border-transparent'
+                            }`}
+                          >
+                            <div className="mt-0.5 shrink-0">
+                              {isDone ? (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <div className={`w-4 h-4 rounded-full border-2 ${isCurrent ? 'border-indigo-400' : 'border-gray-300'}`} />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-medium truncate ${isCurrent ? 'text-indigo-900' : 'text-gray-700'}`}>
+                                {l.sequence_order}. {l.title}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <Dialog open={!!viewingAsset} onOpenChange={(open) => !open && setViewingAsset(null)}>
+        <DialogContent className="max-w-[90vw] w-full h-[90vh] p-0 overflow-hidden flex flex-col bg-gray-50">
+          <div className="flex items-center justify-between p-4 border-b bg-white">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              {assets.find(a => a.id === viewingAsset)?.title || 'View Resource'}
+            </DialogTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                const asset = assets.find(a => a.id === viewingAsset);
+                if (asset) window.open(asset.url, '_blank');
+              }}>
+                Open in New Tab
+              </Button>
+            </div>
+          </div>
+          <div className="flex-1 w-full h-full relative">
+            {assets.find(a => a.id === viewingAsset) && (() => {
+              const asset = assets.find(a => a.id === viewingAsset)!;
+              const isPdf = asset.url.toLowerCase().includes('.pdf');
+              if (isPdf) {
+                return (
+                  <object data={asset.url} type="application/pdf" className="w-full h-full absolute inset-0">
+                    <iframe src={asset.url} className="w-full h-full border-0 absolute inset-0">
+                      This browser does not support PDFs. Please download the PDF to view it.
+                    </iframe>
+                  </object>
+                );
+              } else {
+                return (
+                  <iframe src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(asset.url)}`} className="w-full h-full border-0 absolute inset-0" />
+                );
+              }
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCompletionPopup} onOpenChange={setShowCompletionPopup}>
+        <DialogContent className="sm:max-w-md text-center p-6">
+          <CelebrationAnimation />
+          <DialogTitle className="text-2xl font-bold mt-4">You're All Done!</DialogTitle>
+          <DialogDescription className="text-gray-600 mt-2">
+            You've completed all required activities for this lesson. Would you like to mark it as complete and move on?
+          </DialogDescription>
+          <div className="flex gap-3 justify-center mt-6">
+            <Button variant="outline" onClick={() => setShowCompletionPopup(false)}>Stay Here</Button>
+            <Button onClick={() => { setShowCompletionPopup(false); handleCompleteLesson(); }} className="bg-green-600 hover:bg-green-700">Mark as Complete</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import AdminCourseDetail from '@/components/admin/AdminCourseDetail';
+import CourseWorkspace from '@/components/educator/CourseWorkspace';
 import { Loader2 } from 'lucide-react';
 
 function AdminCourseDetailContent() {
@@ -25,7 +25,7 @@ function AdminCourseDetailContent() {
     );
   }
 
-  return <AdminCourseDetail courseId={id} onBack={() => router.push('/admin/courses')} />;
+  return <CourseWorkspace courseId={id} onBack={() => router.push('/admin/courses')} mode="admin" />;
 }
 
 export default function AdminCourseDetailPage() {

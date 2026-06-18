@@ -610,6 +610,8 @@ export interface CourseStudentProgress {
   completedLessons: number;
   totalLessons: number;
   progressPercent: number;
+  hasCertificate?: boolean;
+  certificateUrl?: string;
 }
 
 export async function fetchCourseStudentsProgress(courseId: string): Promise<CourseStudentProgress[]> {
@@ -651,6 +653,17 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
     progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
   }
 
+  // Fetch certificates for these enrollments
+  const { data: certData } = await supabase
+    .from('certificates')
+    .select('enrollment_id, verification_url, pdf_url')
+    .in('enrollment_id', enrollmentIds);
+
+  const certMap = new Map<string, string>();
+  for (const c of certData || []) {
+    certMap.set(c.enrollment_id, c.verification_url || c.pdf_url || '');
+  }
+
   return enrollments.map((raw: any) => {
     const completed = progressMap.get(raw.id) || 0;
     const progressPercent = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
@@ -664,7 +677,9 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
       status: raw.status,
       completedLessons: Math.min(completed, totalLessons), // Just in case
       totalLessons,
-      progressPercent
+      progressPercent,
+      hasCertificate: certMap.has(raw.id),
+      certificateUrl: certMap.get(raw.id) || undefined
     };
   });
 }
@@ -811,7 +826,26 @@ export async function uploadCourseFile(
     .from(STORAGE_BUCKET)
     .getPublicUrl(filePath)
 
-  return urlData.publicUrl
+  const url = urlData.publicUrl
+
+  const { data: user } = await supabase.auth.getUser()
+  if (user.user) {
+    let fileType = 'other'
+    if (file.type.startsWith('image/')) fileType = 'image'
+    else if (file.type.startsWith('video/')) fileType = 'video'
+    else if (file.type === 'application/pdf') fileType = 'pdf'
+    
+    await supabase.from('media_assets').insert({
+      user_id: user.user.id,
+      course_id: courseId,
+      file_name: file.name,
+      file_type: fileType,
+      url: url,
+      size_bytes: file.size
+    })
+  }
+
+  return url
 }
 
 export async function uploadThumbnail(file: File, courseId: string): Promise<string> {
@@ -828,7 +862,21 @@ export async function uploadThumbnail(file: File, courseId: string): Promise<str
     .from(STORAGE_BUCKET)
     .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10) // 10 years
 
-  return signedUrlData?.signedUrl ?? ''
+  const url = signedUrlData?.signedUrl ?? ''
+
+  const { data: user } = await supabase.auth.getUser()
+  if (user.user) {
+    await supabase.from('media_assets').insert({
+      user_id: user.user.id,
+      course_id: courseId,
+      file_name: file.name,
+      file_type: 'image',
+      url: url,
+      size_bytes: file.size
+    })
+  }
+
+  return url
 }
 
 export async function uploadContentImage(file: File, scopeId: string): Promise<string> {
@@ -846,7 +894,21 @@ export async function uploadContentImage(file: File, scopeId: string): Promise<s
     .from(STORAGE_BUCKET)
     .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10)
 
-  return signedUrlData?.signedUrl ?? ''
+  const url = signedUrlData?.signedUrl ?? ''
+  
+  const { data: user } = await supabase.auth.getUser()
+  if (user.user) {
+    await supabase.from('media_assets').insert({
+      user_id: user.user.id,
+      course_id: null, // Scope ID could be lesson, so we omit course_id for now
+      file_name: file.name,
+      file_type: 'image',
+      url: url,
+      size_bytes: file.size
+    })
+  }
+
+  return url
 }
 
 export async function uploadMediaImage(courseId: string, file: File): Promise<string> {
@@ -864,7 +926,85 @@ export async function uploadMediaImage(courseId: string, file: File): Promise<st
     .from(STORAGE_BUCKET)
     .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10)
 
-  return signedUrlData?.signedUrl ?? ''
+  const url = signedUrlData?.signedUrl ?? ''
+  
+  const { data: user } = await supabase.auth.getUser()
+  if (user.user) {
+    await supabase.from('media_assets').insert({
+      user_id: user.user.id,
+      course_id: courseId,
+      file_name: file.name,
+      file_type: 'image',
+      url: url,
+      size_bytes: file.size
+    })
+  }
+
+  return url
+}
+
+// ─── Global Media Assets ──────────────────────────────────────────────────
+
+export interface MediaAsset {
+  id: string
+  user_id: string
+  course_id: string | null
+  file_name: string
+  file_type: 'image' | 'pdf' | 'video' | 'other'
+  url: string
+  size_bytes: number
+  created_at: string
+}
+
+export async function fetchMediaAssets(typeFilter?: string): Promise<MediaAsset[]> {
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) return []
+
+  let query = supabase
+    .from('media_assets')
+    .select('*')
+    .eq('user_id', user.user.id)
+    .order('created_at', { ascending: false })
+
+  if (typeFilter) {
+    query = query.eq('file_type', typeFilter)
+  }
+
+  const { data, error } = await query
+  if (error) {
+    console.error('fetchMediaAssets error:', error)
+    return []
+  }
+  return data || []
+}
+
+export async function createExternalMediaAsset(
+  fileName: string,
+  url: string,
+  fileType: 'image' | 'pdf' | 'video' | 'other'
+): Promise<MediaAsset | null> {
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) return null
+
+  const { data, error } = await supabase.from('media_assets').insert({
+    user_id: user.user.id,
+    course_id: null,
+    file_name: fileName,
+    file_type: fileType,
+    url: url,
+    size_bytes: 0
+  }).select('*').single()
+
+  if (error) {
+    console.error('createExternalMediaAsset error:', error)
+    return null
+  }
+  return data
+}
+
+export async function deleteMediaAsset(assetId: string): Promise<void> {
+  const { error } = await supabase.from('media_assets').delete().eq('id', assetId)
+  if (error) throw error
 }
 
 // ─── Lesson Assets ──────────────────────────────────────────────────────
@@ -1388,37 +1528,21 @@ export async function uploadCustomCertificate(
     .eq('enrollment_id', enrollmentId)
     .maybeSingle()
 
-  if (existing) {
-    const { error } = await supabase
-      .from('certificates')
-      .update({
-        status: 'issued',
-        verification_url: customUrl, // reusing verification_url as the custom link for simplicity
-      })
-      .eq('id', existing.id)
-    if (error) throw error
-  } else {
-    // We need learner name and course title
-    const { data: enrollment } = await supabase
-      .from('enrollments')
-      .select('course_id, user_id, users(full_name), courses(title)')
-      .eq('id', enrollmentId)
-      .single()
+  // Call API route to save certificate and notify student (bypasses RLS)
+  const res = await fetch('/api/certificates/custom', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      enrollmentId,
+      courseId,
+      userId,
+      customUrl
+    })
+  });
 
-    const { error } = await supabase
-      .from('certificates')
-      .insert({
-        enrollment_id: enrollmentId,
-        course_id: courseId,
-        user_id: userId,
-        learner_name: (enrollment as any)?.users?.full_name || 'Unknown Learner',
-        course_title: (enrollment as any)?.courses?.title || 'Course',
-        reference_code: `CUSTOM-${Date.now()}`,
-        status: 'issued',
-        issued_at: new Date().toISOString(),
-        verification_url: customUrl
-      })
-    if (error) throw error
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Failed to save certificate to database');
   }
 
   return customUrl
@@ -1603,6 +1727,7 @@ export interface InteractiveContent {
   content_data: Record<string, unknown>
   accessibility_settings: Record<string, unknown>
   sequence_order: number
+  is_draft: boolean
   created_by: string | null
   created_at: string
   updated_at: string
@@ -1614,6 +1739,7 @@ export interface InteractiveContentFields {
   content_data: Record<string, unknown>
   accessibility_settings?: Record<string, unknown>
   sequence_order?: number
+  is_draft?: boolean
 }
 
 export async function fetchLessonInteractiveContent(lessonId: string): Promise<InteractiveContent[]> {
@@ -1639,6 +1765,7 @@ export async function createInteractiveContent(
       content_data: fields.content_data,
       accessibility_settings: fields.accessibility_settings ?? {},
       sequence_order: fields.sequence_order ?? 0,
+      is_draft: fields.is_draft ?? false,
     })
     .select('*')
     .single()
@@ -1655,6 +1782,7 @@ export async function updateInteractiveContent(
     .update({
       ...fields,
       sequence_order: fields.sequence_order ?? undefined,
+      is_draft: fields.is_draft ?? undefined,
     })
     .eq('id', id)
     .select('*')

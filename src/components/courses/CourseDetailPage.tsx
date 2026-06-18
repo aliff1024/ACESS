@@ -17,6 +17,7 @@ interface CourseDetailPageProps {
   courseId: string;
   onBack: () => void;
   onStartLesson: (lessonId: string) => void;
+  isPreview?: boolean;
 }
 
 const difficultyColors: Record<string, string> = {
@@ -25,7 +26,7 @@ const difficultyColors: Record<string, string> = {
   advanced: 'bg-red-100 text-red-700 border-red-200',
 };
 
-export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDetailPageProps) {
+export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = false }: CourseDetailPageProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const [course, setCourse] = useState<CourseDetail | null>(null);
@@ -48,9 +49,16 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
       checkIsFavorited(courseId),
     ])
       .then(async ([c, fav]) => {
+        if (c && isPreview) {
+          c.enrollment_id = 'preview-enrollment';
+          c.lessons = c.lessons.map((l: any) => ({ ...l, status: 'current' }));
+          c.progress = 0;
+          c.completed_lessons = 0;
+        }
+
         setCourse(c);
         setIsFav(fav);
-        if (c?.enrollment_id) {
+        if (c?.enrollment_id && !isPreview) {
           if (c?.system_course) {
             fetchSystemCourseProgress(courseId).then(setSysProgress).catch(() => {});
           }
@@ -89,6 +97,17 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
   };
 
   const handleEnroll = async () => {
+    if (isPreview) {
+      toast.info('Enrollment is simulated in Preview Mode');
+      setCourse(prev => prev ? { ...prev, enrollment_id: 'preview-enrollment' } : null);
+      if (course?.system_course) {
+        setSysProgress({
+          completed_lessons: 0,
+          total_lessons: (course as any).lesson_count || 1
+        } as any);
+      }
+      return;
+    }
     setEnrolling(true);
     try {
       await enrollInCourse(courseId);
@@ -106,6 +125,12 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
   };
 
   const handleUnenroll = async () => {
+    if (isPreview) {
+      toast.info('Unenrollment is simulated in Preview Mode');
+      setCourse(prev => prev ? { ...prev, enrollment_id: null } : null);
+      setSysProgress(null);
+      return;
+    }
     setUnenrolling(true);
     try {
       await unenrollFromCourse(courseId);
@@ -178,9 +203,20 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
   // Guided System Course View (for admin-created system courses only)
   // No gradients — solid colors, shadows, borders, spacing
   // ─────────────────────────────────────────────────────────────────
+  const PreviewBanner = isPreview && (
+    <div className="bg-amber-500 text-white px-6 py-3 flex items-center justify-center gap-3 text-sm font-medium z-50 sticky top-0">
+      <AlertTriangle className="w-4 h-4" />
+      Preview Mode — Viewing course as a learner. Progress will not be saved.
+      <Button onClick={onBack} size="sm" className="bg-white text-amber-700 hover:bg-amber-50 font-semibold ml-4">
+        Exit Preview
+      </Button>
+    </div>
+  );
+
   if (isGuided) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pb-24">
+        {PreviewBanner}
         <div className="max-w-5xl mx-auto p-6">
           <button
             onClick={onBack}
@@ -479,8 +515,9 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson }: CourseDeta
   // Standard Course View (for educator courses, unchanged)
   // ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-50 pb-24">
+      {PreviewBanner}
+      <div className="max-w-6xl mx-auto p-6">
         <button
           onClick={onBack}
           className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2"

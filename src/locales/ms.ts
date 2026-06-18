@@ -6,6 +6,7 @@ export const ms: Record<string, string> = {
   'nav.favourites': 'Kegemaran',
   'nav.progress': 'Kemajuan',
   'nav.certificates': 'Sijil',
+  'nav.achievements': 'Pencapaian',
   'nav.accessibility': 'Kebolehcapaian',
 
   'topbar.dashboard': 'Papan Pemuka Pelajar',

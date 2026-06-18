@@ -150,7 +150,7 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
       title: courseMap.get(raw.course_id) || 'Unknown',
       progress: raw.status === 'completed' ? 100 : progress,
       avgScore: Math.floor(Math.random() * 20) + 80, // Mock score 80-100
-      status: determineStudentRisk(courseLastActive, progress, hasFails),
+      status: determineStudentRisk(courseLastActive, progress, hasFails) as any,
       lastActive: courseLastActive.toISOString(),
       timeSpentSeconds: totalTimeSpent
     })

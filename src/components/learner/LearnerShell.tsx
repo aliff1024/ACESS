@@ -48,25 +48,35 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
 
 export function LearnerShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isLoading, isAuthenticated, preview, exitPreview } = useAuth();
+  const searchParams = useSearchParams();
+  const { isLoading, isAuthenticated, preview, enterPreview, exitPreview } = useAuth();
   const role = useRole();
   const { t } = useTranslation();
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
 
-  const isPreview = preview.active && preview.role === 'learner';
+  const isContextPreview = preview.active && preview.role === 'learner';
+  const isUrlPreview = searchParams.get('preview') === 'true';
 
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) { router.replace('/login'); return; }
-    if (role !== 'learner' && role !== 'admin' && !isPreview) { router.replace('/access-denied'); }
-  }, [isLoading, isAuthenticated, role, isPreview, router]);
+    
+    if (isUrlPreview && !isContextPreview) {
+      enterPreview('learner');
+      return;
+    }
+
+    if (role !== 'learner' && role !== 'admin' && !isContextPreview && !isUrlPreview) { 
+      router.replace('/access-denied'); 
+    }
+  }, [isLoading, isAuthenticated, role, isUrlPreview, isContextPreview, router, enterPreview]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">{t('dashboard.verifyAccess')}</p>
+          <p className="text-gray-600" suppressHydrationWarning>{t('dashboard.verifyAccess')}</p>
         </div>
       </div>
     );
@@ -85,7 +95,7 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {isPreview && (
+      {isContextPreview && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-3 text-sm font-medium">
           <EyeOff className="w-4 h-4" />
           {t('dashboard.preview')}
@@ -98,13 +108,12 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <Suspense fallback={<div className="flex-1" />}>
-        <ShellInner
-          onNavigate={handleSidebarNavigate}
-          showAccessibilitySettings={showAccessibilitySettings}
-          setShowAccessibilitySettings={setShowAccessibilitySettings}
-          isPreview={isPreview}
-        >
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+        </div>
+      }>
+        <ShellInner onNavigate={handleSidebarNavigate} showAccessibilitySettings={showAccessibilitySettings} setShowAccessibilitySettings={setShowAccessibilitySettings} isPreview={isContextPreview}>
           {children}
         </ShellInner>
       </Suspense>

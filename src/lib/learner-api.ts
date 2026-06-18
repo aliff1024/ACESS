@@ -171,10 +171,15 @@ export interface LessonProgress {
 
 export interface Certificate {
   id: string
+  course_id?: string
   course_title: string
   completion_date: string
   certificate_code: string
   score: number
+  pdf_url?: string
+  verification_url?: string
+  is_system_course?: boolean
+  is_custom_upload?: boolean
 }
 
 export interface Recommendation {
@@ -266,7 +271,7 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
     }
 
     const [{ data: lessons }, { data: certs }] = await Promise.all([
-      supabase.from('lessons').select('id, course_id').in('course_id', courseIds).or('visibility_status.eq.visible,visibility_status.is.null'),
+      supabase.from('lessons').select('id, course_id').in('course_id', courseIds).eq('status', 'published').or('visibility_status.eq.visible,visibility_status.is.null'),
       supabase.from('certificates').select('enrollment_id').in('enrollment_id', enrollmentsArr.map(e => e.id)).eq('status', 'issued'),
     ])
 
@@ -660,6 +665,7 @@ export async function fetchLessonInteractiveContent(lessonId: string): Promise<L
     .from('lesson_interactive_content')
     .select('*')
     .eq('lesson_id', lessonId)
+    .or('is_draft.eq.false,is_draft.is.null')
     .order('sequence_order', { ascending: true })
   if (error) throw error
   return data || []
@@ -797,6 +803,7 @@ export async function fetchSystemCourseProgress(courseId: string): Promise<Syste
     .from('lessons')
     .select('id, title, sequence_order')
     .eq('course_id', courseId)
+    .eq('status', 'published')
     .or('visibility_status.eq.visible,visibility_status.is.null')
     .order('sequence_order', { ascending: true })
 
@@ -1227,6 +1234,7 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
     .from('lessons')
     .select('id, title, sequence_order')
     .eq('course_id', courseId)
+    .eq('status', 'published')
     .or('visibility_status.eq.visible,visibility_status.is.null')
     .order('sequence_order', { ascending: true })
 
@@ -1333,7 +1341,7 @@ export async function fetchCertificates(): Promise<Certificate[]> {
 
   const { data: certs, error: certErr } = await supabase
     .from('certificates')
-    .select('id, enrollment_id, reference_code, issued_at, pdf_url')
+    .select('id, enrollment_id, reference_code, issued_at, pdf_url, verification_url, metadata')
     .in('enrollment_id', enrollmentIds)
     .eq('status', 'issued')
 
@@ -1347,12 +1355,12 @@ export async function fetchCertificates(): Promise<Certificate[]> {
 
   const { data: courses, error: courseErr } = await supabase
     .from('courses')
-    .select('id, title')
+    .select('id, title, system_course')
     .in('id', [...new Set((enrollments || []).map((e) => e.course_id))])
 
   if (courseErr) console.error('fetchCertificates courses error:', courseErr)
 
-  const titleMap = new Map((courses || []).map((c) => [c.id, c.title]))
+  const courseInfoMap = new Map((courses || []).map((c) => [c.id, c]))
 
   const { data: attempts } = await supabase
     .from('quiz_attempts')
@@ -1367,16 +1375,102 @@ export async function fetchCertificates(): Promise<Certificate[]> {
 
   return certs.map((c) => {
     const courseId = courseMap.get(c.enrollment_id)
+    const courseInfo = courseInfoMap.get(courseId!)
+    
+    // Determine if custom upload
+    const isCustomUpload = c.metadata?.is_custom === true || 
+                           (c.verification_url && !c.verification_url.includes('/verify/')) ||
+                           !!c.pdf_url;
+
     return {
       id: c.id,
-      course_title: titleMap.get(courseId!) || 'Unknown Course',
+      course_id: courseId,
+      course_title: (courseInfo as any)?.title || 'Unknown Course',
       completion_date: new Date(c.issued_at).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric',
       }),
       certificate_code: c.reference_code,
       score: bestScores.get(c.enrollment_id) ?? 0,
+      pdf_url: c.pdf_url || c.verification_url,
+      verification_url: c.verification_url,
+      is_system_course: (courseInfo as any)?.system_course || false,
+      is_custom_upload: !!isCustomUpload
     }
   })
+}
+
+export interface LearnerBadge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  earnedAt?: string;
+  unlocked: boolean;
+}
+
+export async function fetchLearnerBadges(): Promise<LearnerBadge[]> {
+  const stats = await fetchLearnerStats();
+  const badges: LearnerBadge[] = [
+    {
+      id: 'first_steps',
+      title: 'First Steps',
+      description: 'Completed your first lesson.',
+      icon: 'Footprints',
+      unlocked: stats.lessons_completed >= 1,
+      earnedAt: new Date().toISOString()
+    },
+    {
+      id: 'quick_learner',
+      title: 'Quick Learner',
+      description: 'Completed 10 lessons.',
+      icon: 'Zap',
+      unlocked: stats.lessons_completed >= 10,
+    },
+    {
+      id: 'dedicated_learner',
+      title: 'Dedicated Learner',
+      description: 'Completed 25 lessons.',
+      icon: 'BookOpen',
+      unlocked: stats.lessons_completed >= 25,
+    },
+    {
+      id: 'course_master',
+      title: 'Course Master',
+      description: 'Completed your first full course.',
+      icon: 'GraduationCap',
+      unlocked: stats.courses_completed >= 1,
+      earnedAt: new Date().toISOString()
+    },
+    {
+      id: 'veteran_student',
+      title: 'Veteran',
+      description: 'Completed 5 full courses.',
+      icon: 'Shield',
+      unlocked: stats.courses_completed >= 5,
+    },
+    {
+      id: 'high_achiever',
+      title: 'High Achiever',
+      description: 'Maintained an average score of 80% or higher.',
+      icon: 'Star',
+      unlocked: stats.avg_score >= 80 && stats.lessons_completed > 0,
+    },
+    {
+      id: 'multi_course',
+      title: 'Scholar',
+      description: 'Earned 3 or more certificates.',
+      icon: 'Award',
+      unlocked: stats.certificates_count >= 3,
+    },
+    {
+      id: 'consistency',
+      title: 'Consistent Explorer',
+      description: 'Stayed active and engaged across multiple courses.',
+      icon: 'Flame',
+      unlocked: stats.courses_completed >= 2 && stats.lessons_completed >= 15,
+    }
+  ];
+  return badges;
 }
 
 // ─── Lesson Summaries ─────────────────────────────────────────────────

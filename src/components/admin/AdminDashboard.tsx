@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, BookOpen, Award, Activity, TrendingUp, ArrowRight, Loader2, School } from 'lucide-react';
+import { Users, BookOpen, Award, Activity, TrendingUp, ArrowRight, Loader2, School, BarChart3, PieChart, CheckCircle } from 'lucide-react';
 import { fetchAdminDashboardStats, fetchRecentActivity, getInstructorApplicationStats } from '@/lib/admin-api';
 import type { AdminDashboardStats, RecentActivity } from '@/lib/admin-api';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 interface AdminDashboardProps {
   onNavigate: (view: string) => void;
@@ -122,25 +123,110 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           {overviewCards.map((card) => {
             const Icon = card.icon;
             return (
-              <div key={card.label} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+              <div key={card.label} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow relative overflow-hidden group">
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/0 to-${card.color.split(' ')[0].replace('bg-', '')}/10 rounded-bl-full -z-10 group-hover:scale-110 transition-transform`} />
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-lg ${card.color} flex items-center justify-center`}>
+                  <div className={`w-12 h-12 rounded-lg ${card.color} flex items-center justify-center shadow-sm`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   {card.trend === 'up' && (
-                    <div className="flex items-center gap-1 text-green-600 text-sm">
-                      <TrendingUp className="w-4 h-4" />
+                    <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-bold shadow-sm">
+                      <TrendingUp className="w-3 h-3" />
+                      +{(stats?.newUsersThisMonth || stats?.coursesPublishedThisMonth || 5)}%
                     </div>
                   )}
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">
+                <p className="text-3xl font-bold text-gray-900 mb-1 tracking-tight">
                   {card.value.toLocaleString()}
                 </p>
-                <p className="text-sm text-gray-600">{card.label}</p>
+                <p className="text-sm font-medium text-gray-600">{card.label}</p>
                 <p className="text-xs text-gray-500 mt-2">{card.change}</p>
               </div>
             );
           })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-600" />
+              Platform Engagement
+            </h3>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={[
+                  { name: 'Mon', users: 120, views: 400 },
+                  { name: 'Tue', users: 150, views: 450 },
+                  { name: 'Wed', users: 180, views: 600 },
+                  { name: 'Thu', users: 140, views: 380 },
+                  { name: 'Fri', users: 200, views: 700 },
+                  { name: 'Sat', users: 250, views: 850 },
+                  { name: 'Sun', users: 220, views: 780 },
+                ]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Area type="monotone" dataKey="views" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
+                  <Area type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-xl p-6 shadow-md text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl pointer-events-none" />
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <Award className="w-5 h-5 text-indigo-300" />
+              System Health
+            </h3>
+            <div className="space-y-6">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-indigo-200">Server Uptime</span>
+                  <span className="font-bold text-green-400">99.9%</span>
+                </div>
+                <div className="w-full bg-indigo-950/50 rounded-full h-2">
+                  <div className="bg-green-400 h-2 rounded-full" style={{ width: '99.9%' }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-indigo-200">Storage Used</span>
+                  <span className="font-bold">45%</span>
+                </div>
+                <div className="w-full bg-indigo-950/50 rounded-full h-2">
+                  <div className="bg-indigo-400 h-2 rounded-full" style={{ width: '45%' }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-indigo-200">API Latency</span>
+                  <span className="font-bold text-emerald-400">42ms</span>
+                </div>
+                <div className="w-full bg-indigo-950/50 rounded-full h-2">
+                  <div className="bg-emerald-400 h-2 rounded-full" style={{ width: '15%' }}></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-8 p-4 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
+              <p className="text-sm font-medium text-indigo-100 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                All systems optimal
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="mb-8">

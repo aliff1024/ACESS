@@ -429,22 +429,22 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
                   <div className="space-y-3">
                     <h3 className="text-base font-semibold text-gray-800">Assistive Technology</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div><Label className="font-medium text-sm">Text-to-Speech</Label><p className="text-xs text-gray-600">Read content aloud</p></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div><Label className="font-semibold text-gray-900">Text-to-Speech</Label><p className="text-sm text-gray-500 mt-1">Read content aloud</p></div>
                         <Switch checked={ttsEnabled} onCheckedChange={setTtsEnabled} />
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div><Label className="font-medium text-sm">Captions</Label><p className="text-xs text-gray-600">Show captions on media</p></div>
-                        <Switch checked={captionsEnabled} onCheckedChange={setCaptionsEnabled} />
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div><Label className="font-semibold text-gray-900">Reduced Motion</Label><p className="text-sm text-gray-500 mt-1">Minimize animations</p></div>
+                        <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div><Label className="font-medium text-sm">Screen Reader</Label><p className="text-xs text-gray-600">Enhanced support</p></div>
-                        <Switch checked={screenReaderOptimized} onCheckedChange={setScreenReaderOptimized} />
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div><Label className="font-semibold text-gray-900">Simplified UI</Label><p className="text-sm text-gray-500 mt-1">Hide decorative elements</p></div>
+                        <Switch checked={simplifiedUi} onCheckedChange={setSimplifiedUi} />
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div><Label className="font-medium text-sm">Keyboard Navigation</Label><p className="text-xs text-gray-600">Full keyboard nav</p></div>
-                        <Switch checked={keyboardNavigationEnabled} onCheckedChange={setKeyboardNavigationEnabled} />
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div><Label className="font-semibold text-gray-900">Dyslexia Font</Label><p className="text-sm text-gray-500 mt-1">Improve readability</p></div>
+                        <Switch checked={dyslexiaFriendlyFont} onCheckedChange={setDyslexiaFriendlyFont} />
                       </div>
                     </div>
                     {ttsEnabled && (
@@ -483,27 +483,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                     )}
                   </div>
 
-                  <div className="border-t border-gray-200 pt-4" />
 
-                  <div className="space-y-3">
-                    <h3 className="text-base font-semibold text-gray-800">Motion & UI</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div><Label className="font-medium text-sm">Reduced Motion</Label><p className="text-xs text-gray-600">Minimize animations</p></div>
-                        <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div><Label className="font-medium text-sm">Simplified UI</Label><p className="text-xs text-gray-600">Cleaner interface</p></div>
-                        <Switch checked={simplifiedUi} onCheckedChange={setSimplifiedUi} />
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div><Label className="font-medium text-sm">Dyslexia Font</Label><p className="text-xs text-gray-600">Use dyslexia-friendly font</p></div>
-                        <Switch checked={dyslexiaFriendlyFont} onCheckedChange={setDyslexiaFriendlyFont} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-4" />
 
                   <div className="space-y-3">
                     <h3 className="text-base font-semibold text-gray-800">Content Preferences</h3>

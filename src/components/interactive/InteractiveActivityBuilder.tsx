@@ -7,6 +7,7 @@ import { DragDropBuilder } from './DragDropBuilder'
 import { FillBlanksBuilder } from './FillBlanksBuilder'
 import { MemoryGameBuilder } from './MemoryGameBuilder'
 import { TimelineBuilder } from './TimelineBuilder'
+import { InteractiveActivityViewer } from './InteractiveActivityViewer'
 import type { InteractiveContentType, InteractiveActivityConfig, InteractiveActivityData } from '@/lib/interactive-types'
 import type {
   FlashcardsData,
@@ -15,7 +16,6 @@ import type {
   MemoryGameData,
   TimelineData,
 } from '@/lib/interactive-types'
-import { templatesByType } from '@/lib/activity-templates'
 
 const CONTENT_TYPES: { value: InteractiveContentType; label: string; icon: string }[] = [
   { value: 'flashcards', label: 'Flashcards', icon: '🃏' },
@@ -51,7 +51,8 @@ interface InteractiveActivityBuilderProps {
 
 export function InteractiveActivityBuilder({ config, onChange }: InteractiveActivityBuilderProps) {
   const [selectedType, setSelectedType] = useState<InteractiveContentType>(config.contentType)
-  const [showTemplatePicker, setShowTemplatePicker] = useState(false)
+  const isNewActivity = !config.title && (!config.data || Object.keys(config.data).length <= 1)
+  const [mode, setMode] = useState<'intro' | 'edit' | 'preview'>(isNewActivity ? 'intro' : 'edit')
 
   const handleTypeChange = (type: InteractiveContentType) => {
     setSelectedType(type)
@@ -60,24 +61,7 @@ export function InteractiveActivityBuilder({ config, onChange }: InteractiveActi
       contentType: type,
       data: defaultData(type),
     })
-    setShowTemplatePicker(true)
-  }
-
-  const handleSelectTemplate = (templateId: string) => {
-    const templates = templatesByType[selectedType]
-    if (!templates) return
-    const tmpl = templates.find((t) => t.id === templateId)
-    if (!tmpl) return
-    onChange({
-      ...config,
-      contentType: selectedType,
-      data: cloneData(tmpl.data) as InteractiveActivityData,
-    })
-    setShowTemplatePicker(false)
-  }
-
-  const handleSkipTemplate = () => {
-    setShowTemplatePicker(false)
+    setMode('intro')
   }
 
   const handleDataChange = (data: InteractiveActivityData) => {
@@ -98,8 +82,6 @@ export function InteractiveActivityBuilder({ config, onChange }: InteractiveActi
         return <TimelineBuilder data={config.data as TimelineData} onChange={handleDataChange} courseId={config.courseId} />
     }
   }
-
-  const templates = templatesByType[selectedType] || []
 
   return (
     <div className="space-y-6">
@@ -132,35 +114,75 @@ export function InteractiveActivityBuilder({ config, onChange }: InteractiveActi
         </div>
       </div>
 
-      {/* Template picker */}
-      {showTemplatePicker && templates.length > 0 && (
-        <div className="border border-blue-200 bg-blue-50 rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-blue-800">Choose a template to start with:</Label>
-            <Button type="button" variant="ghost" size="sm" onClick={handleSkipTemplate} className="text-blue-700">
-              Start from scratch
+      {mode === 'intro' && (
+        <div className="border border-blue-200 bg-blue-50 rounded-xl p-6 text-center space-y-4">
+          <div className="text-4xl">{CONTENT_TYPES.find(t => t.value === selectedType)?.icon}</div>
+          <h3 className="text-xl font-bold text-blue-900">
+            {CONTENT_TYPES.find(t => t.value === selectedType)?.label}
+          </h3>
+          <p className="text-sm text-blue-700 max-w-md mx-auto">
+            {selectedType === 'flashcards' && "Create interactive flashcards with terms, definitions, and images. Great for vocabulary and concepts."}
+            {selectedType === 'drag_drop' && "Create a visual drag and drop activity where students match items to categories or drop labels onto diagrams."}
+            {selectedType === 'fill_blanks' && "Create sentences with missing words for students to fill in or select from a word bank."}
+            {selectedType === 'memory_game' && "Create a memory matching game. Students flip cards to find matching pairs of concepts, words, or images."}
+            {selectedType === 'timeline' && "Create interactive timelines where students can explore events or sort them into chronological order."}
+          </p>
+          <div className="pt-2">
+            <Button onClick={() => setMode('edit')} className="bg-blue-600 hover:bg-blue-700">
+              Create {CONTENT_TYPES.find(t => t.value === selectedType)?.label}
             </Button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {templates.map((tmpl) => (
-              <button
-                key={tmpl.id}
-                type="button"
-                onClick={() => handleSelectTemplate(tmpl.id)}
-                className="flex items-start gap-3 p-3 rounded-lg border border-blue-200 bg-white hover:border-blue-400 hover:shadow-sm transition-all text-left"
-              >
-                <span className="text-xl shrink-0 mt-0.5">{tmpl.icon}</span>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{tmpl.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{tmpl.description}</p>
-                </div>
-              </button>
-            ))}
           </div>
         </div>
       )}
 
-      {renderBuilder()}
+      {mode !== 'intro' && (
+        <>
+          {/* Mode toggle */}
+          <div className="flex border-b border-gray-200">
+            <button
+              type="button"
+              onClick={() => setMode('edit')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                mode === 'edit'
+                  ? 'border-blue-500 text-blue-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('preview')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                mode === 'preview'
+                  ? 'border-blue-500 text-blue-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Preview
+            </button>
+          </div>
+
+          {mode === 'edit' ? (
+            <>
+              {renderBuilder()}
+            </>
+          ) : (
+            <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+              <div className="p-4 bg-gray-50 border-b border-gray-200">
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Student Preview</p>
+              </div>
+              <div className="p-4">
+                <InteractiveActivityViewer
+                  contentType={selectedType}
+                  title={config.title || 'Untitled Activity'}
+                  data={config.data}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

@@ -324,6 +324,17 @@ export default function CertificateSettingsPanel({
       {/* Eligible Students Custom Upload Section */}
       {allowCustom && (
         <div className="mt-8 pt-8 border-t border-gray-200">
+          <div className="flex items-start gap-4 mb-4 bg-amber-50 p-4 rounded-xl border border-amber-200">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-bold text-amber-900 mb-1">Upload Your Unique Certificate</h3>
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Note: The ACESS platform will automatically grant learners a standard system certificate upon completion if you have certification enabled. 
+                Use this tool <strong>only</strong> if you wish to upload your own unique custom certificate PDF for specific learners.
+              </p>
+            </div>
+          </div>
+          
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Eligible Students ({eligibleStudents.length})</h3>
           {eligibleStudents.length === 0 ? (
             <p className="text-sm text-gray-500">No students are eligible for a certificate yet.</p>
@@ -349,6 +360,17 @@ export default function CertificateSettingsPanel({
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {student.hasCertificate && student.certificateUrl && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() => window.open(student.certificateUrl, '_blank')}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              View
+                            </Button>
+                          )}
                           <input
                             type="file"
                             id={`cert-upload-${student.enrollmentId}`}
@@ -361,8 +383,12 @@ export default function CertificateSettingsPanel({
                               try {
                                 await uploadCustomCertificate(student.enrollmentId, courseId, student.studentId, file)
                                 toast.success(`Certificate uploaded for ${student.studentName}`)
+                                loadSettings() // Reload to reflect changes
                               } catch (err) {
-                                console.error(err)
+                                console.error('Certificate upload failed - full details:', err)
+                                if (err && typeof err === 'object') {
+                                  try { console.error('Stringified:', JSON.stringify(err, Object.getOwnPropertyNames(err))) } catch {}
+                                }
                                 toast.error('Failed to upload certificate')
                               } finally {
                                 setUploadingFor(null)
@@ -381,7 +407,7 @@ export default function CertificateSettingsPanel({
                             >
                               <span>
                                 {uploadingFor === student.enrollmentId ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-                                Upload
+                                {student.hasCertificate ? 'Re-upload' : 'Upload'}
                               </span>
                             </Button>
                           </label>

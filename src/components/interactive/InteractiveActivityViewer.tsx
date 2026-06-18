@@ -10,6 +10,7 @@ interface InteractiveActivityViewerProps {
   title: string
   data: InteractiveActivityData
   accessibilitySettings?: Record<string, unknown>
+  onComplete?: () => void
 }
 
 export function InteractiveActivityViewer({
@@ -17,19 +18,20 @@ export function InteractiveActivityViewer({
   title,
   data,
   accessibilitySettings,
+  onComplete,
 }: InteractiveActivityViewerProps) {
   const renderActivity = () => {
     switch (contentType) {
       case 'flashcards':
-        return <FlashcardViewer data={data as FlashcardsData} accessibilitySettings={accessibilitySettings} />
+        return <FlashcardViewer data={data as FlashcardsData} accessibilitySettings={accessibilitySettings} onComplete={onComplete} />
       case 'drag_drop':
-        return <DragDropViewer data={data as DragDropData} accessibilitySettings={accessibilitySettings} />
+        return <DragDropViewer data={data as DragDropData} accessibilitySettings={accessibilitySettings} onComplete={onComplete} />
       case 'fill_blanks':
-        return <FillBlanksViewer data={data as FillBlanksData} accessibilitySettings={accessibilitySettings} />
+        return <FillBlanksViewer data={data as FillBlanksData} accessibilitySettings={accessibilitySettings} onComplete={onComplete} />
       case 'memory_game':
-        return <MemoryGameViewer data={data as MemoryGameData} accessibilitySettings={accessibilitySettings} />
+        return <MemoryGameViewer data={data as MemoryGameData} accessibilitySettings={accessibilitySettings} onComplete={onComplete} />
       case 'timeline':
-        return <TimelineViewer data={data as TimelineData} accessibilitySettings={accessibilitySettings} />
+        return <TimelineViewer data={data as TimelineData} accessibilitySettings={accessibilitySettings} onComplete={onComplete} />
     }
   }
 

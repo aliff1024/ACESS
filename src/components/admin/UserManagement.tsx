@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, MoreVertical, UserCog, Power, Trash2, Loader2, AlertTriangle } from 'lucide-react';
 import { ConfirmAction } from '../ui/ConfirmAction';
+import { Button } from '../ui/button';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import RoleEditModal from './RoleEditModal';
@@ -21,10 +22,56 @@ export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
 
+  const [sortField, setSortField] = useState<'name' | 'email' | 'role' | 'joined'>('joined');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [dropdownUserId, setDropdownUserId] = useState<string | null>(null);
   const [confirmToggleUserId, setConfirmToggleUserId] = useState<string | null>(null);
   const [confirmDeleteUserId, setConfirmDeleteUserId] = useState<string | null>(null);
+
+  const toggleSort = (field: 'name' | 'email' | 'role' | 'joined') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+    } else {
+      setSelectedUsers(new Set());
+    }
+  };
+
+  const toggleSelectUser = (id: string) => {
+    const newSet = new Set(selectedUsers);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedUsers(newSet);
+  };
+
+  const handleBulkAction = async (action: 'activate' | 'deactivate' | 'delete') => {
+    if (selectedUsers.size === 0) return;
+    try {
+      if (action === 'activate') {
+        await supabase.from('users').update({ role: 'learner', is_active: true }).in('id', Array.from(selectedUsers));
+      } else if (action === 'deactivate') {
+        await supabase.from('users').update({ role: 'disabled', is_active: false }).in('id', Array.from(selectedUsers));
+      } else if (action === 'delete') {
+        await supabase.from('users').update({ deleted_at: new Date().toISOString(), is_active: false }).in('id', Array.from(selectedUsers));
+      }
+      toast.success(`Bulk ${action} completed successfully`);
+      setSelectedUsers(new Set());
+      loadUsers();
+    } catch (err) {
+      toast.error(`Failed to perform bulk ${action}`);
+    }
+  };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -55,12 +102,42 @@ export default function UserManagement() {
   }, [dropdownUserId]);
 
   const getFilteredUsers = () => {
-    return users.filter(user => {
+    let result = users.filter(user => {
       const matchesSearch = user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            user.email?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       return matchesSearch && matchesRole;
     });
+
+    result = result.sort((a, b) => {
+      let valA: string | number = '';
+      let valB: string | number = '';
+      
+      switch (sortField) {
+        case 'name':
+          valA = a.full_name?.toLowerCase() || '';
+          valB = b.full_name?.toLowerCase() || '';
+          break;
+        case 'email':
+          valA = a.email?.toLowerCase() || '';
+          valB = b.email?.toLowerCase() || '';
+          break;
+        case 'role':
+          valA = a.role || '';
+          valB = b.role || '';
+          break;
+        case 'joined':
+          valA = new Date(a.created_at || 0).getTime();
+          valB = new Date(b.created_at || 0).getTime();
+          break;
+      }
+      
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
@@ -205,21 +282,64 @@ export default function UserManagement() {
           </div>
         </div>
 
+        {/* Bulk Actions */}
+        {selectedUsers.size > 0 && (
+          <div className="bg-blue-50 rounded-xl border border-blue-200 p-4 mb-6 flex items-center justify-between">
+            <span className="text-blue-700 font-medium">{selectedUsers.size} users selected</span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleBulkAction('activate')}>
+                Activate Selected
+              </Button>
+              <Button size="sm" variant="outline" className="text-amber-700 border-amber-300 hover:bg-amber-50" onClick={() => handleBulkAction('deactivate')}>
+                Deactivate Selected
+              </Button>
+              <Button size="sm" variant="outline" className="text-red-700 border-red-300 hover:bg-red-50" onClick={() => handleBulkAction('delete')}>
+                Delete Selected
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Users Table */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onClick={() => toggleSort('name')}>
+                    <div className="flex items-center gap-1">Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}</div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onClick={() => toggleSort('email')}>
+                    <div className="flex items-center gap-1">Email {sortField === 'email' && (sortOrder === 'asc' ? '↑' : '↓')}</div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onClick={() => toggleSort('role')}>
+                    <div className="flex items-center gap-1">Role {sortField === 'role' && (sortOrder === 'asc' ? '↑' : '↓')}</div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onClick={() => toggleSort('joined')}>
+                    <div className="flex items-center gap-1">Joined {sortField === 'joined' && (sortOrder === 'asc' ? '↑' : '↓')}</div>
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className={`hover:bg-gray-50 ${selectedUsers.has(user.id) ? 'bg-blue-50/50' : ''}`}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.has(user.id)}
+                        onChange={() => toggleSelectUser(user.id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
@@ -280,6 +400,7 @@ export default function UserManagement() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         {filteredUsers.length === 0 && (

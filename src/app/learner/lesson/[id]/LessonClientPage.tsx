@@ -21,13 +21,17 @@ export default function LessonClientPage({ lessonId }: { lessonId: string }) {
   const prevLessonId = currentIndex > 0 ? lessonIds[currentIndex - 1] : null;
   const nextLessonId = currentIndex < lessonIds.length - 1 ? lessonIds[currentIndex + 1] : null;
 
+  const isPreview = searchParams.get('preview') === 'true';
+  const previewQuery = isPreview ? '&preview=true' : '';
+
   return (
     <LessonViewPage
       lessonId={lessonId}
       courseId={courseId}
-      onBack={() => router.push(`/learner/courses/${courseId}`)}
-      onNextLesson={nextLessonId ? () => router.push(`/learner/lesson/${nextLessonId}?courseId=${courseId}`) : undefined}
-      onPreviousLesson={prevLessonId ? () => router.push(`/learner/lesson/${prevLessonId}?courseId=${courseId}`) : undefined}
+      isPreview={isPreview}
+      onBack={() => router.push(`/learner/courses/${courseId}${isPreview ? '?preview=true' : ''}`)}
+      onNextLesson={nextLessonId ? () => router.push(`/learner/lesson/${nextLessonId}?courseId=${courseId}${previewQuery}`) : undefined}
+      onPreviousLesson={prevLessonId ? () => router.push(`/learner/lesson/${prevLessonId}?courseId=${courseId}${previewQuery}`) : undefined}
     />
   );
 }

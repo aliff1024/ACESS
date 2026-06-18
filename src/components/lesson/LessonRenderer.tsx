@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Video, Play, Layout, CheckCircle, Upload, Layers } from 'lucide-react';
+import { FileText, Video, Play, Layout, CheckCircle, Upload, Layers, Image, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
@@ -24,6 +24,7 @@ interface LessonRendererAsset {
   id: string;
   title: string | null;
   url: string;
+  kind?: string;
 }
 
 interface LessonRendererVideoQuestion {
@@ -70,8 +71,9 @@ interface LessonRendererProps {
     onEditLesson: () => void;
     onEditQuiz: () => void;
     onRemoveQuiz: () => void;
-    onUploadPdf: (file: File) => void;
-    uploadingPdfFor: string | null;
+    onUploadAsset: (file: File) => void;
+    onAddLinkAsset: (url: string, title: string) => void;
+    uploadingAssetFor: string | null;
     onDeleteAsset: (assetId: string) => void;
   };
 
@@ -80,7 +82,7 @@ interface LessonRendererProps {
 export function LessonRenderer({ mode, lesson, assets, videoQuestions, interactiveItems, h5pContents = [], hasQuiz, lessonId, educatorProps }: LessonRendererProps) {
   const isEducator = mode === 'educator';
   const ytId = lesson.video_url ? getYouTubeId(lesson.video_url) : null;
-  const [selectedActivityTabId, setSelectedActivityTabId] = useState<string | null>(null);
+  const [viewingAsset, setViewingAsset] = useState<string | null>(null);
 
   return (
     <div className="space-y-5">
@@ -154,59 +156,132 @@ export function LessonRenderer({ mode, lesson, assets, videoQuestions, interacti
         )}
       </CollapsibleCard>
 
-      {/* ── Resources / PDFs ── */}
+      {/* ── Resources & Materials ── */}
       <CollapsibleCard
         icon={<FileText className="w-4 h-4 text-orange-600" />}
-        title={`Resources ${assets.length > 0 ? `(${assets.length})` : ''}`}
+        title={`Resources & Materials ${assets.length > 0 ? `(${assets.length})` : ''}`}
         defaultOpen={assets.length > 0}
         badge={assets.length > 0 ? `${assets.length} file${assets.length > 1 ? 's' : ''}` : undefined}
         action={isEducator && educatorProps ? (
-          <label className="cursor-pointer">
-            <input
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) educatorProps.onUploadPdf(file);
-                e.target.value = '';
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() => {
+                const url = window.prompt("Enter the link URL (e.g., https://example.com):");
+                if (!url) return;
+                const title = window.prompt("Enter a title for this link:");
+                if (!title) return;
+                educatorProps.onAddLinkAsset(url, title);
               }}
-            />
-            <Button variant="outline" size="sm" className="text-xs" disabled={educatorProps.uploadingPdfFor === lessonId}>
-              {educatorProps.uploadingPdfFor === lessonId ? 'Uploading...' : 'Upload PDF'}
+            >
+              <Link className="w-3 h-3 mr-1" /> Add Link
             </Button>
-          </label>
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) educatorProps.onUploadAsset(file);
+                  e.target.value = '';
+                }}
+              />
+              <Button variant="outline" size="sm" className="text-xs" disabled={educatorProps.uploadingAssetFor === lessonId}>
+                {educatorProps.uploadingAssetFor === lessonId ? 'Uploading...' : 'Upload File'}
+              </Button>
+            </label>
+          </div>
         ) : undefined}
       >
         {assets.length > 0 ? (
           <div className="space-y-2">
-            {assets.map((asset) => (
-              <div key={asset.id} className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg group/resource hover:bg-orange-100/50 transition-colors">
-                <div className="w-10 h-12 bg-orange-200 rounded flex items-center justify-center shrink-0 overflow-hidden">
-                  <FileText className="w-5 h-5 text-orange-700" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-orange-900 truncate">{asset.title || 'Untitled PDF'}</p>
-                  <p className="text-xs text-orange-600">PDF document</p>
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover/resource:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="sm" onClick={() => window.open(asset.url, '_blank')} className="h-7 text-xs">
-                    Open
-                  </Button>
-                  {isEducator && educatorProps && (
-                    <Button variant="ghost" size="sm" onClick={() => educatorProps.onDeleteAsset(asset.id)} className="h-7 text-xs text-red-600">
-                      &times;
-                    </Button>
+            {assets.map((asset) => {
+              let Icon = FileText;
+              let bg = "bg-orange-200";
+              let text = "text-orange-700";
+              let cardBg = "bg-orange-50 border-orange-200 hover:bg-orange-100/50";
+              let desc = "Document";
+
+              if (asset.kind === 'image') {
+                Icon = Image;
+                bg = "bg-blue-200";
+                text = "text-blue-700";
+                cardBg = "bg-blue-50 border-blue-200 hover:bg-blue-100/50";
+                desc = "Image file";
+              } else if (asset.kind === 'video') {
+                Icon = Video;
+                bg = "bg-rose-200";
+                text = "text-rose-700";
+                cardBg = "bg-rose-50 border-rose-200 hover:bg-rose-100/50";
+                desc = "Video file";
+              } else if (asset.kind === 'link') {
+                Icon = Link;
+                bg = "bg-emerald-200";
+                text = "text-emerald-700";
+                cardBg = "bg-emerald-50 border-emerald-200 hover:bg-emerald-100/50";
+                desc = "External link";
+              } else if (asset.kind === 'pdf') {
+                desc = "PDF document";
+              }
+
+              const isPdf = asset.kind === 'pdf' || asset.url.toLowerCase().endsWith('.pdf');
+              const isPptx = asset.url.toLowerCase().endsWith('.pptx');
+
+              return (
+                <div key={asset.id} className="flex flex-col gap-2">
+                  <div className={`flex items-center gap-3 p-3 border rounded-lg group/resource transition-colors ${cardBg}`}>
+                    <div className={`w-10 h-12 rounded flex items-center justify-center shrink-0 overflow-hidden ${bg}`}>
+                      <Icon className={`w-5 h-5 ${text}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${text.replace('text-', 'text-').replace('700', '900')}`}>
+                        {asset.title || 'Untitled Asset'}
+                      </p>
+                      <p className={`text-xs ${text.replace('700', '600')}`}>{desc}</p>
+                    </div>
+                    <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover/resource:opacity-100 transition-opacity">
+                      {(isPdf || isPptx) ? (
+                        <Button variant="ghost" size="sm" onClick={() => setViewingAsset(viewingAsset === asset.id ? null : asset.id)} className="h-7 text-xs">
+                          {viewingAsset === asset.id ? 'Close' : 'View'}
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="sm" onClick={() => window.open(asset.url, '_blank')} className="h-7 text-xs">
+                          Open
+                        </Button>
+                      )}
+                      {isEducator && educatorProps && (
+                        <Button variant="ghost" size="sm" onClick={() => educatorProps.onDeleteAsset(asset.id)} className="h-7 text-xs text-red-600">
+                          &times;
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {viewingAsset === asset.id && (
+                    <div className="w-full h-[600px] border border-gray-200 rounded-lg overflow-hidden bg-gray-50 relative mt-2 shadow-inner">
+                      <Button variant="secondary" size="sm" className="absolute top-2 right-6 z-10 text-xs shadow-md" onClick={() => setViewingAsset(null)}>Close</Button>
+                      <Button variant="secondary" size="sm" className="absolute top-2 right-20 z-10 text-xs shadow-md" onClick={() => window.open(asset.url, '_blank')}>Open in New Tab</Button>
+                      {isPdf ? (
+                        <object data={asset.url} type="application/pdf" className="w-full h-full">
+                          <iframe src={asset.url} className="w-full h-full border-0">
+                            This browser does not support PDFs. Please download the PDF to view it.
+                          </iframe>
+                        </object>
+                      ) : (
+                        <iframe src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(asset.url)}`} className="w-full h-full border-0" />
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl">
             <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
             <p className="text-sm text-gray-500">No files uploaded yet</p>
-            <p className="text-xs text-gray-400 mt-1">Upload PDF resources for your learners</p>
+            <p className="text-xs text-gray-400 mt-1">Upload images, PDFs, or other resources for your learners</p>
           </div>
         )}
       </CollapsibleCard>
@@ -229,51 +304,107 @@ export function LessonRenderer({ mode, lesson, assets, videoQuestions, interacti
       {(isEducator || interactiveItems.length > 0) ? (
         <CollapsibleCard
           icon={<Layout className="w-4 h-4 text-indigo-500" />}
-          title="Interactive Activities (Native)"
+          title="Practice Activities"
           defaultOpen={interactiveItems.length > 0}
           badge={interactiveItems.length > 0 ? `${interactiveItems.length} activity${interactiveItems.length > 1 ? 'ies' : 'y'}` : undefined}
+          action={isEducator && educatorProps ? (
+            <Button variant="outline" size="sm" onClick={educatorProps.onEditLesson} className="h-7 text-xs">
+              Manage Activities
+            </Button>
+          ) : undefined}
         >
           {interactiveItems.length > 0 ? (() => {
             const sorted = [...interactiveItems].sort((a, b) => a.sequence_order - b.sequence_order);
-            const activeId = selectedActivityTabId && sorted.some(i => i.id === selectedActivityTabId) ? selectedActivityTabId : sorted[0].id;
-            const activeItem = sorted.find(i => i.id === activeId)!;
+            
+            // Group by content type
+            const grouped = sorted.reduce((acc, item) => {
+              const type = item.content_type;
+              if (!acc[type]) acc[type] = [];
+              acc[type].push(item);
+              return acc;
+            }, {} as Record<string, typeof sorted>);
+
+            const TYPE_LABELS: Record<string, string> = {
+              'flashcards': 'Flashcards',
+              'drag_drop': 'Drag & Drop',
+              'fill_blanks': 'Fill in the Blanks',
+              'memory_game': 'Memory Game',
+              'timeline': 'Timeline'
+            };
+
+            const [activeType, setActiveType] = useState<string>(Object.keys(grouped)[0]);
+            const [activeItemIds, setActiveItemIds] = useState<Record<string, string>>(() => {
+              const initial: Record<string, string> = {};
+              Object.keys(grouped).forEach(k => initial[k] = grouped[k][0].id);
+              return initial;
+            });
+
+            const activeItem = grouped[activeType]?.find(i => i.id === activeItemIds[activeType]) || grouped[activeType]?.[0];
+
             return (
-              <div className="space-y-3">
-                {sorted.length > 1 && (
-                  <div className="flex border-b border-gray-200 overflow-x-auto">
-                    {sorted.map((item) => (
+              <div className="space-y-6">
+                {/* Type Selector (Tabs) */}
+                {Object.keys(grouped).length > 1 && (
+                  <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-2">
+                    {Object.entries(grouped).map(([type, items]) => (
                       <button
-                        key={item.id}
-                        onClick={() => setSelectedActivityTabId(item.id)}
-                        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
-                          activeId === item.id
-                            ? 'border-indigo-500 text-indigo-700'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        key={type}
+                        onClick={() => setActiveType(type)}
+                        className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
+                          activeType === type 
+                            ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' 
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                       >
-                        <span className={`uppercase ${activeId === item.id ? 'text-indigo-600' : 'text-gray-400'}`}>{item.content_type.replace('_', ' ')}</span>
-                        <span className="text-gray-400 truncate max-w-[120px]">{item.title}</span>
+                        {TYPE_LABELS[type] || type} ({items.length})
                       </button>
                     ))}
                   </div>
                 )}
-                <div className="border border-gray-200 rounded-xl bg-white overflow-hidden p-4">
-                  <InteractiveActivityViewer
-                    key={activeItem.id}
-                    contentType={activeItem.content_type as InteractiveContentType}
-                    title={activeItem.title}
-                    data={activeItem.content_data as InteractiveActivityData}
-                  />
-                </div>
+
+                {/* Activity Selector within Type */}
+                {grouped[activeType] && grouped[activeType].length > 1 && (
+                  <div className="flex flex-wrap gap-2 px-2">
+                    {grouped[activeType].map((item, idx) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setActiveItemIds(prev => ({...prev, [activeType]: item.id}))}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                          activeItem?.id === item.id
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'
+                        }`}
+                      >
+                        Set {idx + 1}: {item.title || 'Untitled'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Activity Viewer container */}
+                {activeItem && (
+                  <div className="border border-gray-200 rounded-xl bg-white overflow-hidden p-0 sm:p-6 shadow-sm">
+                    {grouped[activeType].length === 1 && (
+                      <h4 className="font-bold text-gray-800 mb-4 px-4 sm:px-0">{activeItem.title}</h4>
+                    )}
+                    <InteractiveActivityViewer
+                      key={activeItem.id}
+                      contentType={activeItem.content_type as InteractiveContentType}
+                      title={activeItem.title}
+                      data={activeItem.content_data as InteractiveActivityData}
+                    />
+                  </div>
+                )}
               </div>
             );
           })() : (
-            <div className="text-center py-6">
-              <Layout className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No interactive activities yet</p>
+            <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+              <Layout className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-600 mb-1">No interactive activities yet</p>
+              <p className="text-xs text-gray-400 mb-4">Add flashcards, matching games, and quizzes to test learner knowledge</p>
               {isEducator && educatorProps && (
-                <Button variant="outline" size="sm" onClick={educatorProps.onEditLesson} className="mt-3 text-xs">
-                  Add Activity
+                <Button variant="default" size="sm" onClick={educatorProps.onEditLesson}>
+                  Add First Activity
                 </Button>
               )}
             </div>

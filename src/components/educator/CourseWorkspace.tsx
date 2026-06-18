@@ -51,9 +51,14 @@ import CourseAssets from './CourseAssets';
 import PublishValidationModal from './PublishValidationModal';
 import StudentProgressView from './StudentProgressView';
 import CertificateSettingsPanel from './CertificateSettingsPanel';
+import { AccessibilitySettingsModal } from '../learner/AccessibilitySettingsModal';
+import { CurriculumManager } from '../courses/CurriculumManager';
+import AdminCourseSettingsTab from '../admin/AdminCourseSettingsTab';
+
 interface CourseWorkspaceProps {
   courseId: string;
   onBack: () => void;
+  mode?: 'educator' | 'admin';
 }
 
 interface CourseData {
@@ -174,12 +179,12 @@ function LessonCard({ lesson, assets, onEdit, onDelete, onMoveUp, onMoveDown, on
   );
 }
 
-export default function CourseWorkspace({ courseId, onBack }: CourseWorkspaceProps) {
+export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }: CourseWorkspaceProps) {
   const router = useRouter();
   const [course, setCourse] = useState<CourseData | null>(null);
   const [lessons, setLessons] = useState<LessonWithQuiz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'settings'>('lessons');
+  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'settings' | 'admin'>('lessons');
 
   // Lesson editor modal
   const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
@@ -321,16 +326,30 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
     } catch { toast.error('Failed to delete lesson') }
   };
 
-  const handlePdfUpload = async (lessonId: string, file: File) => {
-    if (file.type !== 'application/pdf') { toast.error('Only PDF files are allowed'); return }
+  const handleAssetUpload = async (lessonId: string, file: File) => {
     setUploadingPdfFor(lessonId);
     try {
       const url = await uploadCourseFile(file, courseId, lessonId);
-      await createLessonAsset(lessonId, 'pdf', file.name, url);
-      toast.success('PDF uploaded');
+      
+      let kind = 'file';
+      if (file.type.startsWith('image/')) kind = 'image';
+      else if (file.type.startsWith('video/')) kind = 'video';
+      else if (file.type === 'application/pdf') kind = 'pdf';
+      else if (file.type.includes('word') || file.type.includes('document')) kind = 'document';
+
+      await createLessonAsset(lessonId, kind, file.name, url);
+      toast.success('Asset uploaded successfully');
       loadAssets(lessonId);
-    } catch { toast.error('Failed to upload PDF') }
+    } catch { toast.error('Failed to upload asset') }
     finally { setUploadingPdfFor(null) }
+  };
+
+  const handleAddLinkAsset = async (lessonId: string, url: string, title: string) => {
+    try {
+      await createLessonAsset(lessonId, 'link', title, url);
+      toast.success('Link added successfully');
+      loadAssets(lessonId);
+    } catch { toast.error('Failed to add link') }
   };
 
   const handleDeleteAsset = async (assetId: string, lessonId: string) => {
@@ -498,14 +517,18 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
     return <div className="p-8 text-center"><p className="text-xl mb-4">Course not found</p><Button onClick={onBack}>Back to Courses</Button></div>;
   }
 
-  const tabs = [
-    { id: 'overview' as const, label: 'Overview', icon: BookOpen },
-    { id: 'lessons' as const, label: 'Lessons', icon: FileText },
-    { id: 'assets' as const, label: 'Assets', icon: FileType },
-    { id: 'students' as const, label: 'Students', icon: Users },
-    { id: 'certificates' as const, label: 'Certificates', icon: Award },
-    { id: 'settings' as const, label: 'Settings', icon: Settings },
+  const tabs: { id: 'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'settings' | 'admin'; label: string; icon: any }[] = [
+    { id: 'overview', label: 'Overview', icon: BookOpen },
+    { id: 'lessons', label: 'Lessons', icon: FileText },
+    { id: 'assets', label: 'Assets', icon: FileType },
+    { id: 'students', label: 'Students', icon: Users },
+    { id: 'certificates', label: 'Certificates', icon: Award },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+  if (mode === 'admin') {
+    tabs.push({ id: 'admin', label: 'Admin Controls', icon: Shield });
+  }
 
   const isPublished = course.status === 'published';
 
@@ -518,7 +541,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
             <ArrowLeft className="w-5 h-5" /> Back to Courses
           </button>
           <div className="flex items-center gap-3">
-            <Button onClick={() => router.push(`/educator/courses/${courseId}/preview`)} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+            <Button onClick={() => router.push(`/educator/preview/course/${courseId}`)} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
               <Eye className="w-4 h-4 mr-2" /> Preview as Learner
             </Button>
             {isPublished ? (
@@ -637,242 +660,100 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
         {/* ─── Lessons Tab ──────────────────────────────────────────── */}
         {activeTab === 'lessons' && (
           <div className="w-[96%] max-w-[1500px] mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Course Lessons</h2>
-                <p className="text-sm text-gray-600">
-                  {selectedLessonId
-                    ? `Lesson ${selectedLessonData?.sequence_order || ''} — ${selectedLessonData?.title || ''}`
-                    : `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''} in this course`}
-                </p>
-              </div>
-              <Button onClick={openNewLesson} className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="w-4 h-4 mr-2" /> Add Lesson
-              </Button>
-            </div>
-
-            <div className="flex gap-6">
-              {/* ── Left: Lesson Navigation Sidebar (drag-and-drop) ── */}
-              <div ref={sidebarRef} className="w-64 shrink-0">
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-700">Lessons</p>
-                    <span className="text-xs text-gray-500">{lessons.length}</span>
+            {selectedLessonId ? (
+              <div className="space-y-4">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedLessonId(null)}
+                  className="mb-2 text-gray-500 hover:text-gray-900 px-0"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back to Curriculum
+                </Button>
+                {loadingDetail ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                   </div>
-                  <div className="max-h-[75vh] overflow-y-auto">
-                    <Reorder.Group axis="y" values={lessons} onReorder={(reordered) => {
-                      setLessons(reordered);
-                      const promises = reordered.map((l, i) =>
-                        updateLesson(l.id, { sequence_order: i + 1 } as Partial<LessonFields>).catch(() => {})
-                      );
-                      Promise.all(promises).then(() => toast.success('Lesson order updated'));
-                    }}>
-                      <AnimatePresence initial={false}>
-                        {lessons.map((lesson) => {
-                          const selected = selectedLessonId === lesson.id;
-                          return (
-                            <Reorder.Item
-                              key={lesson.id}
-                              value={lesson}
-                              className={`border-b border-gray-100 last:border-b-0 ${
-                                selected ? 'bg-blue-50' : 'hover:bg-gray-50'
-                              } transition-colors duration-150`}
-                              style={{ listStyle: 'none' }}
-                            >
-                              <motion.button
-                                layout
-                                initial={{ opacity: 0, x: -8 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.15, ease: 'easeOut' }}
-                                onClick={() => setSelectedLessonId(lesson.id)}
-                                className={`w-full text-left px-2 py-2.5 flex items-center gap-1 ${
-                                  selected ? 'border-l-[3px] border-blue-600' : 'border-l-[3px] border-transparent'
-                                }`}
-                              >
-                                <span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 shrink-0"
-                                  onPointerDown={(e) => e.stopPropagation()}>
-                                  <GripVertical className="w-4 h-4" />
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className={`text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                                      selected ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
-                                    }`}>
-                                      {lesson.sequence_order}
-                                    </span>
-                                    <span className={`text-sm truncate ${selected ? 'text-blue-900 font-medium' : 'text-gray-800'}`}>
-                                      {lesson.title}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1 ml-6.5 mt-0.5">
-                                    <span className={`text-[10px] px-1 py-0.5 rounded font-medium ${
-                                      lesson.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                                    }`}>
-                                      {lesson.status}
-                                    </span>
-                                    {lesson.has_quiz && <span className="text-[10px] text-blue-600 font-semibold">Q</span>}
-                                    {lesson.video_url && <span className="text-[10px] text-rose-600 font-semibold">V</span>}
-                                    {(assets[lesson.id] || []).length > 0 && (
-                                      <span className="text-[10px] text-orange-600 font-semibold">{(assets[lesson.id] || []).length}P</span>
-                                    )}
-                                  </div>
-                                </div>
-                              </motion.button>
-                            </Reorder.Item>
-                          );
-                        })}
-                      </AnimatePresence>
-                    </Reorder.Group>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Right: Content Area ── */}
-              <AnimatePresence mode="wait">
-                {selectedLessonId ? (
-                  /* ── Detail View ── */
-                  <motion.div
-                    key="detail"
-                    ref={detailRef}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="flex-1 min-w-0"
-                  >
-                    {loadingDetail ? (
-                      <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                      </div>
-                    ) : selectedLessonData ? (
-                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                        {/* Header with sticky actions */}
-                        <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-8 py-5">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0 mr-4">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                                  Lesson {selectedLessonData.sequence_order}
-                                </span>
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                  selectedLessonData.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                                }`}>
-                                  {selectedLessonData.status}
-                                </span>
-                              </div>
-                              <h3 className="text-lg font-bold text-gray-900">{selectedLessonData.title}</h3>
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Button variant="outline" size="sm" onClick={() => handleDuplicateLesson(selectedLessonId)} className="h-8 text-xs px-2">
-                                <Copy className="w-3 h-3 mr-1" /> Duplicate
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={() => openEditLesson(selectedLessonId)} className="h-8 text-xs px-2">
-                                <Edit className="w-3 h-3 mr-1" /> Edit
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteLessonId(selectedLessonId)} className="h-8 w-8 p-0 text-red-600">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
+                ) : selectedLessonData ? (
+                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    {/* Header with sticky actions */}
+                    <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-8 py-5 flex items-start justify-between">
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                            Lesson {selectedLessonData.sequence_order}
+                          </span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                            selectedLessonData.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {selectedLessonData.status}
+                          </span>
                         </div>
-
-                        <div className="px-8 py-6 space-y-5">
-                          <LessonRenderer
-                            mode="educator"
-                            lesson={selectedLessonData}
-                            assets={assets[selectedLessonId] || []}
-                            videoQuestions={lessonVideoQuestions}
-                            interactiveItems={lessonInteractiveItems}
-                            h5pContents={lessonH5PContents}
-                            hasQuiz={!!lessons.find(l => l.id === selectedLessonId)?.has_quiz}
-                            lessonId={selectedLessonId}
-                            educatorProps={{
-                              onEditLesson: () => openEditLesson(selectedLessonId),
-                              onEditQuiz: () => {
-                                const lesson = lessons.find(l => l.id === selectedLessonId);
-                                if (lesson?.has_quiz) {
-                                  openEditQuiz(selectedLessonId);
-                                } else {
-                                  openNewQuiz(selectedLessonId);
-                                }
-                              },
-                              onRemoveQuiz: () => setConfirmDeleteQuizLessonId(selectedLessonId),
-                              onUploadPdf: (file) => handlePdfUpload(selectedLessonId, file),
-                              uploadingPdfFor,
-                              onDeleteAsset: (assetId) => handleDeleteAsset(assetId, selectedLessonId),
-                            }}
-                          />
-                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">{selectedLessonData.title}</h3>
                       </div>
-                    ) : (
-                      <div className="text-center py-20 text-gray-500">Failed to load lesson details</div>
-                    )}
-                  </motion.div>
-                ) : (
-                  /* ── Grid View ── */
-                  <motion.div
-                    key="grid"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex-1 min-w-0"
-                  >
-                    {/* Stats */}
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      <Card className="p-4 border border-gray-200">
-                        <p className="text-sm text-gray-600">Total Lessons</p>
-                        <p className="text-3xl font-bold text-gray-900">{lessons.length}</p>
-                      </Card>
-                      <Card className="p-4 border border-gray-200">
-                        <p className="text-sm text-gray-600">With Quizzes</p>
-                        <p className="text-3xl font-bold text-gray-900">{lessons.filter((l) => l.has_quiz).length}</p>
-                      </Card>
-                      <Card className="p-4 border border-gray-200">
-                        <p className="text-sm text-gray-600">Published</p>
-                        <p className="text-3xl font-bold text-gray-900">{lessons.filter((l) => l.status === 'published').length}</p>
-                      </Card>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button variant="outline" size="sm" onClick={() => handleDuplicateLesson(selectedLessonId)} className="h-9 px-3">
+                          <Copy className="w-4 h-4 mr-2" /> Duplicate
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => openEditLesson(selectedLessonId)} className="h-9 px-3">
+                          <Edit className="w-4 h-4 mr-2" /> Edit
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteLessonId(selectedLessonId)} className="h-9 w-9 p-0 text-red-600 hover:bg-red-50">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
-                    {/* Lessons Grid */}
-                    {lessons.length > 0 ? (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {lessons.map((lesson) => (
-                          <motion.div
-                            key={lesson.id}
-                            layout
-                            initial={{ opacity: 0, scale: 0.97 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.15, ease: 'easeOut' }}
-                            onClick={() => setSelectedLessonId(lesson.id)}
-                            className="cursor-pointer"
-                          >
-                            <LessonCard lesson={lesson} assets={assets[lesson.id] || []}
-                              onEdit={() => openEditLesson(lesson.id)}
-                              onDelete={() => setConfirmDeleteLessonId(lesson.id)}
-                              onMoveUp={() => moveLesson(lesson.id, 'up')} onMoveDown={() => moveLesson(lesson.id, 'down')}
-                              onPdfUpload={(file) => handlePdfUpload(lesson.id, file)}
-                              onQuizEdit={() => openEditQuiz(lesson.id)}
-                              onQuizAdd={() => openNewQuiz(lesson.id)} uploadingPdfFor={uploadingPdfFor}
-                              isFirst={lesson.sequence_order === 1} isLast={lesson.sequence_order === lessons.length} />
-                          </motion.div>
-                        ))}
-                      </div>
-                    ) : (
-                      <Card className="p-12 border-2 border-dashed border-gray-300 text-center">
-                        <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No lessons yet</h3>
-                        <p className="text-gray-500 mb-4">Start building your course by adding lessons</p>
-                        <Button onClick={openNewLesson} className="bg-blue-600 hover:bg-blue-700 text-white">
-                          <Plus className="w-4 h-4 mr-2" /> Add Your First Lesson
-                        </Button>
-                      </Card>
-                    )}
-                  </motion.div>
+                    <div className="px-8 py-6 space-y-5">
+                      <LessonRenderer
+                        mode="educator"
+                        lesson={selectedLessonData}
+                        assets={assets[selectedLessonId] || []}
+                        videoQuestions={lessonVideoQuestions}
+                        interactiveItems={lessonInteractiveItems}
+                        h5pContents={lessonH5PContents}
+                        hasQuiz={!!lessons.find(l => l.id === selectedLessonId)?.has_quiz}
+                        lessonId={selectedLessonId}
+                        educatorProps={{
+                          onEditLesson: () => openEditLesson(selectedLessonId),
+                          onEditQuiz: () => {
+                            const lesson = lessons.find(l => l.id === selectedLessonId);
+                            if (lesson?.has_quiz) {
+                              openEditQuiz(selectedLessonId);
+                            } else {
+                              openNewQuiz(selectedLessonId);
+                            }
+                          },
+                          onRemoveQuiz: () => setConfirmDeleteQuizLessonId(selectedLessonId),
+                          onUploadAsset: (file) => handleAssetUpload(selectedLessonId, file),
+                          onAddLinkAsset: (url, title) => handleAddLinkAsset(selectedLessonId, url, title),
+                          uploadingAssetFor: uploadingPdfFor,
+                          onDeleteAsset: (assetId) => handleDeleteAsset(assetId, selectedLessonId),
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-20 text-gray-500">Failed to load lesson details</div>
                 )}
-              </AnimatePresence>
-            </div>
+              </div>
+            ) : (
+              <CurriculumManager
+                lessons={lessons}
+                onReorderLessons={(newOrderIds) => {
+                  const newOrderLessons = newOrderIds.map(id => lessons.find(l => l.id === id)!).filter(Boolean);
+                  setLessons(newOrderLessons);
+                  const promises = newOrderLessons.map((l, i) =>
+                    updateLesson(l.id, { sequence_order: i + 1 } as Partial<LessonFields>).catch(() => {})
+                  );
+                  Promise.all(promises).then(() => toast.success('Lesson order updated'));
+                }}
+                onSelectLesson={setSelectedLessonId}
+                onAddLesson={openNewLesson}
+                onEditLesson={openEditLesson}
+                onDuplicateLesson={handleDuplicateLesson}
+                onDeleteLesson={setConfirmDeleteLessonId}
+              />
+            )}
           </div>
         )}
 
@@ -993,6 +874,11 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
               </div>
             </div>
           </div>
+        )}
+
+        {/* ─── Admin Tab ────────────────────────────────────────────── */}
+        {activeTab === 'admin' && mode === 'admin' && (
+          <AdminCourseSettingsTab courseId={courseId} initialCourse={course} onUpdate={load} />
         )}
       </div>
 
@@ -1155,6 +1041,7 @@ export default function CourseWorkspace({ courseId, onBack }: CourseWorkspacePro
         }}
         checks={[
           { id: 'title', label: 'Course Title', status: course.title?.trim() ? 'pass' : 'fail', message: course.title?.trim() ? `Course title set: "${course.title}"` : 'Course title is required' },
+
           { id: 'description', label: 'Course Description', status: course.description?.trim() ? 'pass' : 'warning', message: course.description?.trim() ? 'Course description provided' : 'Consider adding a course description' },
           { id: 'lessons', label: 'Lessons', status: lessons.length > 0 ? 'pass' : 'fail', message: lessons.length > 0 ? `${lessons.length} lesson(s) created` : 'At least one lesson is required' },
           { id: 'published_lessons', label: 'Published Lessons', status: lessons.every(l => l.status === 'published') ? 'pass' : lessons.some(l => l.status === 'published') ? 'warning' : 'fail', message: lessons.every(l => l.status === 'published') ? `All ${lessons.length} lessons published` : lessons.some(l => l.status === 'published') ? `${lessons.filter(l => l.status === 'published').length} of ${lessons.length} lessons published` : 'No lessons published yet' },

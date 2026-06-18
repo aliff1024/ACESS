@@ -6,6 +6,7 @@ export const en: Record<string, string> = {
   'nav.favourites': 'Favourites',
   'nav.progress': 'Progress',
   'nav.certificates': 'Certificates',
+  'nav.achievements': 'Achievements',
   'nav.accessibility': 'Accessibility',
 
   'topbar.dashboard': 'Learner Dashboard',

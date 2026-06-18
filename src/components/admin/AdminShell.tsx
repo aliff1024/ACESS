@@ -95,25 +95,29 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <aside className="w-64 bg-gray-900 min-h-screen flex flex-col flex-shrink-0">
-        <div className="p-6">
+      <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col flex-shrink-0 shadow-xl z-20">
+        <div className="p-6 border-b border-gray-800 dark">
           <Logo href="/admin" size="md" showSubtitle subtitle="Admin Portal" />
         </div>
-        <nav className="flex-1 px-4 space-y-1">
+        <nav className="flex-1 px-4 py-4 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeView === item.id;
             return (
               <button key={item.id} onClick={() => handleNavigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800'}`}>
-                <Icon className="w-5 h-5" />
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium ${
+                  isActive 
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/50' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800 hover:ring-1 hover:ring-white/5'
+                }`}>
+                <Icon className="w-5 h-5 shrink-0" />
                 <span>{item.label}</span>
               </button>
             );
           })}
         </nav>
         <div className="p-4 border-t border-gray-800">
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-gray-800 transition-colors">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-red-500/10 hover:text-red-400 hover:ring-1 hover:ring-red-500/20 transition-all duration-300 font-medium text-sm">
             <LogOut className="w-5 h-5" />
             <span>Logout</span>
           </button>

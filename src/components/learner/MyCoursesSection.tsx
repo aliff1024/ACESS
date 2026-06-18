@@ -1,10 +1,10 @@
 'use client';
 
-import { Card } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
-import { BookOpen, Clock, Loader2, Shield, Crown, Star } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { BookOpen, Clock, Loader2, PlayCircle, Star, Sparkles } from 'lucide-react';
 import { fetchEnrolledCourses } from '@/lib/learner-api';
 import type { EnrolledCourse } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
@@ -26,120 +26,115 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
       .finally(() => setLoading(false));
   }, []);
 
+  const gradients = [
+    'from-blue-500 to-indigo-600',
+    'from-purple-500 to-pink-600',
+    'from-emerald-400 to-teal-500',
+    'from-orange-400 to-rose-500',
+    'from-cyan-400 to-blue-500'
+  ];
+
   if (loading) {
     return (
-      <div>
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('myCourses.title')}</h2>
-          <p className="text-gray-600">{t('myCourses.description')}</p>
-        </div>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+      <div className="py-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('myCourses.title')}</h2>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="py-2">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('myCourses.title')}</h2>
-          <p className="text-gray-600">{t('myCourses.description')}</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+            <BookOpen className="w-6 h-6 text-blue-500" /> {t('myCourses.title')}
+          </h2>
+          <p className="text-gray-500 font-medium">Jump right back into your active learning paths.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {courses.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-500">
-            <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-lg font-semibold text-gray-700 mb-1">{t('myCourses.empty')}</p>
+          <Card className="col-span-full p-16 border-dashed border-2 border-gray-200 bg-gray-50/50 rounded-3xl text-center">
+            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{t('myCourses.empty')}</h3>
             <p className="text-gray-500">{t('myCourses.emptyDesc')}</p>
-          </div>
+          </Card>
         ) : (
-            courses.map((course) => {
+          courses.map((course, index) => {
             const isSys = course.system_course;
+            const gradient = gradients[index % gradients.length];
+            
             return (
-            <Card
-              key={course.id}
-              className={`p-6 rounded-2xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden ${
-                isSys
-                  ? 'border-indigo-300 hover:border-indigo-400 hover:shadow-xl bg-gradient-to-br from-white to-indigo-50/40'
-                  : 'border-gray-200 hover:border-blue-300 hover:shadow-lg'
-              }`}
-            >
-              {isSys && (
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-              )}
-              <div className="mb-4">
-                {course.thumbnail_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={course.thumbnail_url} alt={course.title} className="w-full h-32 object-cover rounded-lg mb-4" />
-                ) : (
-                  <div className={`w-full h-32 rounded-lg mb-4 flex items-center justify-center ${
-                    isSys ? 'bg-gradient-to-br from-indigo-100 to-purple-100' : 'bg-blue-100'
-                  }`}>
-                    {isSys ? <Crown className="w-12 h-12 text-indigo-600" /> : <BookOpen className="w-12 h-12 text-blue-600" />}
-                  </div>
-                )}
-
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 leading-snug flex items-center gap-2 flex-wrap">
-                  {course.title}
-                  {isSys && (
-                    <Badge className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs flex items-center gap-1 shadow-sm">
-                      <Star className="w-3 h-3" /> Featured
-                    </Badge>
-                  )}
-                  {isSys && course.guided_learning_enabled && (
-                    <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
-                      Guided
-                    </Badge>
-                  )}
-                </h3>
-
-                <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                  <span>{course.completed_lessons}/{course.total_lessons} {t('myCourses.lessons')}</span>
-                  {course.total_lessons > 0 && (
-                    <>
-                      <span>&bull;</span>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>
-                          {course.total_lessons - course.completed_lessons} {t('myCourses.remaining')}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-auto">
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">{t('course.progress')}</span>
-                    <span className={`text-sm font-semibold ${isSys ? 'text-indigo-700' : 'text-gray-900'}`}>
-                      {course.progress}%
-                    </span>
-                  </div>
-                  <Progress
-                    value={course.progress}
-                    className={`h-2 ${isSys ? 'bg-indigo-100' : ''}`}
-                  />
-                </div>
-
-                <Button
-                  onClick={() => onContinue(course.id)}
-                  className={`w-full text-white ${
-                    isSys
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
+              <Card
+                key={course.id}
+                className="border-0 shadow-sm ring-1 ring-gray-200 bg-white rounded-2xl overflow-hidden hover:shadow-xl hover:ring-blue-300 transition-all group flex flex-col h-full"
+              >
+                {/* Course Banner */}
+                <div 
+                  className={`h-32 bg-cover bg-center relative ${!course.thumbnail_url ? `bg-gradient-to-r ${gradient}` : ''}`}
+                  style={course.thumbnail_url ? { backgroundImage: `url(${course.thumbnail_url})` } : {}}
                 >
-                  {isSys ? 'Continue Learning' : t('course.continue')}
-                </Button>
-              </div>
-            </Card>
-          )})
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+                  <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                    {isSys && (
+                      <Badge className="bg-white/90 text-indigo-700 backdrop-blur-md border-0 shadow-sm font-semibold flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-indigo-700" /> Featured
+                      </Badge>
+                    )}
+                    {isSys && course.guided_learning_enabled && (
+                      <Badge className="bg-amber-100 text-amber-800 border-0 shadow-sm font-semibold flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> Guided
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-5 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                    {course.title}
+                  </h3>
+
+                  <div className="flex items-center gap-4 text-xs font-medium text-gray-500 mb-5 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                    <span className="flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5 text-blue-500" /> {course.completed_lessons}/{course.total_lessons} Done
+                    </span>
+                    {course.total_lessons > 0 && course.completed_lessons < course.total_lessons && (
+                      <>
+                        <div className="w-px h-3 bg-gray-300" />
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-orange-500" /> {course.total_lessons - course.completed_lessons} Left
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-auto">
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="text-sm font-medium text-gray-600">Progress</span>
+                      <span className="text-sm font-bold text-gray-900">{course.progress}%</span>
+                    </div>
+                    <Progress
+                      value={course.progress}
+                      className="h-2.5 bg-gray-100 mb-5 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-indigo-500"
+                    />
+
+                    <Button
+                      onClick={() => onContinue(course.id)}
+                      className="w-full h-11 bg-gray-900 hover:bg-blue-600 text-white font-medium shadow-md hover:shadow-lg transition-all group-hover:-translate-y-0.5"
+                    >
+                      <PlayCircle className="w-4 h-4 mr-2" />
+                      {course.progress === 100 ? 'Review Course' : 'Continue Learning'}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>
