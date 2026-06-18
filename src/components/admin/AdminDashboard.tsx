@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Users, BookOpen, Award, Activity, TrendingUp, ArrowRight, Loader2, School, BarChart3, PieChart, CheckCircle } from 'lucide-react';
-import { fetchAdminDashboardStats, fetchRecentActivity, getInstructorApplicationStats } from '@/lib/admin-api';
-import type { AdminDashboardStats, RecentActivity } from '@/lib/admin-api';
+import { fetchAdminDashboardStats, fetchRecentActivity, getInstructorApplicationStats, fetchAdminEngagementData } from '@/lib/admin-api';
+import type { AdminDashboardStats, RecentActivity, EngagementData } from '@/lib/admin-api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 interface AdminDashboardProps {
@@ -14,13 +14,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [instructorStats, setInstructorStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const id = setInterval(() => { setNow(Date.now()); }, 60000);
-    Promise.all([fetchAdminDashboardStats(), fetchRecentActivity(), getInstructorApplicationStats()])
-      .then(([s, a, i]) => { setStats(s); setActivities(a); setInstructorStats(i); })
+    Promise.all([fetchAdminDashboardStats(), fetchRecentActivity(), getInstructorApplicationStats(), fetchAdminEngagementData()])
+      .then(([s, a, i, e]) => { setStats(s); setActivities(a); setInstructorStats(i); setEngagementData(e.reverse()); })
       .catch(console.error)
       .finally(() => setLoading(false));
     return () => clearInterval(id);

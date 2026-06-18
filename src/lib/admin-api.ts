@@ -291,6 +291,81 @@ export interface ReportDefinition {
   data: Record<string, unknown>[]
 }
 
+export interface EngagementData {
+  name: string
+  users: number
+  views: number
+}
+
+export async function fetchAdminEngagementData(): Promise<EngagementData[]> {
+  const now = new Date()
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  
+  const last7Days: { date: Date; name: string; users: Set<string>; views: number }[] = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - i)
+    d.setHours(0, 0, 0, 0)
+    last7Days.push({
+      date: d,
+      name: days[d.getDay()],
+      users: new Set<string>(),
+      views: 0
+    })
+  }
+
+  const sevenDaysAgo = new Date(now)
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString()
+
+  const [lpRes, qaRes] = await Promise.all([
+    supabase.from('lesson_progress')
+      .select('enrollment_id, last_viewed_at')
+      .gte('last_viewed_at', sevenDaysAgoStr),
+    supabase.from('quiz_attempts')
+      .select('enrollment_id, submitted_at')
+      .gte('submitted_at', sevenDaysAgoStr)
+  ])
+
+  if (lpRes.data) {
+    for (const lp of lpRes.data) {
+      if (!lp.last_viewed_at) continue
+      const date = new Date(lp.last_viewed_at)
+      const dayIndex = last7Days.findIndex(d => 
+        date.getFullYear() === d.date.getFullYear() &&
+        date.getMonth() === d.date.getMonth() &&
+        date.getDate() === d.date.getDate()
+      )
+      if (dayIndex !== -1) {
+        last7Days[dayIndex].views++
+        if (lp.enrollment_id) last7Days[dayIndex].users.add(lp.enrollment_id)
+      }
+    }
+  }
+
+  if (qaRes.data) {
+    for (const qa of qaRes.data) {
+      if (!qa.submitted_at) continue
+      const date = new Date(qa.submitted_at)
+      const dayIndex = last7Days.findIndex(d => 
+        date.getFullYear() === d.date.getFullYear() &&
+        date.getMonth() === d.date.getMonth() &&
+        date.getDate() === d.date.getDate()
+      )
+      if (dayIndex !== -1) {
+        last7Days[dayIndex].views++
+        if (qa.enrollment_id) last7Days[dayIndex].users.add(qa.enrollment_id)
+      }
+    }
+  }
+
+  return last7Days.map(d => ({
+    name: d.name,
+    users: d.users.size,
+    views: d.views
+  }))
+}
+
 // ─── Dashboard Stats ─────────────────────────────────────────────────
 
 export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {

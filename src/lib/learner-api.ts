@@ -75,6 +75,7 @@ export interface LessonSummary {
   title: string
   sequence_order: number
   status: 'completed' | 'current' | 'locked'
+  estimated_duration?: number | null
 }
 
 export interface LessonContent {
@@ -1639,6 +1640,26 @@ export interface AccessibilitySettingsData {
   preferred_content_format?: string | null
   tts_rate?: number | null
   tts_voice_uri?: string | null
+  // ─── Accessibility Presets (new granular fields) ──────────────
+  active_preset?: string | null
+  font_family?: string | null
+  font_size_px?: number | null
+  line_spacing_multiplier?: number | null
+  word_spacing_pct?: number | null
+  background_tint?: string | null
+  reading_spotlight?: boolean | null
+  distraction_free_mode?: boolean | null
+  chunked_content_mode?: boolean | null
+  animation_level?: string | null
+  high_contrast?: boolean | null
+  low_contrast?: boolean | null
+  muted_colors?: boolean | null
+  // ─── Executive Function Supports ─────────────────────────────
+  task_checklist_enabled?: boolean | null
+  visual_schedule_enabled?: boolean | null
+  step_by_step_enabled?: boolean | null
+  auto_save_enabled?: boolean | null
+  progress_timeline_enabled?: boolean | null
 }
 
 export interface NotificationSettingsData {
@@ -1708,6 +1729,25 @@ export async function fetchFullProfile(): Promise<FullProfile> {
       preferred_content_format: a.preferred_content_format,
       tts_rate: a.tts_rate ?? 1,
       tts_voice_uri: a.tts_voice_uri ?? null,
+      // Accessibility Presets fields
+      active_preset: a.active_preset ?? 'none',
+      font_family: a.font_family ?? 'arial',
+      font_size_px: a.font_size_px ?? 16,
+      line_spacing_multiplier: a.line_spacing_multiplier ?? 1.5,
+      word_spacing_pct: a.word_spacing_pct ?? 0,
+      background_tint: a.background_tint ?? 'white',
+      reading_spotlight: a.reading_spotlight ?? false,
+      distraction_free_mode: a.distraction_free_mode ?? false,
+      chunked_content_mode: a.chunked_content_mode ?? false,
+      animation_level: a.animation_level ?? 'normal',
+      high_contrast: a.high_contrast ?? false,
+      low_contrast: a.low_contrast ?? false,
+      muted_colors: a.muted_colors ?? false,
+      task_checklist_enabled: a.task_checklist_enabled ?? false,
+      visual_schedule_enabled: a.visual_schedule_enabled ?? false,
+      step_by_step_enabled: a.step_by_step_enabled ?? false,
+      auto_save_enabled: a.auto_save_enabled ?? true,
+      progress_timeline_enabled: a.progress_timeline_enabled ?? false,
     } : null,
     notifications: n ? {
       email_notifications: n.email_notifications,

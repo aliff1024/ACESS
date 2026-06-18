@@ -139,6 +139,115 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ─── Preset: Dyslexia (Cream, Soft Yellow, Low-Glare, High Spacing) ─── */
+html[data-preset="dyslexia"] {
+  --background: oklch(0.97 0.02 90); /* Cream */
+  --foreground: oklch(0.20 0 0); /* Dark grey for high readability */
+  --card: oklch(0.99 0.01 90); /* Slightly lighter cream */
+  --card-foreground: oklch(0.20 0 0);
+  --popover: oklch(0.99 0.01 90);
+  --popover-foreground: oklch(0.20 0 0);
+  --primary: oklch(0.40 0.1 260); /* Muted legible blue */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.93 0.02 85); /* Deeper cream */
+  --secondary-foreground: oklch(0.25 0 0);
+  --muted: oklch(0.93 0.02 85);
+  --muted-foreground: oklch(0.45 0 0);
+  --border: oklch(0.85 0.02 90);
+  --input: oklch(0.85 0.02 90);
+  --sidebar: oklch(0.95 0.02 90); /* Creamy sidebar */
+  --sidebar-foreground: oklch(0.20 0 0);
+  --sidebar-primary: oklch(0.40 0.1 260);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.90 0.02 85);
+  --sidebar-accent-foreground: oklch(0.20 0 0);
+  --sidebar-border: oklch(0.85 0.02 90);
+}
+html[data-preset="dyslexia"] body {
+  letter-spacing: 0.1em !important;
+  word-spacing: 0.2em !important;
+}
+
+/* ─── Preset: ADHD (Soft Grey, Distraction-Free, Focus-First) ─── */
+html[data-preset="adhd"] {
+  --background: oklch(0.95 0 0); /* Soft Grey */
+  --foreground: oklch(0.25 0 0);
+  --card: oklch(0.98 0 0);
+  --card-foreground: oklch(0.25 0 0);
+  --popover: oklch(0.98 0 0);
+  --popover-foreground: oklch(0.25 0 0);
+  --primary: oklch(0.60 0.15 250); /* Bright blue to direct focus */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.90 0 0);
+  --secondary-foreground: oklch(0.30 0 0);
+  --muted: oklch(0.90 0 0);
+  --muted-foreground: oklch(0.50 0 0);
+  --border: oklch(0.85 0 0);
+  --input: oklch(0.85 0 0);
+  --sidebar: oklch(0.92 0 0); /* Distinct grey sidebar */
+  --sidebar-foreground: oklch(0.25 0 0);
+  --sidebar-primary: oklch(0.60 0.15 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.88 0 0);
+  --sidebar-accent-foreground: oklch(0.20 0 0);
+  --sidebar-border: oklch(0.85 0 0);
+}
+
+/* ─── Preset: Autism (Muted Colors, Soft Blue, Predictable) ─── */
+html[data-preset="autism"] {
+  --background: oklch(0.95 0.02 240); /* Soft Blue */
+  --foreground: oklch(0.30 0.02 240);
+  --card: oklch(0.98 0.01 240);
+  --card-foreground: oklch(0.30 0.02 240);
+  --popover: oklch(0.98 0.01 240);
+  --popover-foreground: oklch(0.30 0.02 240);
+  --primary: oklch(0.50 0.05 240); /* Low contrast blue */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.90 0.02 240);
+  --secondary-foreground: oklch(0.35 0.02 240);
+  --muted: oklch(0.90 0.02 240);
+  --muted-foreground: oklch(0.55 0.02 240);
+  --border: oklch(0.85 0.02 240);
+  --input: oklch(0.85 0.02 240);
+  --sidebar: oklch(0.93 0.02 240); /* Soft blue sidebar */
+  --sidebar-foreground: oklch(0.30 0.02 240);
+  --sidebar-primary: oklch(0.50 0.05 240);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.88 0.02 240);
+  --sidebar-accent-foreground: oklch(0.25 0.02 240);
+  --sidebar-border: oklch(0.85 0.02 240);
+}
+html[data-preset="autism"] *, html[data-preset="autism"] *::before, html[data-preset="autism"] *::after {
+  /* Strongly enforce reduced motion globally */
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* ─── Preset: Dyscalculia (Soft Green, High Contrast Values) ─── */
+html[data-preset="dyscalculia"] {
+  --background: oklch(0.95 0.02 150); /* Soft Green */
+  --foreground: oklch(0.25 0.02 150);
+  --card: oklch(0.98 0.01 150);
+  --card-foreground: oklch(0.25 0.02 150);
+  --popover: oklch(0.98 0.01 150);
+  --popover-foreground: oklch(0.25 0.02 150);
+  --primary: oklch(0.45 0.1 150); /* Distinct green */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.90 0.02 150);
+  --secondary-foreground: oklch(0.30 0.02 150);
+  --muted: oklch(0.90 0.02 150);
+  --muted-foreground: oklch(0.50 0.02 150);
+  --border: oklch(0.85 0.02 150);
+  --input: oklch(0.85 0.02 150);
+  --sidebar: oklch(0.93 0.02 150);
+  --sidebar-foreground: oklch(0.25 0.02 150);
+  --sidebar-primary: oklch(0.45 0.1 150);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.88 0.02 150);
+  --sidebar-accent-foreground: oklch(0.20 0.02 150);
+  --sidebar-border: oklch(0.85 0.02 150);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -324,6 +433,107 @@ html[data-screen-reader="true"] #lesson-main-content {
   border-radius: 0.5rem;
   text-decoration: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Accessibility Presets: Font Families ────────────────────────────── */
+html[data-font-family="arial"] body { font-family: Arial, Helvetica, sans-serif !important; }
+html[data-font-family="verdana"] body { font-family: Verdana, Geneva, sans-serif !important; }
+html[data-font-family="calibri"] body { font-family: Calibri, 'Gill Sans', sans-serif !important; }
+html[data-font-family="atkinson_hyperlegible"] body { font-family: 'Atkinson Hyperlegible', sans-serif !important; }
+html[data-font-family="opendyslexic"] body {
+  font-family: 'OpenDyslexic', sans-serif !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* ─── Accessibility Presets: Continuous Font Size (via CSS variable) ──── */
+html[data-font-family] {
+  font-size: var(--user-font-size, 16px);
+}
+
+/* ─── Accessibility Presets: Continuous Line Spacing (via CSS variable) ─ */
+html[data-font-family] body {
+  line-height: var(--user-line-spacing, 1.5);
+}
+
+/* ─── Accessibility Presets: Word Spacing (via CSS variable) ─────────── */
+html[data-font-family] body {
+  word-spacing: var(--user-word-spacing, 0em);
+}
+
+/* ─── Accessibility Presets: Background Tints ────────────────────────── */
+html[data-bg-tint="cream"] { --background: #FDF6E2; --card: #FFFDF7; --popover: #FFFDF7; }
+html[data-bg-tint="pale_blue"] { --background: #EBF4FA; --card: #F5FAFD; --popover: #F5FAFD; }
+html[data-bg-tint="soft_green"] { --background: #F0F7F0; --card: #F7FBF7; --popover: #F7FBF7; }
+html[data-bg-tint="grey"] { --background: #F0F0F0; --card: #F7F7F7; --popover: #F7F7F7; }
+
+/* ─── Accessibility Presets: Reading Spotlight ────────────────────────── */
+html[data-reading-spotlight="true"] .lesson-paragraph,
+html[data-reading-spotlight="true"] .lesson-content > p,
+html[data-reading-spotlight="true"] .lesson-content > div,
+html[data-reading-spotlight="true"] .lesson-content > section {
+  opacity: 0.35;
+  filter: blur(0.3px);
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+html[data-reading-spotlight="true"] .lesson-paragraph.spotlight-active,
+html[data-reading-spotlight="true"] .lesson-paragraph:hover,
+html[data-reading-spotlight="true"] .lesson-content > p.spotlight-active,
+html[data-reading-spotlight="true"] .lesson-content > p:hover,
+html[data-reading-spotlight="true"] .lesson-content > div.spotlight-active,
+html[data-reading-spotlight="true"] .lesson-content > div:hover,
+html[data-reading-spotlight="true"] .lesson-content > section.spotlight-active,
+html[data-reading-spotlight="true"] .lesson-content > section:hover {
+  opacity: 1;
+  filter: none;
+  background: rgba(255, 255, 200, 0.08);
+  border-radius: 0.25rem;
+}
+
+/* ─── Accessibility Presets: Distraction-Free Mode ───────────────────── */
+html[data-distraction-free="true"] .sidebar,
+html[data-distraction-free="true"] .app-sidebar,
+html[data-distraction-free="true"] [data-sidebar],
+html[data-distraction-free="true"] .widget-panel,
+html[data-distraction-free="true"] [data-notification-badge],
+html[data-distraction-free="true"] .notification-popover,
+html[data-distraction-free="true"] .decorative-banner {
+  display: none !important;
+}
+html[data-distraction-free="true"] main,
+html[data-distraction-free="true"] .lesson-content-area {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ─── Accessibility Presets: Animation Levels ────────────────────────── */
+html[data-animation-level="none"] *,
+html[data-animation-level="none"] *::before,
+html[data-animation-level="none"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-animation-level="low"] *,
+html[data-animation-level="low"] *::before,
+html[data-animation-level="low"] *::after {
+  animation-duration: 100ms !important;
+  transition-duration: 100ms !important;
+}
+
+/* ─── Accessibility Presets: Low Contrast ────────────────────────────── */
+html[data-low-contrast="true"] {
+  filter: contrast(0.85);
+}
+
+/* ─── Accessibility Presets: Muted Colors ────────────────────────────── */
+html[data-muted-colors="true"] {
+  filter: saturate(0.6);
+}
+/* When both are active, combine the filters */
+html[data-low-contrast="true"][data-muted-colors="true"] {
+  filter: contrast(0.85) saturate(0.6);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

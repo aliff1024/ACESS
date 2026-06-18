@@ -6,11 +6,30 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Sparkles, ArrowRight } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, ArrowLeft, BookOpen, Target, Zap, Calculator, Check } from 'lucide-react';
 import { fetchFullProfile, saveUserProfile, saveAccessibilitySettings } from '@/lib/learner-api';
 import type { AccessibilitySettingsData } from '@/lib/learner-api';
-import { mergeEasyReadSettings, shouldAutoEnableEasyRead } from '@/lib/accessibility-utils';
+import { PresetCard } from '@/components/accessibility/PresetCard';
+import { SliderSetting } from '@/components/accessibility/SliderSetting';
+import { TintPicker } from '@/components/accessibility/TintPicker';
+import { SettingsPreview } from '@/components/accessibility/SettingsPreview';
+import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, applyPreset as buildPresetSettings } from '@/lib/adaptive-engine';
+import { FONT_FAMILIES, ANIMATION_LEVELS, fontSizePxToEnum, lineSpacingMultiplierToEnum } from '@/lib/accessibility-utils';
 import { toast } from 'sonner';
+
+const PRESET_ICONS: Record<string, React.ReactNode> = {
+  dyslexia: <BookOpen className="w-5 h-5" />,
+  adhd: <Target className="w-5 h-5" />,
+  autism: <Zap className="w-5 h-5" />,
+  dyscalculia: <Calculator className="w-5 h-5" />,
+};
+
+const STEP_LABELS = [
+  'Choose Preset',
+  'Reading',
+  'Focus & Sensory',
+  'Review',
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -19,34 +38,51 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false);
   const [existingProfile, setExistingProfile] = useState(false);
 
-  // Form fields
-  const [disabilityType, setDisabilityType] = useState('');
-  const [preferredFontSize, setPreferredFontSize] = useState('medium');
-  const [preferredTheme, setPreferredTheme] = useState('light');
-  const [lineSpacing, setLineSpacing] = useState('normal');
-  const [ttsEnabled, setTtsEnabled] = useState(false);
-  const [easyReadEnabled, setEasyReadEnabled] = useState(false);
-  const [dyslexiaFriendlyFont, setDyslexiaFriendlyFont] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [preferredReadingLevel, setPreferredReadingLevel] = useState('');
-  const [preferredContentFormat, setPreferredContentFormat] = useState('');
+  // ─── Preset selection ──────────────────────────────────────────────
+  const [activePreset, setActivePreset] = useState('none');
 
+  // ─── Reading Preferences ──────────────────────────────────────────
+  const [fontFamily, setFontFamily] = useState('arial');
+  const [fontSizePx, setFontSizePx] = useState(16);
+  const [lineSpacingMultiplier, setLineSpacingMultiplier] = useState(1.5);
+  const [wordSpacingPct, setWordSpacingPct] = useState(0);
+  const [backgroundTint, setBackgroundTint] = useState('white');
+
+  // ─── Focus Preferences ────────────────────────────────────────────
+  const [readingSpotlight, setReadingSpotlight] = useState(false);
+  const [distractionFreeMode, setDistractionFreeMode] = useState(false);
+  const [chunkedContentMode, setChunkedContentMode] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  // ─── Sensory Preferences ──────────────────────────────────────────
+  const [preferredTheme, setPreferredTheme] = useState('light');
+  const [animationLevel, setAnimationLevel] = useState('normal');
+  const [mutedColors, setMutedColors] = useState(false);
+
+  // ─── Assistive Technology ─────────────────────────────────────────
+  const [ttsEnabled, setTtsEnabled] = useState(false);
+
+  // ─── Load existing profile ────────────────────────────────────────
   useEffect(() => {
     fetchFullProfile()
       .then((profile) => {
         if (profile.accessibility) {
           const a = profile.accessibility;
-          setDisabilityType(a.disability_type || '');
-          setPreferredFontSize(a.preferred_font_size || 'medium');
-          setPreferredTheme(a.preferred_theme || 'light');
-          setLineSpacing(a.line_spacing || 'normal');
-          setTtsEnabled(a.tts_enabled ?? false);
-          setEasyReadEnabled(a.simplified_ui ?? false);
-          setDyslexiaFriendlyFont(a.dyslexia_friendly_font ?? false);
+          setActivePreset(a.active_preset || 'none');
+          setFontFamily(a.font_family || 'arial');
+          setFontSizePx(a.font_size_px ?? 16);
+          setLineSpacingMultiplier(a.line_spacing_multiplier ?? 1.5);
+          setWordSpacingPct(a.word_spacing_pct ?? 0);
+          setBackgroundTint(a.background_tint || 'white');
+          setReadingSpotlight(a.reading_spotlight ?? false);
+          setDistractionFreeMode(a.distraction_free_mode ?? false);
+          setChunkedContentMode(a.chunked_content_mode ?? false);
           setReducedMotion(a.reduced_motion ?? false);
-          setPreferredReadingLevel(a.preferred_reading_level || '');
-          setPreferredContentFormat(a.preferred_content_format || '');
-          if (a.disability_type || a.preferred_font_size) {
+          setPreferredTheme(a.preferred_theme || 'light');
+          setAnimationLevel(a.animation_level || 'normal');
+          setMutedColors(a.muted_colors ?? false);
+          setTtsEnabled(a.tts_enabled ?? false);
+          if (a.active_preset || a.font_family) {
             setExistingProfile(true);
           }
         }
@@ -55,28 +91,85 @@ export default function OnboardingPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // ─── Preset selection handler ─────────────────────────────────────
+  const handlePresetSelect = (presetId: string) => {
+    setActivePreset(presetId);
+    if (presetId === 'none') {
+      // Reset to defaults
+      const d = DEFAULT_PRESET_SETTINGS;
+      setFontFamily(d.font_family);
+      setFontSizePx(d.font_size_px);
+      setLineSpacingMultiplier(d.line_spacing_multiplier);
+      setWordSpacingPct(d.word_spacing_pct);
+      setBackgroundTint(d.background_tint);
+      setReadingSpotlight(d.reading_spotlight);
+      setDistractionFreeMode(d.distraction_free_mode);
+      setChunkedContentMode(d.chunked_content_mode);
+      setReducedMotion(d.reduced_motion);
+      setAnimationLevel(d.animation_level);
+      setMutedColors(d.muted_colors);
+      setTtsEnabled(d.tts_enabled);
+      setPreferredTheme(d.preferred_theme);
+    } else {
+      const preset = ACCESSIBILITY_PRESETS[presetId];
+      if (preset) {
+        const s = preset.settings;
+        setFontFamily(s.font_family);
+        setFontSizePx(s.font_size_px);
+        setLineSpacingMultiplier(s.line_spacing_multiplier);
+        setWordSpacingPct(s.word_spacing_pct);
+        setBackgroundTint(s.background_tint);
+        setReadingSpotlight(s.reading_spotlight);
+        setDistractionFreeMode(s.distraction_free_mode);
+        setChunkedContentMode(s.chunked_content_mode);
+        setReducedMotion(s.reduced_motion);
+        setAnimationLevel(s.animation_level);
+        setMutedColors(s.muted_colors);
+        setTtsEnabled(s.tts_enabled);
+        setPreferredTheme(s.preferred_theme);
+      }
+    }
+  };
+
+  // ─── Save handler ─────────────────────────────────────────────────
   const handleSave = async () => {
     setSaving(true);
     try {
-      await saveUserProfile({ bio: `Learning preferences: ${disabilityType || 'none'}` });
-      let data: AccessibilitySettingsData = {
-        disability_type: disabilityType || null,
-        preferred_font_size: preferredFontSize,
-        preferred_theme: preferredTheme,
-        line_spacing: lineSpacing,
-        tts_enabled: ttsEnabled,
-        dyslexia_friendly_font: dyslexiaFriendlyFont,
-        preferred_font: dyslexiaFriendlyFont ? 'dyslexia' : 'default',
+      await saveUserProfile({ bio: `Accessibility preset: ${activePreset}` });
+
+      const data: AccessibilitySettingsData = {
+        active_preset: activePreset,
+        // Granular settings
+        font_family: fontFamily,
+        font_size_px: fontSizePx,
+        line_spacing_multiplier: lineSpacingMultiplier,
+        word_spacing_pct: wordSpacingPct,
+        background_tint: backgroundTint,
+        reading_spotlight: readingSpotlight,
+        distraction_free_mode: distractionFreeMode,
+        chunked_content_mode: chunkedContentMode,
         reduced_motion: reducedMotion,
-        preferred_reading_level: preferredReadingLevel || null,
-        preferred_content_format: preferredContentFormat || null,
-        simplified_ui: easyReadEnabled || shouldAutoEnableEasyRead(preferredReadingLevel),
+        animation_level: animationLevel,
+        muted_colors: mutedColors,
+        tts_enabled: ttsEnabled,
+        preferred_theme: preferredTheme,
+        // Legacy field mappings for backward compatibility
+        preferred_font_size: fontSizePxToEnum(fontSizePx),
+        line_spacing: lineSpacingMultiplierToEnum(lineSpacingMultiplier),
+        preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
+        dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
+        high_contrast: preferredTheme === 'high_contrast',
+        simplified_ui: false,
+        // Executive function defaults
+        task_checklist_enabled: ACCESSIBILITY_PRESETS[activePreset]?.settings.task_checklist_enabled ?? false,
+        visual_schedule_enabled: ACCESSIBILITY_PRESETS[activePreset]?.settings.visual_schedule_enabled ?? false,
+        step_by_step_enabled: ACCESSIBILITY_PRESETS[activePreset]?.settings.step_by_step_enabled ?? false,
+        auto_save_enabled: true,
+        progress_timeline_enabled: ACCESSIBILITY_PRESETS[activePreset]?.settings.progress_timeline_enabled ?? false,
       };
-      if (data.simplified_ui) {
-        data = mergeEasyReadSettings(data, true);
-      }
+
       await saveAccessibilitySettings(data);
-      toast.success('Your preferences have been saved!');
+      toast.success('Your accessibility preferences have been saved!');
       router.push('/learner');
     } catch {
       toast.error('Failed to save preferences. Please try again.');
@@ -95,7 +188,8 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full">
+      <div className="max-w-3xl w-full">
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Sparkles className="w-8 h-8 text-blue-600" />
@@ -105,61 +199,76 @@ export default function OnboardingPage() {
           </h1>
           <p className="text-lg text-gray-600">
             {existingProfile
-              ? 'Review and update your accessibility and learning preferences.'
-              : 'Set up your learning experience by telling us about your preferences.'}
+              ? 'Review and update your accessibility preferences.'
+              : 'Customize your learning experience with accessibility presets.'}
           </p>
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>1</div>
-          <div className="w-12 h-1 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}" />
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>2</div>
-          <div className="w-12 h-1 rounded-full ${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'}" />
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>3</div>
+        <div className="flex items-center justify-center gap-1 mb-8">
+          {STEP_LABELS.map((label, i) => {
+            const stepNum = i + 1;
+            const isActive = step === stepNum;
+            const isCompleted = step > stepNum;
+            return (
+              <div key={label} className="flex items-center gap-1">
+                {i > 0 && (
+                  <div className={`w-8 h-0.5 rounded-full ${isCompleted || isActive ? 'bg-blue-600' : 'bg-gray-200'}`} />
+                )}
+                <div className="flex flex-col items-center gap-1">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
+                      isCompleted ? 'bg-blue-600 text-white' : isActive ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
+                  </div>
+                  <span className={`text-xs ${isActive ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>
+                    {label}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
+        {/* Step content */}
         <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-sm">
-          {/* Step 1: Disability & Learning Profile */}
+
+          {/* ═══ Step 1: Choose Preset ═══ */}
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1">Learning Profile</h2>
-                <p className="text-sm text-gray-600">Help us personalize your learning experience</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">Choose an Accessibility Preset</h2>
+                <p className="text-sm text-gray-600">
+                  Select a preset to get started quickly. You can customize every setting in the next steps.
+                </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="disability">Do you have any of the following?</Label>
-                <Select value={disabilityType} onValueChange={setDisabilityType}>
-                  <SelectTrigger id="disability"><SelectValue placeholder="Select if applicable" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No accessibility support required</SelectItem>
-                    <SelectItem value="cognitive_impairment">Cognitive Impairment</SelectItem>
-                    <SelectItem value="adhd">ADHD</SelectItem>
-                    <SelectItem value="dyslexia">Dyslexia</SelectItem>
-                    <SelectItem value="asd">Autism Spectrum Disorder (ASD)</SelectItem>
-                    <SelectItem value="visual_impairment">Visual Impairment</SelectItem>
-                    <SelectItem value="hearing_impairment">Hearing Impairment</SelectItem>
-                    <SelectItem value="motor_impairment">Motor Impairment</SelectItem>
-                    <SelectItem value="multiple_disabilities">Multiple Disabilities</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Preset cards grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <PresetCard
+                  id="none"
+                  label="Start from Default"
+                  goal="Standard settings with no accessibility adjustments"
+                  icon={<Sparkles className="w-5 h-5" />}
+                  features={['Default fonts', 'Standard spacing', 'All animations']}
+                  isSelected={activePreset === 'none'}
+                  onSelect={handlePresetSelect}
+                />
+                {Object.entries(ACCESSIBILITY_PRESETS).map(([id, preset]) => (
+                  <PresetCard
+                    key={id}
+                    id={id}
+                    label={preset.label}
+                    goal={preset.goal}
+                    icon={PRESET_ICONS[id] || <Sparkles className="w-5 h-5" />}
+                    features={preset.additional_features.slice(0, 3)}
+                    isSelected={activePreset === id}
+                    onSelect={handlePresetSelect}
+                  />
+                ))}
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="readingLevel">Preferred Reading Level</Label>
-                <Select value={preferredReadingLevel} onValueChange={setPreferredReadingLevel}>
-                  <SelectTrigger id="readingLevel"><SelectValue placeholder="Select level" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="basic">Basic — simpler language and shorter sentences</SelectItem>
-                    <SelectItem value="standard">Standard — balanced difficulty</SelectItem>
-                    <SelectItem value="advanced">Advanced — more detailed content</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-
 
               <div className="flex justify-end pt-4">
                 <Button onClick={() => setStep(2)} className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -169,77 +278,94 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 2: Display Preferences */}
+          {/* ═══ Step 2: Reading Preferences ═══ */}
           {step === 2 && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1">Display Preferences</h2>
-                <p className="text-sm text-gray-600">Customize how content looks on your screen</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">Reading Preferences</h2>
+                <p className="text-sm text-gray-600">Adjust how text appears on your screen</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Font Size</Label>
-                  <Select value={preferredFontSize} onValueChange={setPreferredFontSize}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">Small</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="large">Large</SelectItem>
-                      <SelectItem value="xlarge">Extra Large</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Theme</Label>
-                  <Select value={preferredTheme} onValueChange={setPreferredTheme}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="high_contrast">High Contrast</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Line Spacing</Label>
-                  <Select value={lineSpacing} onValueChange={setLineSpacing}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="relaxed">Relaxed</SelectItem>
-                      <SelectItem value="loose">Loose</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Font Family */}
+              <div className="border border-gray-200 rounded-xl p-4">
+                <Label className="text-sm font-semibold mb-2 block">Font Family</Label>
+                <Select value={fontFamily} onValueChange={setFontFamily}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FONT_FAMILIES.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Font Size Slider */}
+              <SliderSetting
+                label="Text Size"
+                description="Adjust the size of all text"
+                value={fontSizePx}
+                min={12}
+                max={24}
+                step={1}
+                unit="px"
+                onChange={setFontSizePx}
+              />
+
+              {/* Line Spacing Slider */}
+              <SliderSetting
+                label="Line Spacing"
+                description="Space between lines of text"
+                value={lineSpacingMultiplier}
+                min={1.0}
+                max={2.0}
+                step={0.1}
+                unit="x"
+                onChange={(v) => setLineSpacingMultiplier(Math.round(v * 10) / 10)}
+              />
+
+              {/* Word Spacing Slider */}
+              <SliderSetting
+                label="Word Spacing"
+                description="Extra space between words"
+                value={wordSpacingPct}
+                min={0}
+                max={50}
+                step={5}
+                unit="%"
+                onChange={setWordSpacingPct}
+              />
+
+              {/* Background Tint */}
+              <TintPicker value={backgroundTint} onChange={setBackgroundTint} />
+
+              {/* TTS toggle */}
+              <div className="border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-semibold">Text-to-Speech</Label>
+                    <p className="text-xs text-gray-500">Read lesson content aloud</p>
+                  </div>
+                  <Switch checked={ttsEnabled} onCheckedChange={setTtsEnabled} />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div>
-                  <Label className="font-medium">Easy Read Mode</Label>
-                  <p className="text-sm text-gray-600">Large text, high contrast, simplified layout — saved for every visit</p>
-                </div>
-                <Switch checked={easyReadEnabled} onCheckedChange={setEasyReadEnabled} />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <Label className="font-medium">Dyslexia-Friendly Font</Label>
-                  <p className="text-sm text-gray-600">Use a font designed for easier reading</p>
-                </div>
-                <Switch checked={dyslexiaFriendlyFont} onCheckedChange={setDyslexiaFriendlyFont} />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <Label className="font-medium">Reduced Motion</Label>
-                  <p className="text-sm text-gray-600">Minimize animations and transitions</p>
-                </div>
-                <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
-              </div>
+              {/* Live Preview */}
+              <SettingsPreview
+                fontFamily={fontFamily}
+                fontSizePx={fontSizePx}
+                lineSpacingMultiplier={lineSpacingMultiplier}
+                wordSpacingPct={wordSpacingPct}
+                backgroundTint={backgroundTint}
+              />
 
               <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                </Button>
                 <Button onClick={() => setStep(3)} className="bg-blue-600 hover:bg-blue-700 text-white">
                   Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -247,22 +373,217 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 3: Assistive Technology & Done */}
+          {/* ═══ Step 3: Focus & Sensory ═══ */}
           {step === 3 && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">Focus & Sensory Preferences</h2>
+                <p className="text-sm text-gray-600">Reduce distractions and adjust visual comfort</p>
+              </div>
+
+              {/* Focus toggles */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Focus</h3>
+
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-semibold">Reading Spotlight</Label>
+                      <p className="text-xs text-gray-500">Dim surrounding content to highlight what you&apos;re reading</p>
+                    </div>
+                    <Switch checked={readingSpotlight} onCheckedChange={setReadingSpotlight} />
+                  </div>
+                </div>
+
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-semibold">Distraction-Free Mode</Label>
+                      <p className="text-xs text-gray-500">Hide sidebar, widgets, and notifications</p>
+                    </div>
+                    <Switch checked={distractionFreeMode} onCheckedChange={setDistractionFreeMode} />
+                  </div>
+                </div>
+
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-semibold">Chunked Content</Label>
+                      <p className="text-xs text-gray-500">Show one section at a time instead of all at once</p>
+                    </div>
+                    <Switch checked={chunkedContentMode} onCheckedChange={setChunkedContentMode} />
+                  </div>
+                </div>
+
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-semibold">Reduced Motion</Label>
+                      <p className="text-xs text-gray-500">Minimize all animations and transitions</p>
+                    </div>
+                    <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sensory */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Sensory</h3>
+
+                {/* Theme selector */}
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <Label className="text-sm font-semibold mb-3 block">Theme</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { value: 'light', label: 'Light', color: 'bg-white border-gray-300' },
+                      { value: 'soft', label: 'Soft', color: 'bg-amber-50 border-amber-200' },
+                      { value: 'dark', label: 'Dark', color: 'bg-gray-900 border-gray-700' },
+                      { value: 'high_contrast', label: 'High Contrast', color: 'bg-black border-yellow-400' },
+                    ].map((theme) => (
+                      <Button
+                        key={theme.value}
+                        variant={preferredTheme === theme.value ? 'default' : 'outline'}
+                        onClick={() => setPreferredTheme(theme.value)}
+                        className="h-auto py-2"
+                      >
+                        <div className="flex flex-col items-center gap-1.5">
+                          <div className={`w-7 h-7 ${theme.color} border-2 rounded shrink-0`}></div>
+                          <span className="text-xs">{theme.label}</span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Animation Level */}
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <Label className="text-sm font-semibold mb-3 block">Animation Level</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {ANIMATION_LEVELS.map((level) => (
+                      <Button
+                        key={level.value}
+                        variant={animationLevel === level.value ? 'default' : 'outline'}
+                        onClick={() => setAnimationLevel(level.value)}
+                        className="h-auto py-2 text-sm"
+                      >
+                        {level.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Muted Colors */}
+                <div className="border border-gray-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-semibold">Muted Colors</Label>
+                      <p className="text-xs text-gray-500">Use calm, desaturated colors throughout</p>
+                    </div>
+                    <Switch checked={mutedColors} onCheckedChange={setMutedColors} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <Button variant="outline" onClick={() => setStep(2)}>
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                </Button>
+                <Button onClick={() => setStep(4)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Next <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ═══ Step 4: Review & Save ═══ */}
+          {step === 4 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1">Assistive Technology</h2>
-                <p className="text-sm text-gray-600">Enable tools that make learning easier for you</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">Review Your Settings</h2>
+                <p className="text-sm text-gray-600">Here&apos;s a summary of your accessibility preferences</p>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <Label className="font-medium">Text-to-Speech</Label>
-                  <p className="text-sm text-gray-600">Read lesson content aloud</p>
+              {/* Active Preset Badge */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                  {activePreset !== 'none' && PRESET_ICONS[activePreset]
+                    ? PRESET_ICONS[activePreset]
+                    : <Sparkles className="w-5 h-5 text-blue-600" />}
                 </div>
-                <Switch checked={ttsEnabled} onCheckedChange={setTtsEnabled} />
+                <div>
+                  <p className="font-semibold text-blue-900">
+                    {activePreset === 'none' ? 'Default Settings' : ACCESSIBILITY_PRESETS[activePreset]?.label ?? 'Custom'}
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    {activePreset === 'none'
+                      ? 'Using standard accessibility settings'
+                      : ACCESSIBILITY_PRESETS[activePreset]?.goal ?? 'Customized settings'}
+                  </p>
+                </div>
               </div>
 
+              {/* Settings summary grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Font</p>
+                  <p className="text-sm font-medium">{FONT_FAMILIES.find(f => f.value === fontFamily)?.label ?? fontFamily}</p>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Text Size</p>
+                  <p className="text-sm font-medium">{fontSizePx}px</p>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Line Spacing</p>
+                  <p className="text-sm font-medium">{lineSpacingMultiplier}x</p>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Word Spacing</p>
+                  <p className="text-sm font-medium">{wordSpacingPct}%</p>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Background</p>
+                  <p className="text-sm font-medium capitalize">{backgroundTint.replace('_', ' ')}</p>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Theme</p>
+                  <p className="text-sm font-medium capitalize">{preferredTheme.replace('_', ' ')}</p>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Animation</p>
+                  <p className="text-sm font-medium capitalize">{animationLevel}</p>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Text-to-Speech</p>
+                  <p className="text-sm font-medium">{ttsEnabled ? 'On' : 'Off'}</p>
+                </div>
+              </div>
+
+              {/* Active features */}
+              <div className="border border-gray-200 rounded-xl p-4">
+                <p className="text-sm font-semibold mb-2">Active Features</p>
+                <div className="flex flex-wrap gap-2">
+                  {readingSpotlight && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Reading Spotlight</span>}
+                  {distractionFreeMode && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Distraction-Free</span>}
+                  {chunkedContentMode && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Chunked Content</span>}
+                  {reducedMotion && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">Reduced Motion</span>}
+                  {mutedColors && <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Muted Colors</span>}
+                  {ttsEnabled && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Text-to-Speech</span>}
+                  {!readingSpotlight && !distractionFreeMode && !chunkedContentMode && !reducedMotion && !mutedColors && !ttsEnabled && (
+                    <span className="text-xs text-gray-400">No additional features enabled</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Live Preview */}
+              <SettingsPreview
+                fontFamily={fontFamily}
+                fontSizePx={fontSizePx}
+                lineSpacingMultiplier={lineSpacingMultiplier}
+                wordSpacingPct={wordSpacingPct}
+                backgroundTint={backgroundTint}
+              />
+
+              {/* Call to action */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
                 <Sparkles className="w-10 h-10 text-blue-600 mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-blue-900 mb-1">
@@ -270,16 +591,18 @@ export default function OnboardingPage() {
                 </h3>
                 <p className="text-sm text-blue-700">
                   {existingProfile
-                    ? 'Your existing preferences will be updated with any changes.'
-                    : 'Your preferences have been saved and can be changed anytime from the Accessibility Settings.'}
+                    ? 'Your existing preferences will be updated with these changes.'
+                    : 'You can change these settings anytime from the Accessibility panel in the sidebar.'}
                 </p>
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+                <Button variant="outline" onClick={() => setStep(3)}>
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                </Button>
                 <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white">
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                  {saving ? 'Saving...' : existingProfile ? 'Update Preferences' : 'Start Learning'}
+                  {saving ? 'Saving...' : existingProfile ? 'Update Preferences' : 'Save & Start Learning'}
                 </Button>
               </div>
             </div>

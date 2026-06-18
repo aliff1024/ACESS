@@ -3,19 +3,41 @@ import { supabase } from '@/lib/supabase'
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
-export interface AdaptiveRecommendation {
-  disability_type: string
-  rationale: string
-  recommended_ui: Partial<AccessibilitySettingsData>
-  recommended_lesson_modes: {
-    focus_mode?: boolean
-    chunked_content?: boolean
-    guided_mode?: boolean
-    checkpoints?: boolean
-    simplified_summary?: boolean
-  }
+export interface PresetDefinition {
+  id: string
+  label: string
+  goal: string
+  settings: PresetSettings
+  additional_features: string[]
 }
 
+/** The granular settings that a preset applies */
+export interface PresetSettings {
+  font_family: string
+  font_size_px: number
+  line_spacing_multiplier: number
+  word_spacing_pct: number
+  background_tint: string
+  reading_spotlight: boolean
+  distraction_free_mode: boolean
+  chunked_content_mode: boolean
+  reduced_motion: boolean
+  animation_level: string
+  tts_enabled: boolean
+  high_contrast: boolean
+  low_contrast: boolean
+  muted_colors: boolean
+  preferred_theme: string
+  simplified_ui: boolean
+  // Executive function
+  task_checklist_enabled: boolean
+  visual_schedule_enabled: boolean
+  step_by_step_enabled: boolean
+  auto_save_enabled: boolean
+  progress_timeline_enabled: boolean
+}
+
+/** Full effective settings including both legacy and new fields */
 export interface EffectiveAccessibilitySettings {
   ui: Partial<AccessibilitySettingsData>
   lesson_modes: {
@@ -29,7 +51,142 @@ export interface EffectiveAccessibilitySettings {
   active_disability: string | null
 }
 
-// ─── Disability Presets (recommendations, never forces) ──────────────
+export interface AdaptiveRecommendation {
+  disability_type: string
+  rationale: string
+  recommended_ui: Partial<AccessibilitySettingsData>
+  recommended_lesson_modes: {
+    focus_mode?: boolean
+    chunked_content?: boolean
+    guided_mode?: boolean
+    checkpoints?: boolean
+    simplified_summary?: boolean
+  }
+}
+
+// ─── Default Preset Settings ─────────────────────────────────────────────
+
+export const DEFAULT_PRESET_SETTINGS: PresetSettings = {
+  font_family: 'arial',
+  font_size_px: 16,
+  line_spacing_multiplier: 1.5,
+  word_spacing_pct: 0,
+  background_tint: 'white',
+  reading_spotlight: false,
+  distraction_free_mode: false,
+  chunked_content_mode: false,
+  reduced_motion: false,
+  animation_level: 'normal',
+  tts_enabled: false,
+  high_contrast: false,
+  low_contrast: false,
+  muted_colors: false,
+  preferred_theme: 'light',
+  simplified_ui: false,
+  task_checklist_enabled: false,
+  visual_schedule_enabled: false,
+  step_by_step_enabled: false,
+  auto_save_enabled: true,
+  progress_timeline_enabled: false,
+}
+
+// ─── Accessibility Presets ───────────────────────────────────────────────
+
+export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
+  dyslexia: {
+    id: 'dyslexia',
+    label: 'Dyslexia Preset',
+    goal: 'Reduce visual crowding and reading fatigue',
+    settings: {
+      ...DEFAULT_PRESET_SETTINGS,
+      font_family: 'atkinson_hyperlegible',
+      font_size_px: 18,
+      line_spacing_multiplier: 1.6,
+      word_spacing_pct: 20,
+      background_tint: 'cream',
+      reading_spotlight: true,
+      chunked_content_mode: true,
+      reduced_motion: true,
+      animation_level: 'low',
+      tts_enabled: false,
+      preferred_theme: 'light',
+      auto_save_enabled: true,
+    },
+    additional_features: ['Text-to-Speech', 'Reading Ruler', 'Word Highlighting'],
+  },
+  adhd: {
+    id: 'adhd',
+    label: 'ADHD Preset',
+    goal: 'Reduce distractions and support attention',
+    settings: {
+      ...DEFAULT_PRESET_SETTINGS,
+      font_family: 'arial',
+      font_size_px: 18,
+      line_spacing_multiplier: 1.5,
+      word_spacing_pct: 10,
+      background_tint: 'grey',
+      reading_spotlight: true,
+      distraction_free_mode: true,
+      chunked_content_mode: true,
+      reduced_motion: true,
+      animation_level: 'low',
+      preferred_theme: 'light',
+      task_checklist_enabled: true,
+      auto_save_enabled: true,
+      progress_timeline_enabled: true,
+    },
+    additional_features: ['Task Checklist', 'Focus Timer', 'Visual Progress Bar', 'Auto Save', 'Resume Where Left Off'],
+  },
+  autism: {
+    id: 'autism',
+    label: 'Autism Preset',
+    goal: 'Reduce uncertainty and sensory overload',
+    settings: {
+      ...DEFAULT_PRESET_SETTINGS,
+      font_family: 'arial',
+      font_size_px: 18,
+      line_spacing_multiplier: 1.5,
+      word_spacing_pct: 10,
+      background_tint: 'pale_blue',
+      reading_spotlight: false,
+      distraction_free_mode: true,
+      chunked_content_mode: true,
+      reduced_motion: true,
+      animation_level: 'none',
+      muted_colors: true,
+      preferred_theme: 'light',
+      visual_schedule_enabled: true,
+      step_by_step_enabled: true,
+      progress_timeline_enabled: true,
+      auto_save_enabled: true,
+    },
+    additional_features: ['Visual Schedule', 'Clear Instructions', 'Progress Timeline', 'Predictable Layout', 'Transition Warnings'],
+  },
+  dyscalculia: {
+    id: 'dyscalculia',
+    label: 'Dyscalculia Preset',
+    goal: 'Support number comprehension and math learning',
+    settings: {
+      ...DEFAULT_PRESET_SETTINGS,
+      font_family: 'arial',
+      font_size_px: 18,
+      line_spacing_multiplier: 1.6,
+      word_spacing_pct: 15,
+      background_tint: 'soft_green',
+      reading_spotlight: true,
+      chunked_content_mode: true,
+      reduced_motion: true,
+      animation_level: 'low',
+      preferred_theme: 'light',
+      step_by_step_enabled: true,
+      auto_save_enabled: true,
+      progress_timeline_enabled: true,
+    },
+    additional_features: ['Number Line Support', 'Formula Helper', 'Step-by-Step Solutions', 'Color-Coded Numbers', 'Visual Diagrams'],
+  },
+}
+
+// ─── Legacy Disability Presets (backward compatibility) ──────────────────
 
 const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
   cognitive_impairment: {
@@ -182,7 +339,84 @@ const DISABILITY_DISPLAY_NAMES: Record<string, string> = {
   other: 'Other',
 }
 
-// ─── Core Functions ────────────────────────────────────────────────────
+// ─── Preset Functions ──────────────────────────────────────────────────
+
+/** Get a preset definition by name */
+export function getPreset(presetName: string): PresetDefinition | null {
+  return ACCESSIBILITY_PRESETS[presetName] ?? null
+}
+
+/** Get all preset definitions as an array */
+export function getAllPresets(): PresetDefinition[] {
+  return Object.values(ACCESSIBILITY_PRESETS)
+}
+
+/** Apply a preset and return the full settings object ready for saving */
+export function applyPreset(presetName: string, currentSettings?: Partial<AccessibilitySettingsData>): AccessibilitySettingsData {
+  const preset = ACCESSIBILITY_PRESETS[presetName]
+  if (!preset) {
+    return {
+      ...currentSettings,
+      active_preset: 'none',
+    } as AccessibilitySettingsData
+  }
+
+  const s = preset.settings
+
+  return {
+    ...currentSettings,
+    active_preset: presetName,
+    font_family: s.font_family,
+    font_size_px: s.font_size_px,
+    line_spacing_multiplier: s.line_spacing_multiplier,
+    word_spacing_pct: s.word_spacing_pct,
+    background_tint: s.background_tint,
+    reading_spotlight: s.reading_spotlight,
+    distraction_free_mode: s.distraction_free_mode,
+    chunked_content_mode: s.chunked_content_mode,
+    reduced_motion: s.reduced_motion,
+    animation_level: s.animation_level,
+    tts_enabled: s.tts_enabled,
+    high_contrast: s.high_contrast,
+    low_contrast: s.low_contrast,
+    muted_colors: s.muted_colors,
+    preferred_theme: s.preferred_theme,
+    simplified_ui: s.simplified_ui,
+    task_checklist_enabled: s.task_checklist_enabled,
+    visual_schedule_enabled: s.visual_schedule_enabled,
+    step_by_step_enabled: s.step_by_step_enabled,
+    auto_save_enabled: s.auto_save_enabled,
+    progress_timeline_enabled: s.progress_timeline_enabled,
+    // Map to legacy fields for backward compatibility
+    preferred_font_size: s.font_size_px <= 14 ? 'small' : s.font_size_px <= 16 ? 'medium' : s.font_size_px <= 18 ? 'large' : 'xlarge',
+    line_spacing: s.line_spacing_multiplier <= 1.4 ? 'normal' : s.line_spacing_multiplier <= 1.7 ? 'relaxed' : 'loose',
+    preferred_font: s.font_family === 'opendyslexic' || s.font_family === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
+    dyslexia_friendly_font: s.font_family === 'opendyslexic' || s.font_family === 'atkinson_hyperlegible',
+  } as AccessibilitySettingsData
+}
+
+/** Get what settings would change if a preset is applied */
+export function getPresetDiff(
+  presetName: string,
+  currentSettings: Partial<AccessibilitySettingsData>,
+): { key: string; from: unknown; to: unknown }[] {
+  const preset = ACCESSIBILITY_PRESETS[presetName]
+  if (!preset) return []
+
+  const diffs: { key: string; from: unknown; to: unknown }[] = []
+  const presetSettings = preset.settings as unknown as Record<string, unknown>
+
+  for (const [key, value] of Object.entries(presetSettings)) {
+    const currentValue = (currentSettings as unknown as Record<string, unknown>)[key]
+    if (currentValue !== value) {
+      diffs.push({ key, from: currentValue, to: value })
+    }
+  }
+
+  return diffs
+}
+
+// ─── Legacy Core Functions (backward compatibility) ─────────────────────
 
 export function getAdaptiveRecommendation(disabilityType: string | null | undefined): AdaptiveRecommendation | null {
   if (!disabilityType || disabilityType === 'none' || disabilityType === 'other') return null
@@ -255,6 +489,8 @@ export type AdaptationType =
   | 'captions'
   | 'slideshow'
   | 'guided_mode'
+  | 'reading_spotlight'
+  | 'distraction_free'
 
 export async function trackAdaptation(
   adaptation: AdaptationType,

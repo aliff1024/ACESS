@@ -19,6 +19,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Accessibility Presets: Load Atkinson Hyperlegible from Google Fonts */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+          rel="stylesheet"
+        />
+        {/* Accessibility Presets: Load OpenDyslexic from CDN */}
+        <link
+          href="https://fonts.cdnfonts.com/css/opendyslexic"
+          rel="stylesheet"
+        />
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>

@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { Clock, CheckCircle, Loader2, Flag, AlertTriangle, ChevronLeft, ChevronRight, HelpCircle, BarChart3, RotateCcw } from 'lucide-react';
+import { Clock, CheckCircle, Loader2, Flag, AlertTriangle, ChevronLeft, ChevronRight, HelpCircle, BarChart3, RotateCcw, Volume2, Info } from 'lucide-react';
 import { fetchQuizData, checkQuizAttempts, fetchQuizAttemptHistory } from '@/lib/learner-api';
 import type { QuizData } from '@/lib/learner-api';
+import { useAccessibility } from '@/providers/AccessibilityProvider';
 
 interface QuizPageProps {
   lessonId: string;
@@ -28,6 +29,8 @@ export function QuizPage({
   simplifiedSummary = null,
   onSuggestReview,
 }: QuizPageProps) {
+  const { settings } = useAccessibility();
+  const activePreset = settings?.active_preset || 'none';
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState<{ reason: string } | null>(null);
@@ -304,6 +307,19 @@ export function QuizPage({
               </div>
             </div>
 
+            {activePreset === 'autism' && (
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-5 mb-6 text-blue-900">
+                <h3 className="font-bold flex items-center gap-2 mb-2"><Info className="w-5 h-5 text-blue-600"/> Clear Expectations</h3>
+                <ul className="list-disc pl-5 space-y-1 text-sm">
+                  <li>This quiz contains {questions.length} multiple-choice questions.</li>
+                  {quizData.time_limit_seconds ? <li>You will have {Math.round(quizData.time_limit_seconds / 60)} minutes to finish. A timer will be visible.</li> : <li>There is no time limit. Take your time.</li>}
+                  <li>You must score at least {quizData.pass_threshold_pct ?? 80}% to pass.</li>
+                  {maxAttempts ? <li>You have {maxAttempts - usedAttempts} attempt(s) remaining.</li> : <li>You have unlimited attempts.</li>}
+                  <li>There are no trick questions. Read carefully and do your best.</li>
+                </ul>
+              </div>
+            )}
+
             {attemptHistory.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="bg-gray-50 rounded-xl p-3 text-center">
@@ -439,7 +455,7 @@ export function QuizPage({
         <div className="flex items-center gap-3 shrink-0">
           {timeRemaining !== null ? (
             <div className={`quiz-timer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
-              timeLow ? 'bg-red-50 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700'
+              timeLow && activePreset !== 'autism' && activePreset !== 'adhd' ? 'bg-red-50 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700'
             }`}>
               <Clock className="w-4 h-4" />
               <span className="tabular-nums">{formatTime(timeRemaining)}</span>
@@ -455,7 +471,8 @@ export function QuizPage({
 
       <div className="flex-1 flex overflow-hidden">
         {/* ── Left sidebar ── */}
-        <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0 question-sidebar simplifiable">
+        {activePreset !== 'adhd' && activePreset !== 'autism' && (
+          <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0 question-sidebar simplifiable">
           <div className="p-4 border-b border-gray-100">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Questions</p>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -512,6 +529,7 @@ export function QuizPage({
             </div>
           </div>
         </aside>
+        )}
 
         {/* ── Main content ── */}
         <main className="flex-1 overflow-y-auto p-6">
@@ -536,9 +554,26 @@ export function QuizPage({
                   {markedForReview.has(currentQuestion.id) ? 'Flagged for Review' : 'Flag for Review'}
                 </Button>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
-                {currentQuestion.question_text}
-              </h2>
+              <div className="flex items-start justify-between gap-4">
+                <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
+                  {currentQuestion.question_text}
+                </h2>
+                {(activePreset === 'dyslexia' || settings.tts_enabled) && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    onClick={() => {
+                      window.speechSynthesis.cancel();
+                      const u = new SpeechSynthesisUtterance(currentQuestion.question_text);
+                      window.speechSynthesis.speak(u);
+                    }}
+                    title="Read question aloud"
+                  >
+                    <Volume2 className="w-5 h-5" />
+                  </Button>
+                )}
+              </div>
               {currentQuestion.image_url && (
                 <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
                   <img

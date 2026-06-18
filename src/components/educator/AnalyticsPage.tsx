@@ -63,7 +63,7 @@ export function AnalyticsPage() {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center text-green-600 font-medium">
-              <TrendingUp className="w-4 h-4 mr-1" /> +12% this month
+              <TrendingUp className="w-4 h-4 mr-1" /> +{courses.reduce((acc, c) => acc + c.stats.newEnrollmentsThisMonth, 0)} this month
             </span>
           </div>
         </Card>

@@ -37,6 +37,7 @@ export interface CourseDeepAnalytics {
     inactiveLearners: number
     avgCompletionRate: number
     avgQuizScore: number
+    newEnrollmentsThisMonth: number
   }
   insights: {
     mostCompletedLesson?: string
@@ -290,16 +291,119 @@ export async function fetchCourseDeepAnalytics(educatorId: string): Promise<Cour
     
     const now = Date.now()
     let activeLearners = 0
+    let newEnrollmentsThisMonth = 0
     
     // We would need to join with lesson_progress to get exact active/inactive,
     // but for deep analytics overview, we can estimate based on a simpler approach or fetch
     // To save DB calls, we will mark recent enrollments as active
     enrollments.forEach(e => {
-       const days = (now - new Date(e.enrolled_at).getTime()) / (1000 * 60 * 60 * 24)
+       const enrolledDate = new Date(e.enrolled_at).getTime()
+       const days = (now - enrolledDate) / (1000 * 60 * 60 * 24)
        if (days < 14) activeLearners++
+       if (days <= 30) newEnrollmentsThisMonth++
     })
 
     const inactiveLearners = totalEnrollments - activeLearners
+    const enrollmentIds = enrollments.map(e => e.id)
+    
+    // Default insights
+    let avgQuizScore = 0
+    let mostCompletedLesson = 'Not enough data'
+    let mostSkippedLesson = 'Not enough data'
+    let mostDifficultLesson = 'Not enough data'
+    let mostAttemptedQuiz = 'Not enough data'
+
+    if (enrollmentIds.length > 0) {
+      // Fetch Lesson Progress for this course's enrollments
+      const { data: lpData } = await supabase
+        .from('lesson_progress')
+        .select('lesson_id, is_completed, is_viewed, lessons(title)')
+        .in('enrollment_id', enrollmentIds)
+
+      // Fetch Quiz Attempts for this course's enrollments
+      const { data: qaData } = await supabase
+        .from('quiz_attempts')
+        .select('quiz_id, score_pct, quizzes(title)')
+        .in('enrollment_id', enrollmentIds)
+
+      if (qaData && qaData.length > 0) {
+        const totalScore = qaData.reduce((acc, qa) => acc + (qa.score_pct || 0), 0)
+        avgQuizScore = Math.round(totalScore / qaData.length)
+
+        // Most attempted quiz
+        const quizAttemptCounts = new Map<string, { count: number, title: string }>()
+        const quizScores = new Map<string, { total: number, count: number, title: string }>()
+
+        for (const qa of qaData) {
+          if (!qa.quiz_id) continue
+          const title = (qa.quizzes as any)?.title || 'Unknown Quiz'
+          
+          // Attempts
+          const curr = quizAttemptCounts.get(qa.quiz_id) || { count: 0, title }
+          curr.count++
+          quizAttemptCounts.set(qa.quiz_id, curr)
+
+          // Scores (for most difficult)
+          const scoreStats = quizScores.get(qa.quiz_id) || { total: 0, count: 0, title }
+          scoreStats.total += (qa.score_pct || 0)
+          scoreStats.count++
+          quizScores.set(qa.quiz_id, scoreStats)
+        }
+
+        let maxAttempts = 0
+        for (const [_, stats] of quizAttemptCounts.entries()) {
+          if (stats.count > maxAttempts) {
+            maxAttempts = stats.count
+            mostAttemptedQuiz = stats.title
+          }
+        }
+
+        let minAvgScore = 101
+        for (const [_, stats] of quizScores.entries()) {
+          const avg = stats.total / stats.count
+          if (avg < minAvgScore) {
+            minAvgScore = avg
+            mostDifficultLesson = stats.title
+          }
+        }
+      }
+
+      if (lpData && lpData.length > 0) {
+        const completedCounts = new Map<string, { count: number, title: string }>()
+        const skippedCounts = new Map<string, { count: number, title: string }>()
+
+        for (const lp of lpData) {
+          if (!lp.lesson_id) continue
+          const title = (lp.lessons as any)?.title || 'Unknown Lesson'
+
+          if (lp.is_completed) {
+            const curr = completedCounts.get(lp.lesson_id) || { count: 0, title }
+            curr.count++
+            completedCounts.set(lp.lesson_id, curr)
+          } else if (lp.is_viewed) {
+            const curr = skippedCounts.get(lp.lesson_id) || { count: 0, title }
+            curr.count++
+            skippedCounts.set(lp.lesson_id, curr)
+          }
+        }
+
+        let maxCompleted = 0
+        for (const [_, stats] of completedCounts.entries()) {
+          if (stats.count > maxCompleted) {
+            maxCompleted = stats.count
+            mostCompletedLesson = stats.title
+          }
+        }
+
+        let maxSkipped = 0
+        for (const [_, stats] of skippedCounts.entries()) {
+          if (stats.count > maxSkipped) {
+            maxSkipped = stats.count
+            mostSkippedLesson = stats.title
+          }
+        }
+      }
+    }
 
     results.push({
       courseId: course.id,
@@ -309,13 +413,14 @@ export async function fetchCourseDeepAnalytics(educatorId: string): Promise<Cour
         activeLearners,
         inactiveLearners,
         avgCompletionRate: totalEnrollments > 0 ? Math.round((completed / totalEnrollments) * 100) : 0,
-        avgQuizScore: Math.floor(Math.random() * 20) + 75 // Mocking quiz score average for now
+        avgQuizScore,
+        newEnrollmentsThisMonth
       },
       insights: {
-        mostCompletedLesson: 'Lesson 1: Introduction',
-        mostSkippedLesson: 'Lesson 4: Advanced Concepts',
-        mostDifficultLesson: 'Quiz 2',
-        mostAttemptedQuiz: 'Quiz 1'
+        mostCompletedLesson,
+        mostSkippedLesson,
+        mostDifficultLesson,
+        mostAttemptedQuiz
       }
     })
   }

@@ -11,6 +11,7 @@ import { ConfirmAction } from '../ui/ConfirmAction';
 import { fetchCourseDetail, enrollInCourse, unenrollFromCourse, toggleFavorite, checkIsFavorited, fetchSystemCourseProgress, checkCourseCertificateEligibility, claimCertificate, fetchCourseAccessibilityCategoriesForLearner } from '@/lib/learner-api';
 import type { CourseDetail, SystemCourseProgress } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
+import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { toast } from 'sonner';
 
 interface CourseDetailPageProps {
@@ -39,6 +40,8 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
   const [claimingCert, setClaimingCert] = useState(false);
   const [certClaimed, setCertClaimed] = useState(false);
   const [accessibilityCategories, setAccessibilityCategories] = useState<string[]>([]);
+  const { settings } = useAccessibility();
+  const activePreset = settings?.active_preset || 'none';
 
   const isSystem = course?.system_course === true;
   const isGuided = isSystem && course?.guided_learning_enabled;
@@ -444,7 +447,11 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
             </h2>
 
             <div className="space-y-4">
-              {course.lessons.map((lesson) => (
+              {course.lessons.map((lesson) => {
+                // ADHD: Hide locked lessons to prevent overwhelm
+                if (activePreset === 'adhd' && lesson.status === 'locked') return null;
+                
+                return (
                 <Card
                   key={lesson.id}
                   className={`p-5 rounded-xl border-2 transition-all duration-200 ${
@@ -484,6 +491,11 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                         )}
                       </div>
                       <h3 className="text-lg font-bold text-gray-900">{lesson.title}</h3>
+                      {activePreset === 'autism' && (
+                        <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                          <Clock className="w-4 h-4" /> Estimated time: {lesson.estimated_duration ? `${lesson.estimated_duration} mins` : '15 mins'}
+                        </p>
+                      )}
                     </div>
 
                     {course.enrollment_id && (
@@ -503,7 +515,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                     )}
                   </div>
                 </Card>
-              ))}
+              )})}
             </div>
           </div>
         </div>

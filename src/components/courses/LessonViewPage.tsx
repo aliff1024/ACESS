@@ -110,9 +110,9 @@ function GuidedPathBanner({
         )}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-indigo-800 mb-3">
-        {showSimplifiedSummary && <span className="font-medium">① Overview</span>}
-        <span className="font-medium">② Section {currentChunk + 1} of {totalChunks}</span>
-        {hasSummary && <span className={currentChunk >= totalChunks - 1 ? 'font-medium' : 'text-indigo-500'}>③ Wrap-up</span>}
+        {showSimplifiedSummary && <span className="font-medium">Step 1: Overview</span>}
+        <span className="font-medium">Step 2: Section {currentChunk + 1} of {totalChunks}</span>
+        {hasSummary && <span className={currentChunk >= totalChunks - 1 ? 'font-medium' : 'text-indigo-500'}>Step 3: Wrap-up</span>}
       </div>
       <div className="h-2 bg-indigo-200 rounded-full overflow-hidden" role="progressbar" aria-valuenow={sectionProgress} aria-valuemin={0} aria-valuemax={100} aria-label="Section progress">
         <div className="h-full bg-indigo-600 rounded-full transition-all duration-300" style={{ width: `${sectionProgress}%` }} />
@@ -697,14 +697,22 @@ export function LessonViewPage({
   const layout = lesson.lesson_layout || 'standard';
   const layoutContainer = layout === 'focus' ? 'max-w-4xl' : layout === 'two_column' || layout === 'wide' ? 'max-w-7xl' : 'max-w-6xl';
 
-  const simplifiedMode = settings.simplified_ui ?? false;
-  const effectiveFocusMode = focusMode;
-  const effectiveChunkedEnabled = lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content;
+  const activePreset = settings?.active_preset || 'none';
+  const simplifiedMode = settings.simplified_ui ?? (activePreset === 'autism' || activePreset === 'adhd');
+  
+  // ADHD profile forcefully applies chunked learning and focus mode.
+  const effectiveFocusMode = focusMode || activePreset === 'adhd';
+  const effectiveChunkedEnabled = lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content || activePreset === 'adhd' || activePreset === 'autism';
+
+  // For Dyslexia, enforce max-w-2xl for better line lengths (typically 60-70 characters).
+  // For ADHD, keep focus mode tight.
   const contentContainerClass = effectiveFocusMode
     ? 'max-w-3xl'
-    : simplifiedMode
-      ? 'max-w-4xl'
-      : layoutContainer;
+    : activePreset === 'dyslexia'
+      ? 'max-w-2xl text-lg' // tighter width, larger text
+      : simplifiedMode
+        ? 'max-w-4xl'
+        : layoutContainer;
 
   const lineSpacingMap: Record<string, string> = { tight: 'leading-tight', normal: 'leading-normal', relaxed: 'leading-relaxed', wide: 'leading-loose', loose: 'leading-loose' };
   const fontSizeMap: Record<string, string> = { small: 'text-sm prose-sm', medium: 'text-base prose-base', large: 'text-lg prose-lg', xlarge: 'text-xl prose-xl' };
@@ -713,7 +721,8 @@ export function LessonViewPage({
 
   const contentHtml = lesson.content_html || '';
   const educatorLayout = lesson.lesson_layout || 'standard';
-  const isSlideMode = viewMode !== null ? viewMode === 'slide' : educatorLayout === 'slideshow';
+  // Autism profile does not use slideshows (too unexpected), prefers explicit chunks
+  const isSlideMode = activePreset === 'autism' ? false : (viewMode !== null ? viewMode === 'slide' : educatorLayout === 'slideshow');
 
   const chunks = !contentHtml
     ? null
@@ -730,8 +739,8 @@ export function LessonViewPage({
   const totalChunks = chunks?.length ?? 0;
   const showChunkNav = totalChunks > 1;
 
-  const guidedMode = !isSlideMode && !effectiveFocusMode && showChunkNav && (effectiveChunkedEnabled || simplifiedMode || adaptiveLessonModes.guided_mode);
-  const requireCheckpoint = !isSlideMode && (!!lesson.checkpoints_enabled || adaptiveLessonModes.checkpoints) && showChunkNav && !effectiveFocusMode;
+  const guidedMode = !isSlideMode && !effectiveFocusMode && showChunkNav && (effectiveChunkedEnabled || simplifiedMode || adaptiveLessonModes.guided_mode || activePreset === 'autism');
+  const requireCheckpoint = !isSlideMode && (!!lesson.checkpoints_enabled || adaptiveLessonModes.checkpoints || activePreset === 'autism') && showChunkNav && !effectiveFocusMode;
   const currentDbCheckpoint = lessonCheckpoints.length > 0
     ? (lessonCheckpoints.find((cp) => cp.sequence_order === currentChunk) ?? lessonCheckpoints[currentChunk] ?? null)
     : null;
@@ -812,12 +821,12 @@ export function LessonViewPage({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {ttsStatusMessage}
       </div>
       {!effectiveFocusMode && (
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+        <div className="sticky top-0 z-10 bg-card border-b border-border shadow-sm">
           <div className={`${layoutContainer} mx-auto px-6 py-3`}>
             <Breadcrumb className="mb-2 simplifiable">
               <BreadcrumbList>
@@ -1267,7 +1276,7 @@ export function LessonViewPage({
 
                 {/* Slide content */}
                 <div
-                  className="relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
+                  className="relative bg-card border border-border rounded-2xl shadow-sm overflow-hidden"
                   role="region"
                   aria-roledescription="slide"
                   aria-label={`Slide ${currentChunk + 1} of ${totalChunks}`}
@@ -1437,7 +1446,6 @@ export function LessonViewPage({
                         contentType={activeItem.content_type}
                         title={activeItem.title}
                         data={activeItem.content_data as unknown as InteractiveActivityData}
-                        accessibilitySettings={activeItem.accessibility_settings}
                         onComplete={() => {
                           setCompletedActivityIds((prev) => {
                             const next = new Set(prev).add(activeItem.id);
@@ -1506,7 +1514,6 @@ export function LessonViewPage({
                       contentType={activeItem.content_type}
                       title={activeItem.title}
                       data={activeItem.content_data as unknown as InteractiveActivityData}
-                      accessibilitySettings={activeItem.accessibility_settings}
                       onComplete={() => {
                         setCompletedActivityIds((prev) => {
                           const next = new Set(prev).add(activeItem.id);
