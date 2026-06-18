@@ -1476,15 +1476,40 @@ export async function fetchLearnerBadges(): Promise<LearnerBadge[]> {
 
 // ─── Lesson Summaries ─────────────────────────────────────────────────
 
-export async function fetchLessonSummary(lessonId: string): Promise<StudentLessonSummary | null> {
+export async function fetchLessonSummary(lessonId: string, courseId: string): Promise<StudentLessonSummary | null> {
   const userId = await ensureUserId()
-  const { data } = await supabase
-    .from('lesson_summaries')
-    .select('*')
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id')
     .eq('user_id', userId)
-    .eq('lesson_id', lessonId)
+    .eq('course_id', courseId)
+    .neq('status', 'dropped')
     .maybeSingle()
-  return data
+  if (!enrollment) return null
+
+  const { data } = await supabase
+    .from('learner_checkpoints')
+    .select('*')
+    .eq('enrollment_id', enrollment.id)
+    .eq('lesson_id', lessonId)
+    .is('checkpoint_id', null)
+    .maybeSingle()
+    
+  if (!data || !data.response_data) return null
+  
+  const rd = data.response_data as any
+  return {
+    id: data.id,
+    lesson_id: lessonId,
+    content: rd.content || '',
+    word_count: rd.word_count || 0,
+    status: rd.status || 'draft',
+    ai_feedback: rd.ai_feedback,
+    educator_feedback: rd.educator_feedback,
+    submitted_at: data.completed_at,
+    created_at: data.created_at,
+    updated_at: data.created_at
+  }
 }
 
 export async function saveLessonSummary(lessonId: string, courseId: string, content: string, wordCount: number): Promise<void> {
@@ -1499,21 +1524,34 @@ export async function saveLessonSummary(lessonId: string, courseId: string, cont
   if (!enrollment) throw new Error('Not enrolled')
 
   const existing = await supabase
-    .from('lesson_summaries')
-    .select('id')
-    .eq('user_id', userId)
+    .from('learner_checkpoints')
+    .select('id, response_data')
+    .eq('enrollment_id', enrollment.id)
     .eq('lesson_id', lessonId)
+    .is('checkpoint_id', null)
     .maybeSingle()
 
+  const newData = {
+    content,
+    word_count: wordCount,
+    status: 'draft'
+  }
+
   if (existing.data) {
+    const prev = existing.data.response_data as any || {}
     await supabase
-      .from('lesson_summaries')
-      .update({ content, word_count: wordCount, updated_at: new Date().toISOString() })
+      .from('learner_checkpoints')
+      .update({ response_data: { ...prev, ...newData } })
       .eq('id', existing.data.id)
   } else {
     await supabase
-      .from('lesson_summaries')
-      .insert({ user_id: userId, lesson_id: lessonId, enrollment_id: enrollment.id, content, word_count: wordCount, status: 'draft' })
+      .from('learner_checkpoints')
+      .insert({ 
+        enrollment_id: enrollment.id, 
+        lesson_id: lessonId, 
+        completed: false, 
+        response_data: newData 
+      })
   }
 }
 
@@ -1529,21 +1567,39 @@ export async function submitLessonSummary(lessonId: string, courseId: string, co
   if (!enrollment) throw new Error('Not enrolled')
 
   const existing = await supabase
-    .from('lesson_summaries')
-    .select('id')
-    .eq('user_id', userId)
+    .from('learner_checkpoints')
+    .select('id, response_data')
+    .eq('enrollment_id', enrollment.id)
     .eq('lesson_id', lessonId)
+    .is('checkpoint_id', null)
     .maybeSingle()
 
+  const newData = {
+    content,
+    word_count: wordCount,
+    status: 'submitted'
+  }
+
   if (existing.data) {
+    const prev = existing.data.response_data as any || {}
     await supabase
-      .from('lesson_summaries')
-      .update({ content, word_count: wordCount, status: 'submitted', submitted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .from('learner_checkpoints')
+      .update({ 
+        completed: true,
+        completed_at: new Date().toISOString(),
+        response_data: { ...prev, ...newData } 
+      })
       .eq('id', existing.data.id)
   } else {
     await supabase
-      .from('lesson_summaries')
-      .insert({ user_id: userId, lesson_id: lessonId, enrollment_id: enrollment.id, content, word_count: wordCount, status: 'submitted', submitted_at: new Date().toISOString() })
+      .from('learner_checkpoints')
+      .insert({ 
+        enrollment_id: enrollment.id, 
+        lesson_id: lessonId, 
+        completed: true,
+        completed_at: new Date().toISOString(),
+        response_data: newData 
+      })
   }
 
   await supabase
@@ -1579,7 +1635,7 @@ export async function fetchRecommendations(): Promise<Recommendation[]> {
 export async function fetchLearnerSettings(): Promise<LearnerSettings | null> {
   const userId = await ensureUserId()
   const { data, error } = await supabase
-    .from('learner_profiles')
+    .from('user_accessibility_settings')
     .select('preferred_font_size, preferred_theme, line_spacing, tts_enabled')
     .eq('user_id', userId)
     .maybeSingle()
@@ -1596,7 +1652,7 @@ export async function fetchLearnerSettings(): Promise<LearnerSettings | null> {
 
 export async function saveLearnerSettings(settings: LearnerSettings): Promise<void> {
   const userId = await ensureUserId()
-  const { error } = await supabase.from('learner_profiles').upsert(
+  const { error } = await supabase.from('user_accessibility_settings').upsert(
     {
       user_id: userId,
       preferred_font_size: settings.preferred_font_size,

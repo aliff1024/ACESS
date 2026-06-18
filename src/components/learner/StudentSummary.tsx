@@ -30,7 +30,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
   const [checking, setChecking] = useState(false)
 
   useEffect(() => {
-    fetchLessonSummary(lessonId).then((data) => {
+    fetchLessonSummary(lessonId, courseId).then((data) => {
       if (data) {
         setContent(data.content)
         setStatus(data.status as 'draft' | 'submitted')

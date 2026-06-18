@@ -1024,18 +1024,23 @@ export async function createLessonAsset(
   title: string,
   url: string
 ): Promise<void> {
-  const { error } = await supabase.from('lesson_assets').insert({
+  const { data: user } = await supabase.auth.getUser()
+  const userId = user.user?.id
+  if (!userId) throw new Error('Not authenticated')
+  const { error } = await supabase.from('media_assets').insert({
     lesson_id: lessonId,
-    kind,
+    file_type: kind,
     title,
     url,
+    user_id: userId,
+    file_name: title || 'Asset'
   })
   if (error) throw error
 }
 
 export async function fetchLessonAssets(lessonId: string): Promise<LessonAsset[]> {
   const { data, error } = await supabase
-    .from('lesson_assets')
+    .from('media_assets')
     .select('*')
     .eq('lesson_id', lessonId)
     .order('created_at', { ascending: true })
@@ -1044,11 +1049,18 @@ export async function fetchLessonAssets(lessonId: string): Promise<LessonAsset[]
     console.error('fetchLessonAssets error:', error)
     return []
   }
-  return data || []
+  
+  return (data || []).map(row => ({
+    id: row.id,
+    lesson_id: row.lesson_id,
+    kind: row.file_type,
+    title: row.title,
+    url: row.url
+  }))
 }
 
 export async function deleteLessonAsset(assetId: string): Promise<void> {
-  const { error } = await supabase.from('lesson_assets').delete().eq('id', assetId)
+  const { error } = await supabase.from('media_assets').delete().eq('id', assetId)
   if (error) throw error
 }
 
@@ -1134,7 +1146,7 @@ export async function fetchLessonsWithQuizzes(courseId: string): Promise<LessonW
   if (lessonIds.length > 0) {
     const [{ data: quizzes }, { data: assets }] = await Promise.all([
       supabase.from('quizzes').select('id, lesson_id').in('lesson_id', lessonIds),
-      supabase.from('lesson_assets').select('lesson_id').in('lesson_id', lessonIds),
+      supabase.from('media_assets').select('lesson_id').in('lesson_id', lessonIds),
     ])
 
     for (const q of quizzes || []) {

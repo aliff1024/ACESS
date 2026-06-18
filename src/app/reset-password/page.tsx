@@ -8,11 +8,10 @@ import { Input } from '@/components/ui/input';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Loader2, ShieldX } from 'lucide-react';
 
+import { supabase } from '@/lib/supabase';
+
 function ResetPasswordForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,16 +37,10 @@ function ResetPasswordForm() {
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, email, password }),
-      });
+      const { error: updateError } = await supabase.auth.updateUser({ password });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Something went wrong');
+      if (updateError) {
+        setError(updateError.message || 'Failed to update password');
         return;
       }
 
@@ -60,26 +53,6 @@ function ResetPasswordForm() {
     }
   };
 
-  if (!token || !email) {
-    return (
-      <AuthShell title="Invalid reset link" subtitle="This reset link is missing required information.">
-        <div className="p-6 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-4">
-          <ShieldX className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-red-800 mb-1">Invalid link</p>
-            <p className="text-sm text-red-700">
-              This password reset link is invalid. Please request a new one.
-            </p>
-          </div>
-        </div>
-        <div className="mt-6 text-center">
-          <Link href="/forgot-password" className="text-blue-600 hover:text-blue-700 font-semibold">
-            Request new reset link
-          </Link>
-        </div>
-      </AuthShell>
-    );
-  }
 
   if (success) {
     return (
