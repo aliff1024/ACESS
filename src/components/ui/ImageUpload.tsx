@@ -63,6 +63,7 @@ export function ImageUpload({ courseId, value, onChange, label, size = 'sm' }: I
         {value && (
           <>
             <div className={`rounded overflow-hidden bg-gray-100 border shrink-0 ${sizeMap[size]}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={value} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             </div>
             <Button type="button" variant="ghost" size="sm" onClick={() => onChange('')} className="text-red-500 h-7 w-7 p-0">

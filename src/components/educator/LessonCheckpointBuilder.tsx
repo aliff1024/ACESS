@@ -38,6 +38,7 @@ export function LessonCheckpointBuilder({ lessonId, enabled }: LessonCheckpointB
   const [description, setDescription] = useState('');
   const [checkpointType, setCheckpointType] = useState<string>('reflection');
   const [required, setRequired] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     if (!lessonId || !enabled) {
@@ -75,12 +76,16 @@ export function LessonCheckpointBuilder({ lessonId, enabled }: LessonCheckpointB
   };
 
   const handleDelete = async (id: string) => {
+    if (deleting) return;
+    setDeleting(id);
     try {
       await deleteLessonCheckpoint(id);
       setCheckpoints((prev) => prev.filter((c) => c.id !== id));
       toast.success('Checkpoint removed');
     } catch {
       toast.error('Failed to remove checkpoint');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -120,8 +125,8 @@ export function LessonCheckpointBuilder({ lessonId, enabled }: LessonCheckpointB
                     <p className="text-sm font-medium text-gray-900 mt-1">{cp.title}</p>
                     {cp.description && <p className="text-xs text-gray-600 mt-0.5">{cp.description}</p>}
                   </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => handleDelete(cp.id)} className="text-red-500 hover:text-red-700 shrink-0">
-                    <Trash2 className="w-4 h-4" />
+                  <Button type="button" variant="ghost" size="sm" onClick={() => handleDelete(cp.id)} disabled={deleting === cp.id} className="text-red-500 hover:text-red-700 shrink-0">
+                    {deleting === cp.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   </Button>
                 </div>
               ))}

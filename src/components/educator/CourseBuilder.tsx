@@ -21,8 +21,12 @@ interface CourseDraft {
   difficulty: DifficultyLevel
   category: string
   tags: string[]
+  accessibility_categories: string[]
   status: 'draft' | 'published'
   recommended_age_group: string
+  primary_disability_focus: string
+  secondary_disability_focuses: string[]
+  target_reading_age: number
 }
 
 interface LessonDraft {
@@ -73,10 +77,14 @@ export function CourseBuilder({ role, onComplete, onBack }: CourseBuilderProps) 
     description: '',
     thumbnail: '',
     difficulty: 'beginner',
-    category: 'Accessibility',
+    category: '',
     tags: [],
+    accessibility_categories: [],
     status: 'draft',
     recommended_age_group: '',
+    primary_disability_focus: '',
+    secondary_disability_focuses: [],
+    target_reading_age: 13,
   })
   const [tagInput, setTagInput] = useState('')
   const [lessons, setLessons] = useState<LessonDraft[]>([])
@@ -186,15 +194,12 @@ export function CourseBuilder({ role, onComplete, onBack }: CourseBuilderProps) 
           difficulty_level: courseData.difficulty,
           category: courseData.category,
           thumbnail_url: courseData.thumbnail || undefined,
+          tags: courseData.tags,
+          accessibility_categories: courseData.accessibility_categories || [],
+          primary_disability_focus: courseData.primary_disability_focus || undefined,
           recommended_age_group: courseData.recommended_age_group || undefined,
         })
         courseId = course.id
-
-        if (courseData.tags.length > 0) {
-          await supabase.from('course_tags').insert(
-            courseData.tags.map((tag) => ({ course_id: course.id, tag })),
-          )
-        }
       } else {
         const course = await createCourse(user.user.id, {
           title: courseData.title,
@@ -202,6 +207,10 @@ export function CourseBuilder({ role, onComplete, onBack }: CourseBuilderProps) 
           status: finalStatus,
           difficulty_level: courseData.difficulty,
           category: courseData.category,
+          tags: courseData.tags,
+          accessibility_categories: courseData.accessibility_categories || [],
+          primary_disability_focus: courseData.primary_disability_focus || undefined,
+          recommended_age_group: courseData.recommended_age_group || undefined,
         })
         courseId = course.id
 
@@ -242,7 +251,7 @@ export function CourseBuilder({ role, onComplete, onBack }: CourseBuilderProps) 
       }
     } catch (err) {
       toast.error('Failed to create course')
-      console.error(err)
+      console.error(err instanceof Error ? err.message : JSON.stringify(err))
     } finally {
       setSaving(false)
     }
@@ -459,6 +468,21 @@ export function CourseBuilder({ role, onComplete, onBack }: CourseBuilderProps) 
                       Add
                     </button>
                   </div>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {['Accessibility', 'Inclusive Design', 'Special Education', 'Neurodiversity', 'UDL', 'Cognitive Support'].map(ptag => (
+                      <button 
+                        key={ptag}
+                        onClick={() => {
+                          if (!courseData.tags.includes(ptag)) {
+                            setCourseData(prev => ({ ...prev, tags: [...prev.tags, ptag] }));
+                          }
+                        }}
+                        className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors"
+                      >
+                        + {ptag}
+                      </button>
+                    ))}
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {courseData.tags.map((tag) => (
                       <span key={tag} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium flex items-center gap-2">
@@ -498,6 +522,26 @@ export function CourseBuilder({ role, onComplete, onBack }: CourseBuilderProps) 
                     <option value="14-17">Ages 14-17</option>
                     <option value="18+">Ages 18+</option>
                   </select>
+                </div>
+                
+                {/* UDL & Accessibility Configurations */}
+                <div className="pt-6 border-t border-gray-200 space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Universal Design for Learning (UDL) Profile</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Primary Accessibility Focus</label>
+                    <p className="text-xs text-gray-500 mb-2">This determines the strictness of content recommendations and activity suggestions.</p>
+                    <select
+                      value={courseData.primary_disability_focus}
+                      onChange={(e) => setCourseData((prev) => ({ ...prev, primary_disability_focus: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="">General Inclusive Design</option>
+                      <option value="adhd">ADHD-Focused</option>
+                      <option value="autism">Autism-Focused</option>
+                      <option value="dyslexia">Dyslexia-Focused</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             )}

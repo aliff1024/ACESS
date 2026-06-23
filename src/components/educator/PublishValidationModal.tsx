@@ -31,7 +31,7 @@ export default function PublishValidationModal({ isOpen, onClose, onPublish, che
           <div className="flex items-start justify-between">
             <div>
               <h2 className={`text-2xl font-bold mb-2 ${canPublish ? 'text-green-900' : 'text-red-900'}`}>
-                {canPublish ? 'Ready to Publish!' : 'Cannot Publish Yet'}
+                {canPublish ? 'Ready for Approval!' : 'Cannot Publish Yet'}
               </h2>
               <p className={canPublish ? 'text-green-700' : 'text-red-700'}>
                 {canPublish
@@ -78,7 +78,7 @@ export default function PublishValidationModal({ isOpen, onClose, onPublish, che
           <div className="flex gap-3 mt-8">
             <Button onClick={onClose} variant="outline" className="flex-1">Cancel</Button>
             <Button onClick={canPublish ? onPublish : undefined} disabled={!canPublish} className={`flex-1 ${canPublish ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
-              {canPublish ? 'Publish Course' : 'Fix Issues First'}
+              {canPublish ? 'Request Publish Approval' : 'Fix Issues First'}
             </Button>
           </div>
         </div>

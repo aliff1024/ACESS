@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Accessibility, Bell, Loader2, Save, Camera } from 'lucide-react';
+import { User, Bell, Loader2, Save, Camera, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -155,10 +155,10 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
       const ext = file.name.split('.').pop();
       const path = `avatars/${userId}.${ext}`;
       const { error: uploadError } = await supabase.storage
-        .from('course-assets')
+        .from('avatars')
         .upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('course-assets').getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
       const url = urlData.publicUrl;
       setAvatarUrl(url);
       await saveUserProfile({ avatar_url: url });
@@ -291,11 +291,13 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                 <TabsTrigger value="account" className="flex items-center gap-2">
                   <User className="w-4 h-4" /> Account
                 </TabsTrigger>
-                <TabsTrigger value="accessibility" className="flex items-center gap-2">
-                  <Accessibility className="w-4 h-4" /> Accessibility
-                </TabsTrigger>
+
                 <TabsTrigger value="notifications" className="flex items-center gap-2">
                   <Bell className="w-4 h-4" /> Notifications
+                </TabsTrigger>
+
+                <TabsTrigger value="appearance" className="flex items-center gap-2">
+                  <Palette className="w-4 h-4" /> Appearance
                 </TabsTrigger>
               </TabsList>
 
@@ -357,158 +359,46 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                   </Button>
                 </div>
               </TabsContent>
-
-              <TabsContent value="accessibility">
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <h3 className="text-base font-semibold text-gray-800">Disability & Impairment</h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="dlg-disability">Disability / Impairment Type</Label>
-                      <Select value={disabilityType} onValueChange={setDisabilityType}>
-                        <SelectTrigger id="dlg-disability"><SelectValue placeholder="Select if applicable" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No accessibility support required</SelectItem>
-                          <SelectItem value="cognitive_impairment">Cognitive Impairment</SelectItem>
-                          <SelectItem value="adhd">ADHD</SelectItem>
-                          <SelectItem value="dyslexia">Dyslexia</SelectItem>
-                          <SelectItem value="asd">Autism Spectrum Disorder (ASD)</SelectItem>
-                          <SelectItem value="visual_impairment">Visual Impairment</SelectItem>
-                          <SelectItem value="hearing_impairment">Hearing Impairment</SelectItem>
-                          <SelectItem value="motor_impairment">Motor Impairment</SelectItem>
-                          <SelectItem value="multiple_disabilities">Multiple Disabilities</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+              <TabsContent value="appearance">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dlg-theme">Theme</Label>
+                    <Select value={preferredTheme} onValueChange={setPreferredTheme}>
+                      <SelectTrigger id="dlg-theme"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">Light</SelectItem>
+                        <SelectItem value="dark">Dark</SelectItem>
+                        <SelectItem value="system">System Default</SelectItem>
+                        <SelectItem value="high_contrast">High Contrast</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  <div className="border-t border-gray-200 pt-4" />
-
-                  <div className="space-y-3">
-                    <h3 className="text-base font-semibold text-gray-800">Display Preferences</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="dlg-fontSize">Font Size</Label>
-                        <Select value={preferredFontSize} onValueChange={setPreferredFontSize}>
-                          <SelectTrigger id="dlg-fontSize"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="small">Small</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="large">Large</SelectItem>
-                            <SelectItem value="xlarge">Extra Large</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="dlg-theme">Theme</Label>
-                        <Select value={preferredTheme} onValueChange={setPreferredTheme}>
-                          <SelectTrigger id="dlg-theme"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="light">Light</SelectItem>
-                            <SelectItem value="dark">Dark</SelectItem>
-                            <SelectItem value="high_contrast">High Contrast</SelectItem>
-                            <SelectItem value="system">System</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="dlg-lineSpacing">Line Spacing</Label>
-                        <Select value={lineSpacing} onValueChange={setLineSpacing}>
-                          <SelectTrigger id="dlg-lineSpacing"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="normal">Normal</SelectItem>
-                            <SelectItem value="relaxed">Relaxed</SelectItem>
-                            <SelectItem value="loose">Loose</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dlg-fontSize">Font Size</Label>
+                    <Select value={preferredFontSize} onValueChange={setPreferredFontSize}>
+                      <SelectTrigger id="dlg-fontSize"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                        <SelectItem value="x-large">Extra Large</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  <div className="border-t border-gray-200 pt-4" />
-
-                  <div className="space-y-3">
-                    <h3 className="text-base font-semibold text-gray-800">Assistive Technology</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div><Label className="font-semibold text-gray-900">Text-to-Speech</Label><p className="text-sm text-gray-500 mt-1">Read content aloud</p></div>
-                        <Switch checked={ttsEnabled} onCheckedChange={setTtsEnabled} />
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div><Label className="font-semibold text-gray-900">Reduced Motion</Label><p className="text-sm text-gray-500 mt-1">Minimize animations</p></div>
-                        <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div><Label className="font-semibold text-gray-900">Simplified UI</Label><p className="text-sm text-gray-500 mt-1">Hide decorative elements</p></div>
-                        <Switch checked={simplifiedUi} onCheckedChange={setSimplifiedUi} />
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div><Label className="font-semibold text-gray-900">Dyslexia Font</Label><p className="text-sm text-gray-500 mt-1">Improve readability</p></div>
-                        <Switch checked={dyslexiaFriendlyFont} onCheckedChange={setDyslexiaFriendlyFont} />
-                      </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-4">
+                    <div>
+                      <Label className="font-medium text-sm">Reduced Motion</Label>
+                      <p className="text-xs text-gray-600">Minimize animations across the platform</p>
                     </div>
-                    {ttsEnabled && (
-                      <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-                        <Label className="font-medium text-sm">TTS Speed</Label>
-                        <div className="flex gap-1.5">
-                          {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
-                            <button
-                              key={speed}
-                              onClick={() => setTtsRate(speed)}
-                              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                                ttsRate === speed
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
-                              }`}
-                            >
-                              {speed}x
-                            </button>
-                          ))}
-                        </div>
-                        <div className="space-y-1 pt-2">
-                          <Label className="font-medium text-sm">TTS Voice</Label>
-                          <Select value={ttsVoiceUri} onValueChange={setTtsVoiceUri}>
-                            <SelectTrigger><SelectValue placeholder="System default" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">System default</SelectItem>
-                              {availableVoices.map((voice) => (
-                                <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
-                                  {voice.name} ({voice.lang})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
+                    <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
                   </div>
-
-
-
-                  <div className="space-y-3">
-                    <h3 className="text-base font-semibold text-gray-800">Content Preferences</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="dlg-readingLevel">Reading Level</Label>
-                        <Select value={preferredReadingLevel} onValueChange={setPreferredReadingLevel}>
-                          <SelectTrigger id="dlg-readingLevel"><SelectValue placeholder="Select level" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="basic">Basic</SelectItem>
-                            <SelectItem value="standard">Standard</SelectItem>
-                            <SelectItem value="advanced">Advanced</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <Button onClick={saveAccessibility} disabled={saving === 'accessibility'} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button onClick={saveAccessibility} disabled={saving === 'accessibility'} className="bg-blue-600 hover:bg-blue-700 text-white mt-4">
                     {saving === 'accessibility' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    Save Accessibility Settings
+                    Save Appearance
                   </Button>
                 </div>
               </TabsContent>
+
 
               <TabsContent value="notifications">
                 <div className="space-y-3">

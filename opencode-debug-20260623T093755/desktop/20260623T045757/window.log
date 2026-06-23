@@ -1,0 +1,57 @@
+[2026-06-23 12:58:32.791] [error] (window)  renderer unresponsive { window: 'main', currentURL: 'oc://renderer/index.html' }
+[2026-06-23 12:58:40.778] [error] (window)  renderer responsive { window: 'main', currentURL: 'oc://renderer/index.html' }
+[2026-06-23 12:58:40.779] [error] (window)  renderer unresponsive samples
+Window: main
+URL: oc://renderer/index.html
+<7> 
+    at execEditLength (oc://renderer/assets/main-Bh38_FKG.js:44327:7)
+    at LineDiff.diffWithOptionsObj (oc://renderer/assets/main-Bh38_FKG.js:44376:21)
+    at LineDiff.diff (oc://renderer/assets/main-Bh38_FKG.js:44297:17)
+    at diffLines (oc://renderer/assets/main-Bh38_FKG.js:44527:19)
+    at structuredPatch (oc://renderer/assets/main-Bh38_FKG.js:44569:35)
+    at createTwoFilesPatch (oc://renderer/assets/main-Bh38_FKG.js:44699:22)
+    at parseDiffFromFile (oc://renderer/assets/main-Bh38_FKG.js:44726:32)
+    at fileDiffFromContent (oc://renderer/assets/session-CS5JjKv9.js:7033:10)
+    at fileDiffFromPatch (oc://renderer/assets/session-CS5JjKv9.js:6967:28)
+    at resolveFileDiff (oc://renderer/assets/session-CS5JjKv9.js:6937:47)
+    at normalize (oc://renderer/assets/session-CS5JjKv9.js:6950:15)
+    at oc://renderer/assets/session-CS5JjKv9.js:13703:8
+    at Proxy.map (<anonymous>)
+    at Object.fn (oc://renderer/assets/session-CS5JjKv9.js:13702:74)
+    at runComputation (oc://renderer/assets/main-Bh38_FKG.js:487:22)
+    at updateComputation (oc://renderer/assets/main-Bh38_FKG.js:470:3)
+    at Object.readSignal (oc://renderer/assets/main-Bh38_FKG.js:403:67)
+    at diff2 (oc://renderer/assets/session-CS5JjKv9.js:13917:41)
+    at diffCanRender (oc://renderer/assets/session-CS5JjKv9.js:13918:49)
+    at get value (oc://renderer/assets/session-CS5JjKv9.js:14032:32)
+    at Array.resolveSources (oc://renderer/assets/main-Bh38_FKG.js:963:24)
+    at Array.resolveSources (oc://renderer/assets/main-Bh38_FKG.js:963:24)
+    at isExpanded (oc://renderer/assets/session-composer-state-1-PzJIgm.js:946:48)
+    at get open (oc://renderer/assets/session-composer-state-1-PzJIgm.js:961:18)
+    at Array.resolveSources (oc://renderer/assets/main-Bh38_FKG.js:963:24)
+    at Array.resolveSources (oc://renderer/assets/main-Bh38_FKG.js:963:24)
+    at open (oc://renderer/assets/main-Bh38_FKG.js:98077:23)
+    at access$1 (oc://renderer/assets/main-Bh38_FKG.js:8337:67)
+    at Object.value (oc://renderer/assets/main-Bh38_FKG.js:9619:18)
+    at Object.fn (oc://renderer/assets/main-Bh38_FKG.js:9591:54)
+    at runComputation (oc://renderer/assets/main-Bh38_FKG.js:487:22)
+    at updateComputation (oc://renderer/assets/main-Bh38_FKG.js:470:3)
+    at createMemo (oc://renderer/assets/main-Bh38_FKG.js:119:3)
+    at createControllableSignal$1 (oc://renderer/assets/main-Bh38_FKG.js:9591:24)
+    at createControllableBooleanSignal (oc://renderer/assets/main-Bh38_FKG.js:9608:30)
+    at createDisclosureState (oc://renderer/assets/main-Bh38_FKG.js:9618:31)
+    at CollapsibleRoot$1 (oc://renderer/assets/main-Bh38_FKG.js:98076:27)
+    at oc://renderer/assets/main-Bh38_FKG.js:927:24
+    at untrack (oc://renderer/assets/main-Bh38_FKG.js:273:12)
+    at createComponent (oc://renderer/assets/main-Bh38_FKG.js:927:10)
+    at get children (oc://renderer/assets/session-composer-state-1-PzJIgm.js:959:14)
+    at Object.fn (oc://renderer/assets/main-Bh38_FKG.js:775:35)
+    at runComputation (oc://renderer/assets/main-Bh38_FKG.js:487:22)
+    at updateComputation (oc://renderer/assets/main-Bh38_FKG.js:470:3)
+    at createMemo (oc://renderer/assets/main-Bh38_FKG.js:119:3)
+    at children (oc://renderer/assets/main-Bh38_FKG.js:388:21)
+    at oc://renderer/assets/main-Bh38_FKG.js:775:14
+    at untrack (oc://renderer/assets/main-Bh38_FKG.js:273:12)
+    at Object.fn (oc://renderer/assets/main-Bh38_FKG.js:770:36)
+    at runComputation (oc://renderer/assets/main-Bh38_FKG.js:487:22)
+Total Samples: 7

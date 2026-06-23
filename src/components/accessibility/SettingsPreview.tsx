@@ -24,7 +24,14 @@ const TINT_COLOR_MAP: Record<string, string> = {
   pale_blue: '#EBF4FA',
   soft_green: '#F0F7F0',
   grey: '#F0F0F0',
+  dark_cream: '#2D2416',
+  dark_blue_grey: '#111827',
+  dark_green: '#064E3B',
+  dark_brown: '#3E2723',
+  dark_grey: '#1F2937',
 };
+
+const DARK_TINTS = ['dark_cream', 'dark_blue_grey', 'dark_green', 'dark_brown', 'dark_grey'];
 
 const SAMPLE_TEXT = [
   'The quick brown fox jumps over the lazy dog.',
@@ -62,6 +69,7 @@ export function SettingsPreview({
           lineHeight: lineSpacingMultiplier,
           wordSpacing: `${wordSpacingEm}em`,
           backgroundColor: resolvedBg,
+          color: DARK_TINTS.includes(backgroundTint) ? '#F9FAFB' : '#111827',
           transition: 'all 0.3s ease',
         }}
         aria-label="Live preview of accessibility settings"

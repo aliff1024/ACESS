@@ -17,6 +17,7 @@ import {
   type CourseStudentProgress
 } from '@/lib/educator-api';
 import { generatePDFCertificate, MOCK_PREVIEW_DATA, formatDate, type CertificateRenderData } from '@/lib/certificate-utils';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface Props {
   courseId: string
@@ -33,6 +34,7 @@ export default function CertificateSettingsPanel({
   hasEnrollments,
   onCertChange,
 }: Props) {
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [enabled, setEnabled] = useState(false)
@@ -113,14 +115,22 @@ export default function CertificateSettingsPanel({
     }
   }
 
+  const getPreviewStudentName = () => {
+    return eligibleStudents.length > 0 ? eligibleStudents[0].studentName : 'Sample Student';
+  };
+
+  const getPreviewEducatorName = () => {
+    return educatorName || (user as any)?.profile?.display_name || 'Course Educator';
+  };
+
   const handlePreviewDownload = async () => {
     setDownloading(true)
     try {
       const previewData: CertificateRenderData = {
-        learnerName: MOCK_PREVIEW_DATA.learnerName,
+        learnerName: getPreviewStudentName(),
         courseTitle: courseTitle || MOCK_PREVIEW_DATA.courseTitle,
-        educatorName: educatorName || MOCK_PREVIEW_DATA.educatorName,
-        institutionName: institutionName || MOCK_PREVIEW_DATA.institutionName,
+        educatorName: getPreviewEducatorName(),
+        institutionName: institutionName || 'ACESS Platform',
         completionDate: new Date().toISOString(),
         certificateCode: MOCK_PREVIEW_DATA.certificateCode,
         verificationUrl: `${window.location.origin}/verify/${MOCK_PREVIEW_DATA.certificateCode}`,
@@ -441,7 +451,7 @@ export default function CertificateSettingsPanel({
                 </div>
                 <div className="border-t-2 border-b-2 border-blue-200 py-6 my-4">
                   <p className="text-gray-600 mb-3 text-sm">This certifies that</p>
-                  <p className="text-3xl font-bold text-gray-900 mb-3">John Doe</p>
+                  <p className="text-3xl font-bold text-gray-900 mb-3">{getPreviewStudentName()}</p>
                   <p className="text-gray-600 mb-2 text-sm">has successfully completed</p>
                   <p className="text-xl font-bold text-blue-700">{courseTitle}</p>
                   {courseDurationHours > 0 && (
@@ -459,7 +469,7 @@ export default function CertificateSettingsPanel({
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Educator</p>
-                    <p>{educatorName || 'Course Educator'}</p>
+                    <p>{getPreviewEducatorName()}</p>
                   </div>
                 </div>
                 {skillsText && (

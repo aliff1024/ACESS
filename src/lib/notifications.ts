@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 export interface NotificationItem {
   id: string
   user_id: string
-  type: 'enrollment' | 'lesson_completed' | 'quiz_completed' | 'lesson_added' | 'course_published'
+  type: 'enrollment' | 'lesson_completed' | 'quiz_completed' | 'lesson_added' | 'course_published' | 'badge_earned'
   title: string
   body: string | null
   metadata: Record<string, unknown>
@@ -60,4 +60,25 @@ export async function markAllAsRead(): Promise<void> {
     .eq('is_read', false)
 
   if (error) throw error
+}
+
+export async function createNotification(params: {
+  user_id: string
+  type: 'enrollment' | 'lesson_completed' | 'quiz_completed' | 'lesson_added' | 'course_published' | 'badge_earned'
+  title: string
+  body?: string
+  metadata?: Record<string, unknown>
+}): Promise<void> {
+  const { error } = await supabase.from('notifications').insert({
+    user_id: params.user_id,
+    type: params.type,
+    title: params.title,
+    body: params.body || null,
+    metadata: params.metadata || {},
+    is_read: false,
+  })
+
+  if (error) {
+    console.error('Failed to create notification:', error)
+  }
 }

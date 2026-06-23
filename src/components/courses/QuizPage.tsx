@@ -16,6 +16,7 @@ interface QuizPageProps {
   adaptiveLearningEnabled?: boolean;
   simplifiedSummary?: string | null;
   onSuggestReview?: () => void;
+  hideBackButton?: boolean;
 }
 
 function formatDate(dateStr: string) {
@@ -28,6 +29,7 @@ export function QuizPage({
   adaptiveLearningEnabled = false,
   simplifiedSummary = null,
   onSuggestReview,
+  hideBackButton = false,
 }: QuizPageProps) {
   const { settings } = useAccessibility();
   const activePreset = settings?.active_preset || 'none';
@@ -246,9 +248,11 @@ export function QuizPage({
               <p className="text-gray-600 mb-4">Failed to load quiz. Please try again.</p>
             </>
           )}
-          <Button onClick={onBack} className="bg-blue-600 text-white">
-            Back to Lesson
-          </Button>
+          {!hideBackButton && (
+            <Button onClick={onBack} className="bg-blue-600 text-white">
+              Back to Lesson
+            </Button>
+          )}
         </Card>
       </div>
     );
@@ -355,13 +359,15 @@ export function QuizPage({
                 >
                   Start Attempt
                 </Button>
-                <Button
-                  onClick={onBack}
-                  variant="outline"
-                  className="px-6 py-6 text-lg"
-                >
-                  Back to Lesson
-                </Button>
+                {!hideBackButton && (
+                  <Button
+                    onClick={onBack}
+                    variant="outline"
+                    className="px-6 py-6 text-lg"
+                  >
+                    Back to Lesson
+                  </Button>
+                )}
               </div>
             )}
           </Card>
@@ -447,10 +453,14 @@ export function QuizPage({
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* ── Top bar ── */}
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0">
-        <button onClick={onBack} className="text-blue-600 hover:text-blue-700 flex items-center gap-1.5 text-sm font-medium">
-          <ChevronLeft className="w-4 h-4" />
-          Back to Lesson
-        </button>
+        {!hideBackButton ? (
+          <button onClick={onBack} className="text-blue-600 hover:text-blue-700 flex items-center gap-1.5 text-sm font-medium">
+            <ChevronLeft className="w-4 h-4" />
+            Back to Lesson
+          </button>
+        ) : (
+          <div />
+        )}
         <h1 className="text-lg font-semibold text-gray-900 truncate mx-4">{quizData.title}</h1>
         <div className="flex items-center gap-3 shrink-0">
           {timeRemaining !== null ? (
@@ -532,163 +542,273 @@ export function QuizPage({
         )}
 
         {/* ── Main content ── */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-3xl mx-auto">
-            {/* Question header */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-500">
-                  Question {currentQuestionIndex + 1} of {questions.length}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleMarkForReview}
-                  className={`flag-for-review text-sm gap-1.5 ${
-                    markedForReview.has(currentQuestion.id)
-                      ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Flag className={`w-4 h-4 ${markedForReview.has(currentQuestion.id) ? 'fill-amber-500' : ''}`} />
-                  {markedForReview.has(currentQuestion.id) ? 'Flagged for Review' : 'Flag for Review'}
-                </Button>
-              </div>
-              <div className="flex items-start justify-between gap-4">
-                <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
-                  {currentQuestion.question_text}
-                </h2>
-                {(activePreset === 'dyslexia' || settings.tts_enabled) && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                    onClick={() => {
-                      window.speechSynthesis.cancel();
-                      const u = new SpeechSynthesisUtterance(currentQuestion.question_text);
-                      window.speechSynthesis.speak(u);
-                    }}
-                    title="Read question aloud"
-                  >
-                    <Volume2 className="w-5 h-5" />
-                  </Button>
-                )}
-              </div>
-              {currentQuestion.image_url && (
-                <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                  <img
-                    src={currentQuestion.image_url}
-                    alt=""
-                    className="w-full max-h-64 object-contain"
-                    role="presentation"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Options */}
-            <div className="space-y-3 mb-8">
-              {currentQuestion.options.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleSelectOption(option.id)}
-                  className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${
-                    selectedOption === option.id
-                      ? 'border-blue-500 bg-blue-50 shadow-md'
-                      : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                        selectedOption === option.id
-                          ? 'border-blue-600 bg-blue-600'
-                          : 'border-gray-300'
-                      }`}
-                    >
-                      {selectedOption === option.id && (
-                        <CheckCircle className="w-3.5 h-3.5 text-white" />
-                      )}
-                    </div>
-                    <span className="text-base text-gray-900">{option.option_text}</span>
-                    {option.image_url && (
-                      <img
-                        src={option.image_url}
-                        alt=""
-                        className="w-24 h-24 rounded-xl object-cover ml-auto shrink-0 border border-gray-200"
-                        role="presentation"
-                      />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {adaptiveHint && (
-              <Card className="p-4 mb-4 border-2 border-violet-200 bg-violet-50">
-                <p className="text-sm font-semibold text-violet-900 mb-1">Try again</p>
-                <p className="text-sm text-violet-800 mb-3">{adaptiveHint}</p>
-                {onSuggestReview && (
-                  <Button type="button" variant="outline" size="sm" onClick={onSuggestReview} className="border-violet-300 text-violet-800">
-                    Review lesson content
-                  </Button>
-                )}
-              </Card>
-            )}
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <Button
-                onClick={handlePrevious}
-                variant="outline"
-                disabled={isFirstQuestion}
-                className="gap-1.5"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Previous
-              </Button>
-
-              <div className="flex gap-1.5">
-                {questions.map((_, index) => {
-                  const isCurrent = index === currentQuestionIndex;
-                  const isAnswered = answers.some((a) => a.questionId === questions[index].id);
-                  const isMarked = markedForReview.has(questions[index].id);
-                  let bg = 'bg-gray-300';
-                  if (isAnswered) bg = 'bg-green-500';
-                  if (isMarked && !isAnswered) bg = 'bg-amber-400';
-                  if (isCurrent) bg = 'bg-blue-500';
+        <main className="flex-1 overflow-y-auto p-6 relative">
+          <div className={settings.distraction_free_mode ? "max-w-full px-4 sm:px-8 xl:px-12 mx-auto" : "max-w-3xl mx-auto"}>
+            
+            {!(settings.chunked_content_mode || activePreset === 'adhd' || activePreset === 'autism') ? (
+              // ── FULL SCROLL VIEW (CHUNKED OFF) ──
+              <div className="space-y-12 pb-24">
+                {questions.map((q, qIndex) => {
+                  const savedAnswer = answers.find(a => a.questionId === q.id)?.selectedAnswer;
+                  const isMarked = markedForReview.has(q.id);
+                  
                   return (
-                    <button
-                      key={index}
-                      onClick={() => navigateToQuestion(index)}
-                      className={`w-2.5 h-2.5 rounded-full ${bg} transition-colors`}
-                      title={`Question ${index + 1}${isAnswered ? ' (answered)' : ''}${isMarked ? ' (flagged)' : ''}`}
-                    />
+                    <div key={q.id} id={`question-${qIndex}`} className="pt-8 border-t border-gray-200 first:border-0 first:pt-0">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-medium text-gray-500">
+                          Question {qIndex + 1} of {questions.length}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setMarkedForReview(prev => {
+                              const next = new Set(prev);
+                              if (next.has(q.id)) next.delete(q.id);
+                              else next.add(q.id);
+                              return next;
+                            });
+                          }}
+                          className={`text-sm gap-1.5 ${isMarked ? 'text-amber-600 bg-amber-50 hover:bg-amber-100' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                          <Flag className={`w-4 h-4 ${isMarked ? 'fill-amber-500' : ''}`} />
+                          {isMarked ? 'Flagged for Review' : 'Flag for Review'}
+                        </Button>
+                      </div>
+
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
+                          {q.question_text}
+                        </h2>
+                      </div>
+                      
+                      {q.image_url && (
+                        <div className="mt-4 mb-6 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                          <img src={q.image_url} alt="" className="w-full max-h-64 object-contain" role="presentation" />
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        {q.options.map((option) => (
+                          <button
+                            key={option.id}
+                            onClick={() => {
+                              setAnswers(prev => {
+                                const rest = prev.filter(a => a.questionId !== q.id);
+                                return [...rest, { questionId: q.id, selectedAnswer: option.id }];
+                              });
+                              // Also set it as selectedOption if it happens to be the current index (keeps states somewhat in sync)
+                              if (qIndex === currentQuestionIndex) {
+                                setSelectedOption(option.id);
+                              }
+                            }}
+                            className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+                              savedAnswer === option.id
+                                ? 'border-blue-500 bg-blue-50 shadow-md'
+                                : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                  savedAnswer === option.id ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                                }`}>
+                                  {savedAnswer === option.id && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                                </div>
+                                <span className="text-base text-gray-900">{option.option_text}</span>
+                              </div>
+                              {option.image_url && (
+                                <img
+                                  src={option.image_url}
+                                  alt=""
+                                  className="w-40 h-40 rounded-xl object-contain sm:ml-auto shrink-0 border border-gray-200 bg-gray-50"
+                                  role="presentation"
+                                />
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   );
                 })}
+                
+                <div className="pt-8 border-t border-gray-200 text-center">
+                  <Button
+                    onClick={handleAutoSubmit}
+                    disabled={submitting || answers.length === 0}
+                    size="lg"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-6 text-lg w-full md:w-auto"
+                  >
+                    {submitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
+                    {submitting ? 'Submitting...' : 'Submit Quiz'}
+                  </Button>
+                </div>
               </div>
 
-              <Button
-                onClick={handleNext}
-                disabled={!selectedOption || submitting}
-                className={`gap-1.5 ${
-                  selectedOption && !submitting
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {submitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : isLastQuestion ? (
-                  'Submit Quiz'
-                ) : (
-                  <>
-                    Next
-                    <ChevronRight className="w-4 h-4" />
-                  </>
+            ) : (
+
+              // ── CHUNKED VIEW (STEP-BY-STEP) ──
+              <>
+                {/* Question header */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-500">
+                      Question {currentQuestionIndex + 1} of {questions.length}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleMarkForReview}
+                      className={`flag-for-review text-sm gap-1.5 ${
+                        markedForReview.has(currentQuestion.id)
+                          ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <Flag className={`w-4 h-4 ${markedForReview.has(currentQuestion.id) ? 'fill-amber-500' : ''}`} />
+                      {markedForReview.has(currentQuestion.id) ? 'Flagged for Review' : 'Flag for Review'}
+                    </Button>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
+                      {currentQuestion.question_text}
+                    </h2>
+                    {(activePreset === 'dyslexia' || settings.tts_enabled) && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => {
+                          window.speechSynthesis.cancel();
+                          const u = new SpeechSynthesisUtterance(currentQuestion.question_text);
+                          window.speechSynthesis.speak(u);
+                        }}
+                        title="Read question aloud"
+                      >
+                        <Volume2 className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
+                  {currentQuestion.image_url && (
+                    <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                      <img
+                        src={currentQuestion.image_url}
+                        alt=""
+                        className="w-full max-h-64 object-contain"
+                        role="presentation"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Options */}
+                <div className="space-y-3 mb-8">
+                  {currentQuestion.options.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleSelectOption(option.id)}
+                      className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+                        selectedOption === option.id
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                              selectedOption === option.id
+                                ? 'border-blue-600 bg-blue-600'
+                                : 'border-gray-300'
+                            }`}
+                          >
+                            {selectedOption === option.id && (
+                              <CheckCircle className="w-3.5 h-3.5 text-white" />
+                            )}
+                          </div>
+                          <span className="text-base text-gray-900">{option.option_text}</span>
+                        </div>
+                        {option.image_url && (
+                          <img
+                            src={option.image_url}
+                            alt=""
+                            className="w-40 h-40 rounded-xl object-contain sm:ml-auto shrink-0 border border-gray-200 bg-gray-50"
+                            role="presentation"
+                          />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {adaptiveHint && (
+                  <Card className="p-4 mb-4 border-2 border-violet-200 bg-violet-50">
+                    <p className="text-sm font-semibold text-violet-900 mb-1">Try again</p>
+                    <p className="text-sm text-violet-800 mb-3">{adaptiveHint}</p>
+                    {onSuggestReview && (
+                      <Button type="button" variant="outline" size="sm" onClick={onSuggestReview} className="border-violet-300 text-violet-800">
+                        Review lesson content
+                      </Button>
+                    )}
+                  </Card>
                 )}
-              </Button>
-            </div>
+
+                {/* Navigation */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <Button
+                    onClick={handlePrevious}
+                    variant="outline"
+                    disabled={isFirstQuestion}
+                    className="gap-1.5"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </Button>
+
+                  <div className="flex gap-1.5 hidden md:flex">
+                    {questions.map((_, index) => {
+                      const isCurrent = index === currentQuestionIndex;
+                      const isAnswered = answers.some((a) => a.questionId === questions[index].id);
+                      const isMarked = markedForReview.has(questions[index].id);
+                      let bg = 'bg-gray-300';
+                      if (isAnswered) bg = 'bg-green-500';
+                      if (isMarked && !isAnswered) bg = 'bg-amber-400';
+                      if (isCurrent) bg = 'bg-blue-500';
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => navigateToQuestion(index)}
+                          className={`w-2.5 h-2.5 rounded-full ${bg} transition-colors`}
+                          title={`Question ${index + 1}${isAnswered ? ' (answered)' : ''}${isMarked ? ' (flagged)' : ''}`}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    onClick={handleNext}
+                    disabled={!selectedOption || submitting}
+                    className={`gap-1.5 ${
+                      selectedOption && !submitting
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    {submitting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : isLastQuestion ? (
+                      'Submit Quiz'
+                    ) : (
+                      <>
+                        Next
+                        <ChevronRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>

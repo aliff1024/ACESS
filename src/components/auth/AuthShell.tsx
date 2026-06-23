@@ -19,7 +19,7 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
   return (
     <div className="min-h-screen bg-blue-50 dark:bg-gray-950">
       <Toaster position="top-right" richColors />
-      <Navbar onTryDemo={() => router.push('/login')} />
+      <Navbar />
 
       <main className="mx-auto flex min-h-[calc(100vh-10rem)] w-full max-w-7xl items-center justify-center px-6 py-12">
         <div className="grid w-full gap-10 lg:grid-cols-[1.1fr_0.9fr]">

@@ -12,6 +12,9 @@ export interface SystemCourseFields {
   thumbnail_url?: string
   recommended_age_group?: string
   guided_learning_enabled?: boolean
+  tags?: string[]
+  accessibility_categories?: string[]
+  primary_disability_focus?: string
 }
 
 export interface SystemCourseItem {
@@ -66,6 +69,9 @@ export async function createSystemCourse(adminId: string, fields: SystemCourseFi
       managed_by_admin: true,
       guided_learning_enabled: fields.guided_learning_enabled ?? true,
       recommended_age_group: fields.recommended_age_group || null,
+      tags: fields.tags || [],
+      accessibility_categories: fields.accessibility_categories || [],
+      primary_disability_focus: fields.primary_disability_focus || null,
     })
     .select()
     .single()
@@ -248,6 +254,15 @@ export async function fetchSystemCourses(): Promise<SystemCourseItem[]> {
   }))
 }
 
+export async function fetchAllAdminCourses() {
+  const response = await fetch('/api/admin/courses')
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to fetch admin courses')
+  }
+  return response.json()
+}
+
 // ─── Dashboard Types ─────────────────────────────────────────────────
 
 export interface AdminDashboardStats {
@@ -275,6 +290,9 @@ export interface AdminAnalytics {
   avgCompletionRate: number
   avgQuizScore: number
   atRiskLearners: number
+  totalCourses: number
+  totalEducators: number
+  totalInteractiveActivities: number
   accessibilityMetrics: {
     screenReaderUsage: number
     keyboardNavigation: number
@@ -298,72 +316,15 @@ export interface EngagementData {
 }
 
 export async function fetchAdminEngagementData(): Promise<EngagementData[]> {
-  const now = new Date()
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  
-  const last7Days: { date: Date; name: string; users: Set<string>; views: number }[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    d.setHours(0, 0, 0, 0)
-    last7Days.push({
-      date: d,
-      name: days[d.getDay()],
-      users: new Set<string>(),
-      views: 0
-    })
+  try {
+    const res = await fetch('/api/admin/engagement');
+    if (!res.ok) throw new Error('Failed to fetch engagement data');
+    const data = await res.json();
+    return data.engagementData || [];
+  } catch (error) {
+    console.error('Engagement data error:', error);
+    return [];
   }
-
-  const sevenDaysAgo = new Date(now)
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString()
-
-  const [lpRes, qaRes] = await Promise.all([
-    supabase.from('lesson_progress')
-      .select('enrollment_id, last_viewed_at')
-      .gte('last_viewed_at', sevenDaysAgoStr),
-    supabase.from('quiz_attempts')
-      .select('enrollment_id, submitted_at')
-      .gte('submitted_at', sevenDaysAgoStr)
-  ])
-
-  if (lpRes.data) {
-    for (const lp of lpRes.data) {
-      if (!lp.last_viewed_at) continue
-      const date = new Date(lp.last_viewed_at)
-      const dayIndex = last7Days.findIndex(d => 
-        date.getFullYear() === d.date.getFullYear() &&
-        date.getMonth() === d.date.getMonth() &&
-        date.getDate() === d.date.getDate()
-      )
-      if (dayIndex !== -1) {
-        last7Days[dayIndex].views++
-        if (lp.enrollment_id) last7Days[dayIndex].users.add(lp.enrollment_id)
-      }
-    }
-  }
-
-  if (qaRes.data) {
-    for (const qa of qaRes.data) {
-      if (!qa.submitted_at) continue
-      const date = new Date(qa.submitted_at)
-      const dayIndex = last7Days.findIndex(d => 
-        date.getFullYear() === d.date.getFullYear() &&
-        date.getMonth() === d.date.getMonth() &&
-        date.getDate() === d.date.getDate()
-      )
-      if (dayIndex !== -1) {
-        last7Days[dayIndex].views++
-        if (qa.enrollment_id) last7Days[dayIndex].users.add(qa.enrollment_id)
-      }
-    }
-  }
-
-  return last7Days.map(d => ({
-    name: d.name,
-    users: d.users.size,
-    views: d.views
-  }))
 }
 
 // ─── Dashboard Stats ─────────────────────────────────────────────────
@@ -483,46 +444,7 @@ export interface CompletionTrend {
   completed: number
 }
 
-export async function fetchCompletionTrends(): Promise<CompletionTrend[]> {
-  const twelveMonthsAgo = new Date()
-  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11)
-  twelveMonthsAgo.setDate(1)
-  const startDate = twelveMonthsAgo.toISOString()
-
-  const { data, error } = await supabase
-    .from('enrollments')
-    .select('enrolled_at, status')
-    .gte('enrolled_at', startDate)
-    .order('enrolled_at', { ascending: true })
-
-  if (error) throw error
-
-  const monthMap = new Map<string, { total: number; completed: number }>()
-  for (const e of data || []) {
-    const key = new Date(e.enrolled_at).toISOString().slice(0, 7)
-    const entry = monthMap.get(key) || { total: 0, completed: 0 }
-    entry.total++
-    if (e.status === 'completed') entry.completed++
-    monthMap.set(key, entry)
-  }
-
-  const trends: CompletionTrend[] = []
-  const d = new Date(twelveMonthsAgo)
-  for (let i = 0; i < 12; i++) {
-    const key = d.toISOString().slice(0, 7)
-    const monthName = d.toLocaleString('en-US', { month: 'short', year: '2-digit' })
-    const entry = monthMap.get(key) || { total: 0, completed: 0 }
-    trends.push({
-      month: monthName,
-      rate: entry.total > 0 ? Math.round((entry.completed / entry.total) * 100) : 0,
-      total: entry.total,
-      completed: entry.completed,
-    })
-    d.setMonth(d.getMonth() + 1)
-  }
-
-  return trends
-}
+// CompletionTrends now handled by fetchAllAdminAnalytics
 
 // ─── Enrollment Trends ───────────────────────────────────────────────
 
@@ -531,108 +453,21 @@ export interface EnrollmentTrend {
   count: number
 }
 
-export async function fetchEnrollmentTrends(): Promise<EnrollmentTrend[]> {
-  const twelveMonthsAgo = new Date()
-  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11)
-  twelveMonthsAgo.setDate(1)
-  const startDate = twelveMonthsAgo.toISOString()
-
-  const { data, error } = await supabase
-    .from('enrollments')
-    .select('enrolled_at')
-    .gte('enrolled_at', startDate)
-    .order('enrolled_at', { ascending: true })
-
-  if (error) throw error
-
-  const monthMap = new Map<string, number>()
-  for (const e of data || []) {
-    const key = new Date(e.enrolled_at).toISOString().slice(0, 7)
-    monthMap.set(key, (monthMap.get(key) || 0) + 1)
-  }
-
-  const trends: EnrollmentTrend[] = []
-  const d = new Date(twelveMonthsAgo)
-  for (let i = 0; i < 12; i++) {
-    const key = d.toISOString().slice(0, 7)
-    const monthName = d.toLocaleString('en-US', { month: 'short', year: '2-digit' })
-    trends.push({ month: monthName, count: monthMap.get(key) || 0 })
-    d.setMonth(d.getMonth() + 1)
-  }
-
-  return trends
-}
+// EnrollmentTrends now handled by fetchAllAdminAnalytics
 
 // ─── Analytics ───────────────────────────────────────────────────────
 
-export async function fetchAdminAnalytics(): Promise<AdminAnalytics> {
-  const { count: totalActiveLearners } = await supabase
-    .from('users')
-    .select('id', { count: 'exact', head: true })
-    .eq('role', 'learner')
-    .eq('is_active', true)
-    .is('deleted_at', null)
+export interface DataTrend {
+  label: string
+  count: number
+}
 
-  const { data: enrollments } = await supabase
-    .from('enrollments')
-    .select('id, status')
-
-  const totalEnrollments = enrollments?.length ?? 0
-  const completedEnrollments = (enrollments || []).filter((e) => e.status === 'completed').length
-  const avgCompletionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0
-
-  const { data: attempts } = await supabase
-    .from('quiz_attempts')
-    .select('score_pct')
-    .neq('result', 'in_progress')
-
-  const scores = (attempts || []).map((a) => a.score_pct).filter((s): s is number => s !== null)
-  const avgQuizScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
-
-  const activeEnrollmentIds = (enrollments || [])
-    .filter((e) => e.status === 'active')
-    .map((e) => e.id)
-
-  let atRiskLearners = 0
-  if (activeEnrollmentIds.length > 0) {
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const { data: recentViews } = await supabase
-      .from('lesson_progress')
-      .select('enrollment_id', { count: 'exact', head: true })
-      .in('enrollment_id', activeEnrollmentIds)
-      .gte('last_viewed_at', oneWeekAgo)
-    atRiskLearners = activeEnrollmentIds.length - (recentViews?.length ?? 0)
-    if (atRiskLearners < 0) atRiskLearners = 0
+export async function fetchAllAdminAnalytics() {
+  const response = await fetch('/api/admin/analytics');
+  if (!response.ok) {
+    throw new Error('Failed to fetch analytics');
   }
-
-  const { count: srUsers } = await supabase
-    .from('user_accessibility_settings')
-    .select('id', { count: 'exact', head: true })
-    .eq('screen_reader_optimized', true)
-
-  const { count: kbUsers } = await supabase
-    .from('user_accessibility_settings')
-    .select('id', { count: 'exact', head: true })
-    .eq('keyboard_navigation_enabled', true)
-
-  const { count: hcUsers } = await supabase
-    .from('user_accessibility_settings')
-    .select('id', { count: 'exact', head: true })
-    .eq('preferred_theme', 'high_contrast')
-
-  const totalUsersWithAccessibility = (srUsers ?? 0) + (kbUsers ?? 0) + (hcUsers ?? 0) || 1
-
-  return {
-    totalActiveLearners: totalActiveLearners ?? 0,
-    avgCompletionRate,
-    avgQuizScore,
-    atRiskLearners,
-    accessibilityMetrics: {
-      screenReaderUsage: Math.round(((srUsers ?? 0) / totalUsersWithAccessibility) * 100),
-      keyboardNavigation: Math.round(((kbUsers ?? 0) / totalUsersWithAccessibility) * 100),
-      highContrastMode: Math.round(((hcUsers ?? 0) / totalUsersWithAccessibility) * 100),
-    },
-  }
+  return response.json();
 }
 
 // ─── Certificate Management ──────────────────────────────────────────
@@ -648,35 +483,12 @@ export interface AdminCertificate {
 }
 
 export async function fetchAdminCertificates(): Promise<AdminCertificate[]> {
-  const { data, error } = await supabase
-    .from('certificates')
-    .select(`
-      id, reference_code, status, issued_at, revoked_at,
-      enrollments!inner(
-        course_id,
-        users!enrollments_user_id_fkey(full_name),
-        courses!enrollments_course_id_fkey(title)
-      )
-    `)
-    .order('issued_at', { ascending: false })
-
-  if (error) throw error
-
-  return (data || []).map((c) => {
-    const e = c.enrollments as unknown as {
-      users: { full_name: string }
-      courses: { title: string }
-    }
-    return {
-      id: c.id,
-      learner_name: e.users?.full_name || 'Unknown',
-      course_title: e.courses?.title || 'Unknown Course',
-      certificate_code: c.reference_code,
-      issued_at: c.issued_at,
-      status: c.status,
-      revoked_at: c.revoked_at || undefined,
-    }
-  })
+  const response = await fetch('/api/admin/certificates');
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || 'Failed to fetch certificates');
+  }
+  return response.json();
 }
 
 export async function revokeCertificate(certId: string, reason: string): Promise<void> {
@@ -1110,106 +922,29 @@ export async function generateReferralCode(userId: string): Promise<string> {
 }
 
 export async function generateReport(reportType: string): Promise<ReportDefinition> {
-  switch (reportType) {
-    case 'user_activity': {
-      const { data: users } = await supabase
-        .from('users')
-        .select('full_name, email, role, is_active, last_login_at, created_at')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(100)
-
-      return {
-        title: 'User Activity Report',
-        description: 'Detailed breakdown of user engagement and activity patterns',
-        frequency: 'On-demand',
-        data: (users || []).map((u) => ({
-          Name: u.full_name || 'Unknown',
-          Email: u.email,
-          Role: u.role,
-          Active: u.is_active ? 'Yes' : 'No',
-          'Last Login': u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : 'Never',
-          'Joined': new Date(u.created_at).toLocaleDateString(),
-        })),
-      }
-    }
-
-    case 'course_performance': {
-      const { data: courses } = await supabase
-        .from('courses')
-        .select('id, title, status, difficulty_level, created_at')
-        .is('deleted_at', null)
-
-      const courseIds = (courses || []).map((c) => c.id)
-      const enrollCounts = new Map<string, number>()
-
-      if (courseIds.length > 0) {
-        const { data: enrollments } = await supabase
-          .from('enrollments')
-          .select('course_id')
-          .in('course_id', courseIds)
-
-        for (const e of enrollments || []) {
-          enrollCounts.set(e.course_id, (enrollCounts.get(e.course_id) || 0) + 1)
-        }
-      }
-
-      return {
-        title: 'Course Performance Report',
-        description: 'Comprehensive analysis of course completion and quiz scores',
-        frequency: 'On-demand',
-        data: (courses || []).map((c) => ({
-          Title: c.title,
-          Status: c.status,
-          Difficulty: c.difficulty_level || 'N/A',
-          Enrollments: enrollCounts.get(c.id) || 0,
-          Created: new Date(c.created_at).toLocaleDateString(),
-        })),
-      }
-    }
-
-    case 'certificate_issuance': {
-      const { data: certs } = await supabase
-        .from('certificates')
-        .select(`
-          reference_code, status, issued_at, revoked_at,
-          enrollments!inner(
-            users!enrollments_user_id_fkey(full_name),
-            courses!enrollments_course_id_fkey(title)
-          )
-        `)
-        .order('issued_at', { ascending: false })
-        .limit(100)
-
-      return {
-        title: 'Certificate Issuance Report',
-        description: 'Summary of all certificates issued and revoked',
-        frequency: 'On-demand',
-        data: (certs || []).map((c) => {
-          const e = c.enrollments as unknown as {
-            users: { full_name: string }
-            courses: { title: string }
-          }
-          return {
-            Learner: e.users?.full_name || 'Unknown',
-            Course: e.courses?.title || 'Unknown',
-            Code: c.reference_code,
-            Status: c.status,
-            Issued: new Date(c.issued_at).toLocaleDateString(),
-            Revoked: c.revoked_at ? new Date(c.revoked_at).toLocaleDateString() : 'N/A',
-          }
-        }),
-      }
-    }
-
-    default:
-      return {
-        title: 'Platform Health Report',
-        description: 'System performance, uptime, and technical metrics',
-        frequency: 'On-demand',
-        data: [],
-      }
+  const response = await fetch('/api/admin/reports', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reportType }),
+  })
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to generate report')
   }
+  return response.json()
+}
+
+export async function generateCustomReport(entity: string, fields: string[]): Promise<ReportDefinition> {
+  const response = await fetch('/api/admin/reports', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entity, fields }),
+  })
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to generate custom report')
+  }
+  return response.json()
 }
 
 // ─── Course Thumbnails ─────────────────────────────────────────────────
@@ -1243,4 +978,22 @@ export async function assignCourseThumbnails(): Promise<number> {
   }
 
   return courses.length
+}
+
+// ─── System Health ───────────────────────────────────────────────────
+
+export interface SystemHealthMetrics {
+  latencyMs: number;
+  databaseStatus: 'Connected' | 'Disconnected';
+}
+
+export async function fetchSystemHealthMetrics(): Promise<SystemHealthMetrics> {
+  const start = Date.now();
+  const { error } = await supabase.from('users').select('id').limit(1);
+  const end = Date.now();
+  
+  return {
+    latencyMs: end - start,
+    databaseStatus: error ? 'Disconnected' : 'Connected'
+  }
 }

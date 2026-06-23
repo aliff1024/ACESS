@@ -1,0 +1,34 @@
+[2026-06-22 18:29:45.957] [error] (window)  renderer unresponsive { window: 'main', currentURL: 'oc://renderer/index.html' }
+[2026-06-22 18:29:46.047] [error] (window)  renderer responsive { window: 'main', currentURL: 'oc://renderer/index.html' }
+[2026-06-22 18:40:24.945] [error] (window)  renderer unresponsive { window: 'main', currentURL: 'oc://renderer/index.html' }
+[2026-06-22 18:40:32.753] [error] (window)  renderer responsive { window: 'main', currentURL: 'oc://renderer/index.html' }
+[2026-06-22 18:40:32.754] [error] (window)  renderer unresponsive samples
+Window: main
+URL: oc://renderer/index.html
+<7> 
+    at execEditLength (oc://renderer/assets/main-Bh38_FKG.js:44327:7)
+    at LineDiff.diffWithOptionsObj (oc://renderer/assets/main-Bh38_FKG.js:44376:21)
+    at LineDiff.diff (oc://renderer/assets/main-Bh38_FKG.js:44297:17)
+    at diffLines (oc://renderer/assets/main-Bh38_FKG.js:44527:19)
+    at structuredPatch (oc://renderer/assets/main-Bh38_FKG.js:44569:35)
+    at createTwoFilesPatch (oc://renderer/assets/main-Bh38_FKG.js:44699:22)
+    at parseDiffFromFile (oc://renderer/assets/main-Bh38_FKG.js:44726:32)
+    at fileDiffFromContent (oc://renderer/assets/session-CS5JjKv9.js:7033:10)
+    at fileDiffFromPatch (oc://renderer/assets/session-CS5JjKv9.js:6967:28)
+    at resolveFileDiff (oc://renderer/assets/session-CS5JjKv9.js:6937:47)
+    at normalize (oc://renderer/assets/session-CS5JjKv9.js:6950:15)
+    at oc://renderer/assets/session-CS5JjKv9.js:13703:8
+    at Proxy.map (<anonymous>)
+    at Object.fn (oc://renderer/assets/session-CS5JjKv9.js:13702:74)
+    at runComputation (oc://renderer/assets/main-Bh38_FKG.js:487:22)
+    at updateComputation (oc://renderer/assets/main-Bh38_FKG.js:470:3)
+    at runTop (oc://renderer/assets/main-Bh38_FKG.js:566:7)
+    at runQueue (oc://renderer/assets/main-Bh38_FKG.js:638:45)
+    at completeUpdates (oc://renderer/assets/main-Bh38_FKG.js:594:5)
+    at runUpdates (oc://renderer/assets/main-Bh38_FKG.js:584:5)
+    at completeLoad (oc://renderer/assets/main-Bh38_FKG.js:167:5)
+    at loadEnd (oc://renderer/assets/main-Bh38_FKG.js:162:14)
+    at oc://renderer/assets/main-Bh38_FKG.js:232:28
+Total Samples: 7
+[2026-06-22 18:42:47.950] [error] (window)  renderer unresponsive { window: 'main', currentURL: 'oc://renderer/index.html' }
+[2026-06-22 18:42:48.510] [error] (window)  renderer responsive { window: 'main', currentURL: 'oc://renderer/index.html' }

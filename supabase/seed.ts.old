@@ -1,0 +1,239 @@
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Load env from .env.local
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error("Missing Supabase credentials in .env.local");
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
+
+const PERSONAS = [
+  { email: 'admin@acess.demo', role: 'admin', name: 'Aliff Admin' },
+  { email: 'educator@acess.demo', role: 'educator', name: 'Dr. Sarah Educator' },
+  { email: 'learner@acess.demo', role: 'learner', name: 'Leo Learner' },
+  { email: 'student1@acess.demo', role: 'learner', name: 'Mia Student' },
+  { email: 'student2@acess.demo', role: 'learner', name: 'Noah Student' },
+  { email: 'student3@acess.demo', role: 'learner', name: 'Emma Student' },
+  { email: 'student4@acess.demo', role: 'learner', name: 'Oliver Student' },
+  { email: 'student5@acess.demo', role: 'learner', name: 'Ava Student' },
+];
+
+const DEFAULT_PASSWORD = 'AcessDemo2026!';
+
+function randomDate(start: Date, end: Date) {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+}
+
+async function main() {
+  console.log("🚀 Starting LMS Demo Data Generation...");
+
+  // 1. Wipe existing demo users to reset state
+  console.log("🧹 Wiping old demo data...");
+  
+  // Wipe courses first to avoid foreign key violations on users
+  const { data: demoUsersForCourses } = await supabase.from('users').select('id').like('email', '%@acess.demo');
+  if (demoUsersForCourses && demoUsersForCourses.length > 0) {
+    const ids = demoUsersForCourses.map(u => u.id);
+    await supabase.from('courses').delete().in('created_by', ids);
+  }
+
+  // Wipe from public.users to clear constraints and cascade deletes
+  await supabase.from('users').delete().like('email', '%@acess.demo');
+  
+  const { data: existingUsers } = await supabase.auth.admin.listUsers();
+  const demoUserIds = existingUsers.users.filter(u => u.email?.endsWith('@acess.demo')).map(u => u.id);
+  
+  if (demoUserIds.length > 0) {
+    // Delete from public.users first to avoid constraint violation on recreation
+    await supabase.from('users').delete().in('id', demoUserIds);
+    for (const id of demoUserIds) {
+      await supabase.auth.admin.deleteUser(id);
+    }
+  }
+
+  // 2. Create Personas
+  console.log("👥 Creating personas...");
+  const userMap = new Map<string, string>();
+  for (const p of PERSONAS) {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: p.email,
+      password: DEFAULT_PASSWORD,
+      email_confirm: true,
+      user_metadata: { full_name: p.name, role: p.role }
+    });
+    if (error) {
+      console.error(`Error creating ${p.email}:`, error.message);
+      continue;
+    }
+    const userId = data.user.id;
+    userMap.set(p.role, userId); // Save the FIRST of each role for easy access (educator, admin)
+    userMap.set(p.email, userId);
+    
+    // Explicitly update public.users and user_profiles just in case triggers failed
+    await supabase.from('users').update({ role: p.role, full_name: p.name }).eq('id', userId);
+  }
+
+  const educatorId = userMap.get('educator');
+  const mainLearnerId = userMap.get('learner@acess.demo');
+
+  if (!educatorId || !mainLearnerId) {
+    console.error("Failed to create critical personas. Aborting.");
+    return;
+  }
+
+  // 3. Create Flagship Course
+  console.log("📚 Creating 'Mastering Web Accessibility' Course...");
+  const { data: course, error: courseErr } = await supabase.from('courses').insert({
+    title: 'Mastering Web Accessibility (W3C Standard)',
+    slug: 'mastering-web-accessibility',
+    description: 'Learn how to create inclusive digital experiences that comply with WCAG 2.2 standards. Perfect for developers, designers, and content creators.',
+    thumbnail_url: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&q=80&w=800',
+    category: 'Technology',
+    difficulty_level: 'beginner',
+    status: 'published',
+    created_by: educatorId
+  }).select().single();
+
+  if (courseErr) throw courseErr;
+  const courseId = course.id;
+
+  // 4. Create Chapters
+  console.log("📑 Creating Chapters...");
+  const { data: ch1 } = await supabase.from('course_chapters').insert({
+    course_id: courseId, title: 'The Foundations of W3C Accessibility', sequence_order: 1
+  }).select().single();
+  const { data: ch2 } = await supabase.from('course_chapters').insert({
+    course_id: courseId, title: 'Interactive Learning & Application', sequence_order: 2
+  }).select().single();
+  const { data: ch3 } = await supabase.from('course_chapters').insert({
+    course_id: courseId, title: 'Assessment', sequence_order: 3
+  }).select().single();
+
+  // 5. Create Lessons
+  console.log("📝 Creating Lessons...");
+  const { data: l1 } = await supabase.from('lessons').insert({
+    course_id: courseId, chapter_id: ch1.id, title: 'What is WCAG?', sequence_order: 1,
+    content_html: `<h2>Understanding WCAG</h2><p>The Web Content Accessibility Guidelines (WCAG) are part of a series of web accessibility guidelines published by the Web Accessibility Initiative (WAI) of the World Wide Web Consortium (W3C), the main international standards organization for the Internet.</p>`,
+    status: 'published'
+  }).select().single();
+
+  const { data: l2 } = await supabase.from('lessons').insert({
+    course_id: courseId, chapter_id: ch1.id, title: 'The 4 Principles (POUR)', sequence_order: 2,
+    content_html: `<h2>The POUR Principles</h2><p>WCAG is organized around four principles: <strong>Perceivable, Operable, Understandable, and Robust.</strong></p>`,
+    status: 'published'
+  }).select().single();
+
+  const { data: l3 } = await supabase.from('lessons').insert({
+    course_id: courseId, chapter_id: ch2.id, title: 'ARIA Roles Flashcards', sequence_order: 3,
+    content_html: `<p>Review the ARIA roles using the interactive flashcards below.</p>`,
+    status: 'published'
+  }).select().single();
+
+  const { data: l4 } = await supabase.from('lessons').insert({
+    course_id: courseId, chapter_id: ch2.id, title: 'History of Web Accessibility', sequence_order: 4,
+    content_html: `<p>Explore the timeline of web accessibility legislation and standards.</p>`,
+    status: 'published'
+  }).select().single();
+
+  // 6. Interactive Content
+  console.log("🎮 Creating Interactive Activities...");
+  await supabase.from('lesson_interactive_content').insert({
+    lesson_id: l3.id, title: 'ARIA Roles', content_type: 'flashcards',
+    content_data: {
+      cards: [
+        { id: '1', front: 'role="button"', back: 'Used for clickable elements that trigger actions.' },
+        { id: '2', front: 'role="dialog"', back: 'Used for modal windows that interrupt the user.' },
+        { id: '3', front: 'role="alert"', back: 'Used for important, time-sensitive information.' }
+      ]
+    }
+  });
+
+  await supabase.from('lesson_interactive_content').insert({
+    lesson_id: l4.id, title: 'Timeline of A11Y', content_type: 'timeline',
+    content_data: {
+      mode: 'historical',
+      events: [
+        { id: '1', date: '1999', title: 'WCAG 1.0', description: 'The first set of guidelines released by W3C.' },
+        { id: '2', date: '2008', title: 'WCAG 2.0', description: 'A massive update prioritizing testable success criteria.' },
+        { id: '3', date: '2018', title: 'WCAG 2.1', description: 'Added focus on mobile and cognitive accessibility.' },
+        { id: '4', date: '2023', title: 'WCAG 2.2', description: 'The latest standard, adding more focus appearance requirements.' }
+      ]
+    }
+  });
+
+  // 7. Quiz Creation
+  console.log("🧠 Creating Module Quiz...");
+  const { data: quiz, error: quizErr } = await supabase.from('quizzes').insert({
+    lesson_id: l4.id, title: 'WCAG Certification Exam', pass_threshold_pct: 80, time_limit_seconds: 900
+  }).select().single();
+  
+  if (quizErr) {
+    console.error("Error inserting quiz:", quizErr);
+    throw quizErr;
+  }
+
+  const { data: q1, error: q1Err } = await supabase.from('quiz_questions').insert({
+    quiz_id: quiz.id, question_text: 'What does POUR stand for?', question_type: 'multiple_choice', sequence_order: 1
+  }).select().single();
+  
+  if (q1Err) throw q1Err;
+  
+  await supabase.from('quiz_options').insert([
+    { question_id: q1.id, option_text: 'Perceivable, Operable, Understandable, Robust', is_correct: true, sequence_order: 1 },
+    { question_id: q1.id, option_text: 'Performance, Optimization, Usability, Reliability', is_correct: false, sequence_order: 2 }
+  ]);
+
+  // 8. Analytics History Simulation
+  console.log("📈 Simulating 3 Months of Historical Analytics...");
+  const learners = PERSONAS.filter(p => p.role === 'learner').map(p => userMap.get(p.email)!);
+  const now = new Date();
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(now.getMonth() - 3);
+
+  for (const learnerId of learners) {
+    // Spread enrollments across the last 3 months
+    const enrolledAt = randomDate(threeMonthsAgo, now);
+    const { data: enroll } = await supabase.from('enrollments').insert({
+      user_id: learnerId, course_id: courseId, enrolled_at: enrolledAt.toISOString(), status: 'active'
+    }).select().single();
+
+    // Give them varying progress
+    const rand = Math.random();
+    if (rand > 0.2) {
+      await supabase.from('lesson_progress').insert({
+        enrollment_id: enroll.id, lesson_id: l1.id, is_viewed: true, is_completed: true, last_viewed_at: randomDate(enrolledAt, now).toISOString(), time_spent_learning: 900
+      });
+    }
+    if (rand > 0.5) {
+      await supabase.from('lesson_progress').insert({
+        enrollment_id: enroll.id, lesson_id: l2.id, is_viewed: true, is_completed: true, last_viewed_at: randomDate(enrolledAt, now).toISOString(), time_spent_learning: 1200
+      });
+    }
+    if (rand > 0.8) {
+      // Completed course!
+      await supabase.from('quiz_attempts').insert({
+        enrollment_id: enroll.id, quiz_id: quiz.id, attempt_number: 1, score_pct: Math.floor(Math.random() * 20) + 80, result: 'passed'
+      });
+      await supabase.from('enrollments').update({ status: 'completed' }).eq('id', enroll.id);
+    } else if (rand > 0.6) {
+      // Failed quiz
+      await supabase.from('quiz_attempts').insert({
+        enrollment_id: enroll.id, quiz_id: quiz.id, attempt_number: 1, score_pct: Math.floor(Math.random() * 40) + 30, result: 'failed'
+      });
+    }
+  }
+
+  console.log("✨ Demo Data Generation Complete! Present away!");
+}
+
+main().catch(console.error);

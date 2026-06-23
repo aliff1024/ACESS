@@ -30,14 +30,14 @@ function DraggableItem({ item, disabled }: { item: DragDropItem; disabled: boole
       style={style}
       {...listeners}
       {...attributes}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm shadow-sm border cursor-grab active:cursor-grabbing select-none ${
+      className={`inline-flex flex-col items-center gap-2 px-4 py-3 rounded-xl text-sm shadow-sm border cursor-grab active:cursor-grabbing select-none ${
         isDragging ? 'border-blue-400 bg-blue-50' : 'bg-white border-gray-200 hover:border-blue-300'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       {item.image_url && (
-        <img src={item.image_url} alt="" className="w-8 h-8 rounded object-cover" />
+        <img src={item.image_url} alt="" className="w-32 h-32 rounded object-cover shadow-sm" />
       )}
-      {item.text}
+      <span className="font-medium text-center">{item.text}</span>
     </div>
   )
 }
@@ -66,14 +66,14 @@ function DroppableCategory({ category, items, revealed, onItemClick }: {
             <div
               key={item.id}
               onClick={() => !revealed && onItemClick(item)}
-              className={`px-3 py-1.5 rounded-lg text-sm ${!revealed ? 'cursor-pointer hover:bg-gray-50' : ''} border flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-xl text-sm ${!revealed ? 'cursor-pointer hover:bg-gray-50' : ''} border flex flex-col items-center gap-2 shadow-sm ${
                 revealed 
                   ? (isCorrect ? 'bg-green-50 border-green-300 text-green-800' : 'bg-red-50 border-red-300 text-red-800')
                   : 'bg-white border-gray-200'
               }`}
             >
-              {item.image_url && <img src={item.image_url} alt="" className="w-6 h-6 rounded object-cover" />}
-              {item.text}
+              {item.image_url && <img src={item.image_url} alt="" className="w-28 h-28 rounded object-cover shadow-sm" />}
+              <span className="font-medium text-center">{item.text}</span>
             </div>
           )
         })}
@@ -339,9 +339,9 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
 
       <DragOverlay>
         {activeItem ? (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm shadow-lg border-2 border-blue-400 bg-blue-50">
-            {activeItem.image_url && <img src={activeItem.image_url} alt="" className="w-8 h-8 rounded object-cover" />}
-            {activeItem.text}
+          <div className="inline-flex flex-col items-center gap-2 px-4 py-3 rounded-xl text-sm shadow-xl border-2 border-blue-400 bg-blue-50 opacity-90 scale-105 transform">
+            {activeItem.image_url && <img src={activeItem.image_url} alt="" className="w-32 h-32 rounded object-cover shadow-sm" />}
+            <span className="font-medium text-center">{activeItem.text}</span>
           </div>
         ) : null}
       </DragOverlay>

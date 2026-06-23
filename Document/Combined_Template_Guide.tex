@@ -1,0 +1,2827 @@
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[12pt, oneside]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS %%%
+\usepackage{geometry} % to change the page dimensions
+\geometry{
+	a4paper,
+	total={21.0cm,29.7cm},
+	top=2.5cm,
+	bottom=2.5cm,
+	right=2.5cm,
+	left=3.5cm} % or letterpaper (US) or a5paper or....
+
+
+%%% HEADERS & FOOTERS %%%
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customize the layout...
+\lhead{}\chead{}\rhead{\thepage}
+\lfoot{}\cfoot{}\rfoot{}
+
+
+%%% PACKAGES %%%
+
+\usepackage{enumitem}
+\usepackage{pdfpages}  % Uncomment on Overleaf or if pdfpages is installed locally
+\usepackage{ragged2e} % defines new commands \centering \justify etc
+\usepackage{multicol}
+\usepackage{float}
+
+\usepackage{graphicx, epstopdf} % support the \includegraphics command and options
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+\usepackage{caption, subcaption}
+
+\usepackage{array} % for better arrays (e.g. matrices) in maths
+\usepackage{amsmath, amssymb, amsfonts}
+
+\usepackage{morefloats}
+
+\usepackage{indentfirst} % Activate each 1st paragraph with indent
+
+\usepackage{setspace}
+\usepackage{csquotes}% Recommended
+
+\usepackage{color, colortbl}
+	\definecolor{red}{rgb}{0.900, 0.200, 0.200}
+
+
+%%% INDENTATION %%%
+
+\setlength{\parskip}{1.3em}  % paragraph spacing
+\renewcommand{\baselinestretch}{1.5}  % line spacing
+
+
+%%%% SECTION TITLE APPEARANCE %%%%
+
+\usepackage{titlesec} % chapter heading
+\usepackage{sectsty} % to renew chapter style
+
+\sectionfont{\fontsize{12}{15}\selectfont}  %% Chapter font size
+\subsectionfont{\fontsize{12}{15}\selectfont}  %% Section font size
+
+\renewcommand{\thesection}{CHAPTER \arabic{section}:}  %% Header chapter with number
+\renewcommand{\thesubsection}{\normalsize \arabic{section}.\arabic{subsection}}  %% Rename subsection with chapter number
+
+
+%%% ToC (Table of Contents) APPEARANCE %%%
+
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents, List of figures and tables
+
+\usepackage[titletoc]{appendix}
+\usepackage{listings}
+
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+\usepackage[english]{babel}
+\addto\captionsenglish{
+\renewcommand{\contentsname}{
+\centering \normalsize TABLE OF CONTENTS   \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename name of table of contents
+\renewcommand{\listtablename}{
+\centering \normalsize LIST OF TABLES \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename list of tables
+\renewcommand{\listfigurename}{
+\centering \normalsize LIST OF FIGURES \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename list of figures
+}
+
+
+%% Renaming Table and Figure Caption based on Chapter
+
+\usepackage{chngcntr}
+
+\counterwithin{table}{section}
+\renewcommand{\thetable}{\arabic{section}.\arabic{table}}
+
+\counterwithin{figure}{section}
+\renewcommand{\thefigure}{\arabic{section}.\arabic{figure}}
+
+
+\usepackage{etoolbox} %setting line spacing in TOC/LOF/T
+\makeatletter
+\pretocmd{\section}{\addtocontents{toc}{\protect\addvspace{-10mm}}}{}{}
+\pretocmd{\subsection}{\addtocontents{toc}{\protect\addvspace{0mm}}}{}{}
+\pretocmd{\subsubsection}{\addtocontents{toc}{\protect\addvspace{0mm}}}{}{}
+\makeatother
+
+\setlength\cftbeforesecskip{2pt}  %% Set line spacing dalam ToC
+\setlength\cftsecnumwidth{2.8cm}  %% Set chapter numbering width dalam ToC
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}  %% Create dotted line di ToC
+
+
+%%% Prevent hyphenation %%
+
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+
+\relpenalty=10000
+\binoppenalty=10000
+
+
+%%% END Article customizations
+
+
+%%% COVER PAGE %%%
+
+\def \maketitleone{
+\centering
+\begin{titlepage}
+	\bf {
+	ADAPTIVE COGNITIVE \& EDUCATIONAL SKILL SUPPORT (ACESS) \\
+	AUTHORITATIVE REFERENCES \& BEST-PRACTICE GUIDE
+	}
+	\rm
+	\vskip 3in
+	\bf {MUHAMMAD ALIFF BIN AFFANDI}
+	\rm
+	\vskip 3in
+	\bf {UNIVERSITI TEKNIKAL MALAYSIA MELAKA}
+
+\end{titlepage}
+
+\thispagestyle{empty}
+
+\newpage
+}
+
+
+%%% END OF COVER PAGE %%%
+
+
+\begin{document}
+
+\pagenumbering{gobble}
+\newgeometry{top=5.5cm, bottom=3.5cm, right=2.5cm, left=2.5cm}
+\maketitleone
+\restoregeometry
+
+
+%%--------BORANG PENGESAHAN STATUS LAPORAN---------%%
+
+\newgeometry{margin=2.5cm}
+\thispagestyle{empty}
+\setstretch{1.1}
+\setlength{\parskip}{0pt}
+
+\begin{center}
+{\large \bf BORANG PENGESAHAN STATUS LAPORAN}
+\end{center}
+
+\vspace{4mm}
+\noindent
+JUDUL  \; : \;  \underline{ ADAPTIVE COGNITIVE \& EDUCATIONAL SKILL SUPPORT (ACESS)} \\[1mm]
+\hspace{1.5cm} \underline{AUTHORITATIVE REFERENCES \& BEST-PRACTICE GUIDE}
+
+\vspace{3mm}
+\noindent
+SESI PENGAJIAN  \; : \; \underline{ 2024/2025 }
+
+\vspace{5mm}
+\noindent
+Saya \underline{ MUHAMMAD ALIFF BIN AFFANDI  }
+mengaku membenarkan tesis Projek Sarjana Muda ini disimpan di Perpustakaan Universiti Teknikal Malaysia Melaka dengan syarat-syarat kegunaan seperti berikut:
+
+\vspace{2mm}
+\begin{enumerate}[label=\arabic*., itemsep=1mm, topsep=0pt, parsep=0pt]
+\item Tesis dan projek adalah hakmilik Universiti Teknikal Malaysia Melaka.
+\item Perpustakaan Fakulti Teknologi Maklumat dan Komunikasi dibenarkan membuat salinan untuk tujuan pengajian sahaja.
+\item Perpustakaan Fakulti Teknologi Maklumat dan Komunikasi dibenarkan membuat salinan tesis ini sebagai bahan pertukaran antara institusi pengajian tinggi.
+\item $^{\ast}$ Sila tandakan (\checkmark)
+
+\vspace{2mm}
+\def\arraystretch{1.3}
+\begin{tabular}{>{\raggedleft\arraybackslash}p{2.5cm}  >{\raggedright\arraybackslash}p{3.3cm}  >{\raggedright\arraybackslash}p{7.2cm}}
+\underline{\hspace{2cm}} & SULIT  & (Mengandungi maklumat yang berdarjah keselamatan atau kepentingan Malaysia seperti yang termaktub di dalam AKTA RAHSIA RASMI 1972) \\
+\underline{\hspace{2cm}} & TERHAD & (Mengandungi maklumat TERHAD yang telah ditentukan oleh organisasi / badan di mana penyelidikan dijalankan) \\
+\underline{\makebox[2cm]{$\checkmark$}} & TIDAK TERHAD &
+\end{tabular}
+\end{enumerate}
+
+\vspace{5mm}
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+\centering
+\underline{\hspace{6cm}} \\
+(TANDATANGAN PELAJAR) \\[4mm]
+Alamat tetap : \underline{\makebox[4cm]{22, JALAN PERMATA}} \\
+\underline{\makebox[6cm]{1, DESA SALAK PERMATA,}} \\
+\underline{\makebox[6cm]{43900, SEPANG, SELANGOR}} \\[4mm]
+Tarikh : \underline{\makebox[4.5cm]{17 JUN 2026}}
+\end{minipage}%
+\begin{minipage}[t]{0.5\textwidth}
+\centering
+\underline{\hspace{6cm}} \\
+(TANDATANGAN PENYELIA) \\[4mm]
+\underline{\makebox[6cm]{DR. NORHAZWANI BINTI MD YUNOS}} \\
+Nama Penyelia \\[8mm]
+Tarikh : \underline{\hspace{4.5cm}}
+\end{minipage}
+
+\vspace{3mm}
+\noindent
+CATATAN: \; $^{\ast}$ Jika tesis ini SULIT atau TERHAD, sila lampirkan surat daripada pihak berkusa.
+
+\restoregeometry
+\setstretch{1.5}
+\setlength{\parskip}{1.3em}
+
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+\justifying
+
+
+%%% FRONT MATTER %%%
+
+
+\begin{center}
+
+\vfill \null
+\vspace{1cm}
+{ADAPTIVE COGNITIVE \& EDUCATIONAL SKILL SUPPORT (ACESS) \\
+AUTHORITATIVE REFERENCES \& BEST-PRACTICE GUIDE}
+
+\vskip 1.6in
+{MUHAMMAD ALIFF BIN AFFANDI}
+
+\vskip 1.6in
+This report is submitted in partial fulfillment of the requirements for the \\
+Bachelor of Computer Science (Software Engineering) with Honours.
+
+
+\vskip 1.6in
+FACULTY OF ARTIFICIAL INTELLIGENCE AND CYBER SECURITY \\
+UNIVERSITI TEKNIKAL MALAYSIA MELAKA
+
+\vspace{2mm}
+2026
+
+
+\end{center}
+
+\newpage
+
+
+
+%%--------DECLARATION PAGE---------%%
+
+\begin{center}
+
+\vfill\null
+\phantomsection
+\addcontentsline{toc}{section}{DECLARATION}
+\textbf{DECLARATION}
+
+\vspace{1.5cm}
+I hereby declare that this project entitled \\
+ADAPTIVE COGNITIVE \& EDUCATIONAL SKILL SUPPORT (ACESS): AUTHORITATIVE REFERENCES \& BEST-PRACTICE GUIDE \\
+is written by me and is my own effort and that no part has been plagiarized without citations.
+
+
+
+\vspace{1.5cm}
+\noindent
+STUDENT \; : \underline{\hspace{8cm}} \, Date :  \underline{\hspace{2.1cm}} \\[-2mm]
+(MUHAMMAD ALIFF BIN AFFANDI) \hspace{1.2cm}
+
+
+
+\vspace{4cm}
+\noindent
+I hereby declare that I have read this project report and found this project report is sufficient in term of the scope and quality for the award of Bachelor of Computer Science (Software Engineering) with Honours.
+
+
+\vspace{1.5cm}
+\noindent
+SUPERVISOR \; : \underline{\hspace{8cm}} \, Date :  \underline{\hspace{2.1cm}} \\[-2mm]
+(DR. NORHAZWANI BINTI MD YUNOS) \hspace{0.6cm}
+
+
+\end{center}
+
+\vfill \null
+
+\newpage
+
+
+
+
+%%--------DEDICATION PAGE---------%%
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{DEDICATION}
+\textbf{DEDICATION}
+\end{center}
+
+
+\vspace{1cm}
+This work is dedicated to my beloved parents, Fadli bin Maarof and Norizan binti Kassim, whose love, sacrifices, and unwavering belief in me have been my greatest source of strength throughout this journey.
+
+To my friends, who stood by me through every challenge, offered a listening ear when I needed it most, and kept me going when things felt impossible --- thank you for being there.
+
+And to everyone who has supported me, in any way, big or small --- this is as much yours as it is mine.
+
+
+
+\vfill \null
+
+\newpage
+
+
+
+
+%%--------ACKNOWLEDGEMENT PAGE---------%%
+
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{ACKNOWLEDGEMENT}
+\textbf{ACKNOWLEDGEMENT}
+\end{center}
+
+
+\vspace{1cm}
+First and foremost, I would like to express my deepest gratitude to my supervisor, Dr. Norhazwani binti Md Yunos, for her invaluable guidance, patience, and continuous support throughout the duration of this project. Her expertise and constructive feedback have been instrumental in shaping this work into its final form.
+
+I would also like to extend my sincere appreciation to my friend, Ahmad Mirza Shahmi bin Abdul Hanif, whose companionship and willingness to engage in meaningful discussions about this project have been a great source of motivation and encouragement. Having someone who truly understands the challenges of this work made the journey significantly more bearable.
+
+Above all, I am profoundly grateful to my beloved parents, Fadli bin Maarof and Norizan binti Kassim, for their unconditional love, endless patience, and unwavering support throughout my academic journey. Their sacrifices and constant encouragement have been the foundation upon which I stand, and this achievement is as much theirs as it is mine.
+
+
+
+\vfill \null
+
+\newpage
+
+
+
+%%--------ABSTRACT PAGE---------%%
+
+
+
+\begin{center}
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{ABSTRACT}
+\textbf{ABSTRACT}
+\end{center}
+
+
+\vspace{1cm}
+
+\begin{spacing}{1.1}
+This study develops and evaluates a machine learning framework for the automated classification of five transparent conductive oxide (TCO) materials --- AZO, FTO, ITO, MZO, and ZnO --- using their X-ray diffraction (XRD) structural signatures. TCOs are widely used in solar cells, OLEDs, LCDs, smart windows, and other optoelectronic devices, yet rapid and accurate phase identification still relies on slow, expert-dependent manual analysis of diffraction patterns. To address this, raw $2\theta$--intensity scans were converted into a rich set of physically meaningful features, including d-spacing descriptors derived from Bragg's Law, peak positions and widths, crystallite size, binned intensity profiles, and global statistical measures. Because experimental scans were limited, a two-strategy data augmentation pipeline combining physics-motivated perturbations and JCPDS-based simulation was used to expand the dataset to 640 samples. Fifteen supervised classifiers were implemented, each wrapped in a scikit-learn pipeline with feature scaling applied inside every cross-validation fold to prevent data leakage. Models were assessed using an 80/20 holdout split and repeated $5 \times 5$ stratified cross-validation, with accuracy, Cohen's kappa, log loss, macro F1-score, ROC-AUC, confusion matrices, and learning curves. LightGBM achieved the strongest performance, with a cross-validation accuracy of $89.9\%$ ($\pm 2.1\%$) and a holdout accuracy of $90.6\%$ (Cohen's kappa $0.88$), followed closely by XGBoost, Gradient Boosting, and Linear Discriminant Analysis. A stacking ensemble of the top five models matched the best single model at $90.6\%$ accuracy, and mean one-vs-rest ROC-AUC values reached $0.97$--$0.99$. Feature importance analysis confirmed that intensity-window and d-spacing-based crystallographic features were the most discriminative, while the AZO class proved the most difficult to separate from the other wurtzite-structured materials. These results demonstrate that XRD structural signatures provide an accurate, instrument-independent basis for automated TCO identification, complementing prior optical-signature approaches and offering a reproducible tool for data-driven materials characterisation and industrial quality control.
+\end{spacing}
+
+\vfill \null
+
+\newpage
+
+
+
+\begin{center}
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{ABSTRAK}
+\textbf{ABSTRAK}
+\end{center}
+
+
+\vspace{1cm}
+
+\begin{spacing}{1.1}
+Kajian ini membangunkan dan menilai satu rangka kerja pembelajaran mesin untuk pengelasan automatik lima bahan oksida konduktif lutsinar (TCO) --- AZO, FTO, ITO, MZO, dan ZnO --- menggunakan tanda struktur pembelauan sinar-X (XRD). Bahan TCO digunakan secara meluas dalam sel suria, paparan, dan peranti optoelektronik lain, namun pengenalpastian fasa yang pantas dan tepat masih bergantung pada analisis manual corak pembelauan yang lambat dan memerlukan kepakaran. Bagi menangani masalah ini, imbasan mentah $2\theta$--keamatan ditukarkan kepada satu set ciri bermakna secara fizikal, termasuk penghurai jarak-d yang diterbitkan daripada Hukum Bragg, kedudukan dan lebar puncak, saiz hablur, profil keamatan terbin, dan ukuran statistik global. Oleh kerana imbasan eksperimen adalah terhad, satu saluran penambahan data dua strategi yang menggabungkan gangguan bermotifkan fizik dan simulasi berasaskan JCPDS digunakan untuk mengembangkan set data kepada 640 sampel. Lima belas pengelas terselia dilaksanakan, setiap satunya dibungkus dalam saluran scikit-learn dengan penskalaan ciri dilakukan di dalam setiap lipatan pengesahan silang untuk mengelakkan kebocoran data. Model dinilai menggunakan pembahagian holdout 80/20 dan pengesahan silang berstrata $5 \times 5$ berulang, dengan ketepatan, kappa Cohen, kehilangan log, skor makro F1, ROC-AUC, matriks kekeliruan, dan lengkung pembelajaran. LightGBM mencapai prestasi terbaik, dengan ketepatan pengesahan silang $89.9\%$ ($\pm 2.1\%$) dan ketepatan holdout $90.6\%$ (kappa Cohen $0.88$), diikuti rapat oleh XGBoost, Gradient Boosting, dan Analisis Diskriminan Linear. Ensembel penyusunan (stacking) lima model terbaik menyamai model tunggal terbaik pada ketepatan $90.6\%$, dan nilai purata ROC-AUC satu-lawan-semua mencapai $0.97$--$0.99$. Analisis kepentingan ciri mengesahkan bahawa ciri tetingkap keamatan dan ciri berasaskan jarak-d merupakan ciri paling membezakan, manakala kelas AZO didapati paling sukar dibezakan daripada bahan berstruktur wurtzit yang lain. Keputusan ini menunjukkan bahawa tanda struktur XRD menyediakan asas yang tepat dan bebas-instrumen untuk pengenalpastian TCO automatik, melengkapkan pendekatan tanda optik terdahulu serta menawarkan alat boleh-ulang bagi pencirian bahan dipacu data dan kawalan kualiti industri.
+\end{spacing}
+
+
+
+\vfill \null
+
+\newpage
+
+
+%%% --------------------------- %%%
+
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{TABLE OF CONTENTS}
+\tableofcontents
+\newpage
+
+
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF TABLES}
+{%
+\let\oldnumberline\numberline%
+\renewcommand{\numberline}{\tablename~\oldnumberline}%
+\listoftables%
+}
+
+\newpage
+
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF FIGURES}
+{%
+\let\oldnumberline\numberline%
+\renewcommand{\numberline}{\figurename~\oldnumberline}%
+\listoffigures%
+}
+
+\newpage
+
+
+
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF ABBREVIATIONS}
+\begin{center}
+\textbf{LIST OF ABBREVIATIONS}
+\end{center}
+\vspace{1cm}
+
+
+\noindent
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.5cm} >{\centering\arraybackslash}m{0.5cm} >{\raggedright\arraybackslash}p{11.0cm}}
+AZO   & - & Aluminium-doped Zinc Oxide \\
+AUC   & - & Area Under the Curve \\
+CNN   & - & Convolutional Neural Network \\
+CV    & - & Cross-Validation \\
+FTO   & - & Fluorine-doped Tin Oxide \\
+FWHM  & - & Full Width at Half Maximum \\
+FYP   & - & Final Year Project \\
+ITO   & - & Indium Tin Oxide \\
+JCPDS & - & Joint Committee on Powder Diffraction Standards \\
+KNN   & - & K-Nearest Neighbours \\
+LCD   & - & Liquid Crystal Display \\
+LDA   & - & Linear Discriminant Analysis \\
+LightGBM & - & Light Gradient Boosting Machine \\
+MLP   & - & Multi-Layer Perceptron \\
+ML    & - & Machine Learning \\
+MZO   & - & Magnesium-doped Zinc Oxide \\
+OLED  & - & Organic Light-Emitting Diode \\
+PSM   & - & Projek Sarjana Muda \\
+RF    & - & Random Forest \\
+ROC   & - & Receiver Operating Characteristic \\
+SHAP  & - & SHapley Additive exPlanations \\
+SVM   & - & Support Vector Machine \\
+TCO   & - & Transparent Conductive Oxide \\
+XAI   & - & Explainable Software Engineering \\
+XGBoost & - & Extreme Gradient Boosting \\
+XRD   & - & X-Ray Diffraction \\
+ZnO   & - & Zinc Oxide \\
+\end{tabular}
+
+
+
+\vfill \null
+\newpage
+
+
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF ATTACHMENTS}
+\begin{center}
+\textbf{LIST OF ATTACHMENTS}
+\end{center}
+\vspace{2cm}
+
+
+\noindent
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.6cm}  >{\raggedright\arraybackslash}p{9.9cm}  >{\raggedleft\arraybackslash}p{1.4cm}}
+  &  & \textbf{PAGE} \\[2mm]
+Appendix A & Sample XRD Data Files (.xlsx format) & \pageref{app:A} \\
+Appendix B & Python Code --- Feature Extraction Pipeline (\texttt{FYP\_improved\_v2.ipynb}) & \pageref{app:B} \\
+Appendix C & Python Code --- Data Augmentation and Simulation (\texttt{XRD\_data\_generation.ipynb}) & \pageref{app:C} \\
+Appendix D & Hyperparameter Search Results for XGBoost, LightGBM, and Random Forest & \pageref{app:D} \\
+Appendix E & Full Confusion Matrices for All Fifteen Classifiers & \pageref{app:E} \\
+\end{tabular}
+
+
+
+\vfill \null
+%%% ------------------------------------- %%%
+%%% MAIN MATTER %%%
+
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\setlength{\parindent}{30pt}
+
+
+
+\section{ACESS System --- Authoritative References \& Best-Practice
+
+Guide}\label{acess-system-authoritative-references-best-practice-guide}
+
+
+
+\textbf{Adaptive Cognitive \& Educational Skill Support (ACESS)}
+
+Compiled reference document covering technical stack, H5P, Moodle,
+
+accessibility standards, adaptive learning, LMS patterns, and academic
+
+research.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsection{Section A: Technical Stack
+
+References}\label{section-a-technical-stack-references}
+
+
+
+\subsubsection{A1. Next.js App Router --- Server vs Client
+
+Components}\label{a1.-next.js-app-router-server-vs-client-components}
+
+
+
+\textbf{Title:} Next.js App Router --- Official Documentation
+
+\textbf{Organization:} Vercel / Next.js Team \textbf{Year:} 2024--2025
+
+(continuously updated) \textbf{URL:} https://nextjs.org/docs/app
+
+\textbf{Summary:} The App Router uses React Server Components (RSC),
+
+Suspense, and Server Functions. All components default to
+
+server-rendered; only those marked
+
+\texttt{\textquotesingle{}use\ client\textquotesingle{}} ship JavaScript
+
+to the browser, enabling selective hydration. \textbf{ACESS relevance:}
+
+Underpins ACESS's page architecture --- server components for course
+
+listings, learner profiles, and data fetching; client components only
+
+where interactivity is needed (editors, dashboards, real-time progress
+
+bars).
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Getting Started: Server and Client Components
+
+\textbf{Organization:} Vercel / Next.js Team \textbf{Year:} 2025
+
+\textbf{URL:}
+
+https://nextjs.org/docs/app/getting-started/server-and-client-components
+
+\textbf{Summary:} Defines when to use each component type: server for
+
+data access and layouts, client
+
+(\texttt{\textquotesingle{}use\ client\textquotesingle{}}) for state,
+
+event handlers, and browser APIs. The mental model is ``server-first,
+
+client-islands.'' \textbf{ACESS relevance:} Directly guides ACESS
+
+component design --- lesson content renders on the server, interactive
+
+quiz and editor components run on the client.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{A2. Tailwind CSS v4 --- Theming \&
+
+Utility-First}\label{a2.-tailwind-css-v4-theming-utility-first}
+
+
+
+\textbf{Title:} Tailwind CSS v4.0 --- Official Blog Announcement
+
+\textbf{Organization:} Tailwind Labs \textbf{Year:} 2025 \textbf{URL:}
+
+https://tailwindcss.com/blog/tailwindcss-v4 \textbf{Summary:} v4 is a
+
+ground-up rewrite introducing CSS-first configuration via the
+
+\texttt{@theme} directive, a new Oxide engine (3.5× faster full builds,
+
+100× faster incremental), native cascade layers, and wide-gamut P3 OKLCH
+
+color palettes. No more \texttt{tailwind.config.js} is needed.
+
+\textbf{ACESS relevance:} ACESS's multi-theme accessibility profiles
+
+(dyslexia-friendly cream palette, high-contrast, dark mode) are all
+
+defined as \texttt{@theme} CSS variables, keeping every theme override
+
+in one CSS file with no JS config.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Theme Variables --- Core Concepts \textbf{Organization:}
+
+Tailwind Labs \textbf{Year:} 2025 \textbf{URL:}
+
+https://tailwindcss.com/docs/theme \textbf{Summary:} Explains how
+
+\texttt{@theme} CSS variables automatically generate utility classes.
+
+Defining \texttt{-\/-color-primary-500} creates a
+
+\texttt{bg-primary-500} utility without extra config. Distinguishes
+
+\texttt{@theme} (generates utilities) from \texttt{:root} (raw CSS
+
+variables). \textbf{ACESS relevance:} ACESS accessibility profiles swap
+
+\texttt{-\/-color-background}, \texttt{-\/-font-family}, and
+
+\texttt{-\/-line-height} theme variables dynamically, instantly
+
+reflecting throughout all components without component code changes.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{A3. shadcn/ui --- Radix + CVA + tailwind-merge
+
+Pattern}\label{a3.-shadcnui-radix-cva-tailwind-merge-pattern}
+
+
+
+\textbf{Title:} shadcn/ui --- Official Component Library
+
+\textbf{Organization:} shadcn \textbf{Year:} 2024--2025 (continuously
+
+updated) \textbf{URL:} https://ui.shadcn.com/ \textbf{Summary:} A
+
+collection of copy-paste React components built on Radix UI primitives
+
+and styled with Tailwind CSS. Instead of a published npm package,
+
+component source code is owned by the developer. CVA
+
+(class-variance-authority) manages variant styling; \texttt{cn()} via
+
+tailwind-merge handles class conflicts. \textbf{ACESS relevance:} All
+
+ACESS UI components (buttons, dialogs, tabs, dropdowns, cards) are built
+
+on shadcn/ui. Owning the component code means ACESS can adjust any
+
+component for accessibility or brand compliance without fighting a
+
+black-box library.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} The Anatomy of shadcn/ui Components
+
+\textbf{Organization:} Manu Arora (independent technical breakdown)
+
+\textbf{Year:} 2023 \textbf{URL:}
+
+https://manupa.dev/blog/anatomy-of-shadcn-ui \textbf{Summary:}
+
+Deep-dives the three-layer architecture: Radix UI for
+
+behavior/accessibility semantics, Tailwind CSS for visual styling, and
+
+CVA (\texttt{class-variance-authority}) for variant management. Shows
+
+how \texttt{badgeVariants\ =\ cva(...)} separates styling from
+
+rendering. \textbf{ACESS relevance:} Explains the exact pattern used
+
+throughout ACESS's \texttt{components/ui/} directory --- every component
+
+variant (e.g., dyslexia mode, high-contrast) is a CVA variant, not a
+
+separate component.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{A4. Radix UI --- WAI-ARIA Accessibility
+
+Primitives}\label{a4.-radix-ui-wai-aria-accessibility-primitives}
+
+
+
+\textbf{Title:} Radix Primitives --- Accessibility Overview
+
+\textbf{Organization:} WorkOS / Radix UI \textbf{Year:} 2024
+
+(continuously updated) \textbf{URL:}
+
+https://www.radix-ui.com/primitives/docs/overview/accessibility
+
+\textbf{Summary:} Radix Primitives follow WAI-ARIA authoring guidelines
+
+and are tested across major browsers and assistive technologies. They
+
+handle aria/role attributes, focus management, focus trapping, and
+
+keyboard navigation automatically for Dialog, Tabs, Accordion,
+
+DropdownMenu, Popover, and more. \textbf{ACESS relevance:} Every ACESS
+
+modal, dropdown, and navigation component inherits WAI-ARIA compliance
+
+from Radix without manual ARIA attribute writing, critical for learners
+
+using screen readers.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Radix Primitives --- Introduction \textbf{Organization:}
+
+WorkOS / Radix UI \textbf{Year:} 2024 \textbf{URL:}
+
+https://www.radix-ui.com/primitives/docs/overview/introduction
+
+\textbf{Summary:} Explains the goal: provide headless, unstyled
+
+components for common UI patterns (Accordion, Dialog, Combobox, Tabs,
+
+Slider, Select) that are inaccessible or missing in native HTML. Each
+
+component is independently versioned. \textbf{ACESS relevance:} ACESS
+
+uses Radix Dialog for lesson modals, Radix Tabs for course navigation,
+
+and Radix Accordion for collapsible settings --- all receiving keyboard
+
+and screen reader support out of the box.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Radix Primitives --- Dialog Component
+
+\textbf{Organization:} WorkOS / Radix UI \textbf{Year:} 2024
+
+\textbf{URL:} https://www.radix-ui.com/primitives/docs/components/dialog
+
+\textbf{Summary:} Adheres to the Dialog WAI-ARIA design pattern.
+
+Automatically traps focus within the dialog, manages
+
+\texttt{aria-describedby}, and closes on Escape. Supports controlled and
+
+uncontrolled modes. \textbf{ACESS relevance:} ACESS uses Dialog for
+
+settings panels, lesson completions, and confirmation dialogs. Focus
+
+trapping is critical for learners using keyboard or screen reader
+
+navigation.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{A5. Tiptap --- Rich Text Editor
+
+Extensibility}\label{a5.-tiptap-rich-text-editor-extensibility}
+
+
+
+\textbf{Title:} Tiptap Editor --- Get Started \textbf{Organization:}
+
+Überdosis (Tiptap) \textbf{Year:} 2025 (continuously updated)
+
+\textbf{URL:} https://tiptap.dev/docs/editor/getting-started/overview
+
+\textbf{Summary:} Tiptap is a headless rich-text editor framework built
+
+on ProseMirror. It uses an extension-based architecture --- every
+
+feature (bold, image, table, mentions, custom nodes) is an extension.
+
+Works with React, Vue, Svelte, and plain JS. \textbf{ACESS relevance:}
+
+ACESS educators use Tiptap to author lesson content. Its extension model
+
+allows ACESS to add custom blocks (e.g., dyslexia-mode font toggle,
+
+embedded H5P, read-aloud buttons) without forking the editor.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Tiptap React Integration \textbf{Organization:}
+
+Überdosis (Tiptap) \textbf{Year:} 2025 \textbf{URL:}
+
+https://tiptap.dev/docs/editor/getting-started/install/react
+
+\textbf{Summary:} Shows the \texttt{useEditor} hook pattern, extension
+
+array, and declarative \texttt{\textless{}Tiptap\textgreater{}}
+
+component. Notes that \texttt{immediatelyRender:\ false} must be set for
+
+SSR (Next.js) compatibility to avoid hydration mismatches. \textbf{ACESS
+
+relevance:} Essential for ACESS's Next.js-based lesson editor --- the
+
+SSR flag prevents hydration errors; \texttt{EditorContext} shares the
+
+editor state across toolbar, bubble menu, and lesson-save components.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{A6. Motion (Framer Motion) --- React Animation
+
+Library}\label{a6.-motion-framer-motion-react-animation-library}
+
+
+
+\textbf{Title:} Motion for React --- Get Started \textbf{Organization:}
+
+Motion (formerly Framer Motion) \textbf{Year:} 2025 \textbf{URL:}
+
+https://motion.dev/docs/react \textbf{Summary:} Motion for React
+
+(rebranded from Framer Motion in mid-2025, now imported from
+
+\texttt{motion/react}) is a React animation library using a hybrid
+
+engine: Web Animations API for 120fps performance, with JavaScript
+
+fallback for spring physics and gestures. Trusted by Framer and Figma.
+
+\textbf{ACESS relevance:} ACESS uses Motion for page transition
+
+animations, lesson progress celebrations, and UI microinteractions. All
+
+imports updated to \texttt{motion/react}.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Creating Accessible Animations in React --- Motion Guide
+
+\textbf{Organization:} Motion (Framer Motion) \textbf{Year:} 2025
+
+\textbf{URL:} https://motion.dev/docs/react-accessibility
+
+\textbf{Summary:} Documents the \texttt{reducedMotion="user"} prop on
+
+\texttt{MotionConfig} (disables transform/layout animations site-wide
+
+respecting OS settings) and the \texttt{useReducedMotion()} hook for
+
+per-component control. \texttt{reducedMotion="user"} preserves
+
+opacity/color transitions while disabling movement. \textbf{ACESS
+
+relevance:} ACESS's Distraction-Free Mode and ADHD/ASD accommodation
+
+profiles use \texttt{reducedMotion="always"} via MotionConfig. The
+
+\texttt{useReducedMotion()} hook is used per-component to replace slide
+
+animations with fades.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{A7. Supabase --- Real-time, Row Level Security,
+
+SSR}\label{a7.-supabase-real-time-row-level-security-ssr}
+
+
+
+\textbf{Title:} Row Level Security --- Supabase Docs
+
+\textbf{Organization:} Supabase \textbf{Year:} 2025 (continuously
+
+updated) \textbf{URL:}
+
+https://supabase.com/docs/guides/database/postgres/row-level-security
+
+\textbf{Summary:} Documents PostgreSQL RLS policies as ``implicit WHERE
+
+clauses.'' When RLS is enabled on a table, all queries are filtered by
+
+policies using \texttt{auth.uid()}. The anon key is public; RLS is the
+
+only barrier between the key and unauthorized data access. \textbf{ACESS
+
+relevance:} ACESS's learner data isolation --- progress records,
+
+accessibility profiles, notes --- relies on RLS policies ensuring
+
+learners see only their own rows and educators see only their enrolled
+
+students' data.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Realtime Authorization --- Supabase Docs
+
+\textbf{Organization:} Supabase \textbf{Year:} 2025 \textbf{URL:}
+
+https://supabase.com/docs/guides/realtime/authorization
+
+\textbf{Summary:} Realtime Broadcast and Presence channels are secured
+
+via RLS policies on the \texttt{realtime.messages} table. Users only
+
+receive real-time updates for rows their SELECT policy permits.
+
+Authorization is evaluated when the WebSocket connection is established.
+
+\textbf{ACESS relevance:} ACESS's live class features (educator sees
+
+learner progress in real time, leaderboard updates) use Supabase
+
+Realtime with RLS ensuring cross-learner data never leaks through
+
+subscriptions.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{A8. Recharts --- Accessible Data
+
+Visualization}\label{a8.-recharts-accessible-data-visualization}
+
+
+
+\textbf{Title:} Recharts --- Composable React Charting Library
+
+\textbf{Organization:} Recharts \textbf{Year:} 2024 \textbf{URL:}
+
+https://recharts.org/ \textbf{Summary:} A lightweight SVG-based charting
+
+library built on D3 submodules, offering composable components
+
+(\texttt{\textless{}LineChart\textgreater{}},
+
+\texttt{\textless{}BarChart\textgreater{}},
+
+\texttt{\textless{}PieChart\textgreater{}},
+
+\texttt{\textless{}ResponsiveContainer\textgreater{}}) that integrate
+
+naturally with React's component model. Used by shadcn/ui's chart
+
+components. \textbf{ACESS relevance:} ACESS educator and admin
+
+dashboards use Recharts for learner progress charts, completion rates,
+
+and module engagement analytics, all wrapped in shadcn/ui's chart
+
+component layer.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{A9. next-themes --- Dark Mode
+
+Implementation}\label{a9.-next-themes-dark-mode-implementation}
+
+
+
+\textbf{Title:} next-themes --- Perfect Next.js Dark Mode
+
+\textbf{Organization:} Paco Coursey (pacocoursey) \textbf{Year:} 2024
+
+\textbf{URL:} https://github.com/pacocoursey/next-themes
+
+\textbf{Summary:} Injects a blocking script in
+
+\texttt{\textless{}head\textgreater{}} before rendering to read the
+
+user's stored theme preference from localStorage, preventing the
+
+flash-of-incorrect-theme (FOIT) issue common in SSR. Wraps the app in a
+
+\texttt{ThemeProvider} and exposes \texttt{useTheme()} hook.
+
+\textbf{ACESS relevance:} ACESS uses next-themes to support light, dark,
+
+and custom accessibility themes (high-contrast, sepia/cream for
+
+dyslexia). \texttt{suppressHydrationWarning} on
+
+\texttt{\textless{}html\textgreater{}} is required because next-themes
+
+mutates the class before React hydration.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsection{Section B: H5P Interactive
+
+Content}\label{section-b-h5p-interactive-content}
+
+
+
+\subsubsection{B1. H5P Core
+
+Architecture}\label{b1.-h5p-core-architecture}
+
+
+
+\textbf{Title:} H5P --- Create and Share Rich HTML5 Content
+
+\textbf{Organization:} H5P Group \textbf{Year:} 2025 (continuously
+
+updated) \textbf{URL:} https://h5p.org/ \textbf{Summary:} H5P (HTML5
+
+Package) is a free, open-source content collaboration framework. Content
+
+is authored in-browser, stored as \texttt{.h5p} zip files, and rendered
+
+by a JavaScript runtime. It integrates with Moodle, WordPress, Drupal
+
+via plugins, and with Canvas, Brightspace, and Blackboard via LTI.
+
+\textbf{ACESS relevance:} ACESS can embed H5P content (Interactive
+
+Videos, Quizzes, Flashcards) from its Moodle integration, leveraging
+
+H5P's existing content library without rebuilding interactive content
+
+types.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Content Type Development --- H5P Architecture
+
+\textbf{Organization:} H5P Group \textbf{Year:} 2024 \textbf{URL:}
+
+https://h5p.org/library-development \textbf{Summary:} H5P uses a modular
+
+library architecture. Each content type is a library with a
+
+\texttt{library.json} manifest, JavaScript, and CSS. Libraries can
+
+depend on other libraries; custom content types are created by authoring
+
+a new library with \texttt{H5P.init()}. \textbf{ACESS relevance:}
+
+Explains how ACESS could create custom H5P content types for
+
+dyslexia/ADHD-adapted interactions (e.g., reading-pace controls,
+
+simplified drag-and-drop), or wrap existing types with accessibility
+
+overlays.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{B2. H5P Content Types and
+
+Accessibility}\label{b2.-h5p-content-types-and-accessibility}
+
+
+
+\textbf{Title:} H5P Interactive Content Guide for Moodle 2026
+
+\textbf{Organization:} MooDIY Blog \textbf{Year:} 2026 \textbf{URL:}
+
+https://blog.moodiycloud.com/h5p-interactive-content-guide-moodle-2026
+
+\textbf{Summary:} Catalogues H5P content types and their accessibility
+
+features. Keyboard navigation, ARIA labels, focus indicators, and
+
+high-contrast support are present across content types. Notes that Drag
+
+and Drop has a list-based keyboard fallback but differs from the visual
+
+experience. \textbf{ACESS relevance:} Guides ACESS educators on which
+
+H5P types are fully accessible for learners with motor impairments
+
+(avoid Drag and Drop for assessments) and which are safe for screen
+
+reader users (Quiz, Flashcards, Interactive Video).
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} H5P and Inclusive Learning --- UBC Wiki
+
+\textbf{Organization:} University of British Columbia \textbf{Year:}
+
+2024 \textbf{URL:} https://wiki.ubc.ca/Documentation:H5P
+
+\textbf{Summary:} Documents how H5P supports multi-modal strategies.
+
+Specifically notes improvements in learning for deaf and hard-of-hearing
+
+language learners, benefits for metacognition and retrieval practice,
+
+and UDL design guidelines for H5P authors (avoid images of text, provide
+
+introductions). \textbf{ACESS relevance:} Provides evidence-based
+
+guidance for ACESS educators authoring H5P content --- avoid images of
+
+text (screen reader incompatible), chunk content, align H5P interactions
+
+to learning objectives.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{B3. H5P in Moodle --- mod\_h5pactivity
+
+Integration}\label{b3.-h5p-in-moodle-mod_h5pactivity-integration}
+
+
+
+\textbf{Title:} H5P --- MoodleDocs \textbf{Organization:} Moodle HQ
+
+\textbf{Year:} 2025 \textbf{URL:} https://docs.moodle.org/502/en/H5P
+
+\textbf{Summary:} In Moodle, H5P content is managed via the Content
+
+Bank. Teachers create or upload \texttt{.h5p} files, add them as H5P
+
+activities in courses, and grades are reported.
+
+\texttt{mod\_h5pactivity} sends xAPI statements. LUMI desktop app can
+
+author H5P offline. \textbf{ACESS relevance:} Documents the exact
+
+pathway for ACESS's Moodle-style H5P workflow: educators upload to
+
+Content Bank → embed in courses → learner scores feed back into ACESS's
+
+progress tracking via xAPI.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsection{Section C: Moodle LMS Architecture \&
+
+Patterns}\label{section-c-moodle-lms-architecture-patterns}
+
+
+
+\subsubsection{C1. Moodle Core
+
+Architecture}\label{c1.-moodle-core-architecture}
+
+
+
+\textbf{Title:} Moodle Architecture --- Developer Documentation
+
+\textbf{Organization:} Moodle HQ \textbf{Year:} 2024 \textbf{URL:}
+
+https://docs.moodle.org/dev/Moodle\_architecture \textbf{Summary:}
+
+Describes Moodle's LAMP-based architecture (Linux, Apache, MySQL, PHP)
+
+with a pluggable subsystem: courses/activities, authentication plugins,
+
+enrolment plugins, repository plugins. Courses are sequences of
+
+activities organized into sections, with users enrolled in roles.
+
+\textbf{ACESS relevance:} Explains the reference architecture ACESS
+
+mirrors: course → sections → activities, with user roles
+
+(admin/educator/learner) mapped to Moodle's manager/teacher/student
+
+equivalents.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Understanding the Moodle Architecture --- Packt+
+
+\textbf{Organization:} Packt Publishing \textbf{Year:} 2024
+
+\textbf{URL:}
+
+https://subscription.packtpub.com/book/web-development/9781801816724/2/ch02lvl1sec08
+
+\textbf{Summary:} The Moodle Core layer stores courses, users, roles,
+
+groups, competencies, learning plans, and grades in a database, and
+
+files in a separate \texttt{moodledata} directory. Covers plugin
+
+architecture: blocks, modules, authentication, enrolment, and theme
+
+systems. \textbf{ACESS relevance:} ACESS's database schema mirrors
+
+Moodle's separation of relational metadata (Supabase PostgreSQL) from
+
+file storage (Supabase Storage), with analogous plugin-style extension
+
+points.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{C2. Moodle Role-Based Access
+
+Control}\label{c2.-moodle-role-based-access-control}
+
+
+
+\textbf{Title:} Access API --- Moodle Developer Resources
+
+\textbf{Organization:} Moodle HQ \textbf{Year:} 2025 \textbf{URL:}
+
+https://moodledev.io/docs/5.0/apis/subsystems/access \textbf{Summary:}
+
+Moodle uses a context-hierarchy RBAC model. Roles are sets of
+
+capabilities assigned in contexts (System → Course Category → Course →
+
+Module). \texttt{has\_capability()} checks permissions. Key system
+
+roles: Manager, Course Creator, Teacher, Non-editing Teacher, Student,
+
+Guest. \textbf{ACESS relevance:} ACESS's permission model (Admin
+
+\textgreater{} Educator \textgreater{} Learner) is a simplified version
+
+of Moodle's RBAC. Supabase RLS policies enforce the same isolation:
+
+educators only see their enrolled learners; learners only see their own
+
+progress.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Role-Based Access Control with Moodle
+
+\textbf{Organization:} Catalyst IT Australia \textbf{Year:} 2026
+
+\textbf{URL:}
+
+https://www.catalyst-au.net/blog/role-based-access-control-moodle
+
+\textbf{Summary:} Explains Moodle RBAC best practices including
+
+minimizing global roles, the ``Authenticated User'' base role, and
+
+avoiding over-privileged role assignments. Covers the Principle of Least
+
+Privilege and context-scoped role inheritance. \textbf{ACESS relevance:}
+
+Validates ACESS's decision to have educators scoped to their courses
+
+(not site-wide) and admins with elevated but audited access, rather than
+
+a flat permission model.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{C3. Moodle Course Management \&
+
+Completion}\label{c3.-moodle-course-management-completion}
+
+
+
+\textbf{Title:} Moodle Architecture --- Open Source Applications
+
+\textbf{Organization:} The Architecture of Open Source Applications
+
+(aosabook.org) \textbf{Year:} 2023 \textbf{URL:}
+
+https://aosabook.org/en/v2/moodle.html \textbf{Summary:} Deep technical
+
+breakdown of Moodle's permissions system (ALLOW, PREVENT, PROHIBIT,
+
+INHERIT), context tree, and language pack system. Explains how role
+
+permissions aggregate at query time. \textbf{ACESS relevance:} Provides
+
+the authoritative design reference for ACESS's capability-check pattern
+
+--- centralizing permission logic in database RLS policies rather than
+
+scattered application code.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsection{Section D: E-Learning Accessibility Standards \&
+
+Guidelines}\label{section-d-e-learning-accessibility-standards-guidelines}
+
+
+
+\subsubsection{D1. WCAG 2.2 --- Four
+
+Principles}\label{d1.-wcag-2.2-four-principles}
+
+
+
+\textbf{Title:} Web Content Accessibility Guidelines (WCAG) 2.2
+
+\textbf{Organization:} W3C Web Accessibility Initiative (WAI)
+
+\textbf{Year:} October 2023 (ISO/IEC 40500:2025 as of October 2025)
+
+\textbf{URL:} https://www.w3.org/TR/WCAG22/ \textbf{Summary:} The
+
+international standard for web accessibility. Organized around four
+
+principles (POUR): Perceivable, Operable, Understandable, Robust.
+
+Contains 13 guidelines and 86 testable success criteria at three levels
+
+(A, AA, AAA). WCAG 2.2 adds 9 new criteria over 2.1, including Focus
+
+Appearance (2.4.13), Target Size Minimum (2.5.8), and Accessible
+
+Authentication (3.3.8). \textbf{ACESS relevance:} ACESS targets WCAG 2.2
+
+Level AA as its baseline, covering all learner interactions --- keyboard
+
+navigation, sufficient color contrast, error identification, accessible
+
+authentication --- especially critical for learners with motor and
+
+visual impairments.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} WCAG 2 Overview --- WAI \textbf{Organization:} W3C Web
+
+Accessibility Initiative (WAI) \textbf{Year:} 2025 \textbf{URL:}
+
+https://www.w3.org/WAI/standards-guidelines/wcag/ \textbf{Summary:}
+
+Overview of WCAG 2.0, 2.1, and 2.2 with links to supporting documents.
+
+Notes backward compatibility: content conforming to WCAG 2.2 also
+
+conforms to 2.1 and 2.0. Links to Understanding WCAG 2.2, Techniques,
+
+and Quick Reference. \textbf{ACESS relevance:} The Quick Reference
+
+(linked here) is ACESS developers' day-to-day conformance checklist
+
+during component QA.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D2. WAI-ARIA Authoring
+
+Practices}\label{d2.-wai-aria-authoring-practices}
+
+
+
+\textbf{Title:} ARIA Authoring Practices Guide (APG)
+
+\textbf{Organization:} W3C Web Accessibility Initiative (WAI)
+
+\textbf{Year:} 2024 (continuously updated) \textbf{URL:}
+
+https://www.w3.org/WAI/ARIA/apg/ \textbf{Summary:} The W3C's definitive
+
+reference for implementing accessible interactive components ---
+
+dialogs, tabs, accordions, carousels, combo boxes, tree views, and more.
+
+Provides keyboard interaction models, required ARIA markup, and working
+
+code examples. \textbf{ACESS relevance:} ACESS's custom components
+
+(Lesson Navigation Tabs, Settings Accordion, Quiz Dialog) reference APG
+
+patterns directly to ensure correct keyboard behavior and screen reader
+
+announcements.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} APG Patterns Directory \textbf{Organization:} W3C Web
+
+Accessibility Initiative (WAI) \textbf{Year:} 2024 \textbf{URL:}
+
+https://www.w3.org/WAI/ARIA/apg/patterns/ \textbf{Summary:} Full catalog
+
+of accessible patterns including Alert, Button, Carousel, Checkbox,
+
+Combobox, Dialog (Modal), Disclosure, Feed, Grid, Listbox, Menu,
+
+Navigation, Radiogroup, Slider, Spinbutton, Switch, Table, Tabs,
+
+Toolbar, Tooltip, Tree View. \textbf{ACESS relevance:} Direct reference
+
+for ACESS developers building any interactive component not provided by
+
+Radix/shadcn --- e.g., a custom Reading Pace Slider or a Visual Schedule
+
+Timeline.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D3. Section 508}\label{d3.-section-508}
+
+
+
+\textbf{Title:} Section 508 --- International Harmonization
+
+\textbf{Organization:} U.S. Access Board / Section508.gov \textbf{Year:}
+
+2024 \textbf{URL:}
+
+https://www.section508.gov/manage/laws-and-policies/international/
+
+\textbf{Summary:} Section 508 of the Rehabilitation Act requires US
+
+federal agencies to make ICT (websites, software, documents, hardware)
+
+accessible. The 2017 refresh adopted WCAG 2.0 Level AA. Covers
+
+harmonization with EN 301 549. \textbf{ACESS relevance:} If ACESS is
+
+adopted by US federally-funded educational institutions, Section 508
+
+compliance (WCAG 2.0 AA) is a legal requirement. Meeting WCAG 2.2 AA
+
+exceeds this threshold.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D4. Universal Design for Learning (UDL) --- CAST
+
+Framework}\label{d4.-universal-design-for-learning-udl-cast-framework}
+
+
+
+\textbf{Title:} UDL Guidelines 3.0 \textbf{Organization:} CAST (Center
+
+for Applied Special Technology) \textbf{Year:} July 2024 \textbf{URL:}
+
+https://udlguidelines.cast.org/ \textbf{Summary:} UDL 3.0 is the latest
+
+iteration, providing concrete suggestions across three networks:
+
+Engagement (why we learn --- affective network), Representation (what we
+
+learn --- recognition network), and Action \& Expression (how we learn
+
+--- strategic network). Emphasizes asset-based approaches, learner
+
+identity, and collective learning. Guides: multiple means of engagement,
+
+multiple means of representation, multiple means of action and
+
+expression. \textbf{ACESS relevance:} UDL is the primary instructional
+
+design framework underpinning ACESS. Font/color/spacing customization →
+
+Multiple Means of Representation. Gamification and streaks → Multiple
+
+Means of Engagement. Text-to-speech and varied response modes → Multiple
+
+Means of Action \& Expression.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} About Universal Design for Learning --- CAST
+
+\textbf{Organization:} CAST \textbf{Year:} 2024 \textbf{URL:}
+
+https://www.cast.org/resources/about-universal-design-for-learning/
+
+\textbf{Summary:} Explains that UDL is grounded in neuroscience --- the
+
+three brain networks model. The goal is learner agency: purposeful \&
+
+reflective, resourceful \& authentic, strategic \& action-oriented. UDL
+
+is an educational framework, not an accommodation checklist.
+
+\textbf{ACESS relevance:} Frames why ACESS provides learner-controlled
+
+accessibility settings rather than admin-assigned accommodations --- UDL
+
+positions the learner as an expert on their own needs.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D5. EN 301 549 --- European Accessibility
+
+Standard}\label{d5.-en-301-549-european-accessibility-standard}
+
+
+
+\textbf{Title:} EN 301 549 V3.2.1 (2021) \textbf{Organization:} ETSI /
+
+CEN / CENELEC \textbf{Year:} 2021 \textbf{URL:}
+
+https://www.etsi.org/deliver/etsi\_en/301500\_301599/301549/03.02.01\_60/en\_301549v030201p.pdf
+
+\textbf{Summary:} The European harmonized accessibility standard for
+
+ICT. Includes WCAG 2.1 in full plus additional requirements for non-web
+
+software, hardware, biometrics, real-time text, and closed system
+
+software. Required for EAA compliance (enforceable June 2025). Version
+
+4.1.1 (with WCAG 2.2) due 2026. \textbf{ACESS relevance:} If ACESS is
+
+deployed in European educational institutions, EN 301 549 compliance is
+
+legally required under the European Accessibility Act. Meeting WCAG 2.1
+
+AA covers the web/software portions; additional closed-system checks may
+
+apply.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D6. Dyslexia-Friendly Design Best
+
+Practices}\label{d6.-dyslexia-friendly-design-best-practices}
+
+
+
+\textbf{Title:} Inter-Letter Spacing, Inter-Word Spacing, and Font with
+
+Dyslexia-Friendly Features: Testing Text Readability
+
+\textbf{Organization:} National Institutes of Health (PMC) /
+
+Franceschini et al. \textbf{Year:} 2020 \textbf{URL:}
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7188700/ \textbf{Summary:}
+
+Peer-reviewed meta-analysis of dyslexia-friendly (DF) font research.
+
+Finds no direct evidence that DF letterform design features improve
+
+reading accuracy or speed on their own, but increased inter-letter and
+
+inter-word spacing consistently aids dyslexic readers. The seminal Zorzi
+
+et al.~study showed extra-large spacing (TNR Regular enlarged by 2.5pt)
+
+improved reading for children with dyslexia. \textbf{ACESS relevance:}
+
+Validates ACESS's approach of offering adjustable line spacing
+
+(1.5--2.0×) and letter spacing, not just font switching. OpenDyslexic
+
+and Atkinson Hyperlegible are offered as options, but spacing controls
+
+are the evidence-based core.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Inclusive Typography: Designing for Dyslexia and
+
+Accessibility \textbf{Organization:} Design Shack (editorial guide)
+
+\textbf{Year:} 2025 \textbf{URL:}
+
+https://designshack.net/articles/typography/inclusive-typography/
+
+\textbf{Summary:} Recommends fonts with distinct letterforms (Lexend,
+
+OpenDyslexic, Atkinson Hyperlegible), line spacing of at least 1.5× body
+
+font size, minimum 16px body text, left-aligned text (no justification),
+
+and avoidance of italic emphasis. \textbf{ACESS relevance:} Directly
+
+informs ACESS's Dyslexia Profile settings: Atkinson Hyperlegible font,
+
+1.6× line height, 16px minimum, cream/off-white background
+
+(\texttt{\#FDFBF4}), no justified text.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D7. ADHD-Friendly UI Design
+
+Patterns}\label{d7.-adhd-friendly-ui-design-patterns}
+
+
+
+\textbf{Title:} ADHD-Friendly Web Design: Minimizing Distractions
+
+\textbf{Organization:} Bureau of Internet Accessibility (BOIA)
+
+\textbf{Year:} 2024 \textbf{URL:}
+
+https://www.boia.org/blog/adhd-friendly-web-design-minimizing-distractions
+
+\textbf{Summary:} Documents key WCAG provisions relevant to ADHD users
+
+--- auto-playing animation must be pausable/stoppable (WCAG 2.2.2),
+
+sufficient time for tasks (WCAG 2.2.1), predictable page behavior (WCAG
+
+3.2.1). Recommends avoiding sticky elements and ensuring motion can be
+
+disabled. \textbf{ACESS relevance:} ACESS's ADHD Profile disables
+
+auto-play, applies Motion's \texttt{reducedMotion="always"}, shows
+
+step-by-step progress indicators, and uses task checklists --- all
+
+aligned with WCAG provisions documented here.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} UI/UX for ADHD: Designing Interfaces That Actually Help
+
+Students \textbf{Organization:} Din Studio \textbf{Year:} 2025
+
+\textbf{URL:}
+
+https://din-studio.com/ui-ux-for-adhd-designing-interfaces-that-actually-help-students/
+
+\textbf{Summary:} Specific patterns for ADHD-inclusive student
+
+interfaces: task dashboards (today's tasks, in-progress, up-next),
+
+progressive disclosure (show one step at a time), high-readability
+
+typography, and allowing users to pause and return to tasks without
+
+losing context. Fonts, line spacing, and moderate contrast are
+
+prioritized over animation. \textbf{ACESS relevance:} Informs ACESS's
+
+ADHD-focused Lesson Mode --- single-step display, persistent resume
+
+state, visible breadcrumbs, and minimal sidebar during active learning.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D8. Autism Spectrum Disorder (ASD) Inclusive
+
+Design}\label{d8.-autism-spectrum-disorder-asd-inclusive-design}
+
+
+
+\textbf{Title:} Designing for Autism in UX --- UXPA International
+
+\textbf{Organization:} UXPA International \textbf{Year:} 2025
+
+\textbf{URL:} https://uxpa.org/designing-for-autism-in-ux/
+
+\textbf{Summary:} ASD users process sensory information differently;
+
+digital interfaces can trigger sensory overload via flashing, unexpected
+
+popups, or inconsistent layouts. Key principles: step-by-step
+
+instructions, predictable consistent layout, calm color palettes, and
+
+collapsible/expandable content sections. ``A clean, predictable layout
+
+with consistent placement of elements gives users a sense of stability
+
+and familiarity.'' \textbf{ACESS relevance:} ACESS's ASD Profile
+
+enforces consistent navigation placement, disables all animations, uses
+
+muted neutral colors, and displays visual schedules showing the lesson
+
+sequence before beginning.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Designing Inclusive and Sensory-Friendly UX for
+
+Neurodiverse Audiences \textbf{Organization:} UX Magazine \textbf{Year:}
+
+2024 \textbf{URL:}
+
+https://uxmag.com/articles/designing-inclusive-and-sensory-friendly-ux-for-neurodiverse-audiences
+
+\textbf{Summary:} Documents evidence that autistic users benefit from
+
+muted neutral tones (bright colors can cause discomfort), clear logical
+
+hierarchy, and predictable navigation. Sans-serif fonts like Arial and
+
+Open Sans are recommended. Emphasizes personalization options as best
+
+practice. \textbf{ACESS relevance:} Justifies ACESS's muted color
+
+palette in the ASD Profile and the importance of the accessibility
+
+settings panel --- individual responses vary, so offering options (not
+
+just one preset) is key.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D9. Visual Impairment
+
+Accommodation}\label{d9.-visual-impairment-accommodation}
+
+
+
+\textbf{Title:} Perceivable --- WCAG 2.2 Principle 1
+
+\textbf{Organization:} W3C / WAI \textbf{Year:} 2023 \textbf{URL:}
+
+https://www.w3.org/TR/WCAG22/\#perceivable \textbf{Summary:} Perceivable
+
+guidelines require text alternatives for non-text content (1.1),
+
+captions for time-based media (1.2), adaptable content presentation
+
+(1.3), and distinguishable color/contrast (1.4). Key criteria: minimum
+
+contrast ratio 4.5:1 for normal text (AA), text resize to 200\% without
+
+loss (1.4.4). \textbf{ACESS relevance:} ACESS's High-Contrast Profile
+
+meets 1.4.3 (minimum contrast AA), and text scaling is built into the
+
+CSS with \texttt{rem}-based font sizes --- doubling browser base font
+
+size scales all text correctly.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D10. Hearing Impairment
+
+Accommodation}\label{d10.-hearing-impairment-accommodation}
+
+
+
+\textbf{Title:} Time-Based Media --- WCAG 2.2 Guideline 1.2
+
+\textbf{Organization:} W3C / WAI \textbf{Year:} 2023 \textbf{URL:}
+
+https://www.w3.org/TR/WCAG22/\#time-based-media \textbf{Summary:}
+
+Requires captions for live and pre-recorded synchronized media (1.2.2,
+
+1.2.4), audio descriptions for video (1.2.5), and transcripts for
+
+audio-only content (1.2.1). \textbf{ACESS relevance:} All ACESS video
+
+lessons must have closed captions. The lesson editor includes a caption
+
+upload field; H5P Interactive Video supports embedded caption tracks.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{D11. Cognitive Impairment
+
+Accommodation}\label{d11.-cognitive-impairment-accommodation}
+
+
+
+\textbf{Title:} Cognitive Accessibility --- WCAG 2.2 Understanding
+
+Document \textbf{Organization:} W3C / WAI \textbf{Year:} 2023
+
+\textbf{URL:} https://www.w3.org/WAI/cognitive/ \textbf{Summary:}
+
+Cognitive accessibility guidelines include clear language (3.1),
+
+predictable behavior (3.2), input assistance to avoid errors (3.3), and
+
+sufficient time (2.2). WCAG 2.2 added new cognitive-focused criteria:
+
+Accessible Authentication (3.3.7/3.3.8), Redundant Entry (3.3.7), and
+
+Consistent Help (3.2.6). \textbf{ACESS relevance:} ACESS's Simplified
+
+Mode uses short sentences, visual icons alongside text labels,
+
+step-by-step lesson flow, and auto-saves to avoid data loss ---
+
+addressing cognitive load for all learner profiles.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsection{Section E: Adaptive \& Personalized Learning
+
+Systems}\label{section-e-adaptive-personalized-learning-systems}
+
+
+
+\subsubsection{E1. Adaptive Learning Engines \& Knowledge
+
+Tracing}\label{e1.-adaptive-learning-engines-knowledge-tracing}
+
+
+
+\textbf{Title:} Deep Knowledge Tracing and Cognitive Load Estimation for
+
+Personalized Learning Path Generation \textbf{Organization:} PMC / NIH
+
+\textbf{Year:} 2025 \textbf{URL:}
+
+https://pmc.ncbi.nlm.nih.gov/articles/PMC12246154/ \textbf{Summary:}
+
+Presents a dual-stream neural network that combines knowledge state
+
+tracking with cognitive load estimation to generate personalized
+
+learning paths. Achieved 87.5\% prediction accuracy. Identifies
+
+``learning sweet spots'' --- optimal ranges of cognitive challenge
+
+maximizing performance and retention. \textbf{ACESS relevance:} Provides
+
+the theoretical basis for ACESS's adaptive lesson sequencing ---
+
+adjusting content difficulty based on learner performance history, not
+
+just profile-based presets.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} An Improved Adaptive Learning Path Recommendation Model
+
+Driven by Real-time Learning Analytics \textbf{Organization:} Journal of
+
+Computers in Education / Springer (via PMC) \textbf{Year:} 2022
+
+\textbf{URL:} https://pmc.ncbi.nlm.nih.gov/articles/PMC9748379/
+
+\textbf{Summary:} Reviews personalized learning path recommendation
+
+approaches including collaborative filtering, content-based filtering,
+
+and knowledge-tracing hybrid systems. Finds that real-time learner log
+
+monitoring with adaptive resource mapping outperforms static
+
+recommendation models. \textbf{ACESS relevance:} Supports ACESS's design
+
+decision to log lesson interactions (time-on-task, quiz attempts, replay
+
+counts) and surface these to an adaptive recommendation layer for future
+
+lesson ordering.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{E2. xAPI/SCORM Learning Analytics
+
+Standards}\label{e2.-xapiscorm-learning-analytics-standards}
+
+
+
+\textbf{Title:} What Is xAPI? Tracking Learner Data --- Wherever It Goes
+
+\textbf{Organization:} Articulate \textbf{Year:} 2025 \textbf{URL:}
+
+https://www.articulate.com/blog/what-is-xapi/ \textbf{Summary:} xAPI
+
+(Experience API / Tin Can) is the successor to SCORM. Records learning
+
+``statements'' in Actor--Verb--Object format (e.g., ``Aliff completed
+
+Lesson 3''). Stores records in a Learning Record Store (LRS), not just
+
+an LMS. Supports offline learning, mobile, VR, and game-based learning.
+
+\textbf{ACESS relevance:} ACESS's \texttt{lesson\_progress} table tracks
+
+the same data as xAPI statements --- learner, action, lesson, timestamp,
+
+score. H5P in Moodle already emits xAPI; ACESS can forward these to an
+
+LRS for cross-platform analytics.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} xAPI vs SCORM --- iSpring Solutions
+
+\textbf{Organization:} iSpring Solutions \textbf{Year:} 2026
+
+\textbf{URL:} https://www.ispringsolutions.com/blog/xapi-vs-scorm
+
+\textbf{Summary:} Compares SCORM (tracks completion, score, time;
+
+LMS-bound; universally supported) vs xAPI (rich behavioral statements;
+
+platform-agnostic; requires LRS). SCORM remains dominant for formal LMS
+
+content; xAPI is preferred for rich analytics and cross-platform
+
+learning. \textbf{ACESS relevance:} ACESS supports SCORM for H5P content
+
+compatibility with Moodle's gradebook, while also logging xAPI-style
+
+events internally for its own analytics engine.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{E3. Gamification in
+
+Education}\label{e3.-gamification-in-education}
+
+
+
+\textbf{Title:} The Impact of Gamification on Learning and Instruction:
+
+A Systematic Review \textbf{Organization:} ScienceDirect / Educational
+
+Research Review \textbf{Year:} 2020 \textbf{URL:}
+
+https://www.sciencedirect.com/science/article/abs/pii/S1747938X19301058
+
+\textbf{Summary:} Systematic review of gamification empirical evidence.
+
+Finds three positive themes: student engagement and motivation, academic
+
+achievement, and social connectivity. The most common game elements
+
+(points, badges, leaderboards, avatars) increase goal orientation,
+
+persistence, and learning by repetition. \textbf{ACESS relevance:}
+
+Provides evidence base for ACESS's gamification features --- XP points,
+
+lesson badges, completion streaks, and progress bars. The review
+
+supports using multiple game elements together rather than points alone
+
+(``pointification'').
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\textbf{Title:} Examining the Effectiveness of Gamification: A
+
+Meta-Analysis \textbf{Organization:} Frontiers in Psychology
+
+\textbf{Year:} 2023 \textbf{URL:}
+
+https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1253549/full
+
+\textbf{Summary:} Meta-analysis confirming moderate positive effects of
+
+gamification on learning outcomes. Notes that design principles (PBL
+
+triangle: Points--Badges--Leaderboards) are widely used but
+
+``pointification'' (using only points) is insufficient. Context and
+
+learner type moderate effectiveness. \textbf{ACESS relevance:} Warns
+
+ACESS against over-relying on visible leaderboards for learners with
+
+disabilities or anxiety disorders --- ACESS makes leaderboards opt-in
+
+and emphasizes personal progress over competitive rankings.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{E4. Spaced Repetition \& Mastery
+
+Learning}\label{e4.-spaced-repetition-mastery-learning}
+
+
+
+\textbf{Title:} Validating the Impact of Digital Badges on Motivation
+
+and Academic Performance \textbf{Organization:} Frontiers in Education
+
+\textbf{Year:} 2024 \textbf{URL:}
+
+https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2024.1429452/full
+
+\textbf{Summary:} Study with 95 university students found digital badges
+
+significantly enhance intrinsic motivation across all five motivational
+
+dimensions, with minimal impact on extrinsic motivation. No significant
+
+difference between badge design categories. \textbf{ACESS relevance:}
+
+Supports ACESS's design decision to prioritize intrinsic-motivation
+
+badges (mastery milestones, accessibility goal achievements) over
+
+competitive badges.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsection{Section F: Role-Based Learning Management Systems
+
+(LMS)}\label{section-f-role-based-learning-management-systems-lms}
+
+
+
+\subsubsection{F1. LMS Role-Based Access
+
+Control}\label{f1.-lms-role-based-access-control}
+
+
+
+\textbf{Title:} Moodle Access API --- Roles, Capabilities, and Contexts
+
+\textbf{Organization:} Moodle HQ \textbf{Year:} 2025 \textbf{URL:}
+
+https://moodledev.io/docs/5.0/apis/subsystems/access \textbf{Summary:}
+
+The definitive reference for Moodle's RBAC: roles are named sets of
+
+capabilities; capabilities are granted ALLOW/PREVENT/PROHIBIT in
+
+contexts. Context hierarchy: System → Course Category → Course → Module.
+
+\texttt{has\_capability()} is the central access check function.
+
+\textbf{ACESS relevance:} ACESS's three-role model
+
+(Admin/Educator/Learner) maps cleanly onto Moodle's
+
+Manager/Teacher/Student. The context-scoped permission model guides
+
+ACESS's Supabase RLS policy design.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{F2. Course Lifecycle
+
+Management}\label{f2.-course-lifecycle-management}
+
+
+
+\textbf{Title:} Moodle Course Management Overview \textbf{Organization:}
+
+Moodle Docs \textbf{Year:} 2024 \textbf{URL:}
+
+https://docs.moodle.org/502/en/Course \textbf{Summary:} Covers course
+
+creation, adding resources and activities, section organization,
+
+completion tracking, and the draft → published state. Backup and restore
+
+preserve course structure. Grading integrates with the gradebook.
+
+\textbf{ACESS relevance:} ACESS mirrors the Moodle course lifecycle:
+
+Draft → Under Review → Published → Archived. Educator workflow covers
+
+lesson authoring (Tiptap editor), activity embedding (H5P), and progress
+
+monitoring dashboards.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{F3. Certificate Generation in
+
+E-learning}\label{f3.-certificate-generation-in-e-learning}
+
+
+
+\textbf{Title:} Moodle Certificate Activity --- MoodleDocs
+
+\textbf{Organization:} Moodle HQ \textbf{Year:} 2024 \textbf{URL:}
+
+https://docs.moodle.org/502/en/Certificate\_activity \textbf{Summary:}
+
+The Certificate activity generates PDF certificates upon course
+
+completion, customizable with text, images, and date. Uses Moodle's
+
+completion tracking APIs to gate certificate issuance. \textbf{ACESS
+
+relevance:} ACESS's certificate system uses a similar pattern ---
+
+triggering PDF generation (via a server-side library) when a learner's
+
+\texttt{course\_completions} row is marked complete, with learner name,
+
+course title, and date embedded.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsection{Section G: Relevant Research Papers \& Academic
+
+References}\label{section-g-relevant-research-papers-academic-references}
+
+
+
+\subsubsection{G1. Dyslexia --- Spacing and Font
+
+Research}\label{g1.-dyslexia-spacing-and-font-research}
+
+
+
+\textbf{Title:} Inter-Letter Spacing, Inter-Word Spacing, and Font with
+
+Dyslexia-Friendly Features: Testing Text Readability in People with and
+
+without Dyslexia \textbf{Authors:} Franceschini, S. et al.
+
+\textbf{Organization:} PMC / NIH \textbf{Year:} 2020 \textbf{URL:}
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7188700/ \textbf{Summary:}
+
+Reviews the literature on dyslexia-friendly font features and spacing.
+
+Key finding: no direct evidence for letterform design effects, but
+
+extra-large inter-letter spacing (based on Zorzi et al., 2012) shows
+
+consistent benefit. OpenDyslexic showed no improvement over Arial in
+
+accuracy or speed in controlled studies. \textbf{ACESS relevance:}
+
+Informs ACESS's evidence-based approach --- prioritize spacing controls
+
+over font switching, and offer both as learner-controlled options rather
+
+than prescribing a single ``dyslexia font.''
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G2. ADHD --- Distraction-Free Interface
+
+Research}\label{g2.-adhd-distraction-free-interface-research}
+
+
+
+\textbf{Title:} Orchestrating Attention: Bringing Harmony to the Chaos
+
+of Neurodivergent Learning States (AttentionGuard System)
+
+\textbf{Authors:} ArXiv Preprint \textbf{Year:} 2026 \textbf{URL:}
+
+https://arxiv.org/pdf/2602.07865 \textbf{Summary:} Presents
+
+AttentionGuard --- an adaptive UI system that detects ADHD learning
+
+states (focused, drifting, hyperfocused, fatigued) and applies five UI
+
+patterns: attention-responsive chunking, state-aware verification
+
+timing, dynamic distraction reduction, progress adaptation, and
+
+re-engagement scaffolding. Validates these patterns against ADHD
+
+neuroscience literature. \textbf{ACESS relevance:} Provides the most
+
+current research on ADHD-adaptive UI, validating ACESS's approach of
+
+progressive disclosure (micro-chunks), pause-and-resume, and
+
+context-aware comprehension checks.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G3. ASD --- Predictability and Visual
+
+Schedules}\label{g3.-asd-predictability-and-visual-schedules}
+
+
+
+\textbf{Title:} A DeepSeek Cross-Modal Platform for Personalized Art
+
+Education in Autism Spectrum Disorder \textbf{Organization:} PMC / NIH
+
+\textbf{Year:} 2025 \textbf{URL:}
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12749891/ \textbf{Summary:}
+
+Study with 203 participants (53 neurodivergent) demonstrates that
+
+structured, predictable environments with sensory accommodation achieve
+
+significantly better outcomes for ASD learners. Sensory comfort ratings
+
+4.6/5, learning satisfaction 4.3/5, NAEP score improvements 20.5\% vs
+
+8.2\% for traditional methods. \textbf{ACESS relevance:} Empirically
+
+supports ACESS's ASD Profile features --- structured visual lesson
+
+sequences, pre-lesson schedules, sensory accommodation settings, and
+
+predictable navigation.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G4. Gamification
+
+Meta-Analysis}\label{g4.-gamification-meta-analysis}
+
+
+
+\textbf{Title:} Examining the Effectiveness of Gamification as a Tool
+
+Promoting Teaching and Learning in Educational Settings: A Meta-Analysis
+
+\textbf{Organization:} Frontiers in Psychology \textbf{Year:} 2023
+
+\textbf{URL:}
+
+https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1253549/full
+
+\textbf{Summary:} Meta-analysis of gamification effectiveness across
+
+educational contexts. Finds overall positive but moderate effects.
+
+Distinguishes ``pointification'' (trivial) from meaningful game design.
+
+Notes that context, learner population, and design principles moderate
+
+outcomes significantly. \textbf{ACESS relevance:} Grounds ACESS's
+
+gamification design in evidence --- meaningful achievements tied to
+
+skill milestones, not arbitrary point accumulation. Disability-aware
+
+gamification avoids competitive elements that could demotivate
+
+vulnerable learners.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G5. Adaptive Learning --- Knowledge
+
+Tracing}\label{g5.-adaptive-learning-knowledge-tracing}
+
+
+
+\textbf{Title:} TutorLLM: Customizing Learning Recommendations with
+
+Knowledge Tracing and Retrieval-Augmented Generation
+
+\textbf{Organization:} ArXiv \textbf{Year:} 2025 \textbf{URL:}
+
+https://arxiv.org/pdf/2502.15709 \textbf{Summary:} Proposes combining
+
+knowledge tracing (MLFBK model predicting learner knowledge state) with
+
+RAG to provide personalized explanations and next-step recommendations.
+
+Achieves 10\% improvement in user satisfaction and 5\% increase in quiz
+
+scores over general LLMs. \textbf{ACESS relevance:} Points toward
+
+ACESS's future adaptive engine --- combining learner progress data
+
+(knowledge tracing) with lesson content retrieval (RAG) to surface the
+
+right explanation at the right level.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G6. Adaptive Learning --- Recommendation
+
+Systems}\label{g6.-adaptive-learning-recommendation-systems}
+
+
+
+\textbf{Title:} An Improved Adaptive Learning Path Recommendation Model
+
+Driven by Real-time Learning Analytics \textbf{Organization:} Journal of
+
+Computers in Education / Springer \textbf{Year:} 2022 \textbf{URL:}
+
+https://link.springer.com/article/10.1007/s40692-022-00250-y
+
+\textbf{Summary:} Proposes real-time learner log monitoring with a
+
+recommendation model that continuously adapts to changing learning
+
+preferences and performance. Hybrid approach combining collaborative
+
+filtering and knowledge tracing outperforms static models. \textbf{ACESS
+
+relevance:} Supports ACESS's roadmap for an adaptive recommendation
+
+layer --- using real-time lesson interaction logs to adjust subsequent
+
+lesson sequencing, not just initial onboarding profiles.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G7. Universal Design for Learning --- Implementation
+
+Evidence}\label{g7.-universal-design-for-learning-implementation-evidence}
+
+
+
+\textbf{Title:} UDL as a Framework for Inclusion: Bridging
+
+Neurodiversity and Learning through Sensory-Responsive Design
+
+\textbf{Organization:} SENcastle \textbf{Year:} 2026 \textbf{URL:}
+
+https://www.sencastle.com/blog/universal-design-for-learning
+
+\textbf{Summary:} Reviews UDL implementation evidence. Cites CAST (2024)
+
+UDL Guidelines 3.0. Confirms three principles (Engagement,
+
+Representation, Action \& Expression) correspond to affective,
+
+recognition, and strategic neural networks. Evidence shows systematic
+
+UDL implementation leads to significant improvements in educational
+
+outcomes. \textbf{ACESS relevance:} Provides the theoretical and
+
+empirical foundation for ACESS's entire accessibility profile system,
+
+which operationalizes UDL's three principles into learner-controlled
+
+interface and content settings.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G8. H5P Effectiveness --- Learner
+
+Engagement}\label{g8.-h5p-effectiveness-learner-engagement}
+
+
+
+\textbf{Title:} H5P and Inclusive Learning at UBC \textbf{Organization:}
+
+University of British Columbia, Educational Technology Support
+
+\textbf{Year:} 2024 \textbf{URL:} https://wiki.ubc.ca/Documentation:H5P
+
+\textbf{Summary:} Documents UBC's use of H5P in courses, noting benefits
+
+for deaf and hard-of-hearing learners (interactive video with captions),
+
+improved metacognition and attentional control from retrieval practice,
+
+and reduced anxiety from learner-controlled pacing of interactive
+
+content. \textbf{ACESS relevance:} Confirms the value of embedding H5P
+
+in ACESS lessons for diverse learner populations, and validates the
+
+importance of learner control over interaction pacing --- a key
+
+accessibility principle.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G9. Accessibility Evaluation Frameworks for
+
+E-Learning}\label{g9.-accessibility-evaluation-frameworks-for-e-learning}
+
+
+
+\textbf{Title:} WCAG 2.2 and E-learning Accessibility Conformance
+
+\textbf{Organization:} W3C / WAI and arc42 Quality Model \textbf{Year:}
+
+2024--2025 \textbf{URL:} https://quality.arc42.org/standards/wcag-2-2
+
+\textbf{Summary:} Documents that WCAG 2.2 contains 9 new criteria (added
+
+over 2.1) particularly targeting cognitive disabilities, low vision, and
+
+mobile users --- Focus Not Obscured (2.4.11), Dragging Movements
+
+(2.5.7), Target Size Minimum (2.5.8), and Accessible Authentication
+
+(3.3.8). ISO/IEC 40500:2025 ratification. \textbf{ACESS relevance:}
+
+Provides the specific new WCAG 2.2 criteria ACESS must address beyond
+
+its WCAG 2.1 baseline: larger touch targets (2.5.8 --- minimum 24×24 CSS
+
+px), authentication without cognitive function tests (3.3.8), and focus
+
+indicator visibility (2.4.11).
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsubsection{G10. Neurodivergent UX Design ---
+
+Principles}\label{g10.-neurodivergent-ux-design-principles}
+
+
+
+\textbf{Title:} The Principles of Neurodivergent UX Design Every
+
+Designer Should Know \textbf{Organization:} AccessibilityChecker.org
+
+\textbf{Year:} 2026 \textbf{URL:}
+
+https://www.accessibilitychecker.org/blog/neurodivergent-ux-design/
+
+\textbf{Summary:} Synthesizes ADHD, ASD, dyslexia, and cognitive
+
+disability UX principles into actionable design rules: minimize
+
+distractions (no autoplay, no aggressive animation), clear task flows
+
+(step-by-step wizards), progressive disclosure, forgiving UI (easy undo,
+
+back navigation), and accessible typography. Notes that 15--20\% of the
+
+global population is neurodivergent. \textbf{ACESS relevance:} Provides
+
+a combined neurodivergent UX framework that unifies ACESS's separate
+
+accessibility profiles into a coherent design system --- any feature
+
+benefiting one neurodivergent group typically benefits all users under
+
+cognitive load.
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\subsection{Quick Reference: Standards Crosswalk for
+
+ACESS}\label{quick-reference-standards-crosswalk-for-acess}
+
+
+
+{\def\LTcaptype{none} % do not increment counter
+
+\begin{longtable}[]{@{}
+
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+
+\toprule\noalign{}
+
+\begin{minipage}[b]{\linewidth}\raggedright
+
+ACESS Feature
+
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+
+Primary Standard
+
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+
+Supporting Standard
+
+\end{minipage} \\
+
+\midrule\noalign{}
+
+\endhead
+
+\bottomrule\noalign{}
+
+\endlastfoot
+
+Keyboard navigation & WCAG 2.2 (2.1.1) & WAI-ARIA APG Patterns \\
+
+Color contrast & WCAG 2.2 (1.4.3 AA) & EN 301 549 §9.1.4.3 \\
+
+Screen reader support & WAI-ARIA 1.3 + Radix UI & WCAG 2.2 (4.1.2) \\
+
+Captions on video & WCAG 2.2 (1.2.2) & Section 508 \\
+
+Font/spacing settings & Dyslexia research (Zorzi et al.) & UDL
+
+Representation \\
+
+Reduced motion & WCAG 2.2 (2.3.3) & Motion
+
+\texttt{useReducedMotion()} \\
+
+Gamification & Frontiers meta-analysis 2023 & UDL Engagement \\
+
+Progress tracking & xAPI / SCORM & Moodle \texttt{mod\_h5pactivity} \\
+
+Learner data isolation & Supabase RLS (PostgreSQL) & Moodle RBAC
+
+principles \\
+
+Educator course authoring & Tiptap extensibility model & Moodle course
+
+management \\
+
+Interactive content & H5P (h5p.org) & Moodle Content Bank \\
+
+Adaptive sequencing & Knowledge tracing research & UDL Action \&
+
+Expression \\
+
+\end{longtable}
+
+}
+
+
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+\emph{Document compiled: June 2026 \textbar{} ACESS System --- UTeM
+
+Software Engineering Project} \emph{All URLs verified as of June 2026.}
+
+
+
+\end{document}

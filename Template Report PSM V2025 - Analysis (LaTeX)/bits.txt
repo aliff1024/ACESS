@@ -1,0 +1,279 @@
+Bachelor Project Writing Guide
+Panduan Penulisan Projek Sarjana Muda
+[ version 2025 ]
+JAWATANKUASA PSM & PD 2025
+MASHANUM OSMAN
+AMIRUL RAMZANI RADZID
+CHE KU NURAINI CHE KU MOHD
+IKMAL FAIQ ALBAKRI MUSTAFA ALBAKRI
+MOHD NAZRIEN ZARAINI
+MUHAMMAD SHARILAZLAN SALLEH
+YAHYA IBRAHIM
+ROSMIZA WAHIDA ABDULLAH
+TABLE OF CONTENT
+PART I : GENERAL GUIDELINES FOR REPORT WRITING5
+[ ENGLISH VERSION ]6
+CHAPTER 1.GENERAL GUIDE TO WRITING A REPORT7
+CHAPTER 2.GUIDE TO PREPARING A REPORT14
+CHAPTER 3.GUIDE TO WRITING REFERENCES (HARVARD STYLE)18
+CHAPTER 4.GUIDE TO WRITING NOTES AND FOOTNOTES30
+[ BAHASA MELAYU VERSION ]31
+CHAPTER 1.PANDUAN UMUM UNTUK MENULIS LAPORAN32
+CHAPTER 2.PANDUAN UNTUK MENYEDIAKAN LAPORAN40
+CHAPTER 3.PANDUAN MENULIS RUJUKAN (GAYA HARVARD)44
+CHAPTER 4.PANDUAN PENULISAN NOTA DAN NOTA KAKI56
+PART II : BACHELOR PROJECT CONTENTS GUIDE57
+BITC : Computer Networking58
+Project Type I: System Development58
+CHAPTER 1.INTRODUCTION59
+CHAPTER 2.LITERATURE REVIEW62
+CHAPTER 3.PROJECT METHODOLOGY64
+CHAPTER 4.ANALYSIS AND DESIGN65
+CHAPTER 5.IMPLEMENTATION68
+CHAPTER 6.TESTING70
+CHAPTER 7.PROJECT CONCLUSION72
+REFERENCES74
+BIBLIOGRAPHY74
+APPENDICES74
+PROJECT TYPE II: Analysis (SIMULATION AND TESTBED)75
+CHAPTER 1.INTRODUCTION76
+CHAPTER 2.LITERATURE REVIEW79
+CHAPTER 3.PROJECT METHODOLOGY81
+CHAPTER 4.DESIGN83
+CHAPTER 5.IMPLEMENTATION85
+CHAPTER 6.TESTING AND ANALYSIS86
+CHAPTER 7.PROJECT CONCLUSION87
+REFERENCES89
+BIBLIOGRAPHY89
+APPENDICES89
+BITD: Database Management90
+CHAPTER 1.INTRODUCTION91
+CHAPTER 2.PROJECT METHODOLOGY AND PLANNING93
+CHAPTER 3.ANALYSIS95
+CHAPTER 4.DESIGN97
+CHAPTER 5.IMPLEMENTATION99
+CHAPTER 6.TESTING100
+CHAPTER 7.CONCLUSION102
+REFERENCES103
+BIBLIOGRAPHY103
+APPENDICES103
+BITE : Game technology104
+CHAPTER 1.INTRODUCTION105
+CHAPTER 2.LITERATURE RIVIEW AND PROJECT METHODOLOGY107
+CHAPTER 3.ANALYSIS109
+CHAPTER 4.DESIGN111
+CHAPTER 5.IMPLEMENTATION114
+CHAPTER 6.TESTING117
+CHAPTER 7.CONCLUSION119
+REFERENCES120
+BIBLIOGRAPHY120
+APPENDICES120
+BITI : Artificial Intelligence121
+Project Type I: Analysis121
+Artificial Intelligence122
+(BITI)122
+Project Type II: Product122
+CHAPTER 1.INTRODUCTION123
+CHAPTER 2.LITERATURE REVIEW AND PROJECT METHODOLOGY125
+CHAPTER 3.ANALYSIS128
+CHAPTER 4.DESIGN/THE PROPOSED TECHNIQUE130
+CHAPTER 5.IMPLEMENTATION134
+CHAPTER 6.TESTING136
+CHAPTER 7.CONCLUSION139
+REFERENCES140
+BIBLIOGRAPHY140
+APPENDICES140
+BITM : Media Interactive141
+CHAPTER 1.INTRODUCTION142
+CHAPTER 2.LITERATURE REVIEW AND PROJECT METHODOLOGY144
+CHAPTER 3.ANALYSIS147
+CHAPTER 4.DESIGN152
+CHAPTER 5.IMPLEMENTATION155
+CHAPTER 6.TESTING157
+CHAPTER 7.CONCLUSION159
+REFERENCES160
+BIBLIOGRAPHY160
+APPENDICES160
+BITS : Software Development161
+CHAPTER 1.INTRODUCTION162
+CHAPTER 2.LITERATURE REVIEW AND PROJECT METHODOLOGY164
+CHAPTER 3.ANALYSIS166
+CHAPTER 4.DESIGN168
+CHAPTER 5.IMPLEMENTATION171
+CHAPTER 6.TESTING173
+CHAPTER 7.CONCLUSION175
+REFERENCES176
+BIBLIOGRAPHY176
+APPENDICES176
+PART III : LIST OF APPENDICES177
+BITS : Software Development
+CHAPTER 1.INTRODUCTION
+Introduction
+Introduction to your project and your project background as a whole but in brief.
+Problem statement(s)
+Description of problems that directly influence the motives of the project. (Example, explanation of problems of XYZ & Co. record keeping)
+Applicable for project of improving or solving a specific case.
+Project that is of new creation, re-creation, individual initiative or not specifically involves any case to deal with, the problems can be included in the preamble paragraphs.
+Objective
+Can be in point form format (use bullets) together with a brief explanation.
+Scope
+Describes every scope involved in your project and give reason(s) for the involvement. Examples: (e.g. children education), specific users (e.g. children between 5 and 8), other specific entities, specific platform (e.g. network, OS) etc.
+Can be in point form format (use bullets) together with a brief explanation.
+Project Significance
+Describes who/what may benefits from the project and how? You can infer it back to your objectives (if applicable).
+Expected Output
+Describes what do you expected from your project.
+Conclusion
+Give a summary of this chapter and next activities to be developed.
+CHAPTER 2.LITERATURE REVIEW AND PROJECT METHODOLOGY
+Introduction
+Preview to the literature review and project methodology.
+Facts and findings (based on topic)
+Domain
+Identify domain related with your project with explanations.
+Existing System
+Identify domain related with your project with explanations.
+Discuss and state your approach and related or past research, references, case study and other finding that relate to your project title. Examples: readings 1 and 3, experiments you get 3 and 4, case study 5 and 6 etc.
+Tagged the source if you refer the approach from published materials.
+Support the approach with statements (from published materials) to justify you fact findings are sound.
+Identify hardware and software used
+Technique
+State other approaches than what you use that you think also applicable and related and give reason to justify why not.
+Project Methodology
+Describe the selected approach or methodology used in your project (Examples: SSADM/SDLC/OOAD, Instructional design, Database life cycle and relevant methodology)
+Describe the activities that you may do in every stage and relate with your project.
+Include statements (from published materials) that support the approach you apply.
+Project Requirements
+Software Requirement
+List software requirements in point form. Examples: MS Visual Ba- sic Professional v.6.x, Apache Tomcat and the related for developing application software, MS Project 2000 for project management etc.
+Hardware Requirement
+List hardware requirements in point form. Examples: PCs, server, devices and storage.
+Other Requirements
+State other requirements to be used in your project such as you need special lab for project development, photo copy facility, discussion room and etc.
+Project Schedule and Milestones
+Explain your actions plan prior to the end of the project. Apply from what you have learnt from project management.
+List and describe stage by stage of your activities.
+Attach your project time line or Gantt chart (in 1 page view)
+Conclusion
+Summarize the chapter and explain the next activities to be developed.
+CHAPTER 3.ANALYSIS
+Introduction
+Preview to the analysis phase and how it would be developed.
+Problem Analysis
+Investigate and describe current system scenario/situation. Reiterate the data flow diagram or activity diagram from your reference(s), showing how the current system(s) or business(s) runs.
+Use appropriate diagram to visualize the system flow such as sequence diagram (if use OOAD with UML), DFD (if use SSADM) and Flowchart (for network project).
+For simulation based project, analyse the real graph given by company.
+Explain in detail the problems statement as mentioned in Chapter 1.
+Requirement analysis
+Data Requirement
+What data should the system input and output, and what data should the system store internally.
+It can be illustrated by using Data Model or Data Dictionary.
+Functional Requirement
+Specify the functions of the system, how it records, compute, trans- forms, and transmits data.
+It can be illustrated by using DFD, Context diagram or Use case.
+Non-functional Requirement
+Specify how well the system performs its intended functions. E.g. Quality requirement, Performance-how many computer resources should it use, how accurate should the result be, how much data should it be able to store?
+Others Requirement
+Describe each of software, hardware and requirements that will be used (justification of usage).
+Conclusion
+Summarize the chapter and explain the next activities to be developed.
+CHAPTER 4.DESIGN
+Introduction
+Introductory preview to this chapter. Examples: this chapter defines the results of the analysis of the preliminary design and the result of the detailed design.
+High-Level Design
+Describe high-level view of your system’s structure or system’s interior. You may refine some of the function below once you are in PSM II.
+System Architecture
+Define architecture view of your system. The architecture view can be presented in layer, framework, tier or patent (for OOAD).
+Describe the static view and dynamic view of your application (for OOAD - use interaction diagram, high-level class diagram).
+For those use SSADM: use any appropriate diagram to view your system.
+User Interface Design
+Refine your user interface design that defined in chapter 5 of PSM I.
+Navigation Design
+Define and refine the navigation flow and types of navigation controls.
+Input Design
+Define and refine the screens (e.g. types of inputs such as text, numbers, and selection box etc.) used to enter information, as well as any forms on which users write or type information.
+Define and refine validation rule for each of input field.
+Output Design
+Define and refine the types of outputs including detail reports, summary reports, turnaround documents and graphs. Classify your output in term of periodically or ad-hoc basis. For example daily, monthly, yearly etc.
+Database Design
+Conceptual and Logical Database Design
+Introduce briefly to the logical data model (LDM) or entity relation- ship diagram (ERD) and what they have to do with your database design.
+Define, refine and construct the entity relationship (ER) diagrams in details with explanation in text on what basis (business rules) you apply for every entity relationship you have defined in the diagram.
+Data dictionary and normalization
+Detailed Design
+Specification and diagrams may be further elaborated. Emphasis should be on the logic of the design and the approach to satisfying the requirements – How will the system function?
+Software Design
+For those use SSADM/SDLC: Describe in detail of every functions according to your DFD in format of program specification. The program specification includes information of program description, file input/output, pseudo code and attach sample screens.
+For those use OOAD/UML: Describe in detail of every classes. Examples: class name, responsibility, attributes methods/operations. Describe every methods/operations such as its responsibility, input/output parameter, pre/post condition and algorithm –should be bias to language chosen for your software development (e.g. in English like of Java code).
+Physical Database Design
+Translate logical to target DBMS (use DDL/DCL) - base tables, de- sign for other business rules (constraint- validation for fields, records), file organization and indexes
+Conclusion
+Summarize the chapter and explain the next activities to be developed
+CHAPTER 5.IMPLEMENTATION
+Introduction
+Introductory preview to this chapter.
+Briefly describe the activity involved in the implementation phase and what is the expected output after you complete this phase. Provide chapter outline diagram of Chapter 5.
+Software Development Environment setup
+Define your development environment setup.
+Use diagram to view/present the environment architecture. Examples: deployment diagram, draw the software (client s/w, server s/w), hardware (server configuration e.g. port no., IP address, database instance name, table space etc.) and network setup.
+Software Configuration Management
+Configuration environment setup
+Explain how you design and setup the configuration management in your project. Do not explain on how to install the software.
+Explain (if any) the software tools used to support your configuration control. E.g. Visual SourceSafe, CVS etc.
+Version Control Procedure
+Describe the procedure and control in managing your source code version.
+Implementation Status
+Describe the progress of the development status for each of the component/module. For example: component/module name, description, duration to complete, date completed, size of software etc.
+Conclusion
+Summarize the chapter and explain the next activities to be developed.
+CHAPTER 6.TESTING
+Introduction
+Introductory preview to this chapter. E.g. briefly describe the activity involved in testing phase and what is the testing strategy to be adopted in your project. Provide chapter outline diagram of Chapter 6.
+Test Plan
+Test Organization
+Describe personnel involved.
+Test Environment
+Describe the location/environment of testing to be carried out.
+Define hardware, firmware configurations, preparations and training prior to testing.
+Test Schedule
+Define how many cycles and duration of your test to be conducted.
+Test Strategy
+Explain the strategy to be selected such as bottom-up or top-down and black-box/white-box classes of tests.
+Classes of tests
+Output correctness or functionality test, Security test, Stress test and etc.
+Test Design
+Test Description
+Test case identification, test cases and expected result for each module are designed and documented.
+Test Data
+Real life or synthetic data will be selected.
+Test Results and Analysis
+Test case identification, tester identification, test case results (Success/Fail), and detailed documentation on the failed test case.
+How satisfied overall your intended users and yourself with the system.
+Conclusion
+Summarize the chapter and explain the next activities to be developed.
+CHAPTER 7.CONCLUSION
+Observation on Weaknesses and Strengths
+State the weaknesses and strength of your project.
+You also may state other’s responses regarding project topics.
+Propositions for Improvement
+Present your suggestions on how your system can be improved better.
+Elaborate each of your suggestions in paragraph.
+Project Contribution
+State your project contribution to the university/faculty/company/individual.
+State where to find the user manual - e.g. Appendix XX
+Conclusion
+State whether you think your project meets your set objectives conclusively.
+Concluding phrases to conclude the project.
+REFERENCES
+A list of references used in the project report such as journals, articles, books and etc. as directly quoted in the report.
+For complete reference, please refer to Final Year Project Writing Guide 2025.
+BIBLIOGRAPHY
+A list of references used in the project report such as journals, articles, books and etc. but not directly quoted in the report.
+For complete reference, please refer to Final Year Project Writing Guide 2025.
+APPENDICES
+E.g. user guide, user manual, diagrams and etc.
+The Turnitin report for the first page should be included in the appendix.
+PART III : LIST OF APPENDICES
+IMPORTANT NOTES:
+The following appendices are purposely for clearer understanding on how does your report look like.
+Please kindly to download and use the provided template version from the course page in the e-Learning platform.

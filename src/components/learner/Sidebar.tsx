@@ -26,13 +26,14 @@ interface SidebarProps {
   activeView: string;
   onNavigate: (view: string) => void;
   onAccessibilityClick: () => void;
+  className?: string;
 }
 
 function isCoursesView(view: string): boolean {
   return view === 'courses' || view === 'courses_enrolled' || view === 'courses_favorites';
 }
 
-export function Sidebar({ activeView, onNavigate, onAccessibilityClick }: SidebarProps) {
+export function Sidebar({ activeView, onNavigate, onAccessibilityClick, className = '' }: SidebarProps) {
   const { t } = useTranslation();
   const { settings, userAgeGroup } = useAccessibility();
   const activePreset = settings?.active_preset || 'none';
@@ -173,7 +174,7 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick }: Sideba
   const { containerWidth, textClass, itemGap, blockPadding } = getPresetStyles();
 
   return (
-    <aside className={`${containerWidth} bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col flex-shrink-0 shadow-xl z-20 transition-all duration-300`}>
+    <aside className={`${containerWidth} bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col flex-shrink-0 shadow-xl z-20 transition-all duration-300 ${className}`}>
       {/* Brand */}
       <div className="px-6 py-7 border-b border-sidebar-border">
         <Logo href="/learner" size="md" showSubtitle subtitle="Learner Portal" />

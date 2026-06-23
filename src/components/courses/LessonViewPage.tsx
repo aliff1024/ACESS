@@ -1,15 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '../ui/breadcrumb';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
+import DOMPurify from 'dompurify';
+
+import { LessonDiscussion } from '../community/LessonDiscussion';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout, Image, Link, Gamepad2, List } from 'lucide-react';
+import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout, Image, Link, Gamepad2, List, Download, MessageSquare } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
-import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint } from '@/lib/learner-api';
+import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint, fetchSystemCourseProgress } from '@/lib/learner-api';
 import type { LessonContent, QuizData, LearnerLessonCheckpoint } from '@/lib/learner-api';
 import { shouldAutoEnableEasyRead } from '@/lib/accessibility-utils';
 import { trackAdaptation } from '@/lib/adaptive-engine';
@@ -28,6 +32,8 @@ import type { LearnerInteractiveContent, LearnerVideoQuestion, LearnerH5PContent
 import { H5PViewer } from '@/components/h5p/H5PViewer';
 import { toast } from 'sonner';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
+import { TaskChecklist } from '@/components/accessibility/TaskChecklist';
+import { VisualSchedule } from '@/components/accessibility/VisualSchedule';
 
 // ─── Utils ────────────────────────────────────────────────────────────────
 
@@ -50,7 +56,14 @@ function computeReadTime(contentHtml: string, estimatedDuration?: number | null)
   return { label: `~${minutes} min read`, minutes };
 }
 
-function CelebrationAnimation() {
+function CelebrationAnimation({ reducedMotion = false }: { reducedMotion?: boolean }) {
+  if (reducedMotion) {
+    return (
+      <div className="flex flex-col items-center gap-2 py-2">
+        <Award className="w-12 h-12 text-yellow-500" />
+      </div>
+    );
+  }
   return (
     <motion.div
       initial={{ scale: 0, opacity: 0 }}
@@ -190,7 +203,7 @@ interface LessonViewPageProps {
   isPreview?: boolean;
 }
 
-type TabId = 'content' | 'pdf' | 'quiz';
+type TabId = 'content' | 'pdf' | 'quiz' | 'discussion';
 
 export function LessonViewPage({
   lessonId,
@@ -200,6 +213,7 @@ export function LessonViewPage({
   onPreviousLesson,
   isPreview = false,
 }: LessonViewPageProps) {
+  const router = useRouter();
   const [lesson, setLesson] = useState<LessonContent | null>(null);
   const [assets, setAssets] = useState<LessonAsset[]>([]);
   const [interactiveContent, setInteractiveContent] = useState<LearnerInteractiveContent[]>([]);
@@ -223,6 +237,7 @@ export function LessonViewPage({
   // Lesson completion state
   const [lessonCompleted, setLessonCompleted] = useState(false);
   const [summarySubmitted, setSummarySubmitted] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   // Quiz flow state
   const [quizId, setQuizId] = useState<string | null>(null);
@@ -237,6 +252,8 @@ export function LessonViewPage({
   const [tracker, setTracker] = useState({ video: false, activity: false, scroll: false, quiz: false });
   const [completedActivityIds, setCompletedActivityIds] = useState<Set<string>>(new Set());
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+  const [hasDismissedCompletionPopup, setHasDismissedCompletionPopup] = useState(false);
+  const [showChecklistPopup, setShowChecklistPopup] = useState(false);
 
   const { settings, adaptiveOverrides } = useAccessibility();
   const adaptiveLessonModes = adaptiveOverrides.lesson_modes;
@@ -255,6 +272,7 @@ export function LessonViewPage({
   const [ttsPlaying, setTtsPlaying] = useState(false);
   const [ttsStatusMessage, setTtsStatusMessage] = useState('');
   const [ttsRate, setTtsRate] = useState(settings.tts_rate ?? 1);
+  const contentTopRef = useRef<HTMLDivElement>(null);
   const ttsRateRef = useRef(ttsRate);
   ttsRateRef.current = ttsRate;
 
@@ -262,6 +280,7 @@ export function LessonViewPage({
   const [videoQuestions, setVideoQuestions] = useState<LearnerVideoQuestion[]>([]);
   const [answeredQuestionIds, setAnsweredQuestionIds] = useState<Set<string>>(new Set());
   const [vqCompletedIds, setVqCompletedIds] = useState<Set<string>>(new Set());
+  const [temporarilySkippedIds, setTemporarilySkippedIds] = useState<Set<string>>(new Set());
   const [activeVideoQuestion, setActiveVideoQuestion] = useState<LearnerVideoQuestion | null>(null);
   const [selectedVqOption, setSelectedVqOption] = useState<number | null>(null);
   const [vqAnswerFeedback, setVqAnswerFeedback] = useState<{ correct: boolean; correctIndex: number } | null>(null);
@@ -390,9 +409,14 @@ export function LessonViewPage({
     if (!ytId) return;
 
     let cancelled = false;
+    let pollInterval: any = null;
 
-    function onYouTubeIframeAPIReady() {
+    function initPlayer() {
       if (cancelled) return;
+      if (playerRef.current) return;
+      const el = document.getElementById('youtube-player');
+      if (!el) return; // Might be hidden/unmounted
+      
       ytApiReadyRef.current = true;
       setYtApiLoaded(true);
       playerRef.current = new window.YT.Player('youtube-player', {
@@ -403,9 +427,7 @@ export function LessonViewPage({
           cc_load_policy: settings.captions_enabled ? 1 : 0,
         },
         events: {
-          onReady: () => {
-            // Player is ready, polling will be handled by the separate useEffect
-          },
+          onReady: () => {},
           onStateChange: (event: any) => {
             if (event.data === window.YT.PlayerState.ENDED) {
               setTracker((p) => ({ ...p, video: true }));
@@ -415,27 +437,33 @@ export function LessonViewPage({
       });
     }
 
-    // Load YouTube IFrame API if not already loaded
-    if (typeof window.YT === 'undefined' || !window.YT.Player) {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      tag.onload = () => {
-        // The API calls onYouTubeIframeAPIReady when loaded
-      };
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      if (firstScriptTag && firstScriptTag.parentNode) {
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-      } else {
-        document.head.appendChild(tag);
+    if (typeof window.YT === 'undefined' || typeof window.YT.Player === 'undefined') {
+      const existingScript = document.getElementById('youtube-api-script');
+      if (!existingScript) {
+        const tag = document.createElement('script');
+        tag.id = 'youtube-api-script';
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        if (firstScriptTag && firstScriptTag.parentNode) {
+          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        } else {
+          document.head.appendChild(tag);
+        }
       }
-      // Override the global callback
-      (window as any).onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+      
+      pollInterval = setInterval(() => {
+        if (window.YT && window.YT.Player) {
+          clearInterval(pollInterval);
+          initPlayer();
+        }
+      }, 100);
     } else {
-      onYouTubeIframeAPIReady();
+      initPlayer();
     }
 
     return () => {
       cancelled = true;
+      if (pollInterval) clearInterval(pollInterval);
       if (playerRef.current) {
         playerRef.current.destroy();
         playerRef.current = null;
@@ -454,8 +482,23 @@ export function LessonViewPage({
         const currentTime = playerRef.current.getCurrentTime();
         if (typeof currentTime !== 'number') return;
         
+        // Reset skipped questions if we rewind before them
+        if (temporarilySkippedIds.size > 0) {
+          setTemporarilySkippedIds(prev => {
+            const nextSkipped = new Set(prev);
+            let changed = false;
+            videoQuestions.forEach(q => {
+              if (nextSkipped.has(q.id) && currentTime < q.timestamp_seconds - 1) {
+                nextSkipped.delete(q.id);
+                changed = true;
+              }
+            });
+            return changed ? nextSkipped : prev;
+          });
+        }
+        
         const unanswered = videoQuestions.filter(
-          (q) => !answeredQuestionIds.has(q.id) && !vqCompletedIds.has(q.id)
+          (q) => !answeredQuestionIds.has(q.id) && !vqCompletedIds.has(q.id) && !temporarilySkippedIds.has(q.id)
         );
         
         const next = unanswered.find((q) => currentTime >= q.timestamp_seconds);
@@ -471,7 +514,7 @@ export function LessonViewPage({
     }, 500);
 
     return () => window.clearInterval(intervalId);
-  }, [ytApiLoaded, videoQuestions, answeredQuestionIds, vqCompletedIds, activeVideoQuestion]);
+  }, [ytApiLoaded, videoQuestions, answeredQuestionIds, vqCompletedIds, temporarilySkippedIds, activeVideoQuestion]);
 
   const speak = useCallback(() => {
     const text = ttsTextRef.current;
@@ -517,9 +560,48 @@ export function LessonViewPage({
     setEnrollmentId(null);
     stopTTS();
     setTracker({ video: false, activity: false, scroll: false, quiz: false });
-    setCompletedActivityIds(new Set());
+    
+    // Load from localStorage
+    if (typeof window !== 'undefined') {
+      const savedActs = localStorage.getItem(`lesson_${lessonId}_activities`);
+      setCompletedActivityIds(savedActs ? new Set(JSON.parse(savedActs)) : new Set());
+      const savedVQs = localStorage.getItem(`lesson_${lessonId}_videoqs`);
+      setAnsweredQuestionIds(savedVQs ? new Set(JSON.parse(savedVQs)) : new Set());
+      const savedVqCompleted = localStorage.getItem(`lesson_${lessonId}_vqcompleted`);
+      setVqCompletedIds(savedVqCompleted ? new Set(JSON.parse(savedVqCompleted)) : new Set());
+    } else {
+      setCompletedActivityIds(new Set());
+      setAnsweredQuestionIds(new Set());
+      setVqCompletedIds(new Set());
+    }
+    
     setShowCompletionPopup(false);
+    setHasDismissedCompletionPopup(false);
   }, [lessonId, stopTTS]);
+
+  // Sync state to localStorage and update tracker.activity
+  useEffect(() => {
+    if (!lessonId) return;
+    if (completedActivityIds.size > 0) {
+      localStorage.setItem(`lesson_${lessonId}_activities`, JSON.stringify(Array.from(completedActivityIds)));
+    }
+    if (interactiveContent.length > 0 && completedActivityIds.size >= interactiveContent.length) {
+      setTracker(p => ({ ...p, activity: true }));
+    } else if (interactiveContent.length === 0) {
+      setTracker(p => ({ ...p, activity: true })); // Auto-complete activity tracking if none exist
+    }
+  }, [completedActivityIds, lessonId, interactiveContent.length]);
+
+  // Sync video questions to localStorage
+  useEffect(() => {
+    if (!lessonId) return;
+    if (answeredQuestionIds.size > 0) {
+      localStorage.setItem(`lesson_${lessonId}_videoqs`, JSON.stringify(Array.from(answeredQuestionIds)));
+    }
+    if (vqCompletedIds.size > 0) {
+      localStorage.setItem(`lesson_${lessonId}_vqcompleted`, JSON.stringify(Array.from(vqCompletedIds)));
+    }
+  }, [answeredQuestionIds, vqCompletedIds, lessonId]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -544,11 +626,12 @@ export function LessonViewPage({
       (!needsActivities || tracker.activity) &&
       (!needsQuiz || tracker.quiz) &&
       tracker.scroll &&
-      !showCompletionPopup
+      !showCompletionPopup &&
+      !hasDismissedCompletionPopup
     ) {
       setShowCompletionPopup(true);
     }
-  }, [tracker, lesson, interactiveContent.length, quizData, lessonCompleted, showCompletionPopup]);
+  }, [tracker, lesson, interactiveContent.length, quizData, lessonCompleted, showCompletionPopup, hasDismissedCompletionPopup]);
 
   useEffect(() => {
     if (!lessonId || !(lesson?.checkpoints_enabled || adaptiveLessonModes.checkpoints)) return;
@@ -619,15 +702,32 @@ export function LessonViewPage({
   const hasQuiz = quizData !== null;
 
   const handleCompleteLesson = useCallback(async () => {
+    if (completing) return;
     if (isPreview) {
       toast.info('Lesson completion simulated in Preview Mode');
       setLessonCompleted(true);
       return;
     }
     if (!lesson) return;
-    await completeLesson(lessonId, courseId);
-    setLessonCompleted(true);
-  }, [isPreview, lessonId, courseId, lesson]);
+    setCompleting(true);
+    try {
+      await completeLesson(lessonId, courseId);
+      setLessonCompleted(true);
+      
+      // Check if course is now fully completed
+      try {
+        const progress = await fetchSystemCourseProgress(courseId);
+        if (progress && progress.progress_pct === 100) {
+          toast.success('Congratulations! You have completed the entire course.');
+          router.push('/learner/certificates?earned=true');
+        }
+      } catch (e) {
+        console.error('Failed to check course completion', e);
+      }
+    } finally {
+      setCompleting(false);
+    }
+  }, [isPreview, lessonId, courseId, lesson, router, completing]);
 
   const handleQuizSubmit = async (score: number, answers: { questionId: string; selectedAnswer: string }[]) => {
     if (isPreview) {
@@ -650,6 +750,13 @@ export function LessonViewPage({
       if (result.passed) {
         toast.success('Quiz passed!');
         setTracker((p) => ({ ...p, quiz: true }));
+        
+        // Check if course is now fully completed
+        const progress = await fetchSystemCourseProgress(courseId);
+        if (progress && progress.progress_pct === 100) {
+          toast.success('Congratulations! You have completed the entire course.');
+          router.push('/learner/certificates?earned=true');
+        }
       }
     } catch {
       setQuizScore(score);
@@ -702,17 +809,19 @@ export function LessonViewPage({
   
   // ADHD profile forcefully applies chunked learning and focus mode.
   const effectiveFocusMode = focusMode || activePreset === 'adhd';
-  const effectiveChunkedEnabled = lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content || activePreset === 'adhd' || activePreset === 'autism';
+  const effectiveChunkedEnabled = settings.chunked_content_mode || lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content || activePreset === 'adhd' || activePreset === 'autism';
 
   // For Dyslexia, enforce max-w-2xl for better line lengths (typically 60-70 characters).
   // For ADHD, keep focus mode tight.
-  const contentContainerClass = effectiveFocusMode
-    ? 'max-w-3xl'
-    : activePreset === 'dyslexia'
-      ? 'max-w-2xl text-lg' // tighter width, larger text
-      : simplifiedMode
-        ? 'max-w-4xl'
-        : layoutContainer;
+  const contentContainerClass = settings.distraction_free_mode
+    ? 'max-w-full px-4 sm:px-8 xl:px-12'
+    : effectiveFocusMode
+      ? 'max-w-3xl'
+      : activePreset === 'dyslexia'
+        ? 'max-w-2xl text-lg' // tighter width, larger text
+        : simplifiedMode
+          ? 'max-w-4xl'
+          : layoutContainer;
 
   const lineSpacingMap: Record<string, string> = { tight: 'leading-tight', normal: 'leading-normal', relaxed: 'leading-relaxed', wide: 'leading-loose', loose: 'leading-loose' };
   const fontSizeMap: Record<string, string> = { small: 'text-sm prose-sm', medium: 'text-base prose-base', large: 'text-lg prose-lg', xlarge: 'text-xl prose-xl' };
@@ -765,14 +874,20 @@ export function LessonViewPage({
   const goToPrevChunk = () => {
     setCurrentChunk((c) => Math.max(0, c - 1));
     setAdaptiveHint(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const goToNextChunk = () => {
     if (!canAdvanceChunk) return;
     setAdaptiveHint(null);
-    setCurrentChunk((c) => Math.min(totalChunks - 1, c + 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentChunk((c) => {
+      const next = Math.min(totalChunks - 1, c + 1);
+      if (next === totalChunks - 1 && isSlideMode) {
+        setTracker((p) => ({ ...p, scroll: true }));
+      }
+      return next;
+    });
+    contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleCheckpointAcknowledge = async (cp: LearnerLessonCheckpoint) => {
@@ -817,8 +932,28 @@ export function LessonViewPage({
   const tabs: { id: TabId; label: string; icon: typeof BookOpen }[] = [
     { id: 'content', label: 'Lesson', icon: BookOpen },
     ...(lesson.has_pdf !== false ? [{ id: 'pdf' as const, label: 'Resources & Material', icon: FileText }] : []),
-    ...(lesson.has_quiz !== false ? [{ id: 'quiz' as const, label: 'Quiz', icon: HelpCircle }] : []),
+    { id: 'quiz' as const, label: 'Quiz', icon: HelpCircle },
+    ...(lesson.allow_discussions ? [{ id: 'discussion' as const, label: 'Discussion', icon: MessageSquare }] : []),
   ];
+
+  // ── Dynamic Executive Function Content ──
+  const dynamicTasks = [
+    ...(lesson.video_url && lesson.has_video !== false ? [{ id: 'video', title: 'Watch Video', completed: tracker.video, type: 'lesson' as const }] : []),
+    ...(contentHtml ? [{ id: 'content', title: 'Read Lesson Content', completed: tracker.scroll, type: 'lesson' as const }] : []),
+    ...interactiveContent.map(act => ({ id: `act-${act.id}`, title: `Activity: ${act.title}`, completed: completedActivityIds.has(act.id), type: 'assignment' as const })),
+    ...(quizData && lesson.has_quiz !== false ? [{ id: 'quiz', title: 'Pass Quiz', completed: tracker.quiz, type: 'quiz' as const }] : [])
+  ];
+
+  const scheduleItems = [
+    ...(lesson.video_url && lesson.has_video !== false ? [{ id: 'video', title: 'Watch Video', duration: 'Video', completed: tracker.video }] : []),
+    ...(contentHtml ? [{ id: 'content', title: 'Read Core Material', duration: readTime.label, completed: tracker.scroll }] : []),
+    ...(interactiveContent.length > 0 ? [{ id: 'activity', title: 'Complete Activities', duration: 'Activities', completed: tracker.activity }] : []),
+    ...(quizData && lesson.has_quiz !== false ? [{ id: 'quiz', title: 'Knowledge Check', duration: 'Quiz', completed: tracker.quiz }] : [])
+  ];
+  const dynamicSchedule = scheduleItems.filter(i => !i.completed).map((item, index) => {
+    const type: 'now' | 'next' | 'later' = index === 0 ? 'now' : index === 1 ? 'next' : 'later';
+    return { id: item.id, title: item.title, duration: item.duration, type };
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -861,9 +996,11 @@ export function LessonViewPage({
                 )}
                 Lesson {lesson.sequence_order} of {lesson.total_lessons}
               </div>
-              <Button variant="outline" size="sm" onClick={() => setShowHelperSidebar(true)} className="flex items-center gap-1.5 text-xs">
-                <List className="w-3.5 h-3.5" /> Course Outline
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowHelperSidebar(true)} className="flex items-center gap-1.5 text-xs">
+                  <List className="w-3.5 h-3.5" /> Course Outline
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
@@ -917,40 +1054,31 @@ export function LessonViewPage({
                 </span>
               </div>
             )}
+
+            {/* ── Tabs Navigation ── */}
+            {!effectiveFocusMode && (
+              <div className="mt-6 flex border-b border-gray-200 overflow-x-auto hide-scrollbar">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? 'border-blue-600 text-blue-600 bg-blue-50/50'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <tab.icon className="w-4 h-4" />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* ── Learning Objectives (system courses) ── */}
-      {isSystemCourse && learningObjectives && (!effectiveFocusMode || currentFocusId === 'summary') && (
-          <div className={`${layoutContainer} mx-auto px-6 py-4 mt-2 simplifiable`}>
-          <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-5">
-            <h2 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
-              <Target className="w-4 h-4" /> Learning Objectives
-            </h2>
-            <p className="text-purple-900 text-sm leading-relaxed">{learningObjectives}</p>
-          </div>
-        </div>
-      )}
 
-      {/* ── Key Concepts ── */}
-      {lesson.summary_key_points && lesson.summary_key_points.length > 0 && (!effectiveFocusMode || currentFocusId === 'summary') && (
-        <div className={`${layoutContainer} mx-auto px-6 py-4 mt-2`}>
-          <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-5">
-            <h2 className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-2">
-              <BookOpen className="w-4 h-4" /> Key Concepts
-            </h2>
-            <ul className="space-y-2">
-              {lesson.summary_key_points.map((point: string, i: number) => (
-                <li key={i} className="flex items-start gap-2 text-emerald-900 text-sm">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
 
       {/* ── Focus Mode Slide Navigation ── */}
       {focusMode && !simplifiedMode && focusSteps.length > 0 && (
@@ -1005,50 +1133,49 @@ export function LessonViewPage({
         </div>
       )}
 
-      <div id="lesson-main-content" className={`${contentContainerClass} mx-auto px-6 py-4`}>
-        {!effectiveFocusMode && (
-          <div className="flex gap-1 border-b border-gray-200 mb-6 simplifiable tab-bar">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" /> {tab.label}
-                </button>
-              );
-            })}
+      <div id="lesson-main-content" ref={contentTopRef} className={`learner-view ${contentContainerClass} mx-auto px-6 py-4`}>
+          <div className={layout === 'two_column' && !effectiveFocusMode ? 'grid grid-cols-2 gap-6' : 'space-y-8'}>
+            
+            <div className={activeTab === 'content' ? 'block space-y-8' : 'hidden'}>
+      {/* ── Learning Objectives (system courses) ── */}
+      {isSystemCourse && learningObjectives && (!effectiveFocusMode || currentFocusId === 'summary') && (
+          <div className={`${layoutContainer} mx-auto px-6 py-4 mt-2 simplifiable`}>
+          <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-5">
+            <h2 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
+              <Target className="w-4 h-4" /> Learning Objectives
+            </h2>
+            <p className="text-purple-900 text-sm leading-relaxed">{learningObjectives}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {simplifiedMode && !effectiveFocusMode && (
-          <div className="calm-mode-nav flex flex-wrap gap-2 mb-6" role="navigation" aria-label="Lesson sections">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <Button
-                  key={tab.id}
-                  variant={activeTab === tab.id ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveTab(tab.id)}
-                  className="h-auto py-2"
-                >
-                  <Icon className="w-4 h-4 mr-2" /> {tab.label}
-                </Button>
-              );
-            })}
+      {/* ── Key Concepts ── */}
+      {lesson.summary_key_points && lesson.summary_key_points.length > 0 && (!effectiveFocusMode || currentFocusId === 'summary') && (
+        <div className={`${layoutContainer} mx-auto px-6 py-4 mt-2`}>
+          <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-5">
+            <h2 className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-2">
+              <BookOpen className="w-4 h-4" /> Key Concepts
+            </h2>
+            <ul className="space-y-2">
+              {lesson.summary_key_points.map((point: string, i: number) => (
+                <li key={i} className="flex items-start gap-2 text-emerald-900 text-sm">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                  {point}
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
+        </div>
+      )}
+            
+            {/* ── Executive Function Supports ── */}
+            {!effectiveFocusMode && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <TaskChecklist tasks={dynamicTasks} />
+                <VisualSchedule schedule={dynamicSchedule.length > 0 ? dynamicSchedule : undefined} />
+              </div>
+            )}
 
-        {/* ── Content Tab ── */}
-        {activeTab === 'content' && (
-          <div className={layout === 'two_column' && !effectiveFocusMode ? 'grid grid-cols-2 gap-6' : 'space-y-5'}>
             {/* ── Simplified Summary Card ── */}
             {(simplifiedMode || highlightSimplifiedSummary || (effectiveFocusMode && currentFocusId === 'summary')) && lesson.simplified_summary && (
               <Card className={`p-6 border-2 ${highlightSimplifiedSummary ? 'border-amber-400 ring-2 ring-amber-200' : 'border-amber-200'} bg-amber-50`}>
@@ -1080,6 +1207,7 @@ export function LessonViewPage({
                 icon={<Video className="w-4 h-4 text-rose-600" />}
                 title="Video"
                 defaultOpen={true}
+                keepMounted={true}
                 badge={`1 video${videoQuestions.length > 0 ? ` · ${videoQuestions.length} question${videoQuestions.length === 1 ? '' : 's'}` : ''}`}
               >
                 {(() => {
@@ -1159,25 +1287,39 @@ export function LessonViewPage({
                                     </button>
                                   </>
                                 ) : (
-                                  <button
-                                    type="button"
-                                    disabled={selectedVqOption === null}
-                                    onClick={() => {
-                                      const correct = selectedVqOption === activeVideoQuestion.correct_option_index;
-                                      setVqAnswerFeedback({ correct, correctIndex: activeVideoQuestion.correct_option_index });
-                                      setVqCompletedIds((prev) => new Set(prev).add(activeVideoQuestion.id));
-                                      if (correct) {
-                                        setAnsweredQuestionIds((prev) => new Set(prev).add(activeVideoQuestion.id));
-                                      }
-                                    }}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                                      selectedVqOption === null
-                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                                    }`}
-                                  >
-                                    Submit Answer
-                                  </button>
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setTemporarilySkippedIds(prev => new Set(prev).add(activeVideoQuestion.id));
+                                        setActiveVideoQuestion(null);
+                                        setSelectedVqOption(null);
+                                        setVqAnswerFeedback(null);
+                                      }}
+                                      className="px-3 py-1.5 text-xs font-medium rounded-lg text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                                    >
+                                      Watch Video Again
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={selectedVqOption === null}
+                                      onClick={() => {
+                                        const correct = selectedVqOption === activeVideoQuestion.correct_option_index;
+                                        setVqAnswerFeedback({ correct, correctIndex: activeVideoQuestion.correct_option_index });
+                                        setVqCompletedIds((prev) => new Set(prev).add(activeVideoQuestion.id));
+                                        if (correct) {
+                                          setAnsweredQuestionIds((prev) => new Set(prev).add(activeVideoQuestion.id));
+                                        }
+                                      }}
+                                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                                        selectedVqOption === null
+                                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                                      }`}
+                                    >
+                                      Submit Answer
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -1283,6 +1425,41 @@ export function LessonViewPage({
                   aria-live="polite"
                 >
                   <h2 className="sr-only">Slide {currentChunk + 1}</h2>
+                  <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full border border-gray-200 shadow-sm">
+                    <button
+                      onClick={handlePlayTTS}
+                      aria-pressed={ttsPlaying}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        ttsPlaying
+                          ? 'bg-red-100 text-red-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {ttsPlaying ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                      {ttsPlaying ? 'Stop' : 'Listen'}
+                    </button>
+                    <div className="w-px h-4 bg-gray-300"></div>
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider pl-1 hidden sm:inline">Speed</span>
+                    <div className="flex gap-0.5 pr-1">
+                      {([0.75, 1, 1.25, 1.5] as const).map((speed) => (
+                        <button
+                          key={speed}
+                          onClick={() => {
+                            ttsRateRef.current = speed;
+                            setTtsRate(speed);
+                            if (ttsPlaying) { stopTTS(); speak(); }
+                          }}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-md transition-colors ${
+                            ttsRate === speed
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {speed}x
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={currentChunk}
@@ -1294,10 +1471,10 @@ export function LessonViewPage({
                     >
                       {currentChunkHtml ? (
                         <div
-                          className={`prose max-w-4xl mx-auto text-gray-900 ${contentLineSpacing} ${contentFontSize} ${
+                          className={`prose max-w-4xl mx-auto text-gray-900 rich-content ${contentLineSpacing} ${contentFontSize} ${
                             simplifiedMode ? 'prose-xl prose-amber' : 'prose-lg'
-                          } [&_img]:max-h-[50vh] [&_img]:w-auto [&_img]:mx-auto [&_img]:rounded-xl [&_img]:shadow-md`}
-                          dangerouslySetInnerHTML={{ __html: currentChunkHtml }}
+                          }`}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentChunkHtml, { ADD_ATTR: ['data-align', 'style'], ADD_TAGS: ['style'] }) }}
                         />
                       ) : (
                         <div className="text-center py-12">
@@ -1397,10 +1574,10 @@ export function LessonViewPage({
                 </div>
                 {currentChunkHtml ? (
                   <div
-                    className={`prose max-w-none text-gray-900 ${contentLineSpacing} ${contentFontSize} ${
+                    className={`prose max-w-none text-gray-900 rich-content ${contentLineSpacing} ${contentFontSize} ${
                       simplifiedMode ? 'prose-xl prose-amber' : 'prose-lg'
                     }`}
-                    dangerouslySetInnerHTML={{ __html: currentChunkHtml }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentChunkHtml, { ADD_ATTR: ['data-align', 'style'], ADD_TAGS: ['style'] }) }}
                   />
                 ) : (
                   <div className="text-center py-6">
@@ -1461,27 +1638,14 @@ export function LessonViewPage({
                 );
               }
 
-              // Standard tabbed mode
+              // Standard sequential mode
               const activeId = selectedActivityTabId && sorted.some(i => i.id === selectedActivityTabId) ? selectedActivityTabId : sorted[0].id;
               const activeItem = sorted.find(i => i.id === activeId)!;
               return (
-                <Card className="overflow-hidden border-2 border-indigo-100 shadow-sm mt-8">
-                  <div className="bg-indigo-50/50 p-4 border-b border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <h3 className="font-bold text-indigo-900 flex items-center gap-2">
-                        <Gamepad2 className="w-5 h-5 text-indigo-600" />
-                        Interactive Practice
-                      </h3>
-                      <p className="text-sm text-indigo-700/80 mt-1">Complete these activities to test your knowledge.</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm font-medium text-indigo-800 bg-white px-3 py-1.5 rounded-full shadow-sm">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      {completedActivityIds.size} / {sorted.length} Completed
-                    </div>
-                  </div>
+                <CollapsibleCard icon={<Gamepad2 className="w-4 h-4 text-indigo-600" />} title="Interactive Practice" defaultOpen={true} keepMounted={true} badge={`${sorted.length} activities`}>
                   
                   {sorted.length > 1 && (
-                    <div className="bg-gray-50 border-b border-gray-200 p-3 overflow-x-auto">
+                    <div className="bg-gray-50 border-b border-gray-200 p-3 overflow-x-auto rounded-t-xl">
                       <div className="flex gap-2 min-w-max">
                         {sorted.map((item) => {
                           const isDone = completedActivityIds.has(item.id);
@@ -1525,7 +1689,7 @@ export function LessonViewPage({
                       }}
                     />
                   </div>
-                </Card>
+                </CollapsibleCard>
               );
             })()}
 
@@ -1609,7 +1773,104 @@ export function LessonViewPage({
                 <Lock className="w-3 h-3" /> Complete the check-in above to unlock the next section.
               </p>
             )}
+            </div>
 
+            {/* ── PDF Resources ── */}
+            <div className={activeTab === 'pdf' ? 'block' : 'hidden'}>
+            {hasPdfAssets && (!effectiveFocusMode || currentFocusId === 'summary') && (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Resources & Material</h2>
+                    <p className="text-sm text-gray-500">{assets.length} items available for download</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {assets.map((asset) => {
+                    let Icon = FileText;
+                    let bg = "bg-orange-100";
+                    let text = "text-orange-700";
+                    let desc = "Document";
+                    if (asset.kind === 'image') { Icon = Image; bg = "bg-blue-100"; text = "text-blue-700"; desc = "Image file"; }
+                    else if (asset.kind === 'video') { Icon = Video; bg = "bg-rose-100"; text = "text-rose-700"; desc = "Video file"; }
+                    else if (asset.kind === 'link') { Icon = Link; bg = "bg-emerald-100"; text = "text-emerald-700"; desc = "External link"; }
+                    else if (asset.kind === 'pdf') { desc = "PDF document"; }
+                    const isPdf = asset.kind === 'pdf' || asset.url.toLowerCase().endsWith('.pdf');
+                    const isPptx = asset.url.toLowerCase().endsWith('.pptx');
+                    return (
+                      <div key={asset.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                        <div className="flex items-start gap-4">
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${bg} ${text}`}>
+                            <Icon className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 mb-1 truncate">{asset.title || 'Untitled Asset'}</h3>
+                            <p className="text-sm text-gray-500 mb-4">{desc}</p>
+                            <div className="flex gap-2">
+                              {(isPdf || isPptx) ? (
+                                <Button variant="outline" size="sm" className="w-full" onClick={() => setViewingAsset(viewingAsset === asset.id ? null : asset.id)}>
+                                  {viewingAsset === asset.id ? 'Close Viewer' : 'View Resource'}
+                                </Button>
+                              ) : (
+                                <Button variant="outline" size="sm" className="w-full" onClick={() => window.open(asset.url, '_blank')}>
+                                  {asset.kind === 'link' ? 'Open Link' : 'Open Resource'}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            </div>
+
+            {/* ── Quiz ── */}
+            <div className={activeTab === 'quiz' ? 'block' : 'hidden'}>
+              {!lesson.has_quiz || !quizData ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm mb-8">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <HelpCircle className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Quiz Available</h3>
+                  <p className="text-gray-500">This lesson doesn't have a quiz. You can continue to the next lesson or review the material.</p>
+                </div>
+              ) : (
+                (!effectiveFocusMode || currentFocusId === 'summary') && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                        <HelpCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900">Knowledge Check</h2>
+                        <p className="text-sm text-gray-500">{quizData.questions.length} questions to test your understanding</p>
+                      </div>
+                    </div>
+                    <QuizPage
+                      key={quizResetKey}
+                      lessonId={lessonId}
+                      courseId={courseId}
+                      onBack={() => {}}
+                      onSubmit={handleQuizSubmit}
+                      adaptiveLearningEnabled={!!lesson.adaptive_learning_enabled}
+                      simplifiedSummary={lesson.simplified_summary}
+                      onSuggestReview={() => {
+                        contentTopRef.current?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      hideBackButton={true}
+                    />
+                  </div>
+                )
+              )}
+            </div>
+
+            <div className={activeTab === 'content' ? 'block' : 'hidden'}>
             {/* ── Chunk Navigation (bottom of content) ── */}
             {showChunkNav && !effectiveFocusMode && !isSlideMode && (
               <ChunkNavigation
@@ -1656,8 +1917,20 @@ export function LessonViewPage({
                     </p>
                   </div>
                 </div>
-                <Button onClick={handleCompleteLesson} className="bg-green-600 hover:bg-green-700 text-white">
-                  <CheckCircle className="w-4 h-4 mr-2" /> Mark Complete
+                <Button onClick={() => {
+                  const needsVideo = lesson.has_video && !!lesson.video_url;
+                  const needsActivities = interactiveContent.length > 0;
+                  const needsQuiz = lesson.has_quiz && quizData;
+                  const isAllCompleted = (!needsVideo || tracker.video) && (!needsActivities || tracker.activity) && (!needsQuiz || tracker.quiz) && tracker.scroll;
+                  
+                  if (isAllCompleted) {
+                    handleCompleteLesson();
+                  } else {
+                    setShowChecklistPopup(true);
+                  }
+                }} className="bg-green-600 hover:bg-green-700 text-white" disabled={completing}>
+                  {completing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                  {completing ? 'Completing...' : 'Mark Complete'}
                 </Button>
               </Card>
             )}
@@ -1680,8 +1953,8 @@ export function LessonViewPage({
                     <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-yellow-300 rounded-full animate-ping" style={{ animationDelay: '0.8s' }} />
                   </motion.div>
                   <div className="flex flex-col items-center text-center relative z-10">
-                    <CelebrationAnimation />
-                    <h3 className="text-xl font-bold text-green-800 mt-2">Lesson Completed!</h3>
+                    <CelebrationAnimation reducedMotion={settings.reduced_motion} />
+                    <h2 className="text-2xl font-bold text-gray-900 mt-2">Lesson Complete!</h2>
                     <p className="text-sm text-green-700 mt-1">Great work! You can now proceed to the next lesson.</p>
                     {onNextLesson && lesson.sequence_order < lesson.total_lessons && (
                       <Button onClick={onNextLesson} className="mt-4 bg-green-600 hover:bg-green-700 text-white">
@@ -1692,100 +1965,22 @@ export function LessonViewPage({
                 </Card>
               </motion.div>
             )}
-          </div>
-        )}
 
-        {/* ── Resources Tab ── */}
-        {activeTab === 'pdf' && lesson.has_pdf !== false && (
-          <div className="space-y-4">
-            {assets.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No resources for this lesson</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {assets.map((asset) => {
-                  let Icon = FileText;
-                  let bg = "bg-orange-100";
-                  let text = "text-orange-700";
-                  let desc = "Document";
-                  
-                  if (asset.kind === 'image') {
-                    Icon = Image;
-                    bg = "bg-blue-100";
-                    text = "text-blue-700";
-                    desc = "Image file";
-                  } else if (asset.kind === 'video') {
-                    Icon = Video;
-                    bg = "bg-rose-100";
-                    text = "text-rose-700";
-                    desc = "Video file";
-                  } else if (asset.kind === 'link') {
-                    Icon = Link;
-                    bg = "bg-emerald-100";
-                    text = "text-emerald-700";
-                    desc = "External link";
-                  } else if (asset.kind === 'pdf') {
-                    desc = "PDF document";
-                  }
+            </div>
 
-                  const isPdf = asset.kind === 'pdf' || asset.url.toLowerCase().endsWith('.pdf');
-                  const isPptx = asset.url.toLowerCase().endsWith('.pptx');
-                  
-                  return (
-                    <div key={asset.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                      <div className="flex items-start gap-4">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${bg} ${text}`}>
-                          <Icon className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 mb-1 truncate">{asset.title || 'Untitled Asset'}</h3>
-                          <p className="text-sm text-gray-500 mb-4">{desc}</p>
-                          <div className="flex gap-2">
-                            {(isPdf || isPptx) ? (
-                              <Button variant="outline" size="sm" className="w-full" onClick={() => setViewingAsset(viewingAsset === asset.id ? null : asset.id)}>
-                                {viewingAsset === asset.id ? 'Close Viewer' : 'View Resource'}
-                              </Button>
-                            ) : (
-                              <Button variant="outline" size="sm" className="w-full" onClick={() => window.open(asset.url, '_blank')}>
-                                {asset.kind === 'link' ? 'Open Link' : 'Open Resource'}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* ── DISCUSSION TAB ── */}
+            {lesson.allow_discussions && (
+              <div className={activeTab === 'discussion' ? 'block' : 'hidden'}>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <MessageSquare className="w-6 h-6 text-blue-600" />
+                    Class Discussion
+                  </h2>
+                  <LessonDiscussion lessonId={lesson.id} />
+                </div>
               </div>
             )}
           </div>
-        )}
-
-        {/* ── Quiz Tab (optional) ── */}
-        {activeTab === 'quiz' && (
-          lesson.has_quiz === false ? (
-            <div className="text-center py-12">
-              <HelpCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Quiz is not available for this lesson</p>
-            </div>
-          ) : (
-            <QuizPage
-              key={quizResetKey}
-              lessonId={lessonId}
-              courseId={courseId}
-              onBack={() => setActiveTab('content')}
-              onSubmit={handleQuizSubmit}
-              adaptiveLearningEnabled={!!lesson.adaptive_learning_enabled}
-              simplifiedSummary={lesson.simplified_summary}
-              onSuggestReview={() => {
-                setActiveTab('content');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            />
-          )
-        )}
       </div>
 
       {!effectiveFocusMode && (
@@ -1950,6 +2145,42 @@ export function LessonViewPage({
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showChecklistPopup} onOpenChange={setShowChecklistPopup}>
+        <DialogContent className="sm:max-w-md p-6">
+          <DialogTitle className="text-xl font-bold mb-4 text-center">Incomplete Tasks</DialogTitle>
+          <DialogDescription className="text-gray-600 text-center mb-6">
+            You must complete all required actions before marking this lesson as complete.
+          </DialogDescription>
+          <div className="space-y-3 mb-6">
+            {(lesson?.has_video && !!lesson.video_url) ? (
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-gray-700">Watch Video</span>
+                {tracker.video ? <CheckCircle className="w-5 h-5 text-green-500" /> : <span className="text-red-500 text-sm font-semibold">Not Done</span>}
+              </div>
+            ) : null}
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-gray-700">Scroll through lesson content</span>
+              {tracker.scroll ? <CheckCircle className="w-5 h-5 text-green-500" /> : <span className="text-red-500 text-sm font-semibold">Not Done</span>}
+            </div>
+            {(interactiveContent.length > 0) ? (
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-gray-700">Complete Interactive Activities</span>
+                {tracker.activity ? <CheckCircle className="w-5 h-5 text-green-500" /> : <span className="text-red-500 text-sm font-semibold">Not Done</span>}
+              </div>
+            ) : null}
+            {(lesson?.has_quiz && quizData) ? (
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-gray-700">Pass Quiz</span>
+                {tracker.quiz ? <CheckCircle className="w-5 h-5 text-green-500" /> : <span className="text-red-500 text-sm font-semibold">Not Done</span>}
+              </div>
+            ) : null}
+          </div>
+          <div className="flex justify-center">
+            <Button onClick={() => setShowChecklistPopup(false)}>Got it</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showCompletionPopup} onOpenChange={setShowCompletionPopup}>
         <DialogContent className="sm:max-w-md text-center p-6">
           <CelebrationAnimation />
@@ -1958,8 +2189,11 @@ export function LessonViewPage({
             You've completed all required activities for this lesson. Would you like to mark it as complete and move on?
           </DialogDescription>
           <div className="flex gap-3 justify-center mt-6">
-            <Button variant="outline" onClick={() => setShowCompletionPopup(false)}>Stay Here</Button>
-            <Button onClick={() => { setShowCompletionPopup(false); handleCompleteLesson(); }} className="bg-green-600 hover:bg-green-700">Mark as Complete</Button>
+            <Button variant="outline" onClick={() => { setShowCompletionPopup(false); setHasDismissedCompletionPopup(true); }}>Stay Here</Button>
+            <Button onClick={() => { setShowCompletionPopup(false); setHasDismissedCompletionPopup(true); handleCompleteLesson(); }} className="bg-green-600 hover:bg-green-700" disabled={completing}>
+              {completing && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              {completing ? 'Completing...' : 'Mark as Complete'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

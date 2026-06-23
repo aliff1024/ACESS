@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { fetchAvailableCourses, fetchEnrolledCourses, toggleFavorite, fetchFavoriteCourseIds } from '@/lib/learner-api';
 import type { AvailableCourse, EnrolledCourse } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
+import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { toast } from 'sonner';
 
 interface CourseListPageProps {
@@ -41,6 +42,13 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
   const searchParams = useSearchParams();
   const filterParam = searchParams.get('filter');
   
+  const { settings } = useAccessibility();
+  let preferredFocus: string = 'All';
+  if (settings.active_preset === 'adhd') preferredFocus = 'adhd';
+  else if (settings.active_preset === 'dyslexia') preferredFocus = 'dyslexia';
+  else if (settings.active_preset === 'autism') preferredFocus = 'autism';
+  else if (settings.active_preset === 'dyscalculia') preferredFocus = 'cognitive';
+  
   const [allCourses, setAllCourses] = useState<(AvailableCourse | EnrolledCourse)[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -53,6 +61,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
   const [courseType, setCourseType] = useState<string>('All');
   const [requireGuided, setRequireGuided] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedDisability, setSelectedDisability] = useState<string>(preferredFocus);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [durationFilter, setDurationFilter] = useState<string>('All');
   const [sortBy, setSortBy] = useState<string>('newest');
@@ -130,37 +139,52 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
       // Accessibility Filter
       const matchesGuided = !requireGuided || (course as any).guided_learning_enabled;
       
-      // Category Filter (Mock mapping if category is null)
-      const courseCat = course.category || 'Programming'; // fallback
+      // Category Filter
+      const courseCat = course.category || 'Uncategorized';
       const matchesCategory = selectedCategory === 'All' || courseCat.toLowerCase() === selectedCategory.toLowerCase();
 
       // Favorites Filter
       const matchesFavorites = !showFavoritesOnly || favoriteIds.has(course.id);
       
-      // Duration Filter (Assuming 20 mins per lesson)
-      const estMinutes = lessonCount * 20;
+      // Duration Filter
+      const estMinutes = (course as any).total_duration || (lessonCount * 20);
       let matchesDuration = true;
       if (durationFilter === '<1h') matchesDuration = estMinutes < 60;
       if (durationFilter === '1-3h') matchesDuration = estMinutes >= 60 && estMinutes <= 180;
       if (durationFilter === '>3h') matchesDuration = estMinutes > 180;
 
-      return matchesSearch && matchesDifficulty && matchesEnrollment && matchesType && matchesGuided && matchesCategory && matchesFavorites && matchesDuration;
+      // Disability Filter
+      const pFocus = (course as any).primary_disability_focus;
+      const sFocuses = (course as any).secondary_disability_focuses || [];
+      const matchesDisability = selectedDisability === 'All' || 
+        pFocus === selectedDisability || 
+        sFocuses.includes(selectedDisability);
+
+      return matchesSearch && matchesDifficulty && matchesEnrollment && matchesType && matchesGuided && matchesCategory && matchesFavorites && matchesDuration && matchesDisability;
     });
 
     // Sorting
-    result.sort((a, b) => {
-      if (sortBy === 'alphabetical') {
-        return a.title.localeCompare(b.title);
-      } else if (sortBy === 'oldest') {
-        return new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime();
-      } else {
-        // newest (default)
-        return new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
-      }
-    });
+    if (sortBy === 'alphabetical') {
+      result.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === 'newest') {
+      result.sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime());
+    } else if (sortBy === 'oldest') {
+      result.sort((a, b) => new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime());
+    } else if (sortBy === 'popular') {
+      result.sort((a, b) => ((b as any).student_count || 0) - ((a as any).student_count || 0));
+    }
+    
+    // Sort Recommended (Matching Disability Focus) to the top
+    if (preferredFocus) {
+      result.sort((a, b) => {
+        const aMatch = (a as any).primary_disability_focus === preferredFocus ? 1 : 0;
+        const bMatch = (b as any).primary_disability_focus === preferredFocus ? 1 : 0;
+        return bMatch - aMatch;
+      });
+    }
 
     return result;
-  }, [allCourses, debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, requireGuided, selectedCategory, showFavoritesOnly, durationFilter, sortBy, favoriteIds]);
+  }, [allCourses, debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, requireGuided, selectedCategory, showFavoritesOnly, durationFilter, sortBy, favoriteIds, preferredFocus, selectedDisability]);
 
   if (loading) {
     return (
@@ -189,6 +213,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
     setShowFavoritesOnly(false);
     setDurationFilter('All');
     setSortBy('newest');
+    setSelectedDisability(preferredFocus);
   };
 
   return (
@@ -330,6 +355,23 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                 </select>
               </div>
 
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Disability Support</Label>
+                <select
+                  value={selectedDisability}
+                  onChange={(e) => setSelectedDisability(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="All">All Needs</option>
+                  <option value="adhd">ADHD-Friendly</option>
+                  <option value="autism">Autism-Friendly</option>
+                  <option value="dyslexia">Dyslexia-Friendly</option>
+                  <option value="visual">Visual Impairment</option>
+                  <option value="hearing">Hearing Impairment</option>
+                  <option value="cognitive">Cognitive Difficulty</option>
+                </select>
+              </div>
+
               <div className="lg:col-span-4 flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-600" />
@@ -368,11 +410,13 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
             const gradient = gradients[index % gradients.length];
             const diffLvl = course.difficulty_level || 'beginner';
             const courseCategory = course.category || 'Programming';
+            const isRecommended = preferredFocus && (course as any).primary_disability_focus === preferredFocus;
 
             return (
               <Card
                 key={course.id}
-                className="border-0 shadow-sm ring-1 ring-gray-200 bg-white rounded-2xl overflow-hidden hover:shadow-xl hover:ring-blue-300 transition-all group flex flex-col h-full"
+                className={`border-0 shadow-sm ring-1 ring-gray-200 bg-white rounded-2xl overflow-hidden hover:shadow-xl hover:ring-blue-300 transition-all group flex flex-col h-full ${isRecommended ? 'ring-2 ring-indigo-500 shadow-indigo-100' : ''}`}
+                onClick={() => onViewCourse(course.id)}
               >
                 {/* Course Banner */}
                 <div 
@@ -391,6 +435,11 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                     {isSys && (
                       <Badge className="bg-indigo-600 hover:bg-indigo-600 text-white border-0 shadow-sm font-semibold flex items-center gap-1 px-2.5">
                         <Star className="w-3 h-3 fill-current" /> Featured
+                      </Badge>
+                    )}
+                    {isRecommended && (
+                      <Badge className="bg-amber-500 text-white shadow-md border-0 px-2 py-0.5 flex items-center gap-1 font-bold">
+                        <Sparkles className="w-3 h-3" /> Recommended
                       </Badge>
                     )}
                   </div>
@@ -442,13 +491,25 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                       <BookOpen className="w-3.5 h-3.5 text-blue-500" /> {lessonCount} Lessons
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-orange-500" /> {lessonCount * 20} min
+                      <Clock className="w-3.5 h-3.5 text-orange-500" /> {(course as any).total_duration || (lessonCount * 20)} min
                     </span>
                     {(course as any).guided_learning_enabled && (
                       <>
                         <div className="w-px h-3 bg-gray-300" />
                         <span className="flex items-center gap-1.5 text-indigo-600">
                           <Sparkles className="w-3.5 h-3.5" /> Guided
+                        </span>
+                      </>
+                    )}
+                    {((course as any).primary_disability_focus || ((course as any).secondary_disability_focuses?.length > 0)) && (
+                      <>
+                        <div className="w-full h-px bg-gray-200 mt-1 mb-1" />
+                        <span className="flex items-center gap-1.5 text-purple-600 w-full line-clamp-1">
+                          <Shield className="w-3.5 h-3.5 shrink-0" /> 
+                          {[(course as any).primary_disability_focus, ...((course as any).secondary_disability_focuses || [])]
+                            .filter(Boolean)
+                            .map(f => f === 'adhd' ? 'ADHD' : f === 'visual_impairment' ? 'Visual' : f === 'hearing_impairment' ? 'Hearing' : f.charAt(0).toUpperCase() + f.slice(1))
+                            .join(', ')}
                         </span>
                       </>
                     )}

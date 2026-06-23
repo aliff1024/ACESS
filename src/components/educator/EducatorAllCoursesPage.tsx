@@ -57,7 +57,7 @@ export function EducatorAllCoursesPage() {
         .select(`
           id, title, description, difficulty_level, category, 
           thumbnail_url, course_type, system_course, certificate_enabled,
-          updated_at, created_by
+          updated_at, created_by, tags
         `)
         .in('status', ['published'])
         .is('deleted_at', null)
@@ -75,10 +75,9 @@ export function EducatorAllCoursesPage() {
       let tagsMap = new Map<string, string[]>();
 
       if (courseIds.length > 0) {
-        const [{ data: lessons }, { data: enrollments }, { data: tags }] = await Promise.all([
+        const [{ data: lessons }, { data: enrollments }] = await Promise.all([
           supabase.from('lessons').select('course_id').in('course_id', courseIds),
           supabase.from('enrollments').select('course_id').in('course_id', courseIds),
-          supabase.from('course_tags').select('course_id, tag').in('course_id', courseIds),
         ]);
 
         if (lessons) {
@@ -86,13 +85,6 @@ export function EducatorAllCoursesPage() {
         }
         if (enrollments) {
           for (const e of enrollments) enrollmentCounts.set(e.course_id, (enrollmentCounts.get(e.course_id) || 0) + 1);
-        }
-        if (tags) {
-          for (const t of tags) {
-            const existing = tagsMap.get(t.course_id) || [];
-            existing.push(t.tag);
-            tagsMap.set(t.course_id, existing);
-          }
         }
       }
 
@@ -112,7 +104,7 @@ export function EducatorAllCoursesPage() {
         description: c.description,
         difficulty_level: c.difficulty_level || 'beginner',
         category: c.category,
-        tags: tagsMap.get(c.id) || [],
+        tags: c.tags || [],
         lesson_count: lessonCounts.get(c.id) || 0,
         thumbnail_url: c.thumbnail_url,
         course_type: c.course_type,

@@ -12,7 +12,12 @@ const TINT_OPTIONS = [
   { id: 'cream', label: 'Cream', color: 'bg-[#FDF6E2]', border: 'border-[#E8DCC0]' },
   { id: 'pale_blue', label: 'Pale Blue', color: 'bg-[#EBF4FA]', border: 'border-[#C5DAE8]' },
   { id: 'soft_green', label: 'Soft Green', color: 'bg-[#F0F7F0]', border: 'border-[#C5DCC5]' },
-  { id: 'grey', label: 'Grey', color: 'bg-[#F0F0F0]', border: 'border-[#D0D0D0]' },
+  { id: 'grey', label: 'Light Grey', color: 'bg-[#F0F0F0]', border: 'border-[#D0D0D0]' },
+  { id: 'dark_cream', label: 'Dark Cream', color: 'bg-[#3D3322]', border: 'border-[#594B3B]' },
+  { id: 'dark_blue_grey', label: 'Dark Blue Grey', color: 'bg-[#1F2937]', border: 'border-[#374151]' },
+  { id: 'dark_green', label: 'Dark Green', color: 'bg-[#065F46]', border: 'border-[#047857]' },
+  { id: 'dark_brown', label: 'Dark Brown', color: 'bg-[#4E342E]', border: 'border-[#5D4037]' },
+  { id: 'dark_grey', label: 'Dark Grey', color: 'bg-[#374151]', border: 'border-[#4B5563]' },
 ] as const;
 
 export function TintPicker({ value, onChange }: TintPickerProps) {

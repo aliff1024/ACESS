@@ -1,0 +1,794 @@
+======================================================================
+DIAGRAM: CONTEXT DIAGRAM / LEVEL 0 DFD
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "14px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f5f5f5", "tertiaryColor": "#ffffff"}}}%%
+
+graph TB
+
+    %% --- CENTRAL PROCESS (Level 0 DFD) ---
+    P0["0
+    ACESS
+    Adaptive Cognitive &
+    Educational Skill
+    Support Platform"]
+
+    %% --- EXTERNAL ENTITIES ---
+    L["LEARNER"]
+    E["EDUCATOR"]
+    A["ADMINISTRATOR"]
+    EM["EMAIL
+    PROVIDER"]
+    TTS["TTS
+    SERVICE"]
+
+    %% --- DATA FLOWS: LEARNER ---
+    L -->|"Registration Data
+    Login Credentials"| P0
+    L -->|"Accessibility Preferences
+    Course Enrollment Request
+    Lesson View Events
+    Quiz Answers
+    Summary Submissions
+    H5P Responses"| P0
+    P0 -->|"Course Catalog
+    Lesson Content
+    Quiz Questions
+    Progress Reports
+    Certificates
+    Badges/Achievements"| L
+    P0 -->|"Personalized
+    Recommendations"| L
+
+    %% --- DATA FLOWS: EDUCATOR ---
+    E -->|"Course Metadata
+    Lesson Content (HTML)
+    Quiz Configurations
+    Interactive Activities
+    Media Assets (Video/Images)
+    H5P Content
+    Certificate Settings"| P0
+    P0 -->|"Enrollment Notifications
+    Student Progress Data
+    Analytics Reports
+    Certificate PDFs"| E
+    E -->|"Instructor
+    Application"| P0
+    P0 -->|"Application
+    Status"| E
+
+    %% --- DATA FLOWS: ADMIN ---
+    A -->|"User Role Changes
+    Course Moderation Actions
+    System Course Config
+    Instructor Approvals"| P0
+    P0 -->|"Platform Analytics
+    User List
+    System Health Metrics
+    Reports (PDF/CSV)"| A
+
+    %% --- DATA FLOWS: EXTERNAL SERVICES ---
+    P0 -->|"Password Reset
+    Email Verification"| EM
+    P0 -->|"Text-to-Speech
+    Synthesis Request"| TTS
+
+    %% --- STYLES ---
+    classDef process fill:#e8e8e8,stroke:#000000,stroke-width:2px
+    classDef entity fill:#ffffff,stroke:#000000,stroke-width:2px
+    classDef external fill:#ffffff,stroke:#000000,stroke-width:1px,stroke-dasharray: 6 3
+
+    class P0 process
+    class L,E,A entity
+    class EM,TTS external
+
+======================================================================
+DIAGRAM 2: SYSTEM ARCHITECTURE DIAGRAM
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff"}}}%%
+
+graph TD
+    subgraph CLIENT["Client Tier"]
+        Browser["Web Browser"]
+    end
+
+    subgraph EDGE["Edge Tier - Vercel"]
+        MW["Next.js Edge Middleware
+        JWT Validation & Role-Based Access Control"]
+        RSC["React Server Components
+        Secure Data Fetching"]
+        CC["Client Components
+        Tiptap Editor, Quiz Engine, Recharts"]
+    end
+
+    subgraph BACKEND["Backend Tier - Supabase"]
+        API["PostgREST API"]
+        DB[("PostgreSQL Database
+        Row-Level Security")]
+        AUTH["Supabase Auth
+        JWT Management"]
+        STORAGE["Supabase Storage
+        Course Assets Bucket"]
+    end
+
+    Browser -->|"HTTPS"| MW
+    MW --> RSC
+    MW --> CC
+    RSC -->|"Secure API Calls"| API
+    CC -->|"Direct Uploads"| STORAGE
+    API --> DB
+    API --> AUTH
+
+    classDef tier fill:#ffffff,stroke:#000000,stroke-width:2px
+    classDef component fill:#f5f5f5,stroke:#000000,stroke-width:1px
+    classDef db fill:#f5f5f5,stroke:#000000,stroke-width:2px
+
+    class CLIENT,EDGE,BACKEND tier
+    class Browser,MW,RSC,CC,API,AUTH,STORAGE component
+    class DB db
+
+======================================================================
+DIAGRAM 3: DEPLOYMENT DIAGRAM
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff"}}}%%
+
+graph LR
+    subgraph DEV["Development Environment"]
+        VSC["Visual Studio Code"]
+        Node["Node.js Runtime"]
+    end
+
+    subgraph CI["Version Control"]
+        GitHub["GitHub Repository"]
+    end
+
+    subgraph PROD["Production Environment"]
+        Vercel["Vercel Edge Network
+        Next.js Application"]
+        Supa["Supabase Cloud
+        PostgreSQL + Auth + Storage"]
+    end
+
+    subgraph USER["User Access"]
+        LU["Learner Browser"]
+        EU["Educator Browser"]
+        AU["Admin Browser"]
+    end
+
+    VSC -->|"git push"| GitHub
+    Node -->|"Build & Test"| GitHub
+    GitHub -->|"Auto Deploy"| Vercel
+    Vercel -->|"API Connection"| Supa
+    LU --> Vercel
+    EU --> Vercel
+    AU --> Vercel
+
+    classDef env fill:#ffffff,stroke:#000000,stroke-width:2px
+    classDef node fill:#ffffff,stroke:#000000,stroke-width:1px
+
+    class DEV,CI,PROD,USER env
+    class VSC,Node,GitHub,Vercel,Supa,LU,EU,AU node
+
+======================================================================
+DIAGRAM 4: USE CASE DIAGRAM
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+graph TB
+    L["Learner"]
+    E["Educator"]
+    A["Administrator"]
+
+    subgraph LEARNER["Learner Use Cases"]
+        LUC1["Register / Login"]
+        LUC2["Configure Accessibility Profile"]
+        LUC3["Browse Course Catalog"]
+        LUC4["Enroll in Course"]
+        LUC5["View Lesson"]
+        LUC6["Take Quiz"]
+        LUC7["View Progress"]
+        LUC8["Claim Certificate"]
+        LUC9["Earn Achievement"]
+    end
+
+    subgraph EDUCATOR["Educator Use Cases"]
+        EUC1["Create Course"]
+        EUC2["Write Lesson Content"]
+        EUC3["Upload Media Assets"]
+        EUC4["Build Quiz"]
+        EUC5["Build Interactive Activity"]
+        EUC6["Monitor Student Progress"]
+        EUC7["Configure Certificates"]
+    end
+
+    subgraph ADMIN["Admin Use Cases"]
+        AUC1["Manage Users"]
+        AUC2["Moderate Courses"]
+        AUC3["Platform Analytics"]
+        AUC4["Review Applications"]
+        AUC5["Generate Reports"]
+    end
+
+    L --- LUC1
+    L --- LUC2
+    L --- LUC3
+    L --- LUC4
+    L --- LUC5
+    L --- LUC6
+    L --- LUC7
+    L --- LUC8
+    L --- LUC9
+
+    E --- EUC1
+    E --- EUC2
+    E --- EUC3
+    E --- EUC4
+    E --- EUC5
+    E --- EUC6
+    E --- EUC7
+
+    A --- AUC1
+    A --- AUC2
+    A --- AUC3
+    A --- AUC4
+    A --- AUC5
+
+    classDef actor fill:#ffffff,stroke:#000000,stroke-width:2px
+    classDef uc fill:#ffffff,stroke:#000000,stroke-width:1px
+    classDef boundary fill:#ffffff,stroke:#000000,stroke-width:2px,stroke-dasharray: 8 4
+
+    class L,E,A actor
+    class LUC1,LUC2,LUC3,LUC4,LUC5,LUC6,LUC7,LUC8,LUC9,EUC1,EUC2,EUC3,EUC4,EUC5,EUC6,EUC7,AUC1,AUC2,AUC3,AUC4,AUC5 uc
+    class LEARNER,EDUCATOR,ADMIN boundary
+
+======================================================================
+DIAGRAM 5: STUDENT ACTIVITY DIAGRAM
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+graph TD
+    S((Start))
+    Login["Learner Logs In"]
+    Check{"Accessibility Profile
+    Complete?"}
+    Onboarding["Complete Onboarding
+    Setup Preferences"]
+    Dashboard["View Dashboard"]
+    Browse["Browse Course Catalog"]
+    Enroll["Enroll in Course"]
+    Select["Select Lesson"]
+    View["View Lesson Content"]
+    Quiz{"Lesson has
+    Quiz?"}
+    Take["Take Quiz"]
+    Complete["Mark Lesson Complete"]
+    Score{"Score >=
+    Threshold?"}
+    Recommend["Review Recommended
+    Remedial Lesson"]
+    More{"More Lessons
+    in Course?"}
+    Cert["Claim Certificate"]
+    E((End))
+
+    S --> Login
+    Login --> Check
+    Check -->|No| Onboarding
+    Onboarding --> Dashboard
+    Check -->|Yes| Dashboard
+    Dashboard --> Browse
+    Browse --> Enroll
+    Enroll --> Select
+    Select --> View
+    View --> Quiz
+    Quiz -->|Yes| Take
+    Quiz -->|No| Complete
+    Take --> Score
+    Score -->|Pass| Complete
+    Score -->|Fail| Recommend
+    Recommend --> View
+    Complete --> More
+    More -->|Yes| Select
+    More -->|No| Cert
+    Cert --> E
+
+    classDef startEnd fill:#000000,color:#ffffff,stroke:#000000,stroke-width:2px
+    classDef action fill:#ffffff,stroke:#000000,stroke-width:1px
+    classDef decision fill:#ffffff,stroke:#000000,stroke-width:2px
+
+    class S,E startEnd
+    class Login,Onboarding,Dashboard,Browse,Enroll,Select,View,Take,Complete,Recommend,Cert action
+    class Check,Quiz,Score,More decision
+
+======================================================================
+DIAGRAM 6: EDUCATOR ACTIVITY DIAGRAM
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+graph TD
+    S((Start))
+    Login["Educator Logs In"]
+    Dash["View Dashboard"]
+    Create["Create New Course"]
+    Meta["Set Course Metadata
+    Title, Description, Difficulty"]
+    Chapters["Create Chapters"]
+    Content["Create Lesson Content"]
+    Type{"Lesson Type?"}
+    Tiptap["Write in Tiptap Editor"]
+    Video["Upload Video + Transcript"]
+    Quiz["Build Quiz Questions
+    Set Pass Threshold"]
+    Activity["Build Interactive Activity"]
+    Merge["Save Lesson"]
+    More{"More Lessons?"}
+    Validate{"Accessibility
+    Check Passed?"}
+    Fix["Fix Accessibility Issues"]
+    Submit["Submit for Review"]
+    E((End))
+
+    S --> Login
+    Login --> Dash
+    Dash --> Create
+    Create --> Meta
+    Meta --> Chapters
+    Chapters --> Content
+    Content --> Type
+    Type -->|Text| Tiptap
+    Type -->|Video| Video
+    Type -->|Quiz| Quiz
+    Type -->|Activity| Activity
+    Tiptap --> Merge
+    Video --> Merge
+    Quiz --> Merge
+    Activity --> Merge
+    Merge --> More
+    More -->|Yes| Content
+    More -->|No| Validate
+    Validate -->|Fail| Fix
+    Fix --> Validate
+    Validate -->|Pass| Submit
+    Submit --> E
+
+    classDef startEnd fill:#000000,color:#ffffff,stroke:#000000,stroke-width:2px
+    classDef action fill:#ffffff,stroke:#000000,stroke-width:1px
+    classDef decision fill:#ffffff,stroke:#000000,stroke-width:2px
+
+    class S,E startEnd
+    class Login,Dash,Create,Meta,Chapters,Content,Tiptap,Video,Quiz,Activity,Merge,Fix,Submit action
+    class Type,More,Validate decision
+
+======================================================================
+DIAGRAM 7: ADMINISTRATOR ACTIVITY DIAGRAM
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+graph TD
+    S((Start))
+    Login["Admin Logs In"]
+    Dash["View Dashboard"]
+    Menu{"Select Action"}
+    Queue["View Moderation Queue"]
+    Review["Review Course Draft"]
+    Decision{"Approved?"}
+    Publish["Publish Course"]
+    Reject["Reject with Feedback"]
+    Users["View All Users"]
+    Edit["Edit User Role / Status"]
+    Analytics["View Platform Analytics"]
+    Apps["Review Instructor Applications"]
+    Approve["Approve / Reject Application"]
+    E((End))
+
+    S --> Login
+    Login --> Dash
+    Dash --> Menu
+    Menu -->|Moderate| Queue
+    Queue --> Review
+    Review --> Decision
+    Decision -->|Yes| Publish
+    Decision -->|No| Reject
+    Menu -->|Users| Users
+    Users --> Edit
+    Menu -->|Analytics| Analytics
+    Menu -->|Applications| Apps
+    Apps --> Approve
+    Publish --> E
+    Reject --> E
+    Edit --> E
+    Analytics --> E
+    Approve --> E
+
+    classDef startEnd fill:#000000,color:#ffffff,stroke:#000000,stroke-width:2px
+    classDef action fill:#ffffff,stroke:#000000,stroke-width:1px
+    classDef decision fill:#ffffff,stroke:#000000,stroke-width:2px
+
+    class S,E startEnd
+    class Login,Dash,Queue,Review,Publish,Reject,Users,Edit,Analytics,Apps,Approve action
+    class Menu,Decision decision
+
+======================================================================
+DIAGRAM 8: SEQUENCE - COURSE ENROLLMENT
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+sequenceDiagram
+    participant L as Learner Browser
+    participant MW as Edge Middleware
+    participant API as Next.js API
+    participant DB as PostgreSQL
+    participant N as Notification System
+
+    L->>MW: POST /api/enroll { course_id }
+    activate MW
+    MW->>MW: Verify JWT session
+    MW->>API: Forward authenticated request
+    deactivate MW
+    activate API
+    API->>DB: SELECT enrollments
+    activate DB
+    DB-->>API: No duplicate found
+    deactivate DB
+    API->>DB: INSERT INTO enrollments
+    activate DB
+    DB-->>API: Enrollment created
+    deactivate DB
+    DB->>N: Trigger: notify_on_enrollment
+    activate N
+    N-->>N: INSERT notification for educator
+    deactivate N
+    API-->>L: Redirect to /course/[id]/learn
+    deactivate API
+
+======================================================================
+DIAGRAM 9: SEQUENCE - LESSON LEARNING & TELEMETRY
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+sequenceDiagram
+    participant L as Learner Browser
+    participant API as Next.js API
+    participant DB as PostgreSQL
+
+    L->>L: Mount LessonPage component
+    L->>API: GET /api/lesson/[id]
+    activate API
+    API->>DB: SELECT lessons.content_html
+    activate DB
+    DB-->>API: Return lesson content
+    deactivate DB
+    API-->>L: Render sanitized HTML
+    deactivate API
+
+    L->>API: POST /api/lesson/[id]/progress
+    activate API
+    API->>DB: INSERT lesson_progress
+    activate DB
+    DB-->>API: Record created
+    deactivate DB
+    deactivate API
+
+    loop Every 30 seconds
+        L->>API: PATCH /api/lesson/[id]/progress
+        activate API
+        API->>DB: UPDATE time_spent_learning
+        activate DB
+        DB-->>API: Updated
+        deactivate DB
+        deactivate API
+    end
+
+======================================================================
+DIAGRAM 10: SEQUENCE - QUIZ ATTEMPT & ADAPTIVE RECOMMENDATION
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+sequenceDiagram
+    participant L as Learner Browser
+    participant API as Next.js API
+    participant DB as PostgreSQL
+    participant ENG as Recommendation Engine
+
+    L->>API: POST /api/quiz/[id]/submit
+    Note over L: Payload: selected_option_id[]
+    activate API
+
+    API->>DB: Evaluate answers against quiz_options.is_correct
+    activate DB
+    DB-->>API: Score calculated
+    deactivate DB
+
+    API->>DB: INSERT INTO quiz_attempts
+    activate DB
+    DB-->>API: Attempt recorded
+    deactivate DB
+
+    API->>ENG: Evaluate score vs pass_threshold_pct
+    activate ENG
+
+    alt Score < Threshold
+        ENG->>DB: Query lessons.prerequisite_lesson_id
+        activate DB
+        DB-->>ENG: Prerequisite found
+        deactivate DB
+        ENG->>DB: INSERT INTO recommendations
+        activate DB
+        DB-->>ENG: Recommendation created
+        deactivate DB
+    else Score >= Threshold
+        ENG->>ENG: No recommendation needed
+    end
+
+    deactivate ENG
+    API-->>L: Return { score, result, recommendations }
+    deactivate API
+
+======================================================================
+DIAGRAM 11: SEQUENCE - COURSE CREATION & MEDIA UPLOAD
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+sequenceDiagram
+    participant E as Educator Browser
+    participant API as Next.js API
+    participant S3 as Supabase Storage
+    participant DB as PostgreSQL
+
+    E->>API: POST /api/courses { metadata }
+    activate API
+    API->>DB: INSERT INTO courses
+    activate DB
+    DB-->>API: Course created
+    deactivate DB
+    deactivate API
+
+    E->>API: POST /api/educator/lessons
+    activate API
+    API->>DB: INSERT INTO lessons
+    activate DB
+    DB-->>API: Lesson created
+    deactivate DB
+    deactivate API
+
+    E->>API: POST /api/upload-url { filename, type }
+    activate API
+    API->>S3: Request signed upload URL
+    activate S3
+    S3-->>API: Return signed URL
+    deactivate S3
+    API-->>E: Return signed URL
+    deactivate API
+
+    E->>S3: PUT file to signed URL
+    activate S3
+    S3-->>E: Upload complete
+    deactivate S3
+
+    E->>API: PATCH /api/educator/lessons/[id]
+    Note over E: video_url = uploaded URL
+    activate API
+    API->>DB: UPDATE lessons SET video_url
+    activate DB
+    DB-->>API: Updated
+    deactivate DB
+    deactivate API
+
+======================================================================
+DIAGRAM 12: DATABASE ERD
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}}}%%
+
+erDiagram
+    users ||--o| user_profiles : has
+    users ||--o| user_accessibility_settings : configures
+    users ||--o{ enrollments : enrolls
+    users ||--o{ courses : creates
+    users ||--o{ notifications : receives
+    users ||--o{ quiz_attempts : attempts
+
+    courses ||--o{ course_chapters : contains
+    courses ||--o{ lessons : contains
+    courses ||--o{ enrollments : has
+    courses ||--o{ course_favorites : bookmarked
+    courses ||--o{ course_tags : tagged
+    courses ||--o{ course_milestones : has
+
+    course_chapters ||--o{ lessons : groups
+
+    enrollments ||--o{ lesson_progress : tracks
+    enrollments ||--o{ quiz_attempts : records
+    enrollments ||--o| certificates : awards
+    enrollments ||--o{ recommendations : generates
+
+    lessons ||--o{ lesson_progress : viewed
+    lessons ||--o{ lesson_assets : attached
+    lessons ||--o{ lesson_comments : discussed
+    lessons ||--o| quizzes : assessed_by
+
+    quizzes ||--o{ quiz_questions : contains
+    quiz_questions ||--o{ quiz_options : has
+    quiz_attempts ||--o{ quiz_answers : includes
+
+    users {
+        uuid id PK
+        varchar email UK
+        text full_name
+        varchar role
+        boolean is_active
+        timestamptz created_at
+    }
+
+    courses {
+        uuid id PK
+        varchar title
+        varchar slug UK
+        text description
+        varchar difficulty_level
+        varchar status
+    }
+
+    lessons {
+        uuid id PK
+        uuid course_id FK
+        uuid chapter_id FK
+        varchar title
+        text content_html
+        varchar lesson_type
+    }
+
+    enrollments {
+        uuid id PK
+        uuid user_id FK
+        uuid course_id FK
+        varchar status
+        timestamptz enrolled_at
+    }
+
+    user_accessibility_settings {
+        uuid user_id PK FK
+        varchar disability_type
+        varchar preferred_theme
+        boolean tts_enabled
+        boolean reduced_motion
+    }
+
+    lesson_progress {
+        uuid id PK
+        uuid enrollment_id FK
+        uuid lesson_id FK
+        boolean is_viewed
+        integer time_spent_learning
+    }
+
+    quizzes {
+        uuid id PK
+        uuid lesson_id FK
+        integer time_limit_seconds
+        integer pass_threshold_pct
+    }
+
+    quiz_attempts {
+        uuid id PK
+        uuid enrollment_id FK
+        uuid quiz_id FK
+        integer score_pct
+        varchar result
+    }
+
+    notifications {
+        uuid id PK
+        uuid user_id FK
+        text type
+        text title
+        boolean is_read
+    }
+
+======================================================================
+DIAGRAM 13: GANTT CHART - PROJECT SCHEDULE
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#e0e0e0", "tertiaryColor": "#ffffff"}}}%%
+
+gantt
+    title ACESS Development Sprint Schedule
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section Sprint 0
+    Requirements & Scaffolding     :s0, 2026-01-08, 14d
+
+    section Sprint 1
+    Core Authentication            :s1, after s0, 14d
+
+    section Sprint 2
+    Database & Security            :s2, after s1, 14d
+
+    section Sprint 3
+    Educator Authoring             :s3, after s2, 14d
+
+    section Sprint 4
+    Learner Experience             :s4, after s3, 14d
+
+    section Sprint 5
+    Adaptive & Analytics           :s5, after s4, 14d
+
+======================================================================
+DIAGRAM 14: SOFTWARE ARCHITECTURE OVERVIEW
+Paste at: https://mermaid.live
+======================================================================
+
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "13px", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f5f5f5", "tertiaryColor": "#ffffff"}}}%%
+
+graph LR
+    subgraph FRONTEND["Frontend Stack"]
+        Next["Next.js 16"]
+        React["React 18"]
+        TS["TypeScript"]
+        TW["Tailwind CSS v4"]
+        FM["Framer Motion"]
+        Tiptap["Tiptap Editor"]
+        RC["Recharts"]
+    end
+
+    subgraph BACK["Backend Services"]
+        Supa["Supabase"]
+        PG["PostgreSQL"]
+        Strg["File Storage"]
+        AuthS["Authentication"]
+    end
+
+    subgraph TOOLS["Development Tools"]
+        VSC["VS Code"]
+        GJ["Git / GitHub"]
+        Vercel["Vercel"]
+        SC["Supabase CLI"]
+    end
+
+    FRONTEND -->|"Deploy to"| Vercel
+    Vercel -->|"Connect to"| Supa
+    Supa --> PG
+    Supa --> Strg
+    Supa --> AuthS
+    TOOLS -->|"Source Control"| GJ
+    GJ -->|"Auto Deploy"| Vercel
+
+    classDef cat fill:#ffffff,stroke:#000000,stroke-width:2px
+    classDef item fill:#ffffff,stroke:#000000,stroke-width:1px
+
+    class FRONTEND,BACK,TOOLS cat
+    class Next,React,TS,TW,FM,Tiptap,RC,Supa,PG,Strg,AuthS,VSC,GJ,Vercel,SC item
+
+======================================================================
+HOW TO USE:
+1. Open https://mermaid.live in your browser
+2. COPY the ENTIRE diagram block including the %%{init...}%% header line
+3. Paste into the left panel of mermaid.live
+4. Click the download button → "PNG" or "SVG"
+5. Save to Report\ folder with a meaningful name (e.g. context-diagram.png)
+6. Update the .tex file: \includegraphics[width=0.8\textwidth]{your-file-name.png}
+======================================================================

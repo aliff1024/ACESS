@@ -1,6 +1,7 @@
 'use client'
 
 import type { ContentBlock } from '@/lib/content-blocks'
+import DOMPurify from 'isomorphic-dompurify'
 
 interface ContentBlockViewerProps {
   blocks: ContentBlock[]
@@ -21,7 +22,7 @@ export function ContentBlockViewer({ blocks, className }: ContentBlockViewerProp
             return <Tag key={block.id} className={`${size} text-gray-900 mt-6 mb-3`}>{text}</Tag>
           }
           case 'paragraph':
-            return <p key={block.id} className="text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: (block.data as any).text }} />
+            return <p key={block.id} className="text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((block.data as any).text) }} />
           case 'image': {
             const { src, alt, caption } = block.data as any
             return (
@@ -61,7 +62,7 @@ export function ContentBlockViewer({ blocks, className }: ContentBlockViewerProp
             return (
               <Tag key={block.id} className="list-inside space-y-1 text-gray-700" style={{ listStyleType: ordered ? 'decimal' : 'disc' }}>
                 {(items || []).map((item: string, i: number) => (
-                  <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
+                  <li key={i} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item) }} />
                 ))}
               </Tag>
             )
@@ -76,7 +77,7 @@ export function ContentBlockViewer({ blocks, className }: ContentBlockViewerProp
             }
             return (
               <div key={block.id} className={`border-l-4 p-4 rounded-r-lg ${styles[variant] || styles.info}`}>
-                <p dangerouslySetInnerHTML={{ __html: text }} />
+                <p dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(text) }} />
               </div>
             )
           }

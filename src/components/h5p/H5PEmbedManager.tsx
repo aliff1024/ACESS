@@ -65,6 +65,7 @@ export function H5PEmbedManager({ lessonId }: H5PEmbedManagerProps) {
 
   // Editing state
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     loadH5PContents();
@@ -240,12 +241,16 @@ export function H5PEmbedManager({ lessonId }: H5PEmbedManagerProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this activity?')) return;
+    if (deleting) return;
+    setDeleting(id);
     try {
       await deleteH5PContent(id);
       toast.success('Activity deleted successfully');
       loadH5PContents();
     } catch (err) {
       toast.error('Failed to delete activity');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -383,8 +388,8 @@ export function H5PEmbedManager({ lessonId }: H5PEmbedManagerProps) {
                 <Button variant="ghost" size="sm" onClick={() => handleEditClick(item)} className="h-8 w-8 p-0 text-slate-600 hover:text-indigo-600">
                   <Edit2 className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="h-8 w-8 p-0 text-slate-600 hover:text-rose-600">
-                  <Trash2 className="w-3.5 h-3.5" />
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} disabled={deleting === item.id} className="h-8 w-8 p-0 text-slate-600 hover:text-rose-600">
+                  {deleting === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                 </Button>
               </div>
             </div>

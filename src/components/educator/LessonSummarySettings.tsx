@@ -60,7 +60,7 @@ export function LessonSummarySettings({
             <p className="text-xs text-gray-500">Students write a summary based on lesson materials</p>
           </div>
         </div>
-        <Switch checked={enabled} onCheckedChange={(v) => onChange('hasSummaryActivity', v)} />
+        <Switch checked={enabled} onCheckedChange={(v) => onChange('has_summary_activity', v)} />
       </div>
 
       {enabled && (

@@ -135,6 +135,7 @@ export function AssetSelector({ courseId, scopeId, value, onChange, typeFilter =
         <div className="relative group inline-block">
           {typeFilter === 'image' || value.match(/\.(jpeg|jpg|gif|png|webp)/i) ? (
             <div className={`rounded-lg overflow-hidden border border-gray-200 bg-gray-50 ${sizeMap[size] || 'w-full h-32'}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={value} alt="Selected asset" className="w-full h-full object-cover" />
             </div>
           ) : (
@@ -191,6 +192,7 @@ export function AssetSelector({ courseId, scopeId, value, onChange, typeFilter =
                       >
                         {asset.file_type === 'image' ? (
                           <div className="flex-1 bg-gray-100 overflow-hidden relative">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={asset.url} alt={asset.file_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                             {value === asset.url && (
                               <div className="absolute inset-0 bg-blue-600/20 flex items-center justify-center">

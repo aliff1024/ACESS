@@ -358,6 +358,10 @@ html[data-reduced-motion="true"] *::after {
   scroll-behavior: auto !important;
 }
 
+html[data-reduced-motion="true"] *:hover {
+  transform: none !important;
+}
+
 /* ─── Accessibility: Simplified UI (calm mode — hide decorative chrome, keep learning scaffolds) ─ */
 html[data-simplified-ui="true"] .simplifiable {
   display: none !important;
@@ -466,27 +470,69 @@ html[data-bg-tint="pale_blue"] { --background: #EBF4FA; --card: #F5FAFD; --popov
 html[data-bg-tint="soft_green"] { --background: #F0F7F0; --card: #F7FBF7; --popover: #F7FBF7; }
 html[data-bg-tint="grey"] { --background: #F0F0F0; --card: #F7F7F7; --popover: #F7F7F7; }
 
-/* ─── Accessibility Presets: Reading Spotlight ────────────────────────── */
-html[data-reading-spotlight="true"] .lesson-paragraph,
-html[data-reading-spotlight="true"] .lesson-content > p,
-html[data-reading-spotlight="true"] .lesson-content > div,
-html[data-reading-spotlight="true"] .lesson-content > section {
-  opacity: 0.35;
-  filter: blur(0.3px);
-  transition: opacity 0.25s ease, filter 0.25s ease;
+/* Dark Tints */
+html[data-bg-tint="dark_cream"] { --background: #2D2416; --card: #3D3322; --popover: #3D3322; --foreground: #FFFDF7; }
+html[data-bg-tint="dark_blue_grey"] { --background: #111827; --card: #1F2937; --popover: #1F2937; --foreground: #F5FAFD; }
+html[data-bg-tint="dark_green"] { --background: #064E3B; --card: #065F46; --popover: #065F46; --foreground: #F7FBF7; }
+html[data-bg-tint="dark_brown"] { --background: #3E2723; --card: #4E342E; --popover: #4E342E; --foreground: #EFEBE9; }
+html[data-bg-tint="dark_grey"] { --background: #1F2937; --card: #374151; --popover: #374151; --foreground: #F9FAFB; }
+
+/* ─── Global Dark Theme Overrides for Hardcoded Tailwind Classes ──────── */
+html[data-bg-tint^="dark_"] body,
+html[data-bg-tint^="dark_"] main,
+html[data-bg-tint^="dark_"] section,
+html[data-bg-tint^="dark_"] article,
+html[data-bg-tint^="dark_"] aside,
+html[data-bg-tint^="dark_"] .bg-white,
+html[data-bg-tint^="dark_"] .bg-gray-50,
+html[data-bg-tint^="dark_"] .bg-gray-100 {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
 }
-html[data-reading-spotlight="true"] .lesson-paragraph.spotlight-active,
-html[data-reading-spotlight="true"] .lesson-paragraph:hover,
-html[data-reading-spotlight="true"] .lesson-content > p.spotlight-active,
-html[data-reading-spotlight="true"] .lesson-content > p:hover,
-html[data-reading-spotlight="true"] .lesson-content > div.spotlight-active,
-html[data-reading-spotlight="true"] .lesson-content > div:hover,
-html[data-reading-spotlight="true"] .lesson-content > section.spotlight-active,
-html[data-reading-spotlight="true"] .lesson-content > section:hover {
-  opacity: 1;
-  filter: none;
-  background: rgba(255, 255, 200, 0.08);
-  border-radius: 0.25rem;
+
+html[data-bg-tint^="dark_"] .text-gray-900,
+html[data-bg-tint^="dark_"] .text-gray-800,
+html[data-bg-tint^="dark_"] .text-gray-700,
+html[data-bg-tint^="dark_"] .text-gray-600 {
+  color: var(--foreground) !important;
+}
+
+html[data-bg-tint^="dark_"] .text-blue-600,
+html[data-bg-tint^="dark_"] .text-blue-700 {
+  color: #93C5FD !important; /* blue-300 for contrast */
+}
+
+html[data-bg-tint^="dark_"] .text-green-600,
+html[data-bg-tint^="dark_"] .text-green-700 {
+  color: #86EFAC !important; /* green-300 for contrast */
+}
+
+html[data-bg-tint^="dark_"] .bg-white .border-gray-200,
+html[data-bg-tint^="dark_"] .border-gray-200,
+html[data-bg-tint^="dark_"] .border-gray-100 {
+  border-color: var(--card) !important;
+}
+
+/* Base Tints (non-white, non-none) should also override hardcoded backgrounds */
+html[data-bg-tint]:not([data-bg-tint="white"]):not([data-bg-tint="none"]):not([data-bg-tint^="dark_"]) .bg-white,
+html[data-bg-tint]:not([data-bg-tint="white"]):not([data-bg-tint="none"]):not([data-bg-tint^="dark_"]) .bg-gray-50 {
+  background-color: var(--background) !important;
+}
+
+/* ─── Accessibility Presets: Reading Spotlight ────────────────────────── */
+html[data-reading-spotlight="true"] .prose:has(> *:hover) > * {
+  opacity: 0.15;
+  filter: blur(0.5px);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+html[data-reading-spotlight="true"] .prose > *:hover {
+  opacity: 1 !important;
+  filter: none !important;
+  background: var(--spotlight-bg, rgba(100, 150, 255, 0.05));
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 8px var(--spotlight-bg, rgba(100, 150, 255, 0.05));
+  z-index: 10;
+  position: relative;
 }
 
 /* ─── Accessibility Presets: Distraction-Free Mode ───────────────────── */
@@ -501,9 +547,8 @@ html[data-distraction-free="true"] .decorative-banner {
 }
 html[data-distraction-free="true"] main,
 html[data-distraction-free="true"] .lesson-content-area {
-  max-width: 48rem;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: none !important;
+  width: 100%;
 }
 
 /* ─── Accessibility Presets: Animation Levels ────────────────────────── */
@@ -514,6 +559,9 @@ html[data-animation-level="none"] *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+html[data-animation-level="none"] *:hover {
+  transform: none !important;
 }
 html[data-animation-level="low"] *,
 html[data-animation-level="low"] *::before,
@@ -701,3 +749,181 @@ html[data-theme="soft"] .border-blue-300 { border-color: oklch(0.75 0.02 85) !im
 html[data-theme="soft"] .border-green-200,
 html[data-theme="soft"] .border-green-300 { border-color: oklch(0.76 0.02 140) !important; }
 
+/* ─── Text-to-Speech (TTS) Highlight ────────────────────────────────── */
+.tts-active-element {
+  outline: 3px solid var(--primary) !important;
+  outline-offset: 2px !important;
+  background-color: color-mix(in srgb, var(--primary) 15%, transparent) !important;
+  border-radius: 0.25rem !important;
+  transition: all 0.2s ease-in-out;
+}
+
+
+
+/* Tiptap Editor Overrides */
+.tiptap {
+  outline: none;
+  word-break: break-word;
+}
+
+.tiptap p {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.tiptap table td,
+.tiptap table th {
+  min-width: 1em;
+  border: 2px solid #cbd5e1; /* Stronger visible border */
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tiptap table th {
+  font-weight: 600;
+  text-align: left;
+  background-color: #f9fafb;
+}
+
+.tiptap table .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(200, 200, 255, 0.4);
+  pointer-events: none;
+}
+
+.tiptap table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #3b82f6; /* Visible blue on resize */
+  pointer-events: auto; /* Allow dragging */
+  cursor: col-resize; /* Correct pointer cursor */
+  z-index: 20;
+}
+
+
+.tiptap, .rich-content {
+  word-break: break-word;
+}
+
+.tiptap p, .rich-content p {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tiptap table, .rich-content table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.tiptap table td, .tiptap table th,
+.rich-content table td, .rich-content table th {
+  min-width: 1em;
+  border: 2px solid #cbd5e1;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tiptap table th, .rich-content table th {
+  font-weight: 600;
+  text-align: left;
+  background-color: #f9fafb;
+}
+
+.rich-content img[data-align="left"] {
+  float: left;
+  margin-right: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-content img[data-align="right"] {
+  float: right;
+  margin-left: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-content img[data-align="center"] {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* Tiptap Headings */
+.tiptap h1, .rich-content h1 {
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.tiptap h2, .rich-content h2 {
+  font-size: 1.875rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.tiptap h3, .rich-content h3 {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.tiptap h4, .rich-content h4 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Prose Page Break Styling */
+.prose hr {
+  border: none;
+  border-top: 3px dashed #cbd5e1;
+  margin: 3rem 0;
+  position: relative;
+  overflow: visible;
+}
+.prose hr::after {
+  content: 'PAGE BREAK (New Slide)';
+  position: absolute;
+  top: -0.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 0 1rem;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.learner-view .prose hr {
+  display: none;
+}

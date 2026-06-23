@@ -1,0 +1,4 @@
+[2026-06-22 18:38:39.374] [info]  (server)  stdout { message: '[18:38:39.338] INFO (#9582): global event disconnected' }
+[2026-06-22 18:41:33.477] [info]  (server)  stdout { message: '[18:41:33.468] INFO (#24733): global event disconnected' }
+[2026-06-22 18:53:40.062] [info]  (server)  stdout { message: '[18:53:40.010] INFO (#29188): global event disconnected' }
+[2026-06-22 18:53:47.318] [info]  (server)  stdout { message: '[18:53:47.218] INFO (#34608): global event disconnected' }

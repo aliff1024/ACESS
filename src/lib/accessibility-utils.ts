@@ -142,3 +142,56 @@ export function fontTypeToFamily(fontType: string | null | undefined): string {
     default: return 'arial';
   }
 }
+
+// ─── Activity Accessibility Ratings ────────────────────────────────────
+
+export const ACTIVITY_ACCESSIBILITY: Record<string, {
+  recommendedFor: string[];
+  cautionFor: string[];
+  cautionReason?: string;
+  alternativeSuggestion?: string;
+  scaffoldingLevel: 'high' | 'medium' | 'low';
+}> = {
+  quiz: {
+    recommendedFor: ['autism'],
+    cautionFor: ['adhd', 'dyslexia'],
+    cautionReason: 'Time pressure and heavy reading can cause anxiety.',
+    alternativeSuggestion: 'Provide untimed options or oral assessment.',
+    scaffoldingLevel: 'low',
+  },
+  flashcards: {
+    recommendedFor: ['dyslexia', 'adhd'],
+    cautionFor: ['visual'],
+    cautionReason: 'Requires clear, high-contrast text and screen-reader support.',
+    alternativeSuggestion: 'Ensure TTS is enabled for flashcards.',
+    scaffoldingLevel: 'medium',
+  },
+  drag_drop: {
+    recommendedFor: ['adhd', 'cognitive'],
+    cautionFor: ['visual', 'motor'],
+    cautionReason: 'Requires precise cursor control and visual tracking.',
+    alternativeSuggestion: 'Provide keyboard alternatives (e.g. matching dropdowns).',
+    scaffoldingLevel: 'high',
+  },
+  video: {
+    recommendedFor: ['dyslexia'],
+    cautionFor: ['adhd', 'hearing'],
+    cautionReason: 'Sustained attention needed; auditory processing issues.',
+    alternativeSuggestion: 'Provide transcripts, captions, and chunked segments.',
+    scaffoldingLevel: 'low',
+  },
+  sorting: {
+    recommendedFor: ['autism', 'cognitive'],
+    cautionFor: ['motor'],
+    cautionReason: 'May require complex pointer movements.',
+    alternativeSuggestion: 'Ensure keyboard navigation is fully supported.',
+    scaffoldingLevel: 'high',
+  },
+  matching: {
+    recommendedFor: ['adhd', 'dyslexia'],
+    cautionFor: ['visual'],
+    cautionReason: 'Spatial layout can be confusing with screen readers.',
+    alternativeSuggestion: 'Use simple lists with dropdowns instead of spatial linking.',
+    scaffoldingLevel: 'medium',
+  }
+};

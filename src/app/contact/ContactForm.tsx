@@ -53,7 +53,7 @@ export function ContactForm({ initialCategory = 'general' }: { initialCategory?:
   if (submitted) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar onTryDemo={() => router.push('/login')} />
+        <Navbar />
         <main className="max-w-2xl mx-auto px-4 py-20 text-center">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
             <div className="text-5xl mb-4">✅</div>
@@ -76,7 +76,7 @@ export function ContactForm({ initialCategory = 'general' }: { initialCategory?:
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar onTryDemo={() => router.push('/login')} />
+      <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-12">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Contact Us</h1>

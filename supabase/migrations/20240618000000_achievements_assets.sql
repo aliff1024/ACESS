@@ -24,14 +24,17 @@ CREATE INDEX IF NOT EXISTS idx_media_assets_type ON public.media_assets(file_typ
 -- RLS
 ALTER TABLE public.media_assets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own assets" ON public.media_assets;
 CREATE POLICY "Users can view their own assets"
     ON public.media_assets FOR SELECT
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own assets" ON public.media_assets;
 CREATE POLICY "Users can insert their own assets"
     ON public.media_assets FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own assets" ON public.media_assets;
 CREATE POLICY "Users can delete their own assets"
     ON public.media_assets FOR DELETE
     USING (auth.uid() = user_id);
@@ -67,10 +70,12 @@ CREATE INDEX IF NOT EXISTS idx_course_achievements_course ON public.course_achie
 -- RLS
 ALTER TABLE public.course_achievements ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view course achievements" ON public.course_achievements;
 CREATE POLICY "Anyone can view course achievements"
     ON public.course_achievements FOR SELECT
     USING (true);
 
+DROP POLICY IF EXISTS "Educators can manage achievements for their courses" ON public.course_achievements;
 CREATE POLICY "Educators can manage achievements for their courses"
     ON public.course_achievements FOR ALL
     USING (
@@ -106,10 +111,12 @@ CREATE INDEX IF NOT EXISTS idx_user_achievements_course ON public.user_achieveme
 -- RLS
 ALTER TABLE public.user_achievements ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own achievements" ON public.user_achievements;
 CREATE POLICY "Users can view their own achievements"
     ON public.user_achievements FOR SELECT
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Educators can view achievements for their courses" ON public.user_achievements;
 CREATE POLICY "Educators can view achievements for their courses"
     ON public.user_achievements FOR SELECT
     USING (
@@ -120,8 +127,7 @@ CREATE POLICY "Educators can view achievements for their courses"
         )
     );
 
--- System handles inserts, so no direct user insert policy needed 
--- (unless learners can somehow trigger it client-side, but usually service role or function)
+DROP POLICY IF EXISTS "Learners can insert achievements" ON public.user_achievements;
 CREATE POLICY "Learners can insert achievements"
     ON public.user_achievements FOR INSERT
     WITH CHECK (auth.uid() = user_id);

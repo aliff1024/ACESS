@@ -8,6 +8,8 @@ import { FillBlanksBuilder } from './FillBlanksBuilder'
 import { MemoryGameBuilder } from './MemoryGameBuilder'
 import { TimelineBuilder } from './TimelineBuilder'
 import { InteractiveActivityViewer } from './InteractiveActivityViewer'
+import { ACTIVITY_ACCESSIBILITY } from '@/lib/accessibility-utils'
+import { AlertTriangle, ThumbsUp } from 'lucide-react'
 import type { InteractiveContentType, InteractiveActivityConfig, InteractiveActivityData } from '@/lib/interactive-types'
 import type {
   FlashcardsData,
@@ -47,11 +49,12 @@ function cloneData<T>(data: T): T {
 interface InteractiveActivityBuilderProps {
   config: InteractiveActivityConfig
   onChange: (config: InteractiveActivityConfig) => void
+  primaryFocus?: string | null
 }
 
-export function InteractiveActivityBuilder({ config, onChange }: InteractiveActivityBuilderProps) {
-  const [selectedType, setSelectedType] = useState<InteractiveContentType>(config.contentType)
+export function InteractiveActivityBuilder({ config, onChange, primaryFocus }: InteractiveActivityBuilderProps) {
   const isNewActivity = !config.title && (!config.data || Object.keys(config.data).length <= 1)
+  const [selectedType, setSelectedType] = useState<InteractiveContentType | null>(isNewActivity ? null : config.contentType)
   const [mode, setMode] = useState<'intro' | 'edit' | 'preview'>(isNewActivity ? 'intro' : 'edit')
 
   const handleTypeChange = (type: InteractiveContentType) => {
@@ -96,25 +99,41 @@ export function InteractiveActivityBuilder({ config, onChange }: InteractiveActi
       <div>
         <Label>Activity Type</Label>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mt-1">
-          {CONTENT_TYPES.map((type) => (
-            <button
-              key={type.value}
-              type="button"
-              onClick={() => handleTypeChange(type.value)}
-              className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors text-sm ${
-                selectedType === type.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-800'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
-              }`}
-            >
-              <span className="text-xl">{type.icon}</span>
-              <span>{type.label}</span>
-            </button>
-          ))}
+          {CONTENT_TYPES.map((type) => {
+            const rules = ACTIVITY_ACCESSIBILITY[type.value]
+            const isRecommended = primaryFocus && rules?.recommendedFor?.includes(primaryFocus)
+            const isCaution = primaryFocus && rules?.cautionFor?.includes(primaryFocus)
+            
+            return (
+              <button
+                key={type.value}
+                type="button"
+                onClick={() => handleTypeChange(type.value)}
+                className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors text-sm relative ${
+                  selectedType === type.value
+                    ? 'border-blue-500 bg-blue-50 text-blue-800'
+                    : isCaution ? 'border-amber-200 bg-amber-50/50 hover:bg-amber-50 text-amber-900' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                {isRecommended && (
+                  <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1 shadow-sm" title="Highly Recommended for target audience">
+                    <ThumbsUp className="w-3 h-3" />
+                  </div>
+                )}
+                {isCaution && (
+                  <div className="absolute -top-2 -right-2 bg-amber-500 text-white rounded-full p-1 shadow-sm" title="Use with caution for target audience">
+                    <AlertTriangle className="w-3 h-3" />
+                  </div>
+                )}
+                <span className="text-xl">{type.icon}</span>
+                <span>{type.label}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {mode === 'intro' && (
+      {mode === 'intro' && selectedType && (
         <div className="border border-blue-200 bg-blue-50 rounded-xl p-6 text-center space-y-4">
           <div className="text-4xl">{CONTENT_TYPES.find(t => t.value === selectedType)?.icon}</div>
           <h3 className="text-xl font-bold text-blue-900">
@@ -127,6 +146,7 @@ export function InteractiveActivityBuilder({ config, onChange }: InteractiveActi
             {selectedType === 'memory_game' && "Create a memory matching game. Students flip cards to find matching pairs of concepts, words, or images."}
             {selectedType === 'timeline' && "Create interactive timelines where students can explore events or sort them into chronological order."}
           </p>
+          
           <div className="pt-2">
             <Button onClick={() => setMode('edit')} className="bg-blue-600 hover:bg-blue-700">
               Create {CONTENT_TYPES.find(t => t.value === selectedType)?.label}
@@ -135,8 +155,19 @@ export function InteractiveActivityBuilder({ config, onChange }: InteractiveActi
         </div>
       )}
 
-      {mode !== 'intro' && (
+      {mode !== 'intro' && selectedType && (
         <>
+          {/* Accessibility Warning inside Edit mode */}
+          {primaryFocus && ACTIVITY_ACCESSIBILITY[selectedType]?.cautionFor?.includes(primaryFocus) && (
+            <div className="max-w-3xl bg-amber-50 text-amber-900 p-4 rounded-lg text-sm flex gap-3 text-left items-start border border-amber-200">
+              <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" />
+              <div>
+                <strong className="text-amber-800">Caution for {primaryFocus.replace('_', ' ').toUpperCase()}:</strong> {ACTIVITY_ACCESSIBILITY[selectedType].cautionReason}
+                <div className="mt-1 font-medium text-amber-700">Suggestion: {ACTIVITY_ACCESSIBILITY[selectedType].alternativeSuggestion}</div>
+              </div>
+            </div>
+          )}
+
           {/* Mode toggle */}
           <div className="flex border-b border-gray-200">
             <button

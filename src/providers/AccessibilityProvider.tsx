@@ -11,6 +11,8 @@ interface AccessibilityContextType {
   adaptiveOverrides: EffectiveAccessibilitySettings;
   userAgeGroup: '6-12' | '13-17' | '18+';
   updateSettings: (data: AccessibilitySettingsData) => Promise<void>;
+  previewSettings: (data: AccessibilitySettingsData) => void;
+  revertSettings: () => void;
   applyPreset: (presetName: string) => Promise<void>;
   loading: boolean;
 }
@@ -97,7 +99,8 @@ function applySettingsToDOM(settings: AccessibilitySettingsData) {
   root.style.setProperty('--user-word-spacing', `${(wordSpacingPct / 100) * 0.5}em`);
 
   // ─── Theme class management ───────────────────────────────────────
-  if (theme === 'dark') {
+  const isDarkPreset = backgroundTint.startsWith('dark_');
+  if (theme === 'dark' || isDarkPreset) {
     root.classList.add('dark');
   } else if (theme === 'high_contrast' || theme === 'light' || theme === 'soft') {
     root.classList.remove('dark');
@@ -119,19 +122,35 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   adaptiveOverrides: defaultOverrides,
   userAgeGroup: '18+',
   updateSettings: async () => {},
+  previewSettings: () => {},
+  revertSettings: () => {},
   applyPreset: async () => {},
   loading: true,
 });
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<AccessibilitySettingsData>(defaultSettings);
+  
+  const getInitialSettings = (): AccessibilitySettingsData => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('acess_accessibility_settings');
+        if (stored) {
+          return JSON.parse(stored) as AccessibilitySettingsData;
+        }
+      } catch (e) {}
+    }
+    return defaultSettings;
+  };
+
+  const [settings, setSettings] = useState<AccessibilitySettingsData>(getInitialSettings);
   const [adaptiveOverrides, setAdaptiveOverrides] = useState<EffectiveAccessibilitySettings>({
     ui: defaultSettings,
     lesson_modes: { focus_mode: false, chunked_content: false, guided_mode: false, checkpoints: false, simplified_summary: false },
     active_recommendation: null,
     active_disability: null,
   });
+  const [persistedSettings, setPersistedSettings] = useState<AccessibilitySettingsData>(getInitialSettings);
   const [userAgeGroup, setUserAgeGroup] = useState<'6-12' | '13-17' | '18+'>('18+');
   const [loading, setLoading] = useState(true);
   const fetched = useRef(false);
@@ -167,10 +186,17 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
         if (profile.accessibility) {
           const s = applyReadingLevelDefaults(profile.accessibility);
           setSettings(s);
+          setPersistedSettings(s);
           applySettingsToDOM(s);
           recomputeAdaptive(s);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('acess_accessibility_settings', JSON.stringify(s));
+          }
         } else {
           applySettingsToDOM(defaultSettings);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('acess_accessibility_settings', JSON.stringify(defaultSettings));
+          }
         }
       })
       .catch(() => {
@@ -191,25 +217,44 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = useCallback(async (data: AccessibilitySettingsData) => {
     setSettings(data);
+    setPersistedSettings(data);
     applySettingsToDOM(data);
     recomputeAdaptive(data);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('acess_accessibility_settings', JSON.stringify(data));
+    }
     if (user) {
       await saveAccessibilitySettings(data).catch(console.error);
     }
   }, [user, recomputeAdaptive]);
+
+  const previewSettings = useCallback((data: AccessibilitySettingsData) => {
+    setSettings(data);
+    applySettingsToDOM(data);
+    recomputeAdaptive(data);
+  }, [recomputeAdaptive]);
+
+  const revertSettings = useCallback(() => {
+    setSettings(persistedSettings);
+    applySettingsToDOM(persistedSettings);
+    recomputeAdaptive(persistedSettings);
+  }, [persistedSettings, recomputeAdaptive]);
 
   const applyPreset = useCallback(async (presetName: string) => {
     const newSettings = applyPresetSettings(presetName, settings);
     setSettings(newSettings);
     applySettingsToDOM(newSettings);
     recomputeAdaptive(newSettings);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('acess_accessibility_settings', JSON.stringify(newSettings));
+    }
     if (user) {
       await saveAccessibilitySettings(newSettings).catch(console.error);
     }
   }, [user, settings, recomputeAdaptive]);
 
   return (
-    <AccessibilityContext.Provider value={{ settings, adaptiveOverrides, userAgeGroup, updateSettings, applyPreset, loading }}>
+    <AccessibilityContext.Provider value={{ settings, adaptiveOverrides, userAgeGroup, updateSettings, previewSettings, revertSettings, applyPreset, loading }}>
       {children}
     </AccessibilityContext.Provider>
   );

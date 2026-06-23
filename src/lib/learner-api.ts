@@ -1,4 +1,7 @@
 import { supabase } from './supabase'
+import { v4 as uuidv4 } from 'uuid'
+import { createNotification } from './notifications'
+import { evaluateAchievements } from './achievement-engine'
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -28,6 +31,9 @@ export interface EnrolledCourse {
   creator_name?: string
   student_count?: number
   updated_at?: string
+  primary_disability_focus?: string | null
+  total_duration?: number
+  secondary_disability_focuses?: string[] | null
 }
 
 export interface AvailableCourse {
@@ -45,6 +51,9 @@ export interface AvailableCourse {
   creator_name?: string
   student_count?: number
   updated_at?: string
+  primary_disability_focus?: string | null
+  total_duration?: number
+  secondary_disability_focuses?: string[] | null
 }
 
 export interface CourseDetail {
@@ -68,6 +77,8 @@ export interface CourseDetail {
   creator_name?: string
   updated_at?: string
   total_duration?: number
+  primary_disability_focus?: string | null
+  secondary_disability_focuses?: string[] | null
 }
 
 export interface LessonSummary {
@@ -92,6 +103,7 @@ export interface LessonContent {
   has_quiz?: boolean
   has_transcript?: boolean
   has_summary_activity?: boolean
+  allow_discussions?: boolean
   summary_source?: string
   summary_word_target?: number
   summary_key_points?: string[]
@@ -228,7 +240,7 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
     .select(`
       id, status,
       course_id,
-      courses!inner(id, title, description, difficulty_level, category, thumbnail_url, course_type, system_course, guided_learning_enabled, certificate_enabled, created_by, updated_at)
+      courses!inner(id, title, description, difficulty_level, category, thumbnail_url, course_type, system_course, guided_learning_enabled, certificate_enabled, created_by, updated_at, primary_disability_focus)
     `)
     .eq('user_id', userId)
     .neq('status', 'dropped')
@@ -239,12 +251,13 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
     id: string
     status: string
     course_id: string
-    courses: { id: string; title: string; description: string; difficulty_level: string; category: string | null; thumbnail_url: string | null; certificate_enabled: boolean; course_type: string; system_course: boolean; guided_learning_enabled: boolean; created_by: string; updated_at: string }
+    courses: { id: string; title: string; description: string; difficulty_level: string; category: string | null; thumbnail_url: string | null; certificate_enabled: boolean; course_type: string; system_course: boolean; guided_learning_enabled: boolean; created_by: string; updated_at: string; primary_disability_focus?: string | null }
   }[]
 
   const courseIds = enrollmentsArr.map((e) => e.course_id)
 
   const lessonCounts = new Map<string, number>()
+  const lessonDurationMap = new Map<string, number>()
   const completedCounts = new Map<string, number>()
   const certMap = new Map<string, boolean>()
   const creatorMap = new Map<string, string>()
@@ -272,7 +285,7 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
     }
 
     const [{ data: lessons }, { data: certs }] = await Promise.all([
-      supabase.from('lessons').select('id, course_id').in('course_id', courseIds).eq('status', 'published').or('visibility_status.eq.visible,visibility_status.is.null'),
+      supabase.from('lessons').select('id, course_id, estimated_duration').in('course_id', courseIds).eq('status', 'published').or('visibility_status.eq.visible,visibility_status.is.null'),
       supabase.from('certificates').select('enrollment_id').in('enrollment_id', enrollmentsArr.map(e => e.id)).eq('status', 'issued'),
     ])
 
@@ -281,6 +294,7 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
       const arr = lessonMap.get(l.course_id) || []
       arr.push(l.id)
       lessonMap.set(l.course_id, arr)
+      lessonDurationMap.set(l.course_id, (lessonDurationMap.get(l.course_id) || 0) + (l.estimated_duration || 0))
     }
 
     for (const [cid, ids] of lessonMap) {
@@ -337,6 +351,8 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
       creator_name: creatorMap.get(course.created_by) || 'Educator',
       student_count: enrollCountMap.get(e.course_id) || 0,
       updated_at: updatedAtMap.get(e.course_id) || '',
+      primary_disability_focus: course.primary_disability_focus,
+      total_duration: lessonDurationMap.get(e.course_id) || 0,
     }
   })
 }
@@ -348,8 +364,8 @@ export async function fetchAvailableCourses(): Promise<AvailableCourse[]> {
     .from('courses')
     .select(`
       id, title, description, difficulty_level, category, thumbnail_url,
-      course_type, system_course, certificate_enabled, created_by, updated_at,
-      lessons(count)
+      course_type, system_course, certificate_enabled, created_by, updated_at, primary_disability_focus,
+      lessons(estimated_duration)
     `)
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -405,7 +421,15 @@ export async function fetchAvailableCourses(): Promise<AvailableCourse[]> {
     .filter((c: Record<string, unknown>) => !enrolledIds.has(c.id as string))
     .map((c: Record<string, unknown>) => {
       const tagsArr = c.course_tags as { tag: string }[] | undefined
-      const lessonsArr = c.lessons as { count: number }[] | undefined
+      const lessonsArr = c.lessons as { estimated_duration: number | null }[] | undefined
+      
+      let lessonCount = 0;
+      let totalDuration = 0;
+      if (lessonsArr) {
+        lessonCount = lessonsArr.length;
+        totalDuration = lessonsArr.reduce((sum, l) => sum + (l.estimated_duration || 0), 0);
+      }
+      
       return {
         id: c.id as string,
         title: c.title as string,
@@ -414,13 +438,15 @@ export async function fetchAvailableCourses(): Promise<AvailableCourse[]> {
         category: c.category as string | null,
         thumbnail_url: c.thumbnail_url as string | null,
         tags: (tagsArr || []).map((t) => t.tag),
-        lesson_count: lessonsArr?.[0]?.count ?? 0,
+        lesson_count: lessonCount,
         course_type: c.course_type as string || 'educator',
         system_course: c.system_course as boolean || false,
         certificate_enabled: c.certificate_enabled as boolean || false,
         creator_name: creatorMap.get(c.created_by as string) || 'Educator',
         student_count: enrollCountMap.get(c.id as string) || 0,
         updated_at: c.updated_at as string || '',
+        primary_disability_focus: c.primary_disability_focus as string | null,
+        total_duration: totalDuration,
       }
     })
 }
@@ -435,7 +461,7 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
     .select(`
       id, title, description, difficulty_level, category, thumbnail_url,
       course_type, system_course, guided_learning_enabled, recommended_age_group,
-      certificate_enabled, created_by, updated_at
+      certificate_enabled, created_by, updated_at, primary_disability_focus, secondary_disability_focuses
     `)
     .eq('id', courseId)
     .is('deleted_at', null)
@@ -533,6 +559,8 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
     creator_name: creatorName,
     updated_at: course.updated_at || '',
     total_duration: totalDuration,
+    primary_disability_focus: course.primary_disability_focus || null,
+    secondary_disability_focuses: course.secondary_disability_focuses || [],
   }
 }
 
@@ -545,7 +573,7 @@ export async function fetchLessonContent(lessonId: string): Promise<LessonConten
       id, title, sequence_order, content_html, transcript, video_url, course_id,
       lesson_type, has_video, has_pdf, has_quiz, has_transcript, has_summary_activity,
       summary_source, summary_word_target, summary_key_points, summary_reflection_questions,
-      lesson_layout, simplified_summary, focus_mode_enabled, chunked_content_enabled, checkpoints_enabled, estimated_duration, adaptive_learning_enabled
+      lesson_layout, simplified_summary, focus_mode_enabled, chunked_content_enabled, checkpoints_enabled, estimated_duration, adaptive_learning_enabled, allow_discussions
     `)
     .eq('id', lessonId)
     .maybeSingle()
@@ -576,6 +604,7 @@ export async function fetchLessonContent(lessonId: string): Promise<LessonConten
     has_quiz: lesson.has_quiz ?? true,
     has_transcript: lesson.has_transcript ?? true,
     has_summary_activity: lesson.has_summary_activity ?? false,
+    allow_discussions: lesson.allow_discussions ?? false,
     summary_source: lesson.summary_source,
     summary_word_target: lesson.summary_word_target,
     summary_key_points: lesson.summary_key_points ? (
@@ -769,6 +798,23 @@ export async function completeLesson(lessonId: string, courseId: string): Promis
       first_viewed_at: new Date().toISOString(),
       last_viewed_at: new Date().toISOString(),
     })
+  }
+
+  // Hook into Notifications & Achievements
+  try {
+    const { data: l } = await supabase.from('lessons').select('title').eq('id', lessonId).single()
+    if (l) {
+      await createNotification({
+        user_id: userId,
+        type: 'lesson_completed',
+        title: 'Lesson Completed',
+        body: `You finished "${l.title}".`,
+        metadata: { lesson_id: lessonId }
+      })
+      await evaluateAchievements(userId, courseId)
+    }
+  } catch (err) {
+    console.error('Failed to process lesson hooks:', err)
   }
 }
 
@@ -1124,6 +1170,23 @@ export async function submitQuizAttempt(params: {
 
   const { error: ansError } = await supabase.from('quiz_answers').insert(answerRows)
   if (ansError) throw ansError
+
+  // Hook into Notifications & Achievements
+  try {
+    const { data: q } = await supabase.from('quizzes').select('title').eq('id', params.quizId).single()
+    if (q) {
+      await createNotification({
+        user_id: userId,
+        type: 'quiz_completed',
+        title: 'Quiz Submitted',
+        body: `You scored ${score}% on "${q.title}".`,
+        metadata: { quiz_id: params.quizId, score }
+      })
+      await evaluateAchievements(userId, params.courseId)
+    }
+  } catch (err) {
+    console.error('Failed to process quiz hooks:', err)
+  }
 
   return { score, passed, attemptId: attempt.id }
 }
@@ -1635,31 +1698,30 @@ export async function fetchRecommendations(): Promise<Recommendation[]> {
 export async function fetchLearnerSettings(): Promise<LearnerSettings | null> {
   const userId = await ensureUserId()
   const { data, error } = await supabase
-    .from('user_accessibility_settings')
-    .select('preferred_font_size, preferred_theme, line_spacing, tts_enabled')
+    .from('user_profiles')
+    .select('accessibility_prefs')
     .eq('user_id', userId)
     .maybeSingle()
 
   if (error) throw error
-  if (!data) return null
+  if (!data?.accessibility_prefs) return null
+  const prefs = data.accessibility_prefs as any
   return {
-    preferred_font_size: data.preferred_font_size,
-    preferred_theme: data.preferred_theme,
-    line_spacing: data.line_spacing,
-    tts_enabled: data.tts_enabled,
+    preferred_font_size: prefs.preferred_font_size,
+    preferred_theme: prefs.preferred_theme,
+    line_spacing: prefs.line_spacing,
+    tts_enabled: prefs.tts_enabled,
   }
 }
 
 export async function saveLearnerSettings(settings: LearnerSettings): Promise<void> {
   const userId = await ensureUserId()
-  const { error } = await supabase.from('user_accessibility_settings').upsert(
-    {
-      user_id: userId,
-      preferred_font_size: settings.preferred_font_size,
-      preferred_theme: settings.preferred_theme,
-      line_spacing: settings.line_spacing,
-      tts_enabled: settings.tts_enabled,
-    },
+  const { data: profile } = await supabase.from('user_profiles').select('accessibility_prefs').eq('user_id', userId).maybeSingle()
+  const currentPrefs = typeof profile?.accessibility_prefs === 'object' && profile.accessibility_prefs !== null ? profile.accessibility_prefs : {}
+  const mergedPrefs = { ...currentPrefs, ...settings }
+
+  const { error } = await supabase.from('user_profiles').upsert(
+    { user_id: userId, accessibility_prefs: mergedPrefs },
     { onConflict: 'user_id' }
   )
   if (error) throw error
@@ -1739,18 +1801,16 @@ export interface FullProfile {
 export async function fetchFullProfile(): Promise<FullProfile> {
   const userId = await ensureUserId()
 
-  const [userResult, profileResult, accessibilityResult, notificationResult] = await Promise.all([
+  const [userResult, profileResult] = await Promise.all([
     supabase.from('users').select('id, email, full_name, role').eq('id', userId).single(),
     supabase.from('user_profiles').select('*').eq('user_id', userId).maybeSingle(),
-    supabase.from('user_accessibility_settings').select('*').eq('user_id', userId).maybeSingle(),
-    supabase.from('user_notification_settings').select('*').eq('user_id', userId).maybeSingle(),
   ])
 
   if (userResult.error) throw userResult.error
 
   const p = profileResult.data
-  const a = accessibilityResult.data
-  const n = notificationResult.data
+  const a = p?.accessibility_prefs as any
+  const n = p?.notification_prefs as any
 
   return {
     id: userResult.data.id,
@@ -1826,8 +1886,12 @@ export async function saveUserProfile(data: UserProfileData): Promise<void> {
 
 export async function saveAccessibilitySettings(data: AccessibilitySettingsData): Promise<void> {
   const userId = await ensureUserId()
-  const { error } = await supabase.from('user_accessibility_settings').upsert(
-    { user_id: userId, ...data },
+  const { data: profile } = await supabase.from('user_profiles').select('accessibility_prefs').eq('user_id', userId).maybeSingle()
+  const currentPrefs = typeof profile?.accessibility_prefs === 'object' && profile.accessibility_prefs !== null ? profile.accessibility_prefs : {}
+  const mergedPrefs = { ...currentPrefs, ...data }
+
+  const { error } = await supabase.from('user_profiles').upsert(
+    { user_id: userId, accessibility_prefs: mergedPrefs },
     { onConflict: 'user_id' }
   )
   if (error) throw error
@@ -1835,8 +1899,12 @@ export async function saveAccessibilitySettings(data: AccessibilitySettingsData)
 
 export async function saveNotificationSettings(data: NotificationSettingsData): Promise<void> {
   const userId = await ensureUserId()
-  const { error } = await supabase.from('user_notification_settings').upsert(
-    { user_id: userId, ...data },
+  const { data: profile } = await supabase.from('user_profiles').select('notification_prefs').eq('user_id', userId).maybeSingle()
+  const currentPrefs = typeof profile?.notification_prefs === 'object' && profile.notification_prefs !== null ? profile.notification_prefs : {}
+  const mergedPrefs = { ...currentPrefs, ...data }
+
+  const { error } = await supabase.from('user_profiles').upsert(
+    { user_id: userId, notification_prefs: mergedPrefs },
     { onConflict: 'user_id' }
   )
   if (error) throw error
@@ -1864,6 +1932,24 @@ export async function enrollInCourse(courseId: string): Promise<{ enrollmentId: 
     .single()
 
   if (error) throw error
+
+  // Hook into Notifications & Achievements
+  try {
+    const { data: course } = await supabase.from('courses').select('title').eq('id', courseId).single()
+    if (course) {
+      await createNotification({
+        user_id: userId,
+        type: 'enrollment',
+        title: 'Welcome to the Course!',
+        body: `You successfully enrolled in "${course.title}".`,
+        metadata: { course_id: courseId }
+      })
+      await evaluateAchievements(userId, courseId)
+    }
+  } catch (err) {
+    console.error('Failed to process enrollment hooks:', err)
+  }
+
   return { enrollmentId: data.id }
 }
 

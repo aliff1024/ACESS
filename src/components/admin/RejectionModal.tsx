@@ -1,15 +1,16 @@
 'use client';
 
-import { X, XCircle } from 'lucide-react';
+import { X, XCircle, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface RejectionModalProps {
   course: { id: string; title: string; creator_name?: string };
   onClose: () => void;
   onReject: (courseId: string, reason: string) => void;
+  loading?: boolean;
 }
 
-export default function RejectionModal({ course, onClose, onReject }: RejectionModalProps) {
+export default function RejectionModal({ course, onClose, onReject, loading = false }: RejectionModalProps) {
   const [reason, setReason] = useState('');
 
   const handleSubmit = () => {
@@ -63,11 +64,12 @@ export default function RejectionModal({ course, onClose, onReject }: RejectionM
         </div>
 
         <div className="flex gap-3 p-6 border-t border-gray-200">
-          <button onClick={onClose} className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+          <button onClick={onClose} disabled={loading} className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50">
             Cancel
           </button>
-          <button onClick={handleSubmit} disabled={!reason.trim()} className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-            Reject Course
+          <button onClick={handleSubmit} disabled={!reason.trim() || loading} className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
+            {loading ? 'Rejecting...' : 'Reject Course'}
           </button>
         </div>
       </div>

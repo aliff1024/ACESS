@@ -8,8 +8,11 @@ import { toast } from 'sonner';
 
 export default function AdminCourseSettingsTab({ courseId, initialCourse, onUpdate }: { courseId: string, initialCourse: any, onUpdate: () => void }) {
   const [course, setCourse] = useState(initialCourse);
+  const [updating, setUpdating] = useState(false);
 
   const handleUpdateField = async (field: string, value: any) => {
+    if (updating) return;
+    setUpdating(true);
     try {
       await supabase.from('courses').update({ [field]: value }).eq('id', courseId);
       setCourse({ ...course, [field]: value });
@@ -17,6 +20,8 @@ export default function AdminCourseSettingsTab({ courseId, initialCourse, onUpda
       onUpdate();
     } catch {
       toast.error('Failed to update course');
+    } finally {
+      setUpdating(false);
     }
   };
 

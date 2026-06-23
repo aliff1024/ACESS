@@ -35,7 +35,7 @@ import {
   getNextSequenceOrder,
   fetchLessonById,
   fetchCourseAccessibilityCategories,
-  updateCourseAccessibilityCategories,
+  updateCourse,
   fetchLessonInteractiveContent,
   fetchVideoQuestions,
   fetchLessonH5PContent,
@@ -54,6 +54,7 @@ import CertificateSettingsPanel from './CertificateSettingsPanel';
 import { AccessibilitySettingsModal } from '../learner/AccessibilitySettingsModal';
 import { CurriculumManager } from '../courses/CurriculumManager';
 import AdminCourseSettingsTab from '../admin/AdminCourseSettingsTab';
+import AchievementBuilder from './AchievementBuilder';
 
 interface CourseWorkspaceProps {
   courseId: string;
@@ -184,15 +185,15 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   const [course, setCourse] = useState<CourseData | null>(null);
   const [lessons, setLessons] = useState<LessonWithQuiz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'settings' | 'admin'>('lessons');
+  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'admin'>('lessons');
 
   // Lesson editor modal
   const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
   const [lessonEditorLessonId, setLessonEditorLessonId] = useState<string | null>(null);
 
   // Course-level accessibility categories
-  const [accessibilityCategories, setAccessibilityCategories] = useState<string[]>([]);
-  const [savingAccessibilityCategories, setSavingAccessibilityCategories] = useState(false);
+  const [primaryDisabilityFocus, setPrimaryDisabilityFocus] = useState<string | null>(null);
+  const [savingPrimaryFocus, setSavingPrimaryFocus] = useState(false);
 
   // Lesson detail view
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
@@ -230,6 +231,13 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   const [confirmDeleteLessonId, setConfirmDeleteLessonId] = useState<string | null>(null);
   const [confirmDeleteQuizLessonId, setConfirmDeleteQuizLessonId] = useState<string | null>(null);
 
+  // Loading states
+  const [deletingLesson, setDeletingLesson] = useState(false);
+  const [deletingAsset, setDeletingAsset] = useState<string | null>(null);
+  const [duplicatingLesson, setDuplicatingLesson] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [deletingQuiz, setDeletingQuiz] = useState(false);
+
 
   // Quiz modal
   const [quizModalOpen, setQuizModalOpen] = useState(false);
@@ -249,17 +257,27 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
 
   const load = useCallback(async () => {
     try {
-      const [c, l, cats] = await Promise.all([
-        fetchCourseById(courseId),
-        fetchLessonsWithQuizzes(courseId),
-        fetchCourseAccessibilityCategories(courseId).catch(() => [] as string[]),
-      ]);
+      let c, l;
+      if (mode === 'admin') {
+        const res = await fetch(`/api/admin/courses?id=${courseId}`);
+        if (!res.ok) throw new Error('Failed to fetch admin course');
+        const data = await res.json();
+        c = data.course;
+        l = data.lessons;
+      } else {
+        const results = await Promise.all([
+          fetchCourseById(courseId),
+          fetchLessonsWithQuizzes(courseId)
+        ]);
+        c = results[0];
+        l = results[1];
+      }
       if (!c) throw new Error('Course not found');
       setCourse(c);
       setLessons(l);
       setOverviewTitle(c.title);
       setOverviewDesc(c.description);
-      setAccessibilityCategories(cats);
+      setPrimaryDisabilityFocus(c.primary_disability_focus || null);
     } catch (err) {
       console.error(err);
       toast.error('Failed to load course');
@@ -319,11 +337,15 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   };
 
   const handleDeleteLesson = async (lessonId: string) => {
+    if (deletingLesson) return;
+    setDeletingLesson(true);
     try {
       await deleteLesson(lessonId);
       toast.success('Lesson deleted');
+      setConfirmDeleteLessonId(null);
       load();
     } catch { toast.error('Failed to delete lesson') }
+    finally { setDeletingLesson(false) }
   };
 
   const handleAssetUpload = async (lessonId: string, file: File) => {
@@ -353,14 +375,19 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   };
 
   const handleDeleteAsset = async (assetId: string, lessonId: string) => {
+    if (deletingAsset) return;
+    setDeletingAsset(assetId);
     try {
       await deleteLessonAsset(assetId);
       loadAssets(lessonId);
       toast.success('Asset removed');
     } catch { toast.error('Failed to delete asset') }
+    finally { setDeletingAsset(null) }
   };
 
   const handleDuplicateLesson = async (lessonId: string) => {
+    if (duplicatingLesson) return;
+    setDuplicatingLesson(true);
     try {
       const lesson = await fetchLessonById(lessonId);
       const seq = await getNextSequenceOrder(courseId);
@@ -379,6 +406,8 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
       load();
     } catch {
       toast.error('Failed to duplicate lesson');
+    } finally {
+      setDuplicatingLesson(false);
     }
   };
 
@@ -442,10 +471,13 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   };
 
   const handleDeleteQuiz = async (lessonId: string) => {
+    if (deletingQuiz) return;
     const lesson = lessons.find((l) => l.id === lessonId);
     if (!lesson?.quiz_id) return;
-    try { await deleteQuiz(lesson.quiz_id); toast.success('Quiz deleted'); load() }
+    setDeletingQuiz(true);
+    try { await deleteQuiz(lesson.quiz_id); toast.success('Quiz deleted'); setConfirmDeleteQuizLessonId(null); load() }
     catch { toast.error('Failed to delete quiz') }
+    finally { setDeletingQuiz(false) }
   };
 
   // ─── Reordering ──────────────────────────────────────────────────────
@@ -466,13 +498,15 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   // ─── Publish ─────────────────────────────────────────────────────────
 
   const togglePublish = async () => {
-    if (!course) return;
-    const newStatus = course.status === 'published' ? 'draft' : 'published';
+    if (!course || publishing) return;
+    setPublishing(true);
+    const newStatus = course.status === 'published' ? 'draft' : 'pending_review';
     try {
       await updateCourseStatus(courseId, newStatus);
-      toast.success(newStatus === 'published' ? 'Course published!' : 'Course unpublished');
+      toast.success(newStatus === 'pending_review' ? 'Approval request sent to Admin!' : 'Course unpublished');
       load();
     } catch { toast.error('Failed to update status') }
+    finally { setPublishing(false) }
   };
 
   // ─── Overview Save ────────────────────────────────────────────────────
@@ -517,12 +551,13 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
     return <div className="p-8 text-center"><p className="text-xl mb-4">Course not found</p><Button onClick={onBack}>Back to Courses</Button></div>;
   }
 
-  const tabs: { id: 'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'settings' | 'admin'; label: string; icon: any }[] = [
+  const tabs: { id: 'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'admin'; label: string; icon: any }[] = [
     { id: 'overview', label: 'Overview', icon: BookOpen },
     { id: 'lessons', label: 'Lessons', icon: FileText },
     { id: 'assets', label: 'Assets', icon: FileType },
     { id: 'students', label: 'Students', icon: Users },
     { id: 'certificates', label: 'Certificates', icon: Award },
+    { id: 'achievements', label: 'Achievements', icon: Award },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -541,24 +576,26 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
             <ArrowLeft className="w-5 h-5" /> Back to Courses
           </button>
           <div className="flex items-center gap-3">
-            <Button onClick={() => router.push(`/educator/preview/course/${courseId}`)} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+            <Button onClick={() => router.push(`/educator/preview/course/${courseId}${mode === 'admin' ? `?returnTo=${encodeURIComponent(`/admin/courses/${courseId}`)}` : ''}`)} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
               <Eye className="w-4 h-4 mr-2" /> Preview as Learner
             </Button>
             {isPublished ? (
-              <Button onClick={togglePublish} className="bg-yellow-600 hover:bg-yellow-700 text-white">
-                <EyeOff className="w-4 h-4 mr-2" /> Unpublish
+              <Button onClick={togglePublish} disabled={publishing} className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                {publishing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <EyeOff className="w-4 h-4 mr-2" />}
+                Unpublish
               </Button>
             ) : (
-              <Button onClick={() => setShowPublishModal(true)} className="bg-green-600 hover:bg-green-700 text-white">
-                <Globe className="w-4 h-4 mr-2" /> Publish
+              <Button onClick={() => setShowPublishModal(true)} disabled={publishing} className="bg-green-600 hover:bg-green-700 text-white">
+                {publishing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Globe className="w-4 h-4 mr-2" />}
+                Publish
               </Button>
             )}
           </div>
         </div>
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">{course.title}</h1>
-          <Badge className={isPublished ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}>
-            {isPublished ? 'Published' : 'Draft'}
+          <Badge className={isPublished ? 'bg-green-100 text-green-700' : course.status === 'pending_review' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}>
+            {isPublished ? 'Published' : course.status === 'pending_review' ? 'Pending Approval' : 'Draft'}
           </Badge>
         </div>
       </div>
@@ -691,8 +728,9 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                         <h3 className="text-xl font-bold text-gray-900">{selectedLessonData.title}</h3>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <Button variant="outline" size="sm" onClick={() => handleDuplicateLesson(selectedLessonId)} className="h-9 px-3">
-                          <Copy className="w-4 h-4 mr-2" /> Duplicate
+                        <Button variant="outline" size="sm" onClick={() => handleDuplicateLesson(selectedLessonId)} disabled={duplicatingLesson} className="h-9 px-3">
+                          {duplicatingLesson ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Copy className="w-4 h-4 mr-2" />}
+                          Duplicate
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => openEditLesson(selectedLessonId)} className="h-9 px-3">
                           <Edit className="w-4 h-4 mr-2" /> Edit
@@ -752,6 +790,10 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                 onEditLesson={openEditLesson}
                 onDuplicateLesson={handleDuplicateLesson}
                 onDeleteLesson={setConfirmDeleteLessonId}
+                onEditQuiz={(lessonId, hasQuiz) => {
+                  if (hasQuiz) openEditQuiz(lessonId);
+                  else openNewQuiz(lessonId);
+                }}
               />
             )}
           </div>
@@ -776,43 +818,42 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
           />
         )}
 
+        {/* ─── Achievements Tab ────────────────────────────────────── */}
+        {activeTab === 'achievements' && (
+          <AchievementBuilder courseId={courseId} />
+        )}
+
         {/* ─── Settings Tab ─────────────────────────────────────────── */}
         {activeTab === 'settings' && (
           <div className="w-[96%] max-w-[1500px] mx-auto bg-white rounded-lg border border-gray-200 p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Course Settings</h2>
             <div className="space-y-6">
-              {/* ── Accessibility Categories ── */}
+              {/* ── Primary Accessibility Focus ── */}
               <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
                 <div className="flex items-center gap-2 mb-3">
                   <Accessibility className="w-5 h-5 text-purple-600" />
-                  <h3 className="font-semibold text-gray-900">Accessibility Categories</h3>
+                  <h3 className="font-semibold text-gray-900">Primary Accessibility Focus</h3>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
-                  Select the accessibility needs your course supports. Learners see these as badges on course cards.
+                  Select the primary accessibility focus for this course to tailor educator lesson guides.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {[
-                    { value: 'cognitive', label: 'Cognitive' },
                     { value: 'adhd', label: 'ADHD' },
+                    { value: 'autism', label: 'Autism' },
                     { value: 'dyslexia', label: 'Dyslexia' },
-                    { value: 'asd', label: 'ASD' },
-                    { value: 'visual', label: 'Visual' },
-                    { value: 'hearing', label: 'Hearing' },
-                    { value: 'motor', label: 'Motor' },
                   ].map((cat) => {
-                    const selected = accessibilityCategories.includes(cat.value);
+                    const selected = primaryDisabilityFocus === cat.value;
                     return (
                       <button
                         key={cat.value}
                         type="button"
                         onClick={() => {
-                          setAccessibilityCategories((prev) =>
-                            selected ? prev.filter((c) => c !== cat.value) : [...prev, cat.value],
-                          );
+                          setPrimaryDisabilityFocus(selected ? null : cat.value);
                         }}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                           selected
-                            ? 'bg-purple-600 text-white border-purple-600'
+                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
                             : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
                         }`}
                       >
@@ -823,32 +864,33 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                 </div>
                 <Button
                   size="sm"
-                  disabled={savingAccessibilityCategories}
+                  disabled={savingPrimaryFocus}
                   onClick={async () => {
-                    setSavingAccessibilityCategories(true);
+                    setSavingPrimaryFocus(true);
                     try {
-                      await updateCourseAccessibilityCategories(courseId, accessibilityCategories);
-                      toast.success('Accessibility categories updated');
+                      await updateCourse(courseId, { primary_disability_focus: primaryDisabilityFocus || undefined });
+                      toast.success('Primary focus updated');
                     } catch {
-                      toast.error('Failed to save accessibility categories');
+                      toast.error('Failed to save primary focus');
                     } finally {
-                      setSavingAccessibilityCategories(false);
+                      setSavingPrimaryFocus(false);
                     }
                   }}
                   className="bg-purple-600 hover:bg-purple-700 text-white"
                 >
-                  {savingAccessibilityCategories ? 'Saving...' : 'Save Categories'}
+                  {savingPrimaryFocus ? 'Saving...' : 'Save Focus'}
                 </Button>
               </div>
 
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-2">Course Status</h3>
                 <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${isPublished ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {isPublished ? 'Published' : 'Draft'}
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${isPublished ? 'bg-green-100 text-green-700' : course.status === 'pending_review' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {isPublished ? 'Published' : course.status === 'pending_review' ? 'Pending Approval' : 'Draft'}
                   </span>
-                  <Button onClick={togglePublish} variant="outline" size="sm">
-                    {isPublished ? 'Unpublish' : 'Publish'}
+                  <Button onClick={togglePublish} disabled={publishing} variant="outline" size="sm">
+                    {publishing && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {publishing ? (isPublished ? 'Unpublishing...' : course.status === 'pending_review' ? 'Cancelling...' : 'Publishing...') : (isPublished ? 'Unpublish' : course.status === 'pending_review' ? 'Cancel Request' : 'Publish')}
                   </Button>
                 </div>
               </div>
@@ -889,6 +931,15 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
         courseId={courseId}
         lessonId={lessonEditorLessonId}
         onSaved={load}
+        onManageQuiz={() => {
+          setLessonEditorOpen(false);
+          const lesson = lessons.find(l => l.id === lessonEditorLessonId);
+          if (lesson?.has_quiz) {
+            openEditQuiz(lessonEditorLessonId!);
+          } else {
+            openNewQuiz(lessonEditorLessonId!);
+          }
+        }}
       />
 
       {/* ─── Quiz Modal ───────────────────────────────────────────────── */}
@@ -1034,8 +1085,8 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
           if (course.certificate_enabled) {
             await supabase.from('courses').update({ certification_locked: true }).eq('id', courseId)
           }
-          await updateCourseStatus(courseId, 'published');
-          toast.success('Course published!');
+          await updateCourseStatus(courseId, 'pending_review');
+          toast.success('Approval request sent to Admin!');
           setShowPublishModal(false);
           load();
         }}
@@ -1061,9 +1112,11 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
         confirmText="Delete"
         confirmClassName="bg-red-600 hover:bg-red-700 text-white"
         icon={<Trash2 className="w-5 h-5 text-red-600" />}
-        onConfirm={() => { if (confirmDeleteLessonId) { handleDeleteLesson(confirmDeleteLessonId); setConfirmDeleteLessonId(null); } }}
+        loading={deletingLesson}
+        loadingText="Deleting..."
+        onConfirm={() => { if (confirmDeleteLessonId) { handleDeleteLesson(confirmDeleteLessonId); } }}
         open={!!confirmDeleteLessonId}
-        onOpenChange={(o) => { if (!o) setConfirmDeleteLessonId(null); }}
+        onOpenChange={(o) => { if (!o && !deletingLesson) setConfirmDeleteLessonId(null); }}
       />
 
       {/* Confirm Delete Quiz */}
@@ -1073,9 +1126,11 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
         confirmText="Delete"
         confirmClassName="bg-red-600 hover:bg-red-700 text-white"
         icon={<AlertTriangle className="w-5 h-5 text-red-600" />}
-        onConfirm={() => { if (confirmDeleteQuizLessonId) { handleDeleteQuiz(confirmDeleteQuizLessonId); setConfirmDeleteQuizLessonId(null); } }}
+        loading={deletingQuiz}
+        loadingText="Deleting..."
+        onConfirm={() => { if (confirmDeleteQuizLessonId) { handleDeleteQuiz(confirmDeleteQuizLessonId); } }}
         open={!!confirmDeleteQuizLessonId}
-        onOpenChange={(o) => { if (!o) setConfirmDeleteQuizLessonId(null); }}
+        onOpenChange={(o) => { if (!o && !deletingQuiz) setConfirmDeleteQuizLessonId(null); }}
       />
     </div>
   );

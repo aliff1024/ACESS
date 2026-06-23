@@ -12,21 +12,10 @@ interface Task {
   type: 'lesson' | 'quiz' | 'assignment';
 }
 
-export function TaskChecklist({ tasks: initialTasks }: { tasks?: Task[] }) {
+export function TaskChecklist({ tasks = [] }: { tasks?: Task[] }) {
   const { settings } = useAccessibility();
-  
-  // Dummy tasks if none provided, for demonstration
-  const [tasks, setTasks] = useState<Task[]>(initialTasks || [
-    { id: '1', title: 'Read Chapter 1', completed: true, type: 'lesson' },
-    { id: '2', title: 'Complete Knowledge Check', completed: false, type: 'quiz' },
-    { id: '3', title: 'Review Summary', completed: false, type: 'assignment' },
-  ]);
 
-  if (!settings.task_checklist_enabled) return null;
-
-  const toggleTask = (id: string) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-  };
+  if (!settings.task_checklist_enabled || tasks.length === 0) return null;
 
   const completedCount = tasks.filter(t => t.completed).length;
   const progress = Math.round((completedCount / tasks.length) * 100) || 0;
@@ -49,9 +38,8 @@ export function TaskChecklist({ tasks: initialTasks }: { tasks?: Task[] }) {
 
       <div className="space-y-2">
         {tasks.map(task => (
-          <button
+          <div
             key={task.id}
-            onClick={() => toggleTask(task.id)}
             className={`w-full flex items-start gap-3 p-2 rounded-lg text-left transition-colors ${
               task.completed ? 'bg-gray-50 opacity-75' : 'hover:bg-blue-50'
             }`}
@@ -64,7 +52,7 @@ export function TaskChecklist({ tasks: initialTasks }: { tasks?: Task[] }) {
             <span className={`text-sm ${task.completed ? 'text-gray-500 line-through' : 'text-gray-700 font-medium'}`}>
               {task.title}
             </span>
-          </button>
+          </div>
         ))}
       </div>
     </div>

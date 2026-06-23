@@ -42,6 +42,7 @@ export function ContactMessages() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [selectedMsg, setSelectedMsg] = useState<ContactMessage | null>(null)
+  const [readingId, setReadingId] = useState<string | null>(null)
 
   const refetch = useCallback(async () => {
     setLoadError(false)
@@ -64,11 +65,15 @@ export function ContactMessages() {
   useEffect(() => { refetch() }, [refetch])
 
   const handleMarkRead = async (id: string) => {
+    if (readingId) return
+    setReadingId(id)
     try {
       await updateContactMessageStatus(id, 'read')
       refetch()
     } catch {
       toast.error('Failed to update status')
+    } finally {
+      setReadingId(null)
     }
   }
 
@@ -156,7 +161,11 @@ export function ContactMessages() {
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(msg.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
-                <Badge variant="outline" className="text-xs shrink-0 ml-2">{msg.status}</Badge>
+                {readingId === msg.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-600 shrink-0 ml-2" />
+                ) : (
+                  <Badge variant="outline" className="text-xs shrink-0 ml-2">{msg.status}</Badge>
+                )}
               </div>
             </Card>
           ))}

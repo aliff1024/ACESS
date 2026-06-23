@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, CheckCircle, XCircle, Clock, AlertCircle, Eye, Loader2, Plus, BookOpen, Shield, Settings, Archive, Copy, Users, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Clock, AlertCircle, Eye, Loader2, Plus, BookOpen, Shield, Settings, Archive, Copy, Users, TrendingUp, AlertTriangle, MoreVertical } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { ConfirmAction } from '../ui/ConfirmAction';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -9,7 +10,7 @@ import ApprovalModal from './ApprovalModal';
 import RejectionModal from './RejectionModal';
 import { useRouter } from 'next/navigation';
 import { ADMIN_CREATE_SYSTEM_COURSE_PATH } from '@/lib/admin-routes';
-import { fetchSystemCourses, fetchSystemCourseStats, archiveSystemCourse, duplicateSystemCourse } from '@/lib/admin-api';
+import { fetchAllAdminCourses, archiveSystemCourse, duplicateSystemCourse } from '@/lib/admin-api';
 import type { SystemCourseItem, SystemCourseStats } from '@/lib/admin-api';
 
 type TabType = 'educator' | 'system';
@@ -38,40 +39,19 @@ export default function CourseManagement() {
   const [selectedCourse, setSelectedCourse] = useState<CourseItem | null>(null);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [duplicating, setDuplicating] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState<string | null>(null);
 
-  const loadCourses = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const { data: coursesData, error: coursesError } = await supabase
-        .from('courses')
-        .select('id, title, description, status, created_by, created_at, thumbnail_url, course_type')
-        .eq('course_type', 'educator')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (coursesError) throw coursesError;
-
-      const creatorIds = [...new Set((coursesData || []).map(c => c.created_by).filter(Boolean))];
-
-      const userMap = new Map<string, { name: string; email: string }>();
-      if (creatorIds.length > 0) {
-        const { data: usersData } = await supabase
-          .from('users')
-          .select('id, full_name, email')
-          .in('id', creatorIds);
-
-        for (const u of usersData || []) {
-          userMap.set(u.id, { name: u.full_name || 'Unknown', email: u.email || '' });
-        }
-      }
-
-      const enriched = (coursesData || []).map(c => ({
-        ...c,
-        creator_name: userMap.get(c.created_by)?.name || 'Unknown',
-        creator_email: userMap.get(c.created_by)?.email || '',
-      }));
-
-      setCourses(enriched);
+      const data = await fetchAllAdminCourses();
+      setCourses(data.educatorCourses || []);
+      setSystemCourses(data.systemCourses || []);
+      setSystemStats(data.systemStats || null);
     } catch (err) {
       console.error('Failed to load courses:', err);
       toast.error('Failed to load courses');
@@ -80,22 +60,8 @@ export default function CourseManagement() {
     }
   };
 
-  const loadSystemCourses = async () => {
-    try {
-      const [courses, stats] = await Promise.all([
-        fetchSystemCourses(),
-        fetchSystemCourseStats(),
-      ]);
-      setSystemCourses(courses);
-      setSystemStats(stats);
-    } catch {
-      toast.error('Failed to load system courses');
-    }
-  };
-
   useEffect(() => {
-    loadCourses();
-    loadSystemCourses();
+    loadData();
   }, []);
 
   const getFilteredCourses = () => {
@@ -117,72 +83,102 @@ export default function CourseManagement() {
   };
 
   const handleApprove = async (courseId: string) => {
+    if (approving) return;
+    setApproving(true);
     try {
-      const { error } = await supabase
-        .from('courses')
-        .update({ status: 'published', published_at: new Date().toISOString() })
-        .eq('id', courseId);
+      const res = await fetch(`/api/admin/courses/${courseId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'published' })
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to approve course');
+      }
 
-      if (error) throw error;
       toast.success('Course approved and published');
       setShowApprovalModal(false);
       setSelectedCourse(null);
-      loadCourses();
-    } catch (err) {
-      toast.error('Failed to approve course');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to approve course');
       console.error(err);
+    } finally {
+      setApproving(false);
     }
   };
 
-  const handleReject = async (courseId: string) => {
+  const handleReject = async (courseId: string, reason: string) => {
+    if (rejecting) return;
+    setRejecting(true);
     try {
-      const { error } = await supabase
-        .from('courses')
-        .update({ status: 'draft' })
-        .eq('id', courseId);
+      const res = await fetch(`/api/admin/courses/${courseId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'draft', reason })
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to reject course');
+      }
 
-      if (error) throw error;
       toast.success('Course rejected and returned to draft');
       setShowRejectionModal(false);
       setSelectedCourse(null);
-      loadCourses();
-    } catch (err) {
-      toast.error('Failed to reject course');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to reject course');
       console.error(err);
+    } finally {
+      setRejecting(false);
     }
   };
 
   const handleArchiveSystem = async (courseId: string) => {
+    if (archiving) return;
+    setArchiving(true);
     try {
       await archiveSystemCourse(courseId);
-      toast.success('Course archived');
-      loadSystemCourses();
+      toast.success('Course archived successfully');
+      await loadData();
     } catch {
       toast.error('Failed to archive');
+    } finally {
+      setArchiving(false);
     }
   };
 
   const handleDuplicateSystem = async (courseId: string) => {
+    if (duplicating) return;
+    setDuplicating(courseId);
     try {
       const newId = await duplicateSystemCourse(courseId);
-      toast.success('Course duplicated');
-      loadSystemCourses();
+      toast.success('Course duplicated successfully');
+      await loadData();
       router.push(`/admin/courses/${newId}`);
     } catch {
       toast.error('Failed to duplicate');
+    } finally {
+      setDuplicating(null);
     }
   };
 
   const handlePublishSystem = async (courseId: string) => {
+    if (publishing) return;
+    setPublishing(courseId);
     try {
       await supabase
         .from('courses')
         .update({ status: 'published', published_at: new Date().toISOString() })
         .eq('id', courseId);
-      toast.success('Course published');
-      loadSystemCourses();
+      toast.success('Course published successfully');
+      await loadData();
     } catch {
       toast.error('Failed to publish');
+    } finally {
+      setPublishing(null);
     }
   };
 
@@ -347,7 +343,7 @@ export default function CourseManagement() {
               <option value="all">All Status</option>
               <option value="published">Published</option>
               <option value="draft">Draft</option>
-              <option value="pending_review">Pending Review</option>
+              <option value="pending_review">Pending Approval</option>
               <option value="archived">Archived</option>
             </select>
           </div>
@@ -355,7 +351,7 @@ export default function CourseManagement() {
 
         {/* ── Educator Courses Table ── */}
         {activeTab === 'educator' && (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -385,8 +381,8 @@ export default function CourseManagement() {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900">{course.title}</p>
-                        <p className="text-sm text-gray-500 truncate max-w-xs">{course.description}</p>
+                        <p className="font-medium text-gray-900 truncate max-w-[200px] sm:max-w-xs">{course.title}</p>
+                        <p className="text-sm text-gray-500 truncate max-w-[200px] sm:max-w-xs">{course.description}</p>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-600 flex items-center gap-1">
@@ -403,34 +399,33 @@ export default function CourseManagement() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {formatDate(course.created_at)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); router.push(`/admin/courses/${course.id}`); }}
-                            className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </button>
-                          {course.status === 'pending_review' && (
-                            <>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setSelectedCourse(course); setShowApprovalModal(true); }}
-                                className="px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors flex items-center gap-1"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                Approve
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setSelectedCourse(course); setShowRejectionModal(true); }}
-                                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1"
-                              >
-                                <XCircle className="w-4 h-4" />
-                                Reject
-                              </button>
-                            </>
-                          )}
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                              <MoreVertical className="w-5 h-5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={() => router.push(`/admin/courses/${course.id}`)} className="cursor-pointer text-blue-600">
+                              <Eye className="w-4 h-4 mr-2" />
+                              View
+                            </DropdownMenuItem>
+                            {course.status === 'pending_review' && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => { setSelectedCourse(course); setShowApprovalModal(true); }} className="cursor-pointer text-green-600">
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Approve
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setSelectedCourse(course); setShowRejectionModal(true); }} className="cursor-pointer text-red-600">
+                                  <XCircle className="w-4 h-4 mr-2" />
+                                  Reject
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   );
@@ -442,7 +437,7 @@ export default function CourseManagement() {
 
         {/* ── System Courses Table ── */}
         {activeTab === 'system' && (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -474,7 +469,7 @@ export default function CourseManagement() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900">{course.title}</p>
+                          <p className="font-medium text-gray-900 truncate max-w-[150px] sm:max-w-[200px]">{course.title}</p>
                           <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">
                             System
                           </span>
@@ -484,7 +479,7 @@ export default function CourseManagement() {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 truncate max-w-xs mt-1">{course.description}</p>
+                        <p className="text-sm text-gray-500 truncate max-w-[200px] sm:max-w-xs mt-1">{course.description}</p>
                         {course.recommended_age_group && (
                           <p className="text-xs text-gray-400 mt-1">Age: {course.recommended_age_group}</p>
                         )}
@@ -514,58 +509,68 @@ export default function CourseManagement() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {formatDate(course.created_at)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); router.push(`/admin/courses/${course.id}`); }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="View"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          {course.status !== 'published' && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handlePublishSystem(course.id); }}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Publish"
-                            >
-                              <CheckCircle className="w-4 h-4" />
+                      <td className="px-6 py-4 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                              <MoreVertical className="w-5 h-5" />
                             </button>
-                          )}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDuplicateSystem(course.id); }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Duplicate"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </button>
-                          {course.status !== 'archived' && (
-                            <span onClick={(e) => e.stopPropagation()}>
-                              <ConfirmAction
-                                title="Archive System Course"
-                                description="Archive this system course? Learners will no longer see it."
-                                confirmText="Archive"
-                                confirmClassName="bg-red-600 hover:bg-red-700 text-white"
-                                icon={<AlertTriangle className="w-5 h-5 text-red-600" />}
-                                onConfirm={() => handleArchiveSystem(course.id)}
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => router.push(`/admin/courses/${course.id}`)} className="cursor-pointer text-blue-600">
+                              <Eye className="w-4 h-4 mr-2" />
+                              View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/admin/courses/${course.id}?tab=settings`)} className="cursor-pointer text-gray-700">
+                              <Settings className="w-4 h-4 mr-2" />
+                              Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {course.status !== 'published' && (
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (publishing !== course.id) handlePublishSystem(course.id);
+                                }} 
+                                disabled={publishing === course.id}
+                                className="cursor-pointer text-green-600"
                               >
-                                <button
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Archive"
+                                {publishing === course.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                                Publish
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (duplicating !== course.id) handleDuplicateSystem(course.id);
+                              }} 
+                              disabled={duplicating === course.id}
+                              className="cursor-pointer text-blue-600"
+                            >
+                              {duplicating === course.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Copy className="w-4 h-4 mr-2" />}
+                              Duplicate
+                            </DropdownMenuItem>
+                            {course.status !== 'archived' && (
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <ConfirmAction
+                                  title="Archive System Course"
+                                  description="Archive this system course? Learners will no longer see it."
+                                  confirmText="Archive"
+                                  confirmClassName="bg-red-600 hover:bg-red-700 text-white"
+                                  icon={<AlertTriangle className="w-5 h-5 text-red-600" />}
+                                  onConfirm={() => handleArchiveSystem(course.id)}
+                                  loading={archiving}
+                                  loadingText="Archiving..."
                                 >
-                                  <Archive className="w-4 h-4" />
-                                </button>
-                              </ConfirmAction>
-                            </span>
-                          )}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); router.push(`/admin/courses/${course.id}?tab=settings`); }}
-                            className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                            title="Settings"
-                          >
-                            <Settings className="w-4 h-4" />
-                          </button>
-                        </div>
+                                  <div className="flex items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-slate-100 text-red-600 rounded-sm w-full outline-none transition-colors">
+                                    <Archive className="w-4 h-4 mr-2" />
+                                    Archive
+                                  </div>
+                                </ConfirmAction>
+                              </div>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   );
@@ -624,16 +629,18 @@ export default function CourseManagement() {
       {showApprovalModal && selectedCourse && (
         <ApprovalModal
           course={selectedCourse}
-          onClose={() => { setShowApprovalModal(false); setSelectedCourse(null); }}
+          onClose={() => { if (!approving) { setShowApprovalModal(false); setSelectedCourse(null); } }}
           onApprove={handleApprove}
+          loading={approving}
         />
       )}
 
       {showRejectionModal && selectedCourse && (
         <RejectionModal
           course={selectedCourse}
-          onClose={() => { setShowRejectionModal(false); setSelectedCourse(null); }}
+          onClose={() => { if (!rejecting) { setShowRejectionModal(false); setSelectedCourse(null); } }}
           onReject={handleReject}
+          loading={rejecting}
         />
       )}
     </div>

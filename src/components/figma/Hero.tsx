@@ -34,10 +34,14 @@ export function Hero() {
     <section className="bg-blue-50 dark:bg-gray-900 py-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <div className="flex justify-center mb-10">
+            <img src="/light_logo.png" alt="ACESS Logo" className="h-24 md:h-32 dark:hidden object-contain drop-shadow-sm" />
+            <img src="/dark_logo.png" alt="ACESS Logo" className="h-24 md:h-32 hidden dark:block object-contain drop-shadow-sm" />
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
             Accessible Learning for Everyone
           </h1>
-          <p className="text-xl text-gray-700 mb-10 leading-relaxed">
+          <p className="text-xl text-gray-700 dark:text-gray-300 mb-10 leading-relaxed">
             Supporting learners with dyslexia, ADHD, and cognitive challenges through
             adaptive technology, personalized learning paths, and accessible design.
           </p>

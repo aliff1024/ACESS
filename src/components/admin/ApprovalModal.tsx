@@ -1,14 +1,15 @@
 'use client';
 
-import { X, CheckCircle } from 'lucide-react';
+import { X, CheckCircle, Loader2 } from 'lucide-react';
 
 interface ApprovalModalProps {
   course: { id: string; title: string; creator_name?: string };
   onClose: () => void;
   onApprove: (courseId: string) => void;
+  loading?: boolean;
 }
 
-export default function ApprovalModal({ course, onClose, onApprove }: ApprovalModalProps) {
+export default function ApprovalModal({ course, onClose, onApprove, loading = false }: ApprovalModalProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl max-w-md w-full shadow-2xl">
@@ -42,11 +43,12 @@ export default function ApprovalModal({ course, onClose, onApprove }: ApprovalMo
         </div>
 
         <div className="flex gap-3 p-6 border-t border-gray-200">
-          <button onClick={onClose} className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+          <button onClick={onClose} disabled={loading} className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50">
             Cancel
           </button>
-          <button onClick={() => onApprove(course.id)} className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
-            Approve Course
+          <button onClick={() => onApprove(course.id)} disabled={loading} className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
+            {loading ? 'Approving...' : 'Approve Course'}
           </button>
         </div>
       </div>

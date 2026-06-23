@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -35,11 +36,13 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [isFav, setIsFav] = useState(false);
+  const [togglingFav, setTogglingFav] = useState(false);
   const [unenrolling, setUnenrolling] = useState(false);
   const [certEligible, setCertEligible] = useState<{ eligible: boolean; reason?: string } | null>(null);
   const [claimingCert, setClaimingCert] = useState(false);
   const [certClaimed, setCertClaimed] = useState(false);
   const [accessibilityCategories, setAccessibilityCategories] = useState<string[]>([]);
+  const [courseAchievements, setCourseAchievements] = useState<any[]>([]);
   const { settings } = useAccessibility();
   const activePreset = settings?.active_preset || 'none';
 
@@ -75,6 +78,15 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
         try {
           const cats = await fetchCourseAccessibilityCategoriesForLearner(courseId);
           setAccessibilityCategories(cats);
+        } catch {}
+
+        // Fetch course achievements
+        try {
+          const { data: achData } = await supabase
+            .from('course_achievements')
+            .select('*')
+            .eq('course_id', courseId);
+          if (achData) setCourseAchievements(achData);
         } catch {}
       })
       .catch((err) => { console.error('CourseDetailPage load error:', err); })
@@ -149,12 +161,16 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
   };
 
   const handleToggleFav = async () => {
+    if (togglingFav) return;
+    setTogglingFav(true);
     try {
       const nowFav = await toggleFavorite(courseId);
       setIsFav(nowFav);
       toast.success(nowFav ? 'Added to favourites' : 'Removed from favourites');
     } catch {
       toast.error('Failed to update');
+    } finally {
+      setTogglingFav(false);
     }
   };
 
@@ -322,9 +338,10 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                   <div className="flex gap-2">
                     <button
                       onClick={handleToggleFav}
-                      className="p-3 rounded-full hover:bg-gray-100 transition-colors shrink-0"
+                      disabled={togglingFav}
+                      className="p-3 rounded-full hover:bg-gray-100 transition-colors shrink-0 disabled:opacity-50"
                     >
-                      <Heart className={`w-7 h-7 transition-colors ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-400'}`} />
+                      {togglingFav ? <Loader2 className="w-7 h-7 animate-spin text-gray-400" /> : <Heart className={`w-7 h-7 transition-colors ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-400'}`} />}
                     </button>
                   </div>
                 </div>
@@ -593,9 +610,10 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                 </div>
                 <button
                   onClick={handleToggleFav}
-                  className="p-3 rounded-full hover:bg-gray-100 transition-colors shrink-0"
+                  disabled={togglingFav}
+                  className="p-3 rounded-full hover:bg-gray-100 transition-colors shrink-0 disabled:opacity-50"
                 >
-                  <Heart className={`w-7 h-7 transition-colors ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-400'}`} />
+                  {togglingFav ? <Loader2 className="w-7 h-7 animate-spin text-gray-400" /> : <Heart className={`w-7 h-7 transition-colors ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-400'}`} />}
                 </button>
               </div>
             </div>
@@ -608,6 +626,32 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
               </Badge>
             ))}
           </div>
+
+          {courseAchievements.length > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-bold text-yellow-800 mb-4 flex items-center gap-2">
+                <Trophy className="w-5 h-5" /> Earnable Badges
+              </h3>
+              <div className="flex flex-wrap gap-4">
+                {courseAchievements.map(ach => (
+                  <div key={ach.id} className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm border border-yellow-100 min-w-[200px]">
+                    {ach.icon_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={ach.icon_url} alt={ach.name} className="w-10 h-10 object-contain" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                        <Award className="w-5 h-5" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-bold text-sm text-gray-900">{ach.name}</p>
+                      <p className="text-xs text-gray-500">{ach.requirement_type} {ach.requirement_threshold}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {course.enrollment_id ? (
             <div className="space-y-4">

@@ -7,7 +7,7 @@ import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
-import { Type, Target, Eye, ListChecks, Volume2, Globe, FileText } from 'lucide-react';
+import { Loader2, Type, Target, Eye, ListChecks, Volume2, Globe, FileText } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useTranslation } from '@/lib/useTranslation';
 import type { AccessibilitySettingsData } from '@/lib/learner-api';
@@ -25,7 +25,7 @@ export function AccessibilitySettingsModal({
   isOpen,
   onClose,
 }: AccessibilitySettingsModalProps) {
-  const { settings, updateSettings, applyPreset: applyPresetContext } = useAccessibility();
+  const { settings, updateSettings, previewSettings, revertSettings, applyPreset: applyPresetContext } = useAccessibility();
   const { t, setLocale } = useTranslation();
 
   const [activePreset, setActivePreset] = useState<string>(() => settings.active_preset || 'none');
@@ -41,6 +41,7 @@ export function AccessibilitySettingsModal({
   const [ttsVoiceUri, setTtsVoiceUri] = useState<string>(() => settings.tts_voice_uri || '');
   const [preferredLanguage, setPreferredLanguage] = useState<string>(() => settings.preferred_language || 'en');
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [saving, setSaving] = useState(false);
 
   // Focus
   const [readingSpotlight, setReadingSpotlight] = useState<boolean>(() => !!settings.reading_spotlight);
@@ -72,7 +73,6 @@ export function AccessibilitySettingsModal({
     return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
   }, [isOpen]);
 
-  // Update states if settings from context change
   useEffect(() => {
     if (!isOpen) return;
     setActivePreset(settings.active_preset || 'none');
@@ -101,7 +101,50 @@ export function AccessibilitySettingsModal({
     setStepByStepEnabled(!!settings.step_by_step_enabled);
     setAutoSaveEnabled(settings.auto_save_enabled ?? true);
     setProgressTimelineEnabled(!!settings.progress_timeline_enabled);
-  }, [settings, isOpen]);
+  }, [isOpen]); // Only sync when modal opens
+
+  // Push preview to context when local states change
+  useEffect(() => {
+    if (!isOpen) return;
+    previewSettings({
+      ...settings,
+      active_preset: activePreset,
+      font_family: fontFamily,
+      font_size_px: fontSizePx,
+      line_spacing_multiplier: lineSpacingMultiplier,
+      word_spacing_pct: wordSpacingPct,
+      background_tint: backgroundTint,
+      tts_enabled: ttsEnabled,
+      tts_rate: ttsRate,
+      tts_voice_uri: ttsVoiceUri || null,
+      preferred_language: preferredLanguage,
+      reading_spotlight: readingSpotlight,
+      distraction_free_mode: distractionFreeMode,
+      chunked_content_mode: chunkedContentMode,
+      reduced_motion: reducedMotion,
+      preferred_theme: preferredTheme,
+      animation_level: animationLevel,
+      muted_colors: mutedColors,
+      low_contrast: lowContrast,
+      captions_enabled: captionsEnabled,
+      screen_reader_optimized: screenReaderOptimized,
+      keyboard_navigation_enabled: keyboardNavigationEnabled,
+      task_checklist_enabled: taskChecklistEnabled,
+      visual_schedule_enabled: visualScheduleEnabled,
+      step_by_step_enabled: stepByStepEnabled,
+      auto_save_enabled: autoSaveEnabled,
+      progress_timeline_enabled: progressTimelineEnabled,
+      // Update legacy mappings
+      preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
+      dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
+      high_contrast: preferredTheme === 'high_contrast',
+    });
+  }, [
+    isOpen, activePreset, fontFamily, fontSizePx, lineSpacingMultiplier, wordSpacingPct, backgroundTint, ttsEnabled,
+    ttsRate, ttsVoiceUri, preferredLanguage, readingSpotlight, distractionFreeMode, chunkedContentMode, reducedMotion,
+    preferredTheme, animationLevel, mutedColors, lowContrast, captionsEnabled, screenReaderOptimized, keyboardNavigationEnabled,
+    taskChecklistEnabled, visualScheduleEnabled, stepByStepEnabled, autoSaveEnabled, progressTimelineEnabled, previewSettings
+  ]);
 
   const setCustom = () => {
     setActivePreset('custom');
@@ -138,54 +181,65 @@ export function AccessibilitySettingsModal({
   };
 
   const handleSave = async () => {
-    setLocale(preferredLanguage as 'en' | 'ms');
-    await updateSettings({
-      ...settings,
-      active_preset: activePreset,
-      font_family: fontFamily,
-      font_size_px: fontSizePx,
-      line_spacing_multiplier: lineSpacingMultiplier,
-      word_spacing_pct: wordSpacingPct,
-      background_tint: backgroundTint,
-      tts_enabled: ttsEnabled,
-      tts_rate: ttsRate,
-      tts_voice_uri: ttsVoiceUri || null,
-      preferred_language: preferredLanguage,
-      reading_spotlight: readingSpotlight,
-      distraction_free_mode: distractionFreeMode,
-      chunked_content_mode: chunkedContentMode,
-      reduced_motion: reducedMotion,
-      preferred_theme: preferredTheme,
-      animation_level: animationLevel,
-      muted_colors: mutedColors,
-      low_contrast: lowContrast,
-      captions_enabled: captionsEnabled,
-      screen_reader_optimized: screenReaderOptimized,
-      keyboard_navigation_enabled: keyboardNavigationEnabled,
-      task_checklist_enabled: taskChecklistEnabled,
-      visual_schedule_enabled: visualScheduleEnabled,
-      step_by_step_enabled: stepByStepEnabled,
-      auto_save_enabled: autoSaveEnabled,
-      progress_timeline_enabled: progressTimelineEnabled,
-      // Update legacy mappings
-      preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
-      dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
-      high_contrast: preferredTheme === 'high_contrast',
-    });
+    if (saving) return;
+    setSaving(true);
+    try {
+      setLocale(preferredLanguage as 'en' | 'ms');
+      await updateSettings({
+        ...settings,
+        active_preset: activePreset,
+        font_family: fontFamily,
+        font_size_px: fontSizePx,
+        line_spacing_multiplier: lineSpacingMultiplier,
+        word_spacing_pct: wordSpacingPct,
+        background_tint: backgroundTint,
+        tts_enabled: ttsEnabled,
+        tts_rate: ttsRate,
+        tts_voice_uri: ttsVoiceUri || null,
+        preferred_language: preferredLanguage,
+        reading_spotlight: readingSpotlight,
+        distraction_free_mode: distractionFreeMode,
+        chunked_content_mode: chunkedContentMode,
+        reduced_motion: reducedMotion,
+        preferred_theme: preferredTheme,
+        animation_level: animationLevel,
+        muted_colors: mutedColors,
+        low_contrast: lowContrast,
+        captions_enabled: captionsEnabled,
+        screen_reader_optimized: screenReaderOptimized,
+        keyboard_navigation_enabled: keyboardNavigationEnabled,
+        task_checklist_enabled: taskChecklistEnabled,
+        visual_schedule_enabled: visualScheduleEnabled,
+        step_by_step_enabled: stepByStepEnabled,
+        auto_save_enabled: autoSaveEnabled,
+        progress_timeline_enabled: progressTimelineEnabled,
+        // Update legacy mappings
+        preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
+        dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
+        high_contrast: preferredTheme === 'high_contrast',
+      });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    revertSettings();
     onClose();
   };
 
   return (
-    <Dialog key={isOpen ? 'open' : 'closed'} open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
+    <Dialog key={isOpen ? 'open' : 'closed'} open={isOpen} onOpenChange={(open) => { if (!open) handleCancel() }}>
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden h-[85vh] max-h-[800px] flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
           <DialogTitle className="text-2xl">{t('accessibility.title')}</DialogTitle>
           <DialogDescription className="text-gray-600">
             {t('accessibility.description')}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
           <Label className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 block">Quick Apply Preset</Label>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -210,8 +264,8 @@ export function AccessibilitySettingsModal({
           </div>
         </div>
 
-        <Tabs defaultValue="reading" className="flex flex-col">
-          <div className="px-6 pt-2 border-b border-gray-100">
+        <Tabs defaultValue="reading" className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <div className="px-6 pt-2 border-b border-gray-100 shrink-0">
             <TabsList className="bg-transparent space-x-2">
               <TabsTrigger value="reading" className="data-[state=active]:bg-gray-100 data-[state=active]:shadow-none rounded-md px-3 py-1.5 flex items-center gap-2">
                 <Type className="w-4 h-4" /> Reading
@@ -228,7 +282,7 @@ export function AccessibilitySettingsModal({
             </TabsList>
           </div>
 
-          <div className="overflow-y-auto max-h-[50vh] px-6 py-5">
+          <div className="overflow-y-auto flex-1 px-6 py-5 min-h-0">
             {/* Reading Tab */}
             <TabsContent value="reading" className="space-y-4 m-0">
               <div className="border border-gray-200 rounded-xl p-4">
@@ -514,12 +568,13 @@ export function AccessibilitySettingsModal({
           </div>
         </Tabs>
 
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
-          <Button variant="outline" onClick={onClose}>
-            {t('common.cancel')}
+        <div className="flex gap-3 px-6 py-4 border-t border-gray-100 shrink-0 bg-white">
+          <Button variant="outline" className="flex-1" onClick={handleCancel}>
+            Cancel
           </Button>
-          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white">
-            {t('accessibility.save')}
+          <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {saving ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
       </DialogContent>

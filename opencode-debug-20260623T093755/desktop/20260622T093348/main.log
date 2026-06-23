@@ -1,0 +1,25 @@
+[2026-06-22 17:33:48.140] [info]          app starting { version: '1.17.9', packaged: true, onboardingTest: false }
+[2026-06-22 17:33:48.400] [info]          tauri migration: already done, skipping
+[2026-06-22 17:33:48.440] [info]          auto updater configured {
+  channel: 'latest',
+  allowPrerelease: false,
+  allowDowngrade: true,
+  currentVersion: '1.17.9'
+}
+[2026-06-22 17:33:48.452] [info]          updater state changed { from: 'idle', to: 'checking' }
+[2026-06-22 17:33:48.453] [info]          Checking for update
+[2026-06-22 17:33:48.493] [info]            sidecar connection started { url: 'http://127.0.0.1:52867' }
+[2026-06-22 17:33:48.494] [info]            spawning sidecar { url: 'http://127.0.0.1:52867' }
+[2026-06-22 17:33:49.334] [info]            Update for version 1.17.9 is not available (latest version: 1.17.9, downgrade is allowed).
+[2026-06-22 17:33:49.339] [info]            updater state changed { from: 'checking', to: 'up-to-date' }
+[2026-06-22 17:33:50.016] [info]            loading task finished
+[2026-06-22 17:33:50.934] [info]            awaiting server ready
+[2026-06-22 17:33:50.935] [info]            server ready { url: 'http://127.0.0.1:52867' }
+[2026-06-22 17:43:48.510] [info]            updater state changed { from: 'up-to-date', to: 'checking' }
+[2026-06-22 17:43:48.596] [info]            Checking for update
+[2026-06-22 17:43:50.488] [info]            Update for version 1.17.9 is not available (latest version: 1.17.9, downgrade is allowed).
+[2026-06-22 17:43:50.528] [info]            updater state changed { from: 'checking', to: 'up-to-date' }
+[2026-06-22 17:53:48.492] [info]            updater state changed { from: 'up-to-date', to: 'checking' }
+[2026-06-22 17:53:48.541] [info]            Checking for update
+[2026-06-22 17:53:50.259] [info]            Update for version 1.17.9 is not available (latest version: 1.17.9, downgrade is allowed).
+[2026-06-22 17:53:50.281] [info]            updater state changed { from: 'checking', to: 'up-to-date' }

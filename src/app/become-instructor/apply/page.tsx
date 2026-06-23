@@ -112,7 +112,7 @@ export default function BecomeInstructorApplyPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Navbar onTryDemo={() => router.push('/login')} />
+      <Navbar />
       {renderContent()}
       <Footer />
     </div>

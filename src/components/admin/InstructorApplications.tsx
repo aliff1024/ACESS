@@ -276,14 +276,6 @@ export function InstructorApplications() {
                   >
                     <XCircle className="w-4 h-4 mr-2" /> Reject
                   </Button>
-                  <Button
-                    onClick={() => handleAction(selectedApp.id, 'request_info')}
-                    variant="outline"
-                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                    disabled={actionLoading}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" /> Request Info
-                  </Button>
                 </div>
               )}
             </div>

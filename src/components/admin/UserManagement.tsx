@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MoreVertical, UserCog, Power, Trash2, Loader2, AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, MoreVertical, UserCog, Power, Trash2, Loader2, AlertTriangle, Eye } from 'lucide-react';
 import { ConfirmAction } from '../ui/ConfirmAction';
 import { Button } from '../ui/button';
 import { supabase } from '@/lib/supabase';
@@ -17,6 +18,7 @@ interface AdminUser {
 }
 
 export default function UserManagement() {
+  const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,6 +32,10 @@ export default function UserManagement() {
   const [dropdownUserId, setDropdownUserId] = useState<string | null>(null);
   const [confirmToggleUserId, setConfirmToggleUserId] = useState<string | null>(null);
   const [confirmDeleteUserId, setConfirmDeleteUserId] = useState<string | null>(null);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [roleChangeLoading, setRoleChangeLoading] = useState(false);
 
   const toggleSort = (field: 'name' | 'email' | 'role' | 'joined') => {
     if (sortField === field) {
@@ -56,7 +62,8 @@ export default function UserManagement() {
   };
 
   const handleBulkAction = async (action: 'activate' | 'deactivate' | 'delete') => {
-    if (selectedUsers.size === 0) return;
+    if (selectedUsers.size === 0 || bulkActionLoading) return;
+    setBulkActionLoading(true);
     try {
       if (action === 'activate') {
         await supabase.from('users').update({ role: 'learner', is_active: true }).in('id', Array.from(selectedUsers));
@@ -70,6 +77,8 @@ export default function UserManagement() {
       loadUsers();
     } catch (err) {
       toast.error(`Failed to perform bulk ${action}`);
+    } finally {
+      setBulkActionLoading(false);
     }
   };
 
@@ -141,6 +150,8 @@ export default function UserManagement() {
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
+    if (roleChangeLoading) return;
+    setRoleChangeLoading(true);
     try {
       const { error } = await supabase
         .from('users')
@@ -156,10 +167,14 @@ export default function UserManagement() {
     } catch (err) {
       toast.error('Failed to update role');
       console.error(err);
+    } finally {
+      setRoleChangeLoading(false);
     }
   };
 
   const handleToggleStatus = async (userId: string) => {
+    if (toggleLoading) return;
+    setToggleLoading(true);
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
@@ -173,21 +188,29 @@ export default function UserManagement() {
         await supabase.from('users').update({ role: 'learner', is_active: true }).eq('id', userId);
       }
       toast.success(`User ${action}d successfully`);
+      setConfirmToggleUserId(null);
       loadUsers();
     } catch (err) {
       toast.error(`Failed to ${action} user`);
       console.error(err);
+    } finally {
+      setToggleLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
+    if (deleteLoading) return;
+    setDeleteLoading(true);
     try {
       await supabase.from('users').update({ deleted_at: new Date().toISOString(), is_active: false }).eq('id', userId);
       toast.success('User deleted');
+      setConfirmDeleteUserId(null);
       loadUsers();
     } catch (err) {
       toast.error('Failed to delete user');
       console.error(err);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -287,14 +310,17 @@ export default function UserManagement() {
           <div className="bg-blue-50 rounded-xl border border-blue-200 p-4 mb-6 flex items-center justify-between">
             <span className="text-blue-700 font-medium">{selectedUsers.size} users selected</span>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleBulkAction('activate')}>
-                Activate Selected
+              <Button size="sm" variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleBulkAction('activate')} disabled={bulkActionLoading}>
+                {bulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {bulkActionLoading ? 'Processing...' : 'Activate Selected'}
               </Button>
-              <Button size="sm" variant="outline" className="text-amber-700 border-amber-300 hover:bg-amber-50" onClick={() => handleBulkAction('deactivate')}>
-                Deactivate Selected
+              <Button size="sm" variant="outline" className="text-amber-700 border-amber-300 hover:bg-amber-50" onClick={() => handleBulkAction('deactivate')} disabled={bulkActionLoading}>
+                {bulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {bulkActionLoading ? 'Processing...' : 'Deactivate Selected'}
               </Button>
-              <Button size="sm" variant="outline" className="text-red-700 border-red-300 hover:bg-red-50" onClick={() => handleBulkAction('delete')}>
-                Delete Selected
+              <Button size="sm" variant="outline" className="text-red-700 border-red-300 hover:bg-red-50" onClick={() => handleBulkAction('delete')} disabled={bulkActionLoading}>
+                {bulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {bulkActionLoading ? 'Processing...' : 'Delete Selected'}
               </Button>
             </div>
           </div>
@@ -331,8 +357,12 @@ export default function UserManagement() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className={`hover:bg-gray-50 ${selectedUsers.has(user.id) ? 'bg-blue-50/50' : ''}`}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <tr 
+                    key={user.id} 
+                    className={`hover:bg-gray-50 cursor-pointer ${selectedUsers.has(user.id) ? 'bg-blue-50/50' : ''}`}
+                    onClick={() => router.push(`/admin/users/${user.id}`)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedUsers.has(user.id)}
@@ -371,14 +401,21 @@ export default function UserManagement() {
                       {dropdownUserId === user.id && (
                         <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
                           <button
-                            onClick={() => { setDropdownUserId(null); setShowRoleModal(true); }}
+                            onClick={(e) => { e.stopPropagation(); setDropdownUserId(null); router.push(`/admin/users/${user.id}`); }}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View Profile
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDropdownUserId(null); setShowRoleModal(true); }}
                             className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                           >
                             <UserCog className="w-4 h-4" />
                             Edit Role
                           </button>
                           <button
-                            onClick={() => { setDropdownUserId(null); setConfirmToggleUserId(user.id); }}
+                            onClick={(e) => { e.stopPropagation(); setDropdownUserId(null); setConfirmToggleUserId(user.id); }}
                             className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                           >
                             <Power className="w-4 h-4" />
@@ -386,7 +423,7 @@ export default function UserManagement() {
                           </button>
                           <hr className="my-2" />
                           <button
-                            onClick={() => { setDropdownUserId(null); setConfirmDeleteUserId(user.id); }}
+                            onClick={(e) => { e.stopPropagation(); setDropdownUserId(null); setConfirmDeleteUserId(user.id); }}
                             className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -416,8 +453,9 @@ export default function UserManagement() {
       {showRoleModal && dropdownUserId && (
         <RoleEditModal
           user={users.find(u => u.id === dropdownUserId)!}
-          onClose={() => { setShowRoleModal(false); setDropdownUserId(null); }}
+          onClose={() => { if (!roleChangeLoading) { setShowRoleModal(false); setDropdownUserId(null); } }}
           onSave={handleRoleChange}
+          loading={roleChangeLoading}
         />
       )}
 
@@ -433,9 +471,11 @@ export default function UserManagement() {
             confirmText={activating ? 'Activate' : 'Deactivate'}
             confirmClassName={activating ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}
             icon={<AlertTriangle className="w-5 h-5 text-amber-600" />}
-            onConfirm={() => { handleToggleStatus(confirmToggleUserId); setConfirmToggleUserId(null); }}
+            onConfirm={() => handleToggleStatus(confirmToggleUserId)}
             open={true}
-            onOpenChange={(o) => { if (!o) setConfirmToggleUserId(null); }}
+            onOpenChange={(o) => { if (!o && !toggleLoading) setConfirmToggleUserId(null); }}
+            loading={toggleLoading}
+            loadingText={activating ? 'Activating...' : 'Deactivating...'}
           />
         );
       })()}
@@ -451,9 +491,11 @@ export default function UserManagement() {
             confirmText="Delete"
             confirmClassName="bg-red-600 hover:bg-red-700 text-white"
             icon={<Trash2 className="w-5 h-5 text-red-600" />}
-            onConfirm={() => { handleDeleteUser(confirmDeleteUserId); setConfirmDeleteUserId(null); }}
+            onConfirm={() => handleDeleteUser(confirmDeleteUserId)}
             open={true}
-            onOpenChange={(o) => { if (!o) setConfirmDeleteUserId(null); }}
+            onOpenChange={(o) => { if (!o && !deleteLoading) setConfirmDeleteUserId(null); }}
+            loading={deleteLoading}
+            loadingText="Deleting..."
           />
         );
       })()}

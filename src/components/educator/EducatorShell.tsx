@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useAuth, useRole } from '@/providers/AuthProvider';
 import { EducatorSidebar } from './EducatorSidebar';
 import { EducatorTopBar } from './EducatorTopBar';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 
 const viewMeta: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: 'Dashboard', subtitle: 'Overview of your teaching activity' },
@@ -33,12 +34,18 @@ export function EducatorShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isLoading, isAuthenticated } = useAuth();
   const role = useRole();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) { router.replace('/login'); return; }
     if (role !== 'educator' && role !== 'admin') { router.replace('/access-denied'); }
   }, [isLoading, isAuthenticated, role, router]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   if (isLoading) {
     return (
@@ -71,9 +78,24 @@ export function EducatorShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Toaster position="top-right" richColors />
-      <EducatorSidebar activeView={view} onNavigate={handleNavigate} />
-      <div className="flex-1 flex flex-col">
-        <EducatorTopBar title={meta.title} subtitle={meta.subtitle} />
+      
+      {/* Desktop Sidebar */}
+      <EducatorSidebar activeView={view} onNavigate={handleNavigate} className="hidden md:flex" />
+
+      {/* Mobile Sidebar via Sheet */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="left" className="p-0 w-[280px] sm:w-[320px]">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+          <EducatorSidebar activeView={view} onNavigate={handleNavigate} className="w-full h-full border-r-0 shadow-none" />
+        </SheetContent>
+      </Sheet>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <EducatorTopBar 
+          title={meta.title} 
+          subtitle={meta.subtitle} 
+          onMenuClick={() => setIsMobileMenuOpen(true)}
+        />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, CheckCircle, Save, Send, Target, Lightbulb, AlertCircle, Loader2, FileText, Video, Type, Layers, Maximize2, Minimize2, Eye, EyeOff, ListChecks, ChevronRight } from 'lucide-react'
+import { BookOpen, CheckCircle, Save, Send, Target, Lightbulb, AlertCircle, Loader2, FileText, Video, Type, Layers, Maximize2, Minimize2, Eye, EyeOff, ListChecks, ChevronRight, Sparkles } from 'lucide-react'
 import { fetchLessonSummary, saveLessonSummary, submitLessonSummary, completeLesson } from '@/lib/learner-api'
 
 interface StudentSummaryProps {
@@ -28,6 +28,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
   const [showHints, setShowHints] = useState(true)
   const [aiFeedback, setAiFeedback] = useState<string | null>(null)
   const [checking, setChecking] = useState(false)
+  const [completing, setCompleting] = useState(false)
 
   useEffect(() => {
     fetchLessonSummary(lessonId, courseId).then((data) => {
@@ -43,6 +44,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0
   const meetsTarget = wordCount >= wordTarget
+  const progressPercent = Math.min((wordCount / wordTarget) * 100, 100)
 
   const handleSaveDraft = async () => {
     setSaving(true)
@@ -80,7 +82,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
       feedback += `\n📋 Missing key points to consider:\n${missing.map(m => `  • ${m}`).join('\n')}\n`
     }
     if (wordCount < wordTarget) {
-      feedback += `\n📝 Try to reach ${wordTarget} words (currently ${wordCount})`
+      feedback += `\n📏 Try to reach ${wordTarget} words (currently ${wordCount})`
     } else if (wordCount >= wordTarget) {
       feedback += `\n✅ Word count target met (${wordCount}/${wordTarget})`
     }
@@ -108,18 +110,23 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
 
   if (status === 'loading') {
     return (
-      <Card className="p-6 rounded-xl border-2 border-blue-200">
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-        </div>
+      <Card className="p-10 rounded-2xl border border-indigo-100 bg-white/50 backdrop-blur-sm shadow-sm flex flex-col items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-4" />
+        <p className="text-sm font-medium text-indigo-600 animate-pulse">Loading summary activity...</p>
       </Card>
     )
   }
 
   const handleMarkComplete = async () => {
-    await completeLesson(lessonId, courseId)
-    setCompleted(true)
-    onComplete?.()
+    if (completing) return
+    setCompleting(true)
+    try {
+      await completeLesson(lessonId, courseId)
+      setCompleted(true)
+      onComplete?.()
+    } finally {
+      setCompleting(false)
+    }
   }
 
   const handleSubmitAndComplete = async () => {
@@ -135,27 +142,31 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
 
   if (status === 'submitted') {
     return (
-      <Card className="p-6 rounded-xl border-2 border-green-200 bg-green-50">
-        <div className="flex items-start gap-4">
-          <CheckCircle className="w-6 h-6 text-green-600 mt-0.5 shrink-0" />
+      <Card className="p-8 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50/50 shadow-sm overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200/30 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+        <div className="flex items-start gap-5 relative z-10">
+          <div className="bg-emerald-100 p-3 rounded-full shrink-0">
+            <CheckCircle className="w-8 h-8 text-emerald-600" />
+          </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-green-800 mb-1">Summary Submitted</h3>
-            <p className="text-sm text-green-700 mb-3">Your summary has been submitted for review.</p>
+            <h3 className="text-xl font-bold text-emerald-900 mb-1">Summary Submitted</h3>
+            <p className="text-sm text-emerald-700/80 mb-4">Brilliant work! Your summary has been saved and submitted for review.</p>
             {content && (
-              <div className="bg-white rounded-lg p-4 border border-green-200">
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{content}</p>
-                <p className="text-xs text-gray-400 mt-2">{wordCount} words</p>
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-emerald-100 shadow-sm mb-4">
+                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{content}</p>
+                <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+                  <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">{wordCount} words</Badge>
+                </div>
               </div>
             )}
             {!completed && (
-              <Button onClick={handleMarkComplete} className="mt-3 bg-green-600 hover:bg-green-700 text-white">
-                <CheckCircle className="w-4 h-4 mr-2" /> Mark Complete
+              <Button onClick={handleMarkComplete} disabled={completing} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all">
+                {completing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />} Mark Lesson Complete
               </Button>
             )}
             {completed && (
-              <div className="flex items-center gap-2 mt-3 text-green-700">
-                <CheckCircle className="w-5 h-5" />
-                <span className="font-semibold">Lesson Completed</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-lg text-emerald-800 font-semibold border border-emerald-200 shadow-sm">
+                <CheckCircle className="w-5 h-5" /> Lesson Completed
               </div>
             )}
           </div>
@@ -167,140 +178,154 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
   const SourceIcon = sourceIcons[source] || BookOpen
 
   return (
-    <Card className={`p-6 rounded-xl border-2 border-blue-200 transition-all ${focusMode ? 'fixed inset-4 z-50 overflow-y-auto bg-white shadow-2xl' : ''}`}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-start gap-3">
-          <BookOpen className="w-6 h-6 text-blue-600 mt-0.5 shrink-0" />
-          <div>
-            <h3 className="font-semibold text-gray-900">Student Summary</h3>
-            <p className="text-sm text-gray-600">
-              Write a summary based on {sourceLabels[source] || 'the lesson content'}.
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline" className="text-[10px] text-blue-700 border-blue-200 flex items-center gap-1">
-                <SourceIcon className="w-3 h-3" /> {source.charAt(0).toUpperCase() + source.slice(1).replace('_', ' ')}
-              </Badge>
-              <Badge variant="outline" className="text-[10px] text-purple-700 border-purple-200">
-                Target: {wordTarget} words
-              </Badge>
+    <Card className={`overflow-hidden rounded-2xl border transition-all duration-500 ${focusMode ? 'fixed inset-4 z-50 overflow-y-auto bg-slate-50 shadow-2xl border-indigo-200' : 'bg-gradient-to-br from-indigo-50/50 via-white to-blue-50/30 border-indigo-100 shadow-sm'}`}>
+      {/* Premium Header */}
+      <div className={`px-6 pt-6 pb-4 border-b border-indigo-50/60 bg-white/40 backdrop-blur-md ${focusMode ? 'sticky top-0 z-10 shadow-sm' : ''}`}>
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4">
+            <div className="bg-indigo-100/80 p-2.5 rounded-xl shrink-0 shadow-inner">
+              <BookOpen className="w-6 h-6 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-900 to-blue-800">Student Summary</h3>
+              <p className="text-sm text-slate-600 mt-0.5">
+                Write a summary based on <span className="font-semibold text-slate-700">{sourceLabels[source] || 'the lesson content'}</span>.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <Badge variant="outline" className="text-[11px] text-indigo-700 border-indigo-200 bg-indigo-50/50 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full">
+                  <SourceIcon className="w-3.5 h-3.5" /> {source.charAt(0).toUpperCase() + source.slice(1).replace('_', ' ')}
+                </Badge>
+                <Badge variant="outline" className="text-[11px] text-purple-700 border-purple-200 bg-purple-50/50 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full">
+                  <Target className="w-3.5 h-3.5" /> Target: {wordTarget} words
+                </Badge>
+              </div>
             </div>
           </div>
+          <button
+            onClick={() => setFocusMode(!focusMode)}
+            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors bg-white/50 border border-slate-100 shadow-sm"
+            title={focusMode ? 'Exit focus mode' : 'Focus mode'}
+          >
+            {focusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
         </div>
-        <button
-          onClick={() => setFocusMode(!focusMode)}
-          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title={focusMode ? 'Exit focus mode' : 'Focus mode'}
-        >
-          {focusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-        </button>
       </div>
 
-      {showHints && keyPoints.length > 0 && (
-        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-semibold text-amber-800">Key Points to Cover:</span>
+      <div className={`p-6 ${focusMode ? 'max-w-4xl mx-auto' : ''}`}>
+        {/* Dynamic Hints Section */}
+        {keyPoints.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Lightbulb className="w-3.5 h-3.5" /> Key Concepts
+              </h4>
+              <button 
+                onClick={() => setShowHints(!showHints)} 
+                className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+              >
+                {showHints ? <><EyeOff className="w-3.5 h-3.5" /> Hide</> : <><Eye className="w-3.5 h-3.5" /> Show</>}
+              </button>
             </div>
-            <button onClick={() => setShowHints(false)} className="text-amber-400 hover:text-amber-600">
-              <EyeOff className="w-3.5 h-3.5" />
-            </button>
+            
+            <div className={`transition-all duration-300 origin-top overflow-hidden ${showHints ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {keyPoints.map((point, i) => (
+                  <div key={i} className="text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200/60 rounded-lg px-3 py-1.5 shadow-sm">
+                    {point}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {keyPoints.map((point, i) => (
-              <Badge key={i} variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-200">
-                {point}
-              </Badge>
-            ))}
+        )}
+
+        {reflectionQuestions.length > 0 && (
+          <div className="mb-6 bg-blue-50/50 border border-blue-100 rounded-xl p-4 shadow-sm">
+            <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-blue-600" /> Reflection Questions:
+            </h4>
+            <ul className="space-y-1.5">
+              {reflectionQuestions.map((q, i) => (
+                <li key={i} className="text-sm text-blue-800/80 flex items-start gap-2">
+                  <span className="text-blue-400 mt-0.5">•</span> {q}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Text Area and Progress */}
+        <div className="relative group">
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Write your summary here. Focus on the key concepts and demonstrate your understanding..."
+            rows={focusMode ? 16 : 8}
+            className={`text-base bg-white/70 backdrop-blur-md border-indigo-100 shadow-inner focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl resize-y ${focusMode ? 'min-h-[400px] text-lg leading-relaxed' : ''}`}
+            style={focusMode ? { fontSize: '1.125rem', lineHeight: '1.8' } : undefined}
+          />
+          
+          {/* Progress Bar Container */}
+          <div className="mt-4 flex items-center gap-4 bg-white/60 p-3 rounded-xl border border-slate-100 shadow-sm">
+            <div className="flex-1">
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-500 rounded-full ${meetsTarget ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={`text-sm font-bold ${meetsTarget ? 'text-emerald-600' : 'text-slate-600'}`}>
+                {wordCount} <span className="text-slate-400 font-medium">/ {wordTarget} words</span>
+              </span>
+              {meetsTarget && <CheckCircle className="w-5 h-5 text-emerald-500 animate-in zoom-in" />}
+            </div>
           </div>
         </div>
-      )}
 
-      {!showHints && keyPoints.length > 0 && (
-        <button onClick={() => setShowHints(true)} className="mb-4 text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1">
-          <Eye className="w-3 h-3" /> Show key points
-        </button>
-      )}
-
-      {reflectionQuestions.length > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-          <div className="flex items-center gap-2 mb-2">
-            <Lightbulb className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-semibold text-blue-800">Reflection Questions:</span>
-          </div>
-          <ul className="space-y-1">
-            {reflectionQuestions.map((q, i) => (
-              <li key={i} className="text-sm text-blue-900">• {q}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="relative">
-        <Textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Write your summary here. Focus on the key concepts and demonstrate your understanding..."
-          rows={focusMode ? 16 : 10}
-          className={`text-base mb-3 transition-all ${focusMode ? 'min-h-[400px] text-lg leading-relaxed' : ''}`}
-          style={focusMode ? { fontSize: '1.125rem', lineHeight: '1.8' } : undefined}
-        />
-        <div className="absolute bottom-6 right-3">
-          {content.trim() && (
-            <span className="text-xs text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-200">
-              {content.trim().split(/\s+/).length} words
-            </span>
+        {/* AI Feedback Section */}
+        <div className="mt-6 flex flex-col items-start">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCheckSummary}
+            disabled={!content.trim() || checking}
+            className="group text-indigo-700 border-indigo-200 bg-indigo-50/30 hover:bg-indigo-100 hover:border-indigo-300 transition-all rounded-xl px-4 py-2"
+          >
+            {checking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2 text-indigo-500 group-hover:animate-pulse" />}
+            <span className="font-semibold">Get AI Feedback</span>
+          </Button>
+          
+          {aiFeedback && (
+            <div className="mt-3 w-full p-4 bg-white border border-indigo-100 rounded-xl shadow-sm text-sm whitespace-pre-wrap text-slate-700 animate-in slide-in-from-top-2">
+              {aiFeedback}
+            </div>
           )}
         </div>
-      </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Target className={`w-4 h-4 ${meetsTarget ? 'text-green-500' : 'text-gray-400'}`} />
-          <span className={`text-sm ${meetsTarget ? 'text-green-700' : 'text-gray-500'}`}>
-            {wordCount} / {wordTarget} words
-          </span>
-          {meetsTarget && <CheckCircle className="w-4 h-4 text-green-500" />}
+        {/* Action Buttons */}
+        <div className="flex gap-3 mt-8 pt-6 border-t border-slate-100">
+          <Button 
+            variant="outline" 
+            onClick={handleSaveDraft} 
+            disabled={!content.trim() || saving} 
+            className="flex-1 rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold"
+          >
+            {saving && !meetsTarget ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            Save Draft
+          </Button>
+          <Button 
+            onClick={handleSubmitAndComplete} 
+            disabled={!meetsTarget || saving} 
+            className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-600/20 transition-all"
+          >
+            {saving && meetsTarget ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+            Submit Summary
+          </Button>
         </div>
-        {!meetsTarget && wordCount > 0 && (
-          <div className="flex items-center gap-1 text-xs text-amber-600">
-            <AlertCircle className="w-3 h-3" />
-            <span>Need {wordTarget - wordCount} more words</span>
-          </div>
-        )}
-      </div>
-
-      {/* AI Feedback Section */}
-      <div className="mb-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCheckSummary}
-          disabled={!content.trim() || checking}
-          className="text-xs"
-        >
-          {checking ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <ListChecks className="w-3 h-3 mr-1" />}
-          Check My Summary
-        </Button>
-        {aiFeedback && (
-          <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm whitespace-pre-wrap text-gray-700">
-            {aiFeedback}
-          </div>
-        )}
-      </div>
-
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={handleSaveDraft} disabled={!content.trim() || saving} className="flex-1">
-          <Save className="w-4 h-4 mr-2" />
-          {saving ? 'Saving...' : 'Save Draft'}
-        </Button>
-        <Button onClick={handleSubmitAndComplete} disabled={!meetsTarget || saving} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
-          <Send className="w-4 h-4 mr-2" />
-          Submit Summary
-        </Button>
       </div>
     </Card>
   )
 }
-
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 import { FileText, Video, Play, Layout, CheckCircle, Upload, Layers, Image, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,90 @@ import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { InteractiveActivityViewer } from '@/components/interactive/InteractiveActivityViewer';
 import type { InteractiveActivityData, InteractiveContentType } from '@/lib/interactive-types';
 import { H5PViewer } from '@/components/h5p/H5PViewer';
+
+function InteractiveActivityList({ interactiveItems }: { interactiveItems: LessonRendererInteractiveItem[] }) {
+  const sorted = [...interactiveItems].sort((a, b) => a.sequence_order - b.sequence_order);
+  
+  const grouped = sorted.reduce((acc, item) => {
+    const type = item.content_type;
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(item);
+    return acc;
+  }, {} as Record<string, typeof sorted>);
+
+  const TYPE_LABELS: Record<string, string> = {
+    'flashcards': 'Flashcards',
+    'drag_drop': 'Drag & Drop',
+    'fill_blanks': 'Fill in the Blanks',
+    'memory_game': 'Memory Game',
+    'timeline': 'Timeline'
+  };
+
+  const [activeType, setActiveType] = useState<string>(Object.keys(grouped)[0] || '');
+  const [activeItemIds, setActiveItemIds] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    Object.keys(grouped).forEach(k => initial[k] = grouped[k][0].id);
+    return initial;
+  });
+
+  const activeItem = grouped[activeType]?.find(i => i.id === activeItemIds[activeType]) || grouped[activeType]?.[0];
+
+  if (!activeType) return null;
+
+  return (
+    <div className="space-y-6">
+      {Object.keys(grouped).length > 1 && (
+        <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-2">
+          {Object.entries(grouped).map(([type, items]) => (
+            <button
+              key={type}
+              onClick={() => setActiveType(type)}
+              className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
+                activeType === type 
+                  ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {TYPE_LABELS[type] || type} ({items.length})
+            </button>
+          ))}
+        </div>
+      )}
+
+      {grouped[activeType] && grouped[activeType].length > 1 && (
+        <div className="flex flex-wrap gap-2 px-2">
+          {grouped[activeType].map((item, idx) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveItemIds(prev => ({...prev, [activeType]: item.id}))}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                activeItem?.id === item.id
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'
+              }`}
+            >
+              Set {idx + 1}: {item.title || 'Untitled'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activeItem && (
+        <div className="border border-gray-200 rounded-xl bg-white overflow-hidden p-0 sm:p-6 shadow-sm">
+          {grouped[activeType].length === 1 && (
+            <h4 className="font-bold text-gray-800 mb-4 px-4 sm:px-0">{activeItem.title}</h4>
+          )}
+          <InteractiveActivityViewer
+            key={activeItem.id}
+            contentType={activeItem.content_type as InteractiveContentType}
+            title={activeItem.title}
+            data={activeItem.content_data as InteractiveActivityData}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function getYouTubeId(url: string): string | null {
   const patterns = [
@@ -142,7 +227,7 @@ export function LessonRenderer({ mode, lesson, assets, videoQuestions, interacti
       >
         {lesson.content_html ? (
           <div className="prose prose-sm max-w-none text-gray-900 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: lesson.content_html }} />
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(lesson.content_html) }} />
         ) : (
           <div className="text-center py-6">
             <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
@@ -313,91 +398,9 @@ export function LessonRenderer({ mode, lesson, assets, videoQuestions, interacti
             </Button>
           ) : undefined}
         >
-          {interactiveItems.length > 0 ? (() => {
-            const sorted = [...interactiveItems].sort((a, b) => a.sequence_order - b.sequence_order);
-            
-            // Group by content type
-            const grouped = sorted.reduce((acc, item) => {
-              const type = item.content_type;
-              if (!acc[type]) acc[type] = [];
-              acc[type].push(item);
-              return acc;
-            }, {} as Record<string, typeof sorted>);
-
-            const TYPE_LABELS: Record<string, string> = {
-              'flashcards': 'Flashcards',
-              'drag_drop': 'Drag & Drop',
-              'fill_blanks': 'Fill in the Blanks',
-              'memory_game': 'Memory Game',
-              'timeline': 'Timeline'
-            };
-
-            const [activeType, setActiveType] = useState<string>(Object.keys(grouped)[0]);
-            const [activeItemIds, setActiveItemIds] = useState<Record<string, string>>(() => {
-              const initial: Record<string, string> = {};
-              Object.keys(grouped).forEach(k => initial[k] = grouped[k][0].id);
-              return initial;
-            });
-
-            const activeItem = grouped[activeType]?.find(i => i.id === activeItemIds[activeType]) || grouped[activeType]?.[0];
-
-            return (
-              <div className="space-y-6">
-                {/* Type Selector (Tabs) */}
-                {Object.keys(grouped).length > 1 && (
-                  <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-2">
-                    {Object.entries(grouped).map(([type, items]) => (
-                      <button
-                        key={type}
-                        onClick={() => setActiveType(type)}
-                        className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
-                          activeType === type 
-                            ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' 
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        {TYPE_LABELS[type] || type} ({items.length})
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Activity Selector within Type */}
-                {grouped[activeType] && grouped[activeType].length > 1 && (
-                  <div className="flex flex-wrap gap-2 px-2">
-                    {grouped[activeType].map((item, idx) => (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveItemIds(prev => ({...prev, [activeType]: item.id}))}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                          activeItem?.id === item.id
-                            ? 'bg-indigo-600 text-white shadow-sm'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'
-                        }`}
-                      >
-                        Set {idx + 1}: {item.title || 'Untitled'}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Activity Viewer container */}
-                {activeItem && (
-                  <div className="border border-gray-200 rounded-xl bg-white overflow-hidden p-0 sm:p-6 shadow-sm">
-                    {grouped[activeType].length === 1 && (
-                      <h4 className="font-bold text-gray-800 mb-4 px-4 sm:px-0">{activeItem.title}</h4>
-                    )}
-                    <InteractiveActivityViewer
-                      key={activeItem.id}
-                      contentType={activeItem.content_type as InteractiveContentType}
-                      title={activeItem.title}
-                      data={activeItem.content_data as InteractiveActivityData}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })() : (
+          {interactiveItems.length > 0 ? (
+            <InteractiveActivityList interactiveItems={interactiveItems} />
+          ) : (
             <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
               <Layout className="w-10 h-10 text-gray-300 mx-auto mb-3" />
               <p className="text-sm font-medium text-gray-600 mb-1">No interactive activities yet</p>

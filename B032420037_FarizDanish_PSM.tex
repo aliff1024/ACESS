@@ -1,0 +1,1388 @@
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[12pt, oneside]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS %%%
+\usepackage{geometry} % to change the page dimensions
+\geometry{
+	a4paper,
+	total={21.0cm,29.7cm},
+	top=2.5cm,
+	bottom=2.5cm,
+	right=2.5cm,
+	left=3.5cm} % or letterpaper (US) or a5paper or....
+
+
+%%% HEADERS & FOOTERS %%%
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customize the layout...
+\lhead{}\chead{}\rhead{\thepage}
+\lfoot{}\cfoot{}\rfoot{}
+
+
+%%% PACKAGES %%%
+
+\usepackage{enumitem}
+\usepackage{pdfpages}  % Uncomment on Overleaf or if pdfpages is installed locally
+\usepackage{ragged2e} % defines new commands \centering \justify etc
+\usepackage{multicol}
+\usepackage{float}
+
+\usepackage{graphicx, epstopdf} % support the \includegraphics command and options
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+\usepackage{caption, subcaption}
+
+\usepackage{array} % for better arrays (e.g. matrices) in maths
+\usepackage{amsmath, amssymb, amsfonts}
+
+\usepackage{morefloats}
+
+\usepackage{indentfirst} % Activate each 1st paragraph with indent
+
+\usepackage{setspace}
+\usepackage{csquotes}% Recommended
+
+\usepackage{color, colortbl}
+	\definecolor{red}{rgb}{0.900, 0.200, 0.200}
+
+
+%%% INDENTATION %%%
+
+\setlength{\parskip}{1.3em}  % paragraph spacing
+\renewcommand{\baselinestretch}{1.5}  % line spacing
+
+
+%%%% SECTION TITLE APPEARANCE %%%%
+
+\usepackage{titlesec} % chapter heading
+\usepackage{sectsty} % to renew chapter style
+
+\sectionfont{\fontsize{12}{15}\selectfont}  %% Chapter font size
+\subsectionfont{\fontsize{12}{15}\selectfont}  %% Section font size
+
+\renewcommand{\thesection}{CHAPTER \arabic{section}:}  %% Header chapter with number
+\renewcommand{\thesubsection}{\normalsize \arabic{section}.\arabic{subsection}}  %% Rename subsection with chapter number
+
+
+%%% ToC (Table of Contents) APPEARANCE %%%
+
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents, List of figures and tables
+
+\usepackage[titletoc]{appendix}
+\usepackage{listings}
+
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+\usepackage[english]{babel}
+\addto\captionsenglish{
+\renewcommand{\contentsname}{
+\centering \normalsize TABLE OF CONTENTS   \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename name of table of contents
+\renewcommand{\listtablename}{
+\centering \normalsize LIST OF TABLES \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename list of tables
+\renewcommand{\listfigurename}{
+\centering \normalsize LIST OF FIGURES \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename list of figures
+}
+
+
+%% Renaming Table and Figure Caption based on Chapter
+
+\usepackage{chngcntr}
+
+\counterwithin{table}{section}
+\renewcommand{\thetable}{\arabic{section}.\arabic{table}}
+
+\counterwithin{figure}{section}
+\renewcommand{\thefigure}{\arabic{section}.\arabic{figure}}
+
+
+\usepackage{etoolbox} %setting line spacing in TOC/LOF/T
+\makeatletter
+\pretocmd{\section}{\addtocontents{toc}{\protect\addvspace{-10mm}}}{}{}
+\pretocmd{\subsection}{\addtocontents{toc}{\protect\addvspace{0mm}}}{}{}
+\pretocmd{\subsubsection}{\addtocontents{toc}{\protect\addvspace{0mm}}}{}{}
+\makeatother
+
+\setlength\cftbeforesecskip{2pt}  %% Set line spacing dalam ToC
+\setlength\cftsecnumwidth{2.8cm}  %% Set chapter numbering width dalam ToC
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}  %% Create dotted line di ToC
+
+
+%%% Prevent hyphenation %%
+
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+
+\relpenalty=10000
+\binoppenalty=10000
+
+
+%%% END Article customizations
+
+
+%%% COVER PAGE %%%
+
+\def \maketitleone{
+\centering
+\begin{titlepage}
+	\bf {
+	MACHINE LEARNING CLASSIFICATION OF TRANSPARENT CONDUCTIVE OXIDES USING \\
+	X-RAY DIFFRACTION STRUCTURAL SIGNATURES
+	}
+	\rm
+	\vskip 3in
+	\bf {FARIZ DANISH BIN FADLI}
+	\rm
+	\vskip 3in
+	\bf {UNIVERSITI TEKNIKAL MALAYSIA MELAKA}
+
+\end{titlepage}
+
+\thispagestyle{empty}
+
+\newpage
+}
+
+
+%%% END OF COVER PAGE %%%
+
+
+\begin{document}
+
+\pagenumbering{gobble}
+\newgeometry{top=5.5cm, bottom=3.5cm, right=2.5cm, left=2.5cm}
+\maketitleone
+\restoregeometry
+
+
+%%--------BORANG PENGESAHAN STATUS LAPORAN---------%%
+
+\newgeometry{margin=2.5cm}
+\thispagestyle{empty}
+\setstretch{1.1}
+\setlength{\parskip}{0pt}
+
+\begin{center}
+{\large \bf BORANG PENGESAHAN STATUS LAPORAN}
+\end{center}
+
+\vspace{4mm}
+\noindent
+JUDUL  \; : \;  \underline{ MACHINE LEARNING CLASSIFICATION OF TRANSPARENT CONDUCTIVE OXIDES} \\[1mm]
+\hspace{1.5cm} \underline{USING X-RAY DIFFRACTION STRUCTURAL SIGNATURES}
+
+\vspace{3mm}
+\noindent
+SESI PENGAJIAN  \; : \; \underline{ 2024/2025 }
+
+\vspace{5mm}
+\noindent
+Saya \underline{ FARIZ DANISH BIN FADLI  }
+mengaku membenarkan tesis Projek Sarjana Muda ini disimpan di Perpustakaan Universiti Teknikal Malaysia Melaka dengan syarat-syarat kegunaan seperti berikut:
+
+\vspace{2mm}
+\begin{enumerate}[label=\arabic*., itemsep=1mm, topsep=0pt, parsep=0pt]
+\item Tesis dan projek adalah hakmilik Universiti Teknikal Malaysia Melaka.
+\item Perpustakaan Fakulti Teknologi Maklumat dan Komunikasi dibenarkan membuat salinan untuk tujuan pengajian sahaja.
+\item Perpustakaan Fakulti Teknologi Maklumat dan Komunikasi dibenarkan membuat salinan tesis ini sebagai bahan pertukaran antara institusi pengajian tinggi.
+\item $^{\ast}$ Sila tandakan (\checkmark)
+
+\vspace{2mm}
+\def\arraystretch{1.3}
+\begin{tabular}{>{\raggedleft\arraybackslash}p{2.5cm}  >{\raggedright\arraybackslash}p{3.3cm}  >{\raggedright\arraybackslash}p{7.2cm}}
+\underline{\hspace{2cm}} & SULIT  & (Mengandungi maklumat yang berdarjah keselamatan atau kepentingan Malaysia seperti yang termaktub di dalam AKTA RAHSIA RASMI 1972) \\
+\underline{\hspace{2cm}} & TERHAD & (Mengandungi maklumat TERHAD yang telah ditentukan oleh organisasi / badan di mana penyelidikan dijalankan) \\
+\underline{\makebox[2cm]{$\checkmark$}} & TIDAK TERHAD &
+\end{tabular}
+\end{enumerate}
+
+\vspace{5mm}
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+\centering
+\underline{\hspace{6cm}} \\
+(TANDATANGAN PELAJAR) \\[4mm]
+Alamat tetap : \underline{\makebox[4cm]{22, JALAN PERMATA}} \\
+\underline{\makebox[6cm]{1, DESA SALAK PERMATA,}} \\
+\underline{\makebox[6cm]{43900, SEPANG, SELANGOR}} \\[4mm]
+Tarikh : \underline{\makebox[4.5cm]{17 JUN 2026}}
+\end{minipage}%
+\begin{minipage}[t]{0.5\textwidth}
+\centering
+\underline{\hspace{6cm}} \\
+(TANDATANGAN PENYELIA) \\[4mm]
+\underline{\makebox[6cm]{DR. NORHAZWANI BINTI MD YUNOS}} \\
+Nama Penyelia \\[8mm]
+Tarikh : \underline{\hspace{4.5cm}}
+\end{minipage}
+
+\vspace{3mm}
+\noindent
+CATATAN: \; $^{\ast}$ Jika tesis ini SULIT atau TERHAD, sila lampirkan surat daripada pihak berkusa.
+
+\restoregeometry
+\setstretch{1.5}
+\setlength{\parskip}{1.3em}
+
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+\justifying
+
+
+%%% FRONT MATTER %%%
+
+
+\begin{center}
+
+\vfill \null
+\vspace{1cm}
+{MACHINE LEARNING CLASSIFICATION OF TRANSPARENT CONDUCTIVE OXIDES USING \\
+X-RAY DIFFRACTION STRUCTURAL SIGNATURES}
+
+\vskip 1.6in
+{FARIZ DANISH BIN FADLI}
+
+\vskip 1.6in
+This report is submitted in partial fulfillment of the requirements for the \\
+Bachelor of Computer Science (Artificial Intelligence) with Honours.
+
+
+\vskip 1.6in
+FACULTY OF ARTIFICIAL INTELLIGENCE AND CYBER SECURITY \\
+UNIVERSITI TEKNIKAL MALAYSIA MELAKA
+
+\vspace{2mm}
+2026
+
+
+\end{center}
+
+\newpage
+
+
+
+%%--------DECLARATION PAGE---------%%
+
+\begin{center}
+
+\vfill\null
+\phantomsection
+\addcontentsline{toc}{section}{DECLARATION}
+\textbf{DECLARATION}
+
+\vspace{1.5cm}
+I hereby declare that this project entitled \\
+MACHINE LEARNING CLASSIFICATION OF TRANSPARENT CONDUCTIVE OXIDES USING X-RAY DIFFRACTION STRUCTURAL SIGNATURES \\
+is written by me and is my own effort and that no part has been plagiarized without citations.
+
+
+
+\vspace{1.5cm}
+\noindent
+STUDENT \; : \underline{\hspace{8cm}} \, Date :  \underline{\hspace{2.1cm}} \\[-2mm]
+(FARIZ DANISH BIN FADLI) \hspace{1.2cm}
+
+
+
+\vspace{4cm}
+\noindent
+I hereby declare that I have read this project report and found this project report is sufficient in term of the scope and quality for the award of Bachelor of Computer Science (Artificial Intelligence) with Honours.
+
+
+\vspace{1.5cm}
+\noindent
+SUPERVISOR \; : \underline{\hspace{8cm}} \, Date :  \underline{\hspace{2.1cm}} \\[-2mm]
+(DR. NORHAZWANI BINTI MD YUNOS) \hspace{0.6cm}
+
+
+\end{center}
+
+\vfill \null
+
+\newpage
+
+
+
+
+%%--------DEDICATION PAGE---------%%
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{DEDICATION}
+\textbf{DEDICATION}
+\end{center}
+
+
+\vspace{1cm}
+This work is dedicated to my beloved parents, Fadli bin Maarof and Norizan binti Kassim, whose love, sacrifices, and unwavering belief in me have been my greatest source of strength throughout this journey.
+
+To my friends, who stood by me through every challenge, offered a listening ear when I needed it most, and kept me going when things felt impossible --- thank you for being there.
+
+And to everyone who has supported me, in any way, big or small --- this is as much yours as it is mine.
+
+
+
+\vfill \null
+
+\newpage
+
+
+
+
+%%--------ACKNOWLEDGEMENT PAGE---------%%
+
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{ACKNOWLEDGEMENT}
+\textbf{ACKNOWLEDGEMENT}
+\end{center}
+
+
+\vspace{1cm}
+First and foremost, I would like to express my deepest gratitude to my supervisor, Dr. Norhazwani binti Md Yunos, for her invaluable guidance, patience, and continuous support throughout the duration of this project. Her expertise and constructive feedback have been instrumental in shaping this work into its final form.
+
+I would also like to extend my sincere appreciation to my friend, Ahmad Mirza Shahmi bin Abdul Hanif, whose companionship and willingness to engage in meaningful discussions about this project have been a great source of motivation and encouragement. Having someone who truly understands the challenges of this work made the journey significantly more bearable.
+
+Above all, I am profoundly grateful to my beloved parents, Fadli bin Maarof and Norizan binti Kassim, for their unconditional love, endless patience, and unwavering support throughout my academic journey. Their sacrifices and constant encouragement have been the foundation upon which I stand, and this achievement is as much theirs as it is mine.
+
+
+
+\vfill \null
+
+\newpage
+
+
+
+%%--------ABSTRACT PAGE---------%%
+
+
+
+\begin{center}
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{ABSTRACT}
+\textbf{ABSTRACT}
+\end{center}
+
+
+\vspace{1cm}
+
+\begin{spacing}{1.1}
+This study develops and evaluates a machine learning framework for the automated classification of five transparent conductive oxide (TCO) materials --- AZO, FTO, ITO, MZO, and ZnO --- using their X-ray diffraction (XRD) structural signatures. TCOs are widely used in solar cells, OLEDs, LCDs, smart windows, and other optoelectronic devices, yet rapid and accurate phase identification still relies on slow, expert-dependent manual analysis of diffraction patterns. To address this, raw $2\theta$--intensity scans were converted into a rich set of physically meaningful features, including d-spacing descriptors derived from Bragg's Law, peak positions and widths, crystallite size, binned intensity profiles, and global statistical measures. Because experimental scans were limited, a two-strategy data augmentation pipeline combining physics-motivated perturbations and JCPDS-based simulation was used to expand the dataset to 640 samples. Fifteen supervised classifiers were implemented, each wrapped in a scikit-learn pipeline with feature scaling applied inside every cross-validation fold to prevent data leakage. Models were assessed using an 80/20 holdout split and repeated $5 \times 5$ stratified cross-validation, with accuracy, Cohen's kappa, log loss, macro F1-score, ROC-AUC, confusion matrices, and learning curves. LightGBM achieved the strongest performance, with a cross-validation accuracy of $89.9\%$ ($\pm 2.1\%$) and a holdout accuracy of $90.6\%$ (Cohen's kappa $0.88$), followed closely by XGBoost, Gradient Boosting, and Linear Discriminant Analysis. A stacking ensemble of the top five models matched the best single model at $90.6\%$ accuracy, and mean one-vs-rest ROC-AUC values reached $0.97$--$0.99$. Feature importance analysis confirmed that intensity-window and d-spacing-based crystallographic features were the most discriminative, while the AZO class proved the most difficult to separate from the other wurtzite-structured materials. These results demonstrate that XRD structural signatures provide an accurate, instrument-independent basis for automated TCO identification, complementing prior optical-signature approaches and offering a reproducible tool for data-driven materials characterisation and industrial quality control.
+\end{spacing}
+
+\vfill \null
+
+\newpage
+
+
+
+\begin{center}
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{ABSTRAK}
+\textbf{ABSTRAK}
+\end{center}
+
+
+\vspace{1cm}
+
+\begin{spacing}{1.1}
+Kajian ini membangunkan dan menilai satu rangka kerja pembelajaran mesin untuk pengelasan automatik lima bahan oksida konduktif lutsinar (TCO) --- AZO, FTO, ITO, MZO, dan ZnO --- menggunakan tanda struktur pembelauan sinar-X (XRD). Bahan TCO digunakan secara meluas dalam sel suria, paparan, dan peranti optoelektronik lain, namun pengenalpastian fasa yang pantas dan tepat masih bergantung pada analisis manual corak pembelauan yang lambat dan memerlukan kepakaran. Bagi menangani masalah ini, imbasan mentah $2\theta$--keamatan ditukarkan kepada satu set ciri bermakna secara fizikal, termasuk penghurai jarak-d yang diterbitkan daripada Hukum Bragg, kedudukan dan lebar puncak, saiz hablur, profil keamatan terbin, dan ukuran statistik global. Oleh kerana imbasan eksperimen adalah terhad, satu saluran penambahan data dua strategi yang menggabungkan gangguan bermotifkan fizik dan simulasi berasaskan JCPDS digunakan untuk mengembangkan set data kepada 640 sampel. Lima belas pengelas terselia dilaksanakan, setiap satunya dibungkus dalam saluran scikit-learn dengan penskalaan ciri dilakukan di dalam setiap lipatan pengesahan silang untuk mengelakkan kebocoran data. Model dinilai menggunakan pembahagian holdout 80/20 dan pengesahan silang berstrata $5 \times 5$ berulang, dengan ketepatan, kappa Cohen, kehilangan log, skor makro F1, ROC-AUC, matriks kekeliruan, dan lengkung pembelajaran. LightGBM mencapai prestasi terbaik, dengan ketepatan pengesahan silang $89.9\%$ ($\pm 2.1\%$) dan ketepatan holdout $90.6\%$ (kappa Cohen $0.88$), diikuti rapat oleh XGBoost, Gradient Boosting, dan Analisis Diskriminan Linear. Ensembel penyusunan (stacking) lima model terbaik menyamai model tunggal terbaik pada ketepatan $90.6\%$, dan nilai purata ROC-AUC satu-lawan-semua mencapai $0.97$--$0.99$. Analisis kepentingan ciri mengesahkan bahawa ciri tetingkap keamatan dan ciri berasaskan jarak-d merupakan ciri paling membezakan, manakala kelas AZO didapati paling sukar dibezakan daripada bahan berstruktur wurtzit yang lain. Keputusan ini menunjukkan bahawa tanda struktur XRD menyediakan asas yang tepat dan bebas-instrumen untuk pengenalpastian TCO automatik, melengkapkan pendekatan tanda optik terdahulu serta menawarkan alat boleh-ulang bagi pencirian bahan dipacu data dan kawalan kualiti industri.
+\end{spacing}
+
+
+
+\vfill \null
+
+\newpage
+
+
+%%% --------------------------- %%%
+
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{TABLE OF CONTENTS}
+\tableofcontents
+\newpage
+
+
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF TABLES}
+{%
+\let\oldnumberline\numberline%
+\renewcommand{\numberline}{\tablename~\oldnumberline}%
+\listoftables%
+}
+
+\newpage
+
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF FIGURES}
+{%
+\let\oldnumberline\numberline%
+\renewcommand{\numberline}{\figurename~\oldnumberline}%
+\listoffigures%
+}
+
+\newpage
+
+
+
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF ABBREVIATIONS}
+\begin{center}
+\textbf{LIST OF ABBREVIATIONS}
+\end{center}
+\vspace{1cm}
+
+
+\noindent
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.5cm} >{\centering\arraybackslash}m{0.5cm} >{\raggedright\arraybackslash}p{11.0cm}}
+AZO   & - & Aluminium-doped Zinc Oxide \\
+AUC   & - & Area Under the Curve \\
+CNN   & - & Convolutional Neural Network \\
+CV    & - & Cross-Validation \\
+FTO   & - & Fluorine-doped Tin Oxide \\
+FWHM  & - & Full Width at Half Maximum \\
+FYP   & - & Final Year Project \\
+ITO   & - & Indium Tin Oxide \\
+JCPDS & - & Joint Committee on Powder Diffraction Standards \\
+KNN   & - & K-Nearest Neighbours \\
+LCD   & - & Liquid Crystal Display \\
+LDA   & - & Linear Discriminant Analysis \\
+LightGBM & - & Light Gradient Boosting Machine \\
+MLP   & - & Multi-Layer Perceptron \\
+ML    & - & Machine Learning \\
+MZO   & - & Magnesium-doped Zinc Oxide \\
+OLED  & - & Organic Light-Emitting Diode \\
+PSM   & - & Projek Sarjana Muda \\
+RF    & - & Random Forest \\
+ROC   & - & Receiver Operating Characteristic \\
+SHAP  & - & SHapley Additive exPlanations \\
+SVM   & - & Support Vector Machine \\
+TCO   & - & Transparent Conductive Oxide \\
+XAI   & - & Explainable Artificial Intelligence \\
+XGBoost & - & Extreme Gradient Boosting \\
+XRD   & - & X-Ray Diffraction \\
+ZnO   & - & Zinc Oxide \\
+\end{tabular}
+
+
+
+\vfill \null
+\newpage
+
+
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF ATTACHMENTS}
+\begin{center}
+\textbf{LIST OF ATTACHMENTS}
+\end{center}
+\vspace{2cm}
+
+
+\noindent
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.6cm}  >{\raggedright\arraybackslash}p{9.9cm}  >{\raggedleft\arraybackslash}p{1.4cm}}
+  &  & \textbf{PAGE} \\[2mm]
+Appendix A & Sample XRD Data Files (.xlsx format) & \pageref{app:A} \\
+Appendix B & Python Code --- Feature Extraction Pipeline (\texttt{FYP\_improved\_v2.ipynb}) & \pageref{app:B} \\
+Appendix C & Python Code --- Data Augmentation and Simulation (\texttt{XRD\_data\_generation.ipynb}) & \pageref{app:C} \\
+Appendix D & Hyperparameter Search Results for XGBoost, LightGBM, and Random Forest & \pageref{app:D} \\
+Appendix E & Full Confusion Matrices for All Fifteen Classifiers & \pageref{app:E} \\
+\end{tabular}
+
+
+
+\vfill \null
+%%% ------------------------------------- %%%
+%%% MAIN MATTER %%%
+
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\setlength{\parindent}{30pt}
+
+
+%==========================================================%
+% CHAPTER 1: INTRODUCTION
+%==========================================================%
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{INTRODUCTION}
+\end{center}
+\vspace{2cm}
+
+
+\subsection{Background of Study}
+
+Transparent conductive oxides (TCOs) are a critical class of semiconductor materials that uniquely combine high electrical conductivity with high optical transparency across the visible spectrum (Shi et al., 2021). These properties make TCOs indispensable in solar cells, OLEDs, LCDs, smart windows, and other optoelectronic devices (Grundmann et al., 2010; Stadler, 2012). The five most industrially relevant TCO materials --- ITO, AZO, FTO, MZO, and ZnO --- each possess distinct crystal structures that are captured in XRD diffractograms as unique structural fingerprints governed by Bragg's Law ($n\lambda = 2d\sin\theta$) (Afre et al., 2018; Md Yunos et al., 2026).
+
+Machine learning (ML) has emerged as a transformative tool in materials science, enabling automated pattern extraction from complex experimental data (Stoll and Benner, 2021; Grandi et al., 2025). Applied to XRD diffractograms, ML classifiers can rapidly identify TCO phases, reducing reliance on time-consuming manual characterisation (Rickert et al., 2021; B{\o}dker et al., 2022). This study builds on the reference work by Md Yunos et al.\ (2026), who achieved $96.21\%$ accuracy classifying TCOs via optical signatures, by extending the approach to XRD structural data and evaluating fifteen ML classifiers.
+
+
+\subsection{Problem Statement}
+
+Despite widespread TCO deployment, rapid and accurate phase identification remains challenging. Manual XRD analysis requires skilled operators and significant time (Amigo et al., 2023; Boscarino et al., 2014). Optical properties can overlap between structurally distinct TCO materials, creating ambiguous classifications. XRD structural signatures encode atomic-level information, offering a richer feature space. Key challenges include limited labelled data, high dimensionality, class imbalance, and data leakage risks in ML preprocessing pipelines.
+
+
+\subsection{Objectives}
+
+The primary objectives of this study are:
+\vspace{-5mm}
+\begin{enumerate}[itemsep=0mm]
+\item To develop a comprehensive XRD feature extraction pipeline incorporating d-spacing descriptors, peak statistics, crystallite size, and spectral shape measures for TCO material classification.
+
+\item To develop and implement machine learning classifiers for multiclass classification of five TCO materials (AZO, FTO, ITO, MZO, and ZnO) using a physics-motivated data augmentation pipeline to address data scarcity.
+
+\item To evaluate and compare the performance of the developed ML classifiers using multi-metric assessment including accuracy, Cohen's kappa, ROC-AUC, confusion matrices, and feature importance analysis.
+\end{enumerate}
+
+
+\subsection{Scope of Study}
+
+This study focuses on five TCO materials --- AZO, FTO, ITO, MZO, ZnO --- as 200 nm sputtered thin films measured by XRD with Cu K$\alpha$ radiation ($\lambda = 1.5406$ \AA) over $2\theta = 20^{\circ}$--$80^{\circ}$. Fifteen ML classifiers are evaluated using data-leakage-free scikit-learn pipelines. Scope excludes real-time diffractometer integration.
+
+
+\subsection{Significance of Study}
+
+This study demonstrates that XRD structural signatures provide a rich, discriminative, and instrument-independent feature space for TCO classification. The multi-strategy augmentation pipeline addresses data scarcity without additional laboratory measurements. The rigorous evaluation framework sets a higher reproducibility standard, and the feature importance analysis provides actionable crystallographic insights for data-driven materials science and industrial quality control.
+
+
+\subsection{Report Organisation}
+
+Chapter 1, Introduction, provides the background of the study, problem statement, objectives, scope, and significance of classifying TCO materials using an ML-based XRD analysis framework.
+
+Chapter 2, Literature Review, reviews the properties and applications of TCO materials, the principles of XRD characterisation, ML applications in materials science, gradient boosting ensemble methods, and the reference optical-signature study by Md Yunos et al.
+
+Chapter 3, Project Methodology, describes the overall research framework, the experimental dataset, the two-strategy data augmentation pipeline, a high-level overview of the six-group feature extraction approach, an overview of the fifteen ML classifier families selected, and the evaluation strategy.
+
+Chapter 4, Proposed Method, details the end-to-end classification pipeline architecture, the complete technical configuration of each feature extraction group (Groups A--F), the hyperparameter settings for all fifteen ML classifiers, the stacking ensemble design, and the hyperparameter tuning results.
+
+Chapter 5, Result and Discussion, presents and analyses the holdout evaluation, cross-validation accuracy, confusion matrices, ROC-AUC curves, learning curves, and feature importance rankings for all fifteen classifiers.
+
+Chapter 6, Conclusion, summarises the key findings, project contributions, limitations, and recommendations for future research directions.
+
+
+\subsection{Summary}
+
+This chapter introduced the motivation for automated TCO classification using XRD structural signatures, identified the research challenges, stated five measurable objectives, and outlined the scope and significance of the study. The following chapter reviews the literature underpinning these choices.
+
+
+\vfill \null
+
+\newpage
+
+
+%==========================================================%
+% CHAPTER 2: LITERATURE REVIEW
+%==========================================================%
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{LITERATURE REVIEW}
+\end{center}
+\vspace{2cm}
+
+
+\subsection{Introduction}
+
+This chapter reviews the background literature underpinning this study. It begins with a discussion of transparent conductive oxide materials, covering their individual properties, crystal structures, applications, and characterisation challenges. The principles of X-ray diffraction are then presented, including Bragg's Law, d-spacing analysis, crystallite size estimation, and the role of the JCPDS reference database. The chapter subsequently reviews machine learning techniques applied in materials science, covering feature engineering, data augmentation, and the full range of classifier families evaluated in this study. A dedicated section reviews prior work on ML-based XRD pattern recognition. The chapter concludes with a review of the reference optical-signature study and a critical justification for the approach adopted in this work.
+
+
+\subsection{Transparent Conductive Oxides}
+
+\subsubsection{Overview and Properties}
+
+Transparent conductive oxides (TCOs) are a distinctive class of semiconductor materials that simultaneously exhibit high electrical conductivity and high optical transparency in the visible spectrum. These two properties are generally mutually exclusive in conventional materials, as free carriers that enable conduction typically absorb visible light. In TCOs, this paradox is resolved through controlled doping of wide-bandgap metal oxides, where the optical bandgap ($3$--$4$ eV) is sufficiently large to transmit visible photons while dopant-introduced free carriers provide electrical conduction (Shi et al., 2021; Stadler, 2012). The resulting combination of low sheet resistance (typically $5$--$100$ $\Omega$/sq) and high transmittance ($>80\%$ in the visible range) makes TCOs indispensable in a wide range of modern optoelectronic technologies (Grundmann et al., 2010).
+
+The structural and electronic properties of TCOs are intimately linked to their crystal structure. Each TCO family adopts a specific crystal symmetry --- bixbyite, cassiterite, or wurtzite --- that governs the arrangement of cations and oxygen anions and determines the available doping sites, carrier mobility mechanisms, and optical absorption edges. These distinct crystal structures produce characteristic X-ray diffraction signatures that form the physical basis for ML-based structural identification in this study (Coutts et al., 2000).
+
+
+\subsubsection{Indium Tin Oxide (ITO)}
+
+ITO ($\text{In}_2\text{O}_3$:Sn) is the most widely deployed TCO, serving as the industry benchmark for transparent electrode applications. It crystallises in the cubic bixbyite structure (space group $Ia\bar{3}$), in which tin substitutes on indium sites and acts as a donor impurity, generating free electrons. ITO achieves sheet resistances of $10$--$15$ $\Omega$/sq and optical transmittances exceeding $85\%$ in the visible spectrum, representing the gold standard for transparent electrode performance (Shi et al., 2021; Wen et al., 2024). Its high carrier concentration ($\sim 10^{21}$ cm$^{-3}$) and electron mobility ($\sim 30$--$40$ cm$^2$ V$^{-1}$ s$^{-1}$) arise from the unique electronic structure of the bixbyite phase. However, the scarcity and rising cost of indium, a critical mineral, have driven significant research into alternative TCO materials (Stadler, 2012).
+
+
+\subsubsection{Aluminium-doped Zinc Oxide (AZO)}
+
+AZO (ZnO:Al) is the most studied indium-free alternative to ITO. It crystallises in the wurtzite hexagonal structure (space group $P6_3mc$), in which aluminium substitutes on zinc sites, acting as a shallow donor that increases free electron concentration. The wurtzite structure of AZO produces a characteristic XRD pattern with prominent reflections at the (100), (002), (101), and (102) planes, with the (002) reflection often dominating in c-axis-textured sputtered films. Dondapati et al.\ (2013) demonstrated that the crystallographic properties of AZO films --- including crystallite size, preferred orientation, and lattice strain --- directly correlate with their electrical resistivity and optical transmittance, establishing the link between structural XRD signatures and functional properties. AZO is attractive due to its earth-abundant, non-toxic constituent elements and CMOS-compatible processing.
+
+
+\subsubsection{Fluorine-doped Tin Oxide (FTO)}
+
+FTO ($\text{SnO}_2$:F) crystallises in the tetragonal cassiterite (rutile-type) structure (space group $P4_2/mnm$), which is structurally distinct from the wurtzite and bixbyite phases of the other TCO materials. Fluorine substitutes on oxygen sites and acts as a donor, generating free electrons. The cassiterite structure produces a characteristic XRD fingerprint with a strong (110) reflection near $2\theta = 26.5^{\circ}$ that is unique to FTO and absent in all other TCO materials studied, providing a highly discriminative feature for classification (Afre et al., 2018). FTO exhibits excellent chemical stability and thermal resistance up to $600^{\circ}$C, making it the preferred choice for applications requiring high-temperature processing, such as silicon solar cells and dye-sensitised solar cells. Its lower carrier mobility compared to ITO is partially offset by its superior durability and lower cost (Afre et al., 2018).
+
+
+\subsubsection{Magnesium-doped Zinc Oxide (MZO)}
+
+MZO (ZnO:Mg) shares the wurtzite crystal structure with ZnO and AZO, adopting the $P6_3mc$ space group. Magnesium is incorporated substitutionally on zinc sites, and because Mg$^{2+}$ has a larger ionic radius than Zn$^{2+}$, its incorporation shifts the lattice parameters and widens the optical bandgap through alloy bandgap bowing effects. This allows the optical bandgap of MZO to be tuned between the ZnO value ($\sim 3.37$ eV) and the MgO value ($\sim 7.8$ eV) by varying the magnesium content, providing a route to bandgap-engineered transparent oxides. MZO has gained attention as a high-resistance buffer layer in CIGS and CdTe thin-film solar cells, where its tunable bandgap enables optimised band alignment at the absorber interface (Md Yunos et al., 2026). The structural similarity of MZO to ZnO and AZO --- all sharing the wurtzite phase --- creates the greatest classification challenge in this study, as their XRD patterns overlap significantly in the $2\theta = 31^{\circ}$--$37^{\circ}$ region.
+
+
+\subsubsection{Zinc Oxide (ZnO)}
+
+Undoped ZnO is the parent material of both AZO and MZO, and itself functions as a TCO in intrinsic or lightly doped form. It crystallises in the wurtzite structure with a direct bandgap of approximately $3.37$ eV and a large exciton binding energy of $60$ meV, making it useful in UV photonics and optoelectronics in addition to transparent electrode applications (Shi et al., 2021). The characteristic XRD pattern of ZnO in its undoped wurtzite form serves as the structural reference for understanding the modifications introduced by aluminium and magnesium doping. As crystallite size, lattice strain, and preferred orientation differ between undoped ZnO and its doped variants under identical deposition conditions, crystallographic peak features --- particularly the Scherrer-derived crystallite size and d-spacing shifts --- provide discriminative signatures even when peak positions substantially overlap (Dondapati et al., 2013).
+
+
+\subsubsection{Applications of TCOs}
+
+TCOs are deployed across a broad spectrum of high-technology applications. In photovoltaics, TCO layers serve as transparent front electrodes in thin-film solar cells (CIGS, CdTe, amorphous silicon, and perovskite architectures) and as front contacts in silicon heterojunction cells (Boscarino et al., 2014). In display technology, ITO remains the standard electrode material in liquid crystal displays (LCDs) and OLED panels, while ZnO-based alternatives are being explored for flexible substrates. Smart windows exploit electrochromic TCO stacks that reversibly modulate optical transmission under an applied voltage, reducing building energy consumption. Resistive touchscreens, low-emissivity glass coatings for energy-efficient glazing, gas sensors, and transparent thin-film transistors represent further application domains (Shi et al., 2021; Grundmann et al., 2010; Stadler, 2012). The diversity of applications has driven demand for rapid, accurate TCO phase identification in industrial quality control workflows.
+
+
+\subsubsection{Challenges in TCO Characterisation}
+
+Despite widespread TCO deployment, rapid and accurate phase identification and quality control remain challenging. Manual XRD analysis requires trained crystallographers and significant analysis time, creating bottlenecks in high-throughput production environments (Amigo et al., 2023). The structural similarity between the three wurtzite-structured materials --- AZO, MZO, and ZnO --- produces substantially overlapping XRD peak positions, making manual discrimination unreliable without careful intensity ratio analysis. Furthermore, thin film deposition conditions (substrate temperature, sputtering power, gas pressure, and target composition) introduce variability in peak positions, widths, and relative intensities compared to powder reference patterns, since preferred orientation and residual stress alter the apparent diffractogram (Dondapati et al., 2013). These challenges motivate the development of automated, data-driven classification approaches capable of exploiting subtle structural differences that manual analysis may miss.
+
+
+\subsection{X-Ray Diffraction for Material Characterisation}
+
+\subsubsection{Principles and Bragg's Law}
+
+X-ray diffraction is a non-destructive analytical technique based on the elastic scattering of X-rays by the periodic arrangement of atoms in a crystalline material. When a monochromatic X-ray beam of wavelength $\lambda$ impinges on a crystal, X-rays scattered from successive atomic planes interfere constructively when the path difference equals an integer multiple of the wavelength. This condition is expressed by Bragg's Law (Scardi et al., 2004):
+
+\begin{equation}
+n\lambda = 2d\sin\theta
+\end{equation}
+
+where $n$ is the diffraction order (typically taken as 1), $d$ is the interplanar spacing, and $\theta$ is the Bragg angle (half the scattering angle). Each crystalline phase produces a unique set of diffraction peaks at characteristic $2\theta$ positions, forming a structural fingerprint governed by the unit cell geometry and atomic arrangement. For Cu K$\alpha$ radiation ($\lambda = 1.5406$ \AA), the accessible d-spacing range for a $2\theta$ scan of $20^{\circ}$--$80^{\circ}$ covers the major low-index reflections of all five TCO materials studied here.
+
+
+\subsubsection{D-Spacing and Crystallographic Analysis}
+
+The d-spacing values computed from Bragg's Law represent the actual physical spacing between atomic planes in the crystal lattice and are therefore absolute crystallographic quantities independent of the instrument used. Unlike $2\theta$ angles, which can shift between diffractometers due to calibration offsets, zero-point errors, or sample displacement, d-spacing values are intrinsic material properties that remain constant across instruments and laboratories (Li et al., 2024). This instrument-independence makes d-spacing-based features particularly suitable as ML classifier inputs intended for cross-laboratory deployment. Different crystal structures produce characteristic d-spacing fingerprints: the bixbyite structure of ITO yields a unique set of d-spacings corresponding to its cubic symmetry, the cassiterite structure of FTO produces its own distinct pattern, and the three wurtzite materials (AZO, MZO, ZnO) share similar but subtly distinct d-spacing distributions determined by their respective lattice parameters.
+
+
+\subsubsection{Scherrer Equation and Crystallite Size}
+
+The breadth of XRD peaks provides information beyond peak position alone. Peak broadening arises from several contributions, including instrumental broadening, finite crystallite size, and lattice microstrain. The Scherrer equation isolates the crystallite size contribution (Scardi et al., 2004; Le Bail, 2005):
+
+\begin{equation}
+D = \frac{K\lambda}{\beta\cos\theta}
+\end{equation}
+
+where $D$ is the mean crystallite size, $K \approx 0.9$ is the dimensionless Scherrer constant (for spherical crystallites), $\lambda$ is the X-ray wavelength, $\beta$ is the FWHM in radians, and $\theta$ is the Bragg angle. Crystallite size depends on deposition temperature, sputtering conditions, and doping level, and differs between AZO, MZO, and ZnO even when their peak positions substantially overlap. This makes Scherrer-derived crystallite size a valuable discriminative feature for the structurally similar wurtzite materials. When both crystallite size and microstrain contribute to broadening, Williamson-Hall analysis --- which plots $\beta\cos\theta$ against $\sin\theta$ --- separates the two contributions from the slope and intercept of the linear fit (Le Bail, 2005).
+
+
+\subsubsection{XRD for Thin Film Characterisation}
+
+The XRD characterisation of TCO thin films introduces additional considerations beyond standard powder diffraction. Sputtered TCO films commonly exhibit preferred crystallographic orientation (texture), in which certain crystallographic planes align preferentially parallel to the substrate surface. For ZnO-family films deposited by RF magnetron sputtering, strong c-axis texture (with the (002) plane parallel to the substrate) is commonly observed, leading to an enhanced (002) reflection intensity relative to the isotropic powder reference (Dondapati et al., 2013). This texture modifies the relative peak intensities in the measured diffractogram and must be accounted for in classification. Residual compressive or tensile stress, arising from thermal expansion mismatch between film and substrate, shifts peak positions systematically from their powder reference values. These thin-film-specific effects --- texture, stress, and the associated peak intensity and position variations --- increase the complexity of TCO identification and motivate data augmentation strategies that simulate these physical sources of variability.
+
+
+\subsubsection{JCPDS Reference Database}
+
+The Joint Committee on Powder Diffraction Standards (JCPDS), now maintained as the International Centre for Diffraction Data (ICDD) Powder Diffraction File (PDF), provides standardised reference diffraction patterns for crystalline materials collected under controlled conditions. Each entry contains the expected $2\theta$ peak positions, d-spacing values, and relative intensities for a specific phase. JCPDS reference cards for the five TCO materials studied in this work define the expected reflection positions for ITO (bixbyite $\text{In}_2\text{O}_3$), FTO (cassiterite $\text{SnO}_2$), AZO, MZO, and ZnO (wurtzite ZnO) and were used in this study both to annotate characteristic peak positions in measured diffractograms and to generate physics-based synthetic training data through simulation of reference-pattern-based XRD profiles.
+
+
+\subsection{Machine Learning in Materials Science}
+
+\subsubsection{Overview}
+
+Machine learning has undergone rapid expansion in materials science over the past decade, driven by the growing availability of digitised experimental datasets and the maturation of open-source ML frameworks. ML approaches have been applied across the materials characterisation pipeline: predicting material properties from composition (Stoll and Benner, 2021), identifying phases from spectroscopic signatures (Rickert et al., 2021), optimising synthesis conditions (Amigo et al., 2023), predicting glass structure from composition (B{\o}dker et al., 2022), and accelerating materials discovery through surrogate models (Grandi et al., 2025). The common thread in these applications is the ability of ML algorithms to extract complex non-linear relationships from high-dimensional datasets without requiring explicit physical models, making them well-suited to the pattern-rich data produced by spectroscopic measurement techniques. For structured tabular feature sets derived from experimental spectra, ensemble methods --- particularly gradient boosting --- have consistently achieved superior classification performance across diverse materials datasets (Shaik and Srinivasan, 2018; Raghavendra et al., 2020).
+
+
+\subsubsection{Feature Engineering and Extraction}
+
+Feature engineering is the process of transforming raw measurement data into a structured numerical representation that ML algorithms can process effectively. For spectroscopic data such as XRD diffractograms, effective features must capture the physically meaningful aspects of the signal: peak positions, intensities, widths, inter-peak relationships, and global spectral statistics. D-spacing-based features are particularly valuable because they encode crystallographic information in an instrument-independent form, as discussed in Section 2.3 (Li et al., 2024). Window-based features that compute statistics within specific angular regions targeting known structural differences concentrate discriminative information where it is most relevant. Resampled continuous representations of the full spectrum preserve shape information that peak-picking approaches may miss when peaks are weak or overlapping. The design of the feature set fundamentally determines the upper bound on achievable classification accuracy, making feature engineering a critical step in any ML pipeline for materials characterisation.
+
+
+\subsubsection{Data Augmentation}
+
+Data augmentation is a technique for artificially expanding a limited training dataset by applying controlled transformations to existing samples, thereby exposing the model to a wider range of plausible input variations during training. For spectroscopic data, physics-motivated augmentations are more appropriate than generic geometric transformations used in image processing. In XRD, relevant augmentations include Gaussian noise addition (simulating detector noise), peak shifting (simulating lattice strain and instrument calibration variation), intensity scaling (simulating beam intensity fluctuation), background drift addition (simulating amorphous substrate contributions), and peak broadening (simulating reduced crystallite size). Physics-based simulation using JCPDS reference database entries provides an independent source of synthetic data that complements experimental augmentation by covering the ideal polycrystalline diffraction pattern. Data augmentation is particularly important in materials science where experimental data collection is expensive and time-consuming, often limiting dataset sizes to tens of samples per class. Lee (2019) demonstrated that augmentation significantly improves ML model generalisation for solar cell property prediction, a finding consistent with the approach adopted in this study.
+
+
+\subsubsection{Tree-Based Models}
+
+Decision trees partition the feature space through a sequence of binary threshold splits, producing interpretable if-then classification rules. The splitting criterion at each node maximises information gain or minimises Gini impurity. While individual decision trees suffer from high variance and overfitting, ensemble extensions substantially improve generalisation. Random Forest constructs an ensemble of decision trees, each trained on a bootstrap sample of the data with random feature subsampling at each split node (Salman et al., 2024). The combination of bagging (bootstrap aggregation) and feature randomisation reduces variance while maintaining low bias, consistently producing robust classifiers for structured spectroscopic data (Shaik and Srinivasan, 2018). Extra Trees (Extremely Randomised Trees) extends the Random Forest approach by additionally randomising the split threshold selection at each node, further reducing variance at the cost of a marginal increase in bias.
+
+
+\subsubsection{Gradient Boosting Models}
+
+Gradient boosting builds an additive ensemble of weak learners (typically shallow decision trees) sequentially, where each successive tree is trained to minimise the residual errors of the current ensemble. The classical Friedman gradient boosting algorithm minimises a differentiable loss function by gradient descent in function space. XGBoost extends this framework with second-order Taylor expansion of the loss function, L1 and L2 regularisation terms, column subsampling per tree and per split, and efficient handling of sparse data (Chen and Guestrin, 2016). These additions substantially reduce overfitting and improve computational efficiency. Bent\'{e}jac et al.\ (2021) conducted a comprehensive comparative analysis confirming XGBoost's superiority across diverse classification benchmarks, making it the natural reference algorithm for this study given its use in the reference optical-signature work (Md Yunos et al., 2026). LightGBM achieves further computational efficiency through histogram-based approximate split finding, leaf-wise (best-first) tree growth instead of the conventional level-wise strategy, and Gradient-based One-Side Sampling (GOSS) that concentrates computation on training samples with large gradient magnitudes (Ke et al., 2017). AdaBoost, an earlier boosting algorithm, iteratively reweights training samples by increasing the weight of misclassified samples and decreasing that of correctly classified samples, forcing successive learners to focus on the difficult examples. Stacking combines the predictions of diverse base classifiers through a meta-learner trained on their out-of-fold outputs, exploiting complementary strengths to achieve performance beyond any individual model (Salman et al., 2024).
+
+
+\subsubsection{Support Vector Machines}
+
+Support Vector Machines (SVMs) identify the maximum-margin hyperplane that separates classes in a transformed feature space. The kernel trick implicitly maps the input features into a higher-dimensional space where linear separation becomes tractable, without requiring explicit computation of the transformation. The Radial Basis Function (RBF) kernel $K(\mathbf{x}, \mathbf{x}') = \exp(-\gamma \|\mathbf{x} - \mathbf{x}'\|^2)$ is the most widely used kernel for spectroscopic classification, as it can represent arbitrary smooth decision boundaries (Du et al., 2024). The regularisation parameter $C$ controls the trade-off between maximising the margin and tolerating training misclassifications. Linear SVM applies a linear kernel and is particularly efficient in high-dimensional feature spaces; it has been shown to perform competitively with non-linear kernels when the number of features is large relative to the number of samples (Prasad et al., 2017). For XRD feature vectors of approximately 359 dimensions with 640 training samples, linear separability may be partially achieved, motivating the inclusion of both RBF and linear SVM variants.
+
+
+\subsubsection{Linear and Probabilistic Models}
+
+Logistic Regression extends linear classification to probabilistic outputs via the softmax function in the multi-class setting, providing calibrated class probability estimates that are useful for uncertainty quantification. Ridge Classifier applies L2-regularised linear discriminant classification and is equivalent to logistic regression under specific distributional assumptions. Linear Discriminant Analysis (LDA) assumes each class follows a multivariate Gaussian distribution with a shared covariance matrix and finds the linear projection that maximises between-class separation relative to within-class scatter. LDA with shrinkage regularisation --- which regularises the estimated covariance matrix towards a scaled identity --- performs robustly when the number of features approaches or exceeds the number of training samples, a scenario common in spectroscopic ML pipelines. Naive Bayes classifiers apply Bayes' theorem with the conditional independence assumption between features given the class label; while this assumption is generally violated for XRD features (adjacent angle measurements are highly correlated), Naive Bayes can serve as a useful baseline and sometimes achieves competitive performance through cancellation of errors (Obi, 2023).
+
+
+\subsubsection{Neural Networks}
+
+Multilayer perceptrons (MLPs) are fully connected feedforward neural networks that learn non-linear feature representations through multiple layers of weighted connections followed by non-linear activation functions such as ReLU ($f(x) = \max(0, x)$). By the universal approximation theorem, an MLP with a single sufficiently wide hidden layer can approximate any continuous function, though deeper architectures are typically more parameter-efficient in practice. K-Nearest Neighbours (KNN) is a non-parametric instance-based classifier that assigns a class label to a query point based on the majority vote (or distance-weighted vote) of its $k$ nearest training samples in feature space. KNN makes no distributional assumptions and can represent arbitrarily complex decision boundaries, but its performance degrades in high-dimensional spaces due to the curse of dimensionality, where Euclidean distances between points become increasingly uninformative as dimensionality grows. Both MLP and KNN are included in this study to establish the performance ceiling for non-linear approaches and the performance floor for distance-based methods, respectively.
+
+
+\subsubsection{Model Evaluation Techniques}
+
+Rigorous evaluation of ML classifiers requires metrics that go beyond simple accuracy, particularly for class-imbalanced datasets and probabilistic models. Cohen's kappa coefficient ($\kappa$) measures the agreement between predicted and true labels corrected for chance, with $\kappa > 0.80$ indicating strong agreement (Yang, 2024). Log loss (cross-entropy) penalises confident incorrect predictions and assesses model calibration; lower values indicate better-calibrated probability estimates. Macro F1-score computes the harmonic mean of precision and recall independently per class and then averages without class-frequency weighting, ensuring equal treatment of minority classes. The Receiver Operating Characteristic (ROC) curve plots the true positive rate against the false positive rate at varying classification thresholds; the Area Under the Curve (AUC) summarises overall discrimination ability, with values approaching 1.0 indicating near-perfect class separation (Yang, 2024). Cross-validation, particularly repeated stratified $k$-fold cross-validation, provides substantially more reliable performance estimates than a single holdout split by averaging results across multiple random data partitions while preserving class proportions in each fold (Buitinck et al., 2013). All preprocessing steps (feature scaling) must be applied within each fold rather than on the full dataset to prevent data leakage, which would produce artificially optimistic performance estimates.
+
+
+\subsection{Machine Learning for XRD Pattern Recognition}
+
+The application of ML to XRD pattern analysis has attracted growing research interest as a means of automating phase identification, traditionally a manual and expert-dependent process. Early approaches applied artificial neural networks to simulated multi-phase XRD patterns, demonstrating the feasibility of automated phase classification but limited to small numbers of phases and simplified patterns. Convolutional neural networks (CNNs) have more recently been applied directly to raw XRD diffractograms as one-dimensional signals, learning hierarchical feature representations through convolutional filters without manual feature engineering. While CNNs can achieve high accuracy on large labelled datasets, their data hunger limits applicability in experimental materials science where only tens of measured patterns per phase are typically available.
+
+Traditional ML classifiers operating on handcrafted crystallographic features --- peak positions, intensities, d-spacings, and statistical descriptors --- have demonstrated competitive performance and greater interpretability than deep learning approaches for small-to-medium datasets. Random Forest and gradient boosting classifiers have achieved strong accuracy in phase identification tasks for oxide material systems, with d-spacing-based feature representations proving more generalisable across instruments than raw angle-based representations. Rickert et al.\ (2021) demonstrated that ML classifiers can extract discriminative information from spectroscopic surface property data in biological materials, establishing a methodological parallel to the XRD-based materials classification approach in this study.
+
+Critically, no prior study in the open literature has systematically evaluated a comprehensive set of fifteen ML classifiers on XRD-derived features for TCO material discrimination using a data-leakage-free repeated stratified cross-validation framework with physics-motivated data augmentation. Most existing XRD classification studies evaluate a small number of algorithms, use train-test splits without stratification, or apply preprocessing outside the cross-validation loop --- practices that risk data leakage and overoptimistic performance estimates. This gap in the literature represents the primary methodological contribution of the present study.
+
+
+\subsection{Reference Study: TCO Classification via Optical Signatures}
+
+The most directly related prior work is that of Md Yunos et al.\ (2026), published in the Journal of Electronic Materials, which classified the same five TCO materials --- AZO, FTO, ITO, MZO, and ZnO --- using optical signatures. Their feature set comprised wavelength, optical density, optical absorption coefficient, and transmittance measurements extracted from UV-Vis spectrophotometry. Six ML classifiers were evaluated, with XGBoost achieving the best performance at $96.21\%$ accuracy and AUC of $1.00$ across all five classes. The study demonstrated that optical signatures provide highly discriminative features for TCO classification, establishing a strong benchmark against which XRD-based approaches can be compared.
+
+The present study extends the work of Md Yunos et al.\ (2026) in three key directions. First, it shifts the feature domain from optical to structural (XRD), providing instrument-independent crystallographic features that encode atomic-level information not accessible through optical measurements. Second, it substantially expands the classifier evaluation from six to fifteen models, enabling a comprehensive comparison across all major ML algorithm families. Third, it introduces a physics-motivated data augmentation pipeline and a data-leakage-free repeated stratified cross-validation framework that provide more rigorous and reproducible performance estimates. Together, these extensions establish XRD structural signatures as a complementary modality to optical measurements for TCO classification.
+
+
+\subsection{Critical Review and Justification}
+
+The literature reviewed in this chapter reveals several consistent findings that directly motivate the methodological choices in this study. Gradient boosting methods --- XGBoost, LightGBM, and classical Gradient Boosting --- consistently achieve top performance on structured tabular datasets derived from spectroscopic measurements (Shaik and Srinivasan, 2018; Raghavendra et al., 2020; Chen and Guestrin, 2016; Bent\'{e}jac et al., 2021; Ke et al., 2017). This pattern holds across diverse application domains in materials science and is confirmed by the reference optical-signature study (Md Yunos et al., 2026), providing strong a priori justification for including these algorithms as primary candidates.
+
+XRD d-spacing features offer a critical advantage over raw angle-based features: their instrument-independence makes trained models transferable across laboratories and diffractometer systems without recalibration (Li et al., 2024). This property is essential for practical deployment in industrial quality control workflows where multiple instruments may be in use. Despite this advantage, the structural similarity of the three wurtzite-structured materials (AZO, MZO, ZnO) creates a classification challenge that angle-based peak matching also faces, motivating the design of physically motivated features targeting windows of crystallographic significance.
+
+The existing XRD classification literature is characterised by small classifier sets, inconsistent evaluation protocols, and limited handling of data scarcity. No prior study has addressed all of these limitations simultaneously for the specific problem of TCO phase discrimination. This study addresses the identified gaps by evaluating fifteen classifiers under a unified, data-leakage-free repeated stratified cross-validation protocol, with physics-based data augmentation to address the limited experimental dataset. The direct comparison with the reference optical-signature benchmark (Md Yunos et al., 2026) provides a clear metric for assessing the relative value of structural versus optical feature modalities.
+
+
+\subsection{Summary}
+
+This chapter reviewed the properties and crystal structures of the five TCO materials (ITO, AZO, FTO, MZO, ZnO), the principles of XRD characterisation including Bragg's Law, d-spacing analysis, and the Scherrer equation, and the application of ML in materials science spanning feature engineering, data augmentation, and the full range of classifier families evaluated in this study. Prior work on ML-based XRD pattern recognition was reviewed, identifying the research gap that this study addresses. The reference optical-signature study by Md Yunos et al.\ (2026) was analysed as the primary benchmark. The next chapter describes the methodology adopted to address the identified research gaps.
+
+
+
+\vfill \null
+
+\newpage
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{PROJECT METHODOLOGY}
+\end{center}
+\vspace{2cm}
+
+
+\subsection{Introduction}
+
+This chapter presents the overall research methodology adopted in this study. It describes the dataset, the data augmentation strategy, a high-level overview of the feature extraction approach, the machine learning classifier families considered, and the evaluation framework. Detailed technical configurations for each feature extraction group and individual ML model hyperparameter settings are provided in Chapter 4.
+
+
+\subsection{Overview of Research Framework}
+
+The proposed research framework comprises five sequential phases: (1) data collection, (2) data augmentation and simulation, (3) feature extraction, (4) model development and hyperparameter optimisation, and (5) model evaluation. Data collection gathers raw XRD diffractograms for the five TCO materials. Data augmentation expands the limited experimental dataset through physics-motivated transformations and JCPDS-based simulation. Feature extraction converts each raw scan into a structured numerical vector using six complementary strategies. Model development trains and tunes fifteen supervised ML classifiers using a data-leakage-free pipeline. Model evaluation assesses performance using a comprehensive set of metrics under repeated stratified cross-validation. Figure~\ref{fig:class_dist} illustrates the class distribution across the five TCO materials in the combined dataset following augmentation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig_3_1}
+\caption{Sample count per TCO material class after data augmentation.}
+\label{fig:class_dist}
+\end{figure}
+
+
+\subsection{Dataset Description}
+
+XRD diffractograms were collected for five TCO materials (AZO, FTO, ITO, MZO, ZnO) as 200 nm sputtered thin films on glass substrates. Measurements used Cu K$\alpha$ radiation ($\lambda = 1.5406$ \AA) over $2\theta = 20^{\circ}$--$80^{\circ}$. Figure~\ref{fig:xrd_patterns} shows the overlaid XRD patterns with dashed vertical lines indicating JCPDS reference peak positions for each material, while Figure~\ref{fig:dspacing_patterns} presents the same patterns converted into d-spacing space. D-spacing is an absolute crystallographic quantity independent of instrument calibration, making it a more generalisable feature for cross-laboratory classification. Figure~\ref{fig:waterfall} shows a waterfall (offset) plot of the five TCO patterns for clearer visual comparison of peak positions and relative intensities without overlap.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig_3_2}
+\caption{XRD patterns of five TCO materials with reference peak positions (Cu K$\alpha$, $\lambda = 1.5406$ \AA).}
+\label{fig:xrd_patterns}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig_3_3}
+\caption{XRD patterns in d-spacing space (Bragg's Law: $d = \lambda / 2\sin\theta$).}
+\label{fig:dspacing_patterns}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig_3_4}
+\caption{Waterfall plot of XRD patterns (vertically offset for clarity).}
+\label{fig:waterfall}
+\end{figure}
+
+
+\subsection{Data Augmentation and Physics-Based Simulation}
+
+Due to the limited number of experimental XRD scans available per material class, a two-strategy data augmentation pipeline was developed to expand the dataset to a size sufficient for robust ML training. The first strategy applies eight physics-motivated transformations to each real scan: Gaussian noise addition (simulating detector noise), peak shifting $\pm 0.3^{\circ}$ (simulating lattice strain), intensity scaling (simulating beam intensity variation), background drift addition, peak broadening (simulating reduced crystallite size), preferred orientation modification, sub-range cropping, and combined multi-perturbation. The second strategy generates synthetic XRD patterns by simulating ideal diffractograms from JCPDS reference cards for each TCO material, providing additional training diversity that is physically grounded but independent of the measured experimental data. Figure~\ref{fig:augmentation} compares a real scan with augmented copies and a JCPDS-simulated scan for ZnO, confirming that the augmented patterns remain physically realistic.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig_3_5}
+\caption{Augmentation quality check --- real, augmented, and JCPDS-simulated XRD scans for ZnO.}
+\label{fig:augmentation}
+\end{figure}
+
+
+\subsection{Feature Extraction Overview}
+
+Feature extraction converts each raw XRD scan into a fixed-length numerical vector suitable for ML classification. Since the raw data consists only of $2\theta$ and intensity columns, a structured extraction pipeline was designed to derive physically meaningful features from these two quantities. Six complementary feature groups were developed, each targeting a different aspect of the XRD signal: (A) D-Spacing Space Features, (B) $2\theta$ Interpolated Points, (C) Fixed $2\theta$ Grid Fingerprint, (D) Diagnostic Angular Window Statistics, (E) Peak Analysis Features, and (F) Global Statistical Features. Together these six groups produce approximately 359 features per sample. Figure~\ref{fig:feat_dist} illustrates the distribution of selected key features across the five TCO material classes, demonstrating the discriminative separation achievable from the extracted representations.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{fig_3_6}
+\caption{Feature distribution box plots for four key XRD features across five TCO material classes.}
+\label{fig:feat_dist}
+\end{figure}
+
+The rationale for using six complementary strategies rather than a single approach is that each group captures information the others miss. Groups A and B provide continuous curve representations preserving the full spectral shape; Group C creates a universal fingerprint at fixed angular positions for direct cross-sample comparison; Group D concentrates discriminative information at crystallographically significant angular windows; Group E extracts peak-level crystallographic parameters including Scherrer crystallite size; and Group F summarises the global intensity distribution. Full details of each feature group, including feature names, counts, and design rationale, are presented in Chapter 4.
+
+
+\subsection{Machine Learning Classifier Selection}
+
+Fifteen supervised ML classifiers spanning all major algorithm families were selected to provide a comprehensive cross-family comparison. The classifier set comprises: three tree-based models (Decision Tree, Random Forest, Extra Trees); four gradient boosting models (Gradient Boosting, XGBoost, LightGBM, AdaBoost); two kernel-based models (SVM with RBF kernel, Linear SVM); three linear and probabilistic models (Logistic Regression, Ridge Classifier, Linear Discriminant Analysis); and three instance-based and neural models (K-Nearest Neighbours, Naive Bayes, and MLP Neural Network). By evaluating fifteen models spanning diverse algorithmic paradigms, the study identifies not merely the best-performing model but which algorithm family is most suited to XRD-based spectroscopic classification. Each classifier is wrapped in a scikit-learn \texttt{Pipeline} with \texttt{StandardScaler} applied inside the cross-validation loop to ensure data-leakage-free preprocessing. Detailed model configurations and hyperparameter settings for each classifier are presented in Chapter 4.
+
+
+\subsection{Model Evaluation Framework}
+
+Two complementary evaluation strategies were employed to ensure reliable and reproducible performance assessment. The primary evaluation used an 80/20 stratified holdout split, providing a single unbiased estimate of generalisation performance on unseen data. The secondary evaluation used repeated $5 \times 5$ stratified cross-validation (25 folds total), providing a statistically robust performance estimate with variance quantification across multiple data partitions. Performance metrics included accuracy, Cohen's kappa, log loss, macro F1-score, confusion matrices, ROC-AUC, and learning curves. All preprocessing steps were applied exclusively within each \texttt{Pipeline}/CV fold to strictly prevent data leakage (Buitinck et al., 2013).
+
+
+\subsection{Summary}
+
+This chapter presented the overall research methodology comprising five sequential phases: data collection, data augmentation, feature extraction, model development, and model evaluation. The XRD dataset covers five TCO materials collected under standardised Cu K$\alpha$ radiation conditions. A two-strategy augmentation pipeline expanded the limited experimental dataset to 640 samples. Six complementary feature groups were designed to extract approximately 359 physically meaningful features per scan, and fifteen ML classifiers spanning all major algorithm families were selected for evaluation. Chapter 4 provides the detailed technical configurations for the feature extraction pipeline and all ML model settings.
+
+
+
+\vfill \null
+
+\newpage
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{PROPOSED METHOD}
+\end{center}
+\vspace{2cm}
+
+
+\subsection{Introduction}
+
+This chapter details the technical implementation of the proposed XRD-based TCO classification system. It covers the end-to-end classification pipeline architecture, the detailed configuration of each feature extraction group, the individual ML model hyperparameter settings, the stacking ensemble design, and the hyperparameter tuning strategy and results.
+
+
+\subsection{End-to-End Classification Pipeline}
+
+The proposed end-to-end pipeline transforms a raw XRD \texttt{.xlsx} file into a material class prediction through five sequential stages. Stage 1 (Data Ingestion) reads each \texttt{.xlsx} file, identifies the $2\theta$ and intensity columns by keyword search (tolerating minor naming differences between files), and discards any rows containing NaN values. Stage 2 (Preprocessing) normalises the intensity by dividing by the maximum value so all scans are on a $0$--$1$ scale, then applies Savitzky-Golay smoothing (window size 11, polynomial order 2) to suppress high-frequency detector noise without blurring the crystallographic peaks. Stage 3 (Feature Extraction) runs the six-group extraction pipeline detailed in Section 4.3, producing a $\sim$359-element numerical vector from each scan; any features that could not be computed (e.g.\ fewer than 8 detectable peaks) are filled with zero. Stage 4 (Scaling and Classification) passes the feature vector through a \texttt{StandardScaler} followed by the trained classifier, both wrapped in a scikit-learn \texttt{Pipeline} to prevent data leakage. Stage 5 (Output) returns the predicted class label (AZO, FTO, ITO, MZO, or ZnO) along with a probability score for each class. The augmented and JCPDS-simulated scans are stored in the same \texttt{.xlsx} two-column format as the real scans, so they enter at Stage 1 identically to real data with no special handling required.
+
+
+\subsection{Feature Extraction Settings}
+
+\subsubsection{Group A: D-Spacing Space Features (120 Features)}
+
+The first step converts each scan from angle space into d-spacing space using Bragg's Law: $d = \lambda / (2\sin\theta)$, where $\lambda = 1.5406$ \AA\ for Cu K$\alpha$ radiation. D-spacing is an absolute physical quantity representing the actual spacing between atomic planes in the crystal and does not change between different XRD machines or laboratories. Angle values ($2\theta$), by contrast, can shift slightly depending on instrument calibration. Using d-spacing therefore makes the features more generalisable and instrument-independent.
+
+The d-spacing curve is resampled at 60 equally-spaced points to produce 60 intensity values (features \texttt{d\_point\_0} to \texttt{d\_point\_59}). The first derivative of this curve (30 sampled values, \texttt{d\_deriv1\_0} to \texttt{d\_deriv1\_29}) captures how rapidly intensity is rising or falling at each position, which helps identify peak edges and shoulders. The cumulative sum (30 values, \texttt{d\_cumsum\_0} to \texttt{d\_cumsum\_29}) records how much total signal has accumulated up to each d-spacing point, encoding the overall distribution of crystalline phases. Total from Group A: $60 + 30 + 30 = \mathbf{120}$ features.
+
+\subsubsection{Group B: 2$\theta$ Interpolated Points (60 Features)}
+
+Different XRD files may have slightly different angle ranges or measurement step sizes depending on scan configuration. To ensure every sample has the same number of features regardless of original scan resolution, the pipeline resamples the original angle-vs-intensity curve at 60 equally-spaced points within its own range (features \texttt{theta\_point\_0} to \texttt{theta\_point\_59}). This standardises the length of the angle-space representation without discarding any portion of the scan. The choice of 60 points balances information density against feature redundancy: enough to capture all major peaks, but not so many that consecutive points become virtually identical. Total from Group B: $\mathbf{60}$ features.
+
+\subsubsection{Group C: Fixed 2$\theta$ Grid Fingerprint (120 Features)}
+
+While Group B resamples within each scan's own range, Group C forces every scan onto a fixed grid from exactly $20^{\circ}$ to $80^{\circ}$ at 120 equally-spaced checkpoints (features \texttt{fg\_0} to \texttt{fg\_119}). If a scan does not cover a particular checkpoint, the intensity is set to zero. This group creates a true universal fingerprint --- every sample is described at exactly the same 120 angular positions, making direct cross-sample comparison straightforward. Feature importance analysis (Chapter 5) confirms that grid points \texttt{fg\_21}, \texttt{fg\_29}, \texttt{fg\_13}, \texttt{fg\_20}, \texttt{fg\_23}, \texttt{fg\_55}, \texttt{fg\_28}, \texttt{fg\_27}, and \texttt{fg\_81} all appear in the top 20 most discriminative features, corresponding to the characteristic reflection angles of the five TCO crystal structures. Total from Group C: $\mathbf{120}$ features.
+
+\subsubsection{Group D: Diagnostic Angular Window Statistics (20 Features)}
+
+Group D divides the scan into five angular windows, each targeting a crystallographically significant region. For each window, four statistics are computed: maximum intensity, mean intensity, area under the curve (integrated intensity), and number of detectable peaks. The five windows and their physical significance are as follows:
+
+\begin{itemize}[itemsep=0mm]
+\item \textbf{FTO window ($20^{\circ}$--$28^{\circ}$)}: Captures the cassiterite SnO$_2$ (110) reflection, unique to FTO and absent in all other materials.
+\item \textbf{ITO window ($28^{\circ}$--$33^{\circ}$)}: Captures the bixbyite In$_2$O$_3$ (222) reflection, the primary identification signature for ITO.
+\item \textbf{ZnO-family window ($33^{\circ}$--$37^{\circ}$)}: Captures the wurtzite (002) and (101) reflections shared by AZO, MZO, and ZnO.
+\item \textbf{Mid-angle window ($37^{\circ}$--$55^{\circ}$)}: Captures secondary reflections that differentiate the wurtzite materials from each other.
+\item \textbf{High-angle window ($55^{\circ}$--$80^{\circ}$)}: Captures higher-order reflections whose relative intensities differ between materials.
+\end{itemize}
+
+This group produced the single most important features in the study --- \texttt{max\_zn\_region}, \texttt{max\_ito\_region}, \texttt{max\_fto\_region}, \texttt{mean\_fto\_region}, and \texttt{area\_fto\_region} all appear in the top 10 features by importance. Total from Group D: $5 \text{ windows} \times 4 \text{ statistics} = \mathbf{20}$ features.
+
+\subsubsection{Group E: Peak Analysis Features (up to 74 Features)}
+
+Group E automatically detects peaks using \texttt{scipy.signal.find\_peaks} and analyses up to eight of the strongest peaks in detail. For each detected peak, the following are recorded: the $2\theta$ position, the d-spacing value (computed via Bragg's Law), the normalised intensity, the Full Width at Half Maximum (FWHM) in degrees, and the crystallite size estimated from the Scherrer equation $D = K\lambda / (\beta \cos\theta)$, where $K = 0.9$ is the Scherrer constant and $\beta$ is the FWHM in radians. The Scherrer equation provides an estimate of crystallite size --- a material property that often differs between AZO, MZO, and ZnO even when their peak positions overlap, providing discriminative information that angle measurements alone cannot supply.
+
+Additionally, d-spacing ratios between consecutive peaks (up to 5 values) and intensity ratios relative to the tallest peak (up to 5 values) are computed. Ratios are scale-independent features: they remain constant regardless of total signal strength, making them robust to variations in film thickness or beam intensity. Peak-derived features \texttt{peak\_0\_d}, \texttt{d\_ratio\_0}, \texttt{peak\_0\_intensity}, and \texttt{peak\_1\_theta} all appear in the top 20 feature importance rankings. Maximum features from Group E: $8 \times 5 + 5 + 5 = \mathbf{up\ to\ 74}$ features.
+
+\subsubsection{Group F: Global Statistical Features (6 Features)}
+
+Group F treats the entire d-spacing-resampled scan as a statistical distribution and computes six summary statistics: total area (integral of the intensity curve, representing overall crystallinity), mean intensity, standard deviation, skewness (asymmetry of the intensity distribution --- a positive skew indicates a few very strong peaks with mostly low background), kurtosis (sharpness of peaks relative to a normal distribution), and four region-energy values (fraction of total signal in each quarter of the scan range). These global features act as a coarse summary that complements the localised peak and window features, capturing the overall shape of the scan. Total from Group F: $\mathbf{6}$ features.
+
+\subsubsection{Feature Extraction Summary}
+
+Table~\ref{tab:feat_summary} summarises the six groups, their feature counts, and their physical motivation.
+
+\begin{table}[H]
+\caption{Feature extraction group summary.}
+\label{tab:feat_summary}
+\vspace{-4mm}
+\begin{center}
+\begin{tabular}{|>{\raggedright\arraybackslash}p{1.2cm}|>{\raggedright\arraybackslash}p{4.0cm}|c|>{\raggedright\arraybackslash}p{6.5cm}|}
+\hline
+\textbf{Group} & \textbf{Name} & \textbf{Count} & \textbf{Physical Motivation} \\
+\hline
+A & D-Spacing Space Features & 120 & Absolute crystallographic representation, instrument-independent \\
+\hline
+B & $2\theta$ Interpolated Points & 60 & Standardised angle-space curve regardless of original scan resolution \\
+\hline
+C & Fixed $2\theta$ Grid Fingerprint & 120 & Universal fingerprint at fixed $20^{\circ}$--$80^{\circ}$ angular positions \\
+\hline
+D & Diagnostic Angular Window Statistics & 20 & Physically motivated zone intensities targeting characteristic reflections \\
+\hline
+E & Peak Analysis Features & $\leq$74 & Crystallographic peak parameters including Scherrer crystallite size \\
+\hline
+F & Global Statistical Features & 6 & Summary statistics of the overall intensity distribution \\
+\hline
+\multicolumn{2}{|l|}{\textbf{Total}} & $\sim$\textbf{380} & \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\subsection{ML Model Configuration}
+
+\subsubsection{Tree-Based Models}
+
+Decision Tree was included as the simplest interpretable baseline, with \texttt{max\_depth=5} and \texttt{min\_samples\_split=10} to prevent overfitting on training data. Random Forest builds 200 decision trees on random subsets of data and features (\texttt{n\_estimators=200}, \texttt{max\_depth=8}, \texttt{max\_features=sqrt}), then takes a majority vote --- the randomness between trees reduces variance without increasing bias. Extra Trees (Extremely Randomised Trees) uses the same 200-tree ensemble but adds randomness to the split threshold selection, further reducing variance at the cost of slightly higher bias (\texttt{n\_estimators=200}, \texttt{max\_depth=8}, \texttt{max\_features=sqrt}).
+
+\subsubsection{Gradient Boosting Models}
+
+Four gradient boosting algorithms were included because this family consistently achieves top performance on structured tabular data (Chen and Guestrin, 2016; Bent\'{e}jac et al., 2021). Gradient Boosting (scikit-learn's implementation) uses the classical Friedman algorithm with \texttt{n\_estimators=100}, \texttt{learning\_rate=0.05}, and \texttt{max\_depth=3}. XGBoost extends this with L1 and L2 regularisation (\texttt{n\_estimators=100}, \texttt{learning\_rate=0.05}, \texttt{max\_depth=3}, \texttt{subsample=0.8}) (Chen and Guestrin, 2016); it was selected because it is the algorithm used in the reference study by Md Yunos et al.\ (2026), enabling direct comparison. LightGBM uses a histogram-based algorithm and leaf-wise tree growth (\texttt{n\_estimators=100}, \texttt{learning\_rate=0.05}, \texttt{max\_depth=5}, \texttt{num\_leaves=31}) (Ke et al., 2017). AdaBoost was included as a classical boosting baseline (\texttt{n\_estimators=100}, \texttt{learning\_rate=0.05}).
+
+\subsubsection{Support Vector Machines}
+
+SVM with RBF kernel (\texttt{C=10}, \texttt{kernel=rbf}, \texttt{gamma=scale}) was selected because SVMs are theoretically well-suited to high-dimensional feature spaces; the RBF kernel maps features into an implicit higher-dimensional space, enabling nonlinear class boundaries. Linear SVM (\texttt{C=1.0}, \texttt{max\_iter=2000}) was included as a computationally faster alternative; its competitive accuracy ($87.5\%$) confirms that much of the class separation is already linear in the 359-feature space.
+
+\subsubsection{Linear and Probabilistic Models}
+
+Logistic Regression (\texttt{C=1.0}, \texttt{max\_iter=1000}, \texttt{solver=lbfgs}) provides a probabilistic linear baseline with calibrated class probabilities. Ridge Classifier (\texttt{alpha=1.0}) applies L2-regularised linear classification. Linear Discriminant Analysis (\texttt{solver=svd}) assumes each class follows a multivariate Gaussian distribution with a shared covariance matrix; SVD-based solving handles the case where the number of features approaches the number of samples. Naive Bayes (\texttt{var\_smoothing=1e-9}) assumes feature independence within each class --- an assumption violated for XRD features (nearby angle measurements are highly correlated), which explains its lower accuracy.
+
+\subsubsection{Distance and Neural Models}
+
+K-Nearest Neighbours (\texttt{n\_neighbors=5}, \texttt{weights=distance}) classifies by finding the five most similar training samples in feature space with distance-inverse weighting. Its lower accuracy ($69.5\%$) likely reflects the curse of dimensionality in the 359-feature space. The MLP Neural Network (\texttt{hidden\_layer\_sizes=(100,50)}, \texttt{activation=relu}, \texttt{lr=0.001}) was included with early stopping (\texttt{validation\_fraction=0.15}) to prevent overfitting; its moderate performance ($79.7\%$) suggests that the dataset size (640 samples) limits its ability to learn complex representations effectively.
+
+Table~\ref{tab:classifiers} summarises all fifteen classifiers and their key hyperparameter settings.
+
+\begin{table}[H]
+\caption{Summary of fifteen ML classifiers and their key hyperparameter settings.}
+\label{tab:classifiers}
+\vspace{-4mm}
+\begin{center}
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.8cm}|>{\raggedright\arraybackslash}p{2.8cm}|>{\raggedright\arraybackslash}p{6.0cm}|}
+\hline
+\textbf{Model} & \textbf{Category} & \textbf{Key Hyperparameters} \\
+\hline
+Decision Tree & Tree-based & \texttt{max\_depth=5, min\_samples\_split=10} \\
+\hline
+Random Forest & Ensemble (Bagging) & \texttt{n\_estimators=200, max\_depth=8, max\_features=sqrt} \\
+\hline
+Extra Trees & Ensemble (Bagging) & \texttt{n\_estimators=200, max\_depth=8, max\_features=sqrt} \\
+\hline
+Gradient Boosting & Ensemble (Boosting) & \texttt{n\_estimators=100, lr=0.05, max\_depth=3} \\
+\hline
+XGBoost & Ensemble (Boosting) & \texttt{n\_estimators=100, lr=0.05, max\_depth=3, subsample=0.8} \\
+\hline
+LightGBM & Ensemble (Boosting) & \texttt{n\_estimators=100, lr=0.05, max\_depth=5, num\_leaves=31} \\
+\hline
+AdaBoost & Ensemble (Boosting) & \texttt{n\_estimators=100, learning\_rate=0.05} \\
+\hline
+SVM (RBF) & Kernel-based & \texttt{C=10, kernel=rbf, gamma=scale} \\
+\hline
+SVM (Linear) & Kernel-based & \texttt{C=1.0, max\_iter=2000} \\
+\hline
+KNN & Instance-based & \texttt{n\_neighbors=5, weights=distance} \\
+\hline
+Logistic Regression & Linear & \texttt{C=1.0, max\_iter=1000, solver=lbfgs} \\
+\hline
+Ridge Classifier & Linear & \texttt{alpha=1.0} \\
+\hline
+LDA & Discriminant & \texttt{solver=svd} \\
+\hline
+Naive Bayes & Probabilistic & \texttt{var\_smoothing=1e-9} \\
+\hline
+Neural Network (MLP) & Neural & \texttt{hidden=(100,50), activation=relu, lr=0.001} \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\subsection{Stacking Ensemble Architecture}
+
+A stacking ensemble was constructed as a second-level classifier combining the predictions of the top five cross-validation models: LightGBM, XGBoost, Gradient Boosting, LDA, and Linear SVM. The rationale for stacking is that different models capture different aspects of the data --- gradient boosting models excel at nonlinear feature interactions, LDA exploits Gaussian class structure, and Linear SVM provides a stable linear boundary. No single model sees all of these simultaneously, but a meta-learner trained on their combined predictions can exploit complementary strengths. The meta-learner is a Logistic Regression, chosen because it is interpretable, fast, and provides calibrated probability outputs for the five-class problem. The stacking is implemented with 5-fold cross-validation to generate out-of-fold predictions for training the meta-learner, preventing the base models from simply passing their own training predictions upward and overfitting. The final stacking ensemble achieved $90.6\%$ holdout accuracy ($\kappa = 0.882$), matching the best single model (LightGBM), which demonstrates that the ensemble provides a robust alternative even when a single model already performs well (Salman et al., 2024).
+
+
+\subsection{Hyperparameter Tuning}
+
+Hyperparameter tuning was applied to the three best-performing model families: XGBoost, LightGBM, and Random Forest. \texttt{RandomizedSearchCV} was selected as the tuning strategy with 30 iterations and 5-fold cross-validation. The reason for choosing \texttt{RandomizedSearchCV} over exhaustive \texttt{GridSearchCV} is computational efficiency: with continuous hyperparameter ranges and multiple parameters, a full grid would require hundreds of evaluations. Randomly sampling 30 combinations provides adequate coverage of the search space in minutes rather than hours, while research has shown that random search often finds equally good solutions as grid search for the same budget (Obi, 2023).
+
+The search spaces were: for XGBoost, \texttt{n\_estimators} $\in [50, 300]$, \texttt{learning\_rate} $\in [0.01, 0.21]$, \texttt{max\_depth} $\in [2, 7]$, \texttt{subsample} $\in [0.6, 1.0]$, \texttt{colsample\_bytree} $\in [0.6, 1.0]$; for LightGBM, \texttt{n\_estimators} $\in [50, 300]$, \texttt{learning\_rate} $\in [0.01, 0.21]$, \texttt{num\_leaves} $\in [8, 40]$, \texttt{subsample} $\in [0.6, 1.0]$; for Random Forest, \texttt{n\_estimators} $\in [100, 400]$, \texttt{max\_depth} $\in [4, 15]$, \texttt{min\_samples\_split} $\in [2, 20]$, \texttt{max\_features} $\in \{\text{sqrt}, \text{log2}\}$.
+
+The tuning result showed zero improvement over the default settings for all three models ($\Delta = 0.000$ for XGBoost and LightGBM, $\Delta = -0.008$ for Random Forest). This confirms that the initial manual hyperparameter selection was already well-calibrated for this dataset size and feature space, and that the models are not constrained by suboptimal hyperparameters.
+
+
+\subsection{Summary}
+
+This chapter detailed the end-to-end XRD classification pipeline, the six feature extraction group configurations (Groups A--F producing $\sim$359 features per sample), the hyperparameter settings for all fifteen ML classifiers, the stacking ensemble architecture using LightGBM, XGBoost, Gradient Boosting, LDA, and Linear SVM as base models with a Logistic Regression meta-learner, and the hyperparameter tuning results. The next chapter presents the experimental results and discussion.
+
+
+
+\vfill \null
+
+\newpage
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{RESULT AND DISCUSSION}
+\end{center}
+\vspace{2cm}
+
+
+\subsection{Introduction}
+
+This chapter presents and discusses the results of the holdout evaluation, repeated cross-validation, confusion matrix analysis, ROC-AUC curves, learning curves, and feature importance analysis for all fifteen classifiers. Results are compared against the reference optical-signature study.
+
+
+\subsection{Holdout Evaluation Results}
+
+Figure~\ref{fig:holdout_acc} presents the holdout accuracy comparison across all fifteen evaluated classifiers, sorted in ascending order. LightGBM leads at $90.6\%$, followed by Gradient Boosting and LDA (both $89.1\%$) and XGBoost ($88.3\%$); gradient boosting, discriminant, and linear models occupy the top of the ranking, while AdaBoost, Naive Bayes, and KNN are the weakest performers.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_5_1}
+\caption{Holdout accuracy comparison for all ML classifiers (blue $\geq 0.90$, orange $\geq 0.75$, red $< 0.75$).}
+\label{fig:holdout_acc}
+\end{figure}
+
+Table~\ref{tab:holdout} summarises the detailed holdout performance metrics for the twelve probability-output classifiers. LightGBM achieves the best overall performance ($90.6\%$ accuracy, Cohen's $\kappa = 0.88$, log loss $0.26$), with Gradient Boosting, LDA, and XGBoost following closely, confirming the strength of gradient boosting and discriminant methods for XRD-based TCO classification.
+
+\begin{table}[H]
+\caption{Holdout evaluation results for the twelve probability-output classifiers.}
+\label{tab:holdout}
+\vspace{-4mm}
+\begin{center}
+\begin{tabular}{|>{\raggedright\arraybackslash}p{4.0cm}|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Holdout Acc.} & \textbf{Cohen's $\kappa$} & \textbf{Log Loss} & \textbf{Macro F1} \\
+\hline
+XGBoost             & 0.883 & 0.852 & 0.319 & 0.88 \\
+\hline
+LightGBM            & 0.906 & 0.882 & 0.255 & 0.90 \\
+\hline
+Extra Trees         & 0.797 & 0.741 & 0.549 & 0.79 \\
+\hline
+Random Forest       & 0.852 & 0.811 & 0.494 & 0.84 \\
+\hline
+Gradient Boosting   & 0.891 & 0.862 & 0.271 & 0.89 \\
+\hline
+AdaBoost            & 0.648 & 0.543 & 1.547 & 0.51 \\
+\hline
+Decision Tree       & 0.781 & 0.723 & 0.465 & 0.73 \\
+\hline
+LDA                 & 0.891 & 0.862 & 0.279 & 0.89 \\
+\hline
+Logistic Regression & 0.867 & 0.833 & 0.311 & 0.86 \\
+\hline
+SVM (RBF)           & 0.836 & 0.793 & 0.401 & 0.82 \\
+\hline
+Neural Network      & 0.797 & 0.743 & 0.431 & 0.80 \\
+\hline
+KNN                 & 0.695 & 0.617 & 2.032 & 0.68 \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\subsection{Cross-Validation Results}
+
+Figure~\ref{fig:cv_acc} presents the repeated $5 \times 5$ stratified cross-validation results with error bars (mean $\pm$ standard deviation across 25 folds). LightGBM achieves the highest mean CV accuracy ($89.9\% \pm 2.1\%$), ahead of XGBoost ($88.2\% \pm 2.2\%$) and Gradient Boosting ($87.7\% \pm 1.8\%$); their low standard deviations confirm stable generalisation. The CV ranking is consistent with the holdout results, indicating reliable and reproducible performance estimates.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_5_2}
+\caption{Repeated $5 \times 5$ stratified cross-validation accuracy with error bars (mean $\pm$ std, 25 folds).}
+\label{fig:cv_acc}
+\end{figure}
+
+
+\subsection{Confusion Matrix Analysis}
+
+Figure~\ref{fig:conf_matrix} shows confusion matrices for the top eight classifiers. LightGBM, Gradient Boosting, and LDA show the strongest diagonal dominance. FTO and ITO are classified almost perfectly by every top model, whereas AZO is the most difficult class --- it is most often confused with ZnO, and to a lesser extent MZO, which is physically interpretable because AZO, MZO, and ZnO all share the wurtzite structure and therefore overlapping crystallographic peak positions.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_5_3}
+\caption{Confusion matrices for the top eight classifiers on the holdout test set.}
+\label{fig:conf_matrix}
+\end{figure}
+
+
+\subsection{ROC Curve and AUC Analysis}
+
+Figure~\ref{fig:roc} presents ROC curves for the top six probability models using a one-vs-rest strategy. The boosting models and LDA achieve mean AUC $\approx 0.98$--$0.99$ across the five TCO classes, with FTO and ITO reaching AUC $\approx 1.00$. Consistent with the confusion-matrix analysis, the lowest per-class AUC values occur for AZO and ZnO (typically $0.94$--$0.97$), reflecting their overlapping wurtzite signatures.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_5_4}
+\caption{ROC curves (one-vs-rest) for the top six classifiers showing per-class AUC scores.}
+\label{fig:roc}
+\end{figure}
+
+
+\subsection{Learning Curve Analysis}
+
+Figure~\ref{fig:learning_curves} displays learning curves for the top four models (LightGBM, XGBoost, Gradient Boosting, and LDA), plotting training and cross-validation accuracy as a function of training set size. All four show a modest training--validation gap ($0.10$--$0.13$) that narrows as more data is added, indicating good generalisation rather than severe overfitting. LightGBM and LDA show the smallest final gaps ($0.11$ and $0.10$ respectively), while the steadily rising cross-validation curves suggest that performance would continue to improve with additional training data.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_5_5}
+\caption{Learning curves for the top four models showing training vs.\ CV accuracy.}
+\label{fig:learning_curves}
+\end{figure}
+
+
+\subsection{Feature Importance Analysis}
+
+Figure~\ref{fig:feat_importance} shows the top 20 features ranked by Random Forest mean decrease in impurity. The most discriminative features are the diagnostic angular-window intensities and the fixed $2\theta$-grid points (e.g.\ \texttt{max\_zn\_region}, \texttt{max\_ito\_region}, \texttt{max\_fto\_region}, \texttt{mean\_fto\_region}, \texttt{area\_fto\_region}, and grid points \texttt{fg\_21} and \texttt{fg\_29}), which capture the presence and strength of each material's characteristic reflections --- the SnO$_2$ cassiterite peak for FTO, the bixbyite peak for ITO, and the wurtzite peaks shared by AZO, MZO, and ZnO. Peak-derived features (\texttt{peak\_0\_d}, \texttt{d\_ratio\_0}, \texttt{peak\_0\_intensity}, \texttt{peak\_1\_theta}) and the ITO peak-count feature also rank highly, confirming that crystallographic peak position and intensity carry the strongest class information.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_5_6}
+\caption{Top 20 feature importances from Random Forest (mean decrease in Gini impurity).}
+\label{fig:feat_importance}
+\end{figure}
+
+
+\subsection{Comparison with Reference Study}
+
+Comparing with Md Yunos et al.\ (2026) --- optical-signature-based classification --- both studies confirm that gradient boosting is the strongest family for TCO classification. In the reference optical study XGBoost was optimal ($96.21\%$ accuracy), whereas for the XRD structural data in this study LightGBM gave the best result ($90.6\%$ holdout, $89.9\%$ cross-validation accuracy), with XGBoost close behind. The somewhat lower accuracy here is consistent with the harder, more overlapping wurtzite signatures (AZO/MZO/ZnO) in structural space. XRD features offer richer crystallographic information and greater instrument-independence (d-spacing values are absolute physical quantities), while optical measurements are faster and more accessible. The two approaches are complementary, and their fusion represents a promising future direction.
+
+
+\subsection{Summary}
+
+LightGBM achieved the best overall performance at $90.6\%$ holdout accuracy ($\kappa = 0.88$). Gradient boosting models and LDA consistently ranked near the top, while AdaBoost, Naive Bayes, and KNN were the weakest performers. Diagnostic angular-window and fixed-grid features were most discriminative. AZO was the hardest class to separate due to its structural similarity with MZO and ZnO. The next chapter concludes the study.
+
+
+
+\vfill \null
+\newpage
+
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{CONCLUSION}
+\end{center}
+\vspace{2cm}
+
+
+\subsection{Introduction}
+
+This chapter summarises the key conclusions drawn from the study, states the project contributions, identifies the limitations encountered, and recommends directions for future research.
+
+
+\subsection{Conclusions}
+
+This study successfully developed and evaluated a comprehensive ML framework for classifying five TCO materials using XRD structural signatures. The key conclusions are as follows.
+
+\begin{enumerate}[itemsep=0mm]
+\item A comprehensive XRD feature extraction pipeline was successfully developed, incorporating six complementary feature groups --- d-spacing descriptors, $2\theta$ interpolated points, fixed-grid fingerprints, diagnostic angular-window statistics, peak analysis features, and global statistical measures --- producing approximately 359 physically meaningful and instrument-independent features per sample. Feature importance analysis confirmed that angular-window intensities and d-spacing-based peak descriptors were the most discriminative features for distinguishing the five TCO materials.
+
+\item Machine learning classifiers were successfully developed and implemented for multiclass classification of five TCO materials (AZO, FTO, ITO, MZO, and ZnO). A two-strategy data augmentation pipeline combining physics-motivated perturbations and JCPDS-based simulation expanded the limited experimental dataset to 640 samples, enabling robust model training across all five classes.
+
+\item Comprehensive evaluation of the developed ML classifiers using multi-metric assessment --- including accuracy, Cohen's kappa, log loss, macro F1-score, ROC-AUC, confusion matrices, and learning curves --- identified LightGBM as the optimal model, achieving $90.6\%$ holdout accuracy (Cohen's $\kappa = 0.88$) and $89.9\% \pm 2.1\%$ cross-validation accuracy. A stacking ensemble of the top five models matched this performance, and mean ROC-AUC values of $0.97$--$0.99$ confirmed strong class separability across all five TCO materials.
+\end{enumerate}
+
+
+\subsection{Project Contribution}
+
+This study contributes a validated XRD-based ML classification framework for TCO materials that is instrument-independent, reproducible, and data-leakage-free. It provides a direct extension of the reference optical-signature study to the structural XRD domain, enabling future multimodal fusion. The six-group feature extraction framework and the rigorous repeated stratified cross-validation protocol serve as reusable methodological contributions for data-driven materials science and industrial quality control.
+
+
+\subsection{Project Limitation}
+
+The principal limitations of this study are as follows. The experimental dataset was limited to a small number of real XRD scans per class, requiring heavy reliance on augmented and simulated data. The study is restricted to the five TCO materials enumerated and may not generalise to other phases without retraining. Real-time integration with automated diffractometer hardware was outside the scope of this work. The neural network's performance was likely constrained by the relatively small dataset size.
+
+
+\subsection{Recommendations for Future Work}
+
+\begin{enumerate}[itemsep=0mm]
+\item \textbf{Dataset expansion:} Collect additional XRD scans under diverse deposition conditions to improve model generalisability.
+
+\item \textbf{Multimodal fusion:} Combine XRD structural features with optical signatures in a unified ML framework for superior classification.
+
+\item \textbf{Deep learning:} Apply 1D-CNN directly to raw XRD profiles for automatic feature learning without manual extraction.
+
+\item \textbf{Transfer learning:} Adapt models trained on known TCO materials to classify newly developed variants with minimal retraining.
+
+\item \textbf{Explainable AI (XAI):} Integrate SHAP values for feature contribution analysis and crystallographic interpretation.
+
+\item \textbf{Real-time deployment:} Integrate the classifier with automated diffractometer hardware for in-process quality control.
+
+\item \textbf{Extended material classes:} Expand to GZO, CIO, ATO, and other emerging TCO candidates.
+\end{enumerate}
+
+
+\subsection{Summary}
+
+This study demonstrated that XRD structural signatures provide an accurate and instrument-independent basis for automated TCO classification using ML. LightGBM achieved the best performance at $90.6\%$ holdout accuracy, the data-leakage-free evaluation framework produced reliable results, and the feature importance analysis provided physically interpretable crystallographic insights. All five project objectives were met.
+
+
+\vfill \null
+%%% ========================== %%%
+
+\newpage
+
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{REFERENCES}
+\textbf{REFERENCES}
+\end{center}
+
+\begin{itemize}[leftmargin=1.5em, label={}, itemsep=2mm]
+
+\item Afre, R.A., Sharma, N., Sharon, M. and Sharon, M. (2018) 'Transparent conducting oxide films for various applications: a review', \textit{Reviews on Advanced Materials Science}, 53(1), pp. 79--89.
+
+\item Amigo, N., Valencia, F.J. and Palominos, S. (2023) 'Machine learning modeling for the prediction of plastic properties in metallic glasses', \textit{Scientific Reports}, 13(1), p. 348.
+
+\item Bent\'{e}jac, C., Cs\"{o}rg\H{o}, A. and Mart\'{i}nez-Mu\~{n}oz, G. (2021) 'A comparative analysis of gradient boosting algorithms', \textit{Artificial Intelligence Review}, 54(3), pp. 1937--1967.
+
+\item B{\o}dker, M.L., Bauchy, M., Du, T., Mauro, J.C. and Smedskjaer, M.M. (2022) 'Predicting glass structure by physics-informed machine learning', \textit{npj Computational Materials}, 8(1), p. 192.
+
+\item Boscarino, S., Crupi, I., Simone, F., Mirabella, S. and Terrasi, A. (2014) 'TCO/Ag/TCO transparent electrodes for solar cells application', \textit{Applied Physics A}, 116(3), pp. 1287--1291.
+
+\item Buitinck, L., Louppe, G., Blondel, M., Pedregosa, F., Mueller, A., Grisel, O. and Varoquaux, G. (2013) 'API design for machine learning software: experiences from scikit-learn', in \textit{ECML PKDD Workshop: Languages for Data Mining and Machine Learning}, pp. 108--122.
+
+\item Chen, T. and Guestrin, C. (2016) 'XGBoost: a scalable tree boosting system', in \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, pp. 785--794.
+
+\item Coutts, T.J., Li, X. and Young, D.L. (2000) 'Characterization of transparent conducting oxides', \textit{MRS Bulletin}, 25(8), pp. 58--65.
+
+\item Dondapati, H., Santiago, K. and Pradhan, A.K. (2013) 'Influence of growth temperature on AZO films grown by RF magnetron sputtering', \textit{Journal of Applied Physics}, 114(14), p. 143506.
+
+\item Du, K.-L., Jiang, B., Lu, J., Hua, J. and Swamy, M.N.S. (2024) 'Exploring kernel machines and support vector machines', \textit{Mathematics}, 12(24), p. 3935.
+
+\item Grandi, D., Jain, Y.P., Groom, A., Cramer, B. and McComb, C. (2025) 'Evaluating large language models for material selection', \textit{Journal of Computing and Information Science in Engineering}, 25(2), p. 021004.
+
+\item Grundmann, M., Frenzel, H., Lorenz, M., Lajn, A., Schein, F. and von Wenckstern, H. (2010) 'Transparent semiconducting oxides: materials and devices', \textit{Physica Status Solidi (a)}, 207(6), pp. 1437--1449.
+
+\item Ke, G., Meng, Q., Finley, T., Wang, T., Chen, W., Ma, W., Ye, Q. and Liu, T.-Y. (2017) 'LightGBM: a highly efficient gradient boosting decision tree', \textit{Advances in Neural Information Processing Systems (NeurIPS)}, 30.
+
+\item Le Bail, A. (2005) 'Whole powder pattern decomposition methods', \textit{Powder Diffraction}, 20(4), pp. 316--326.
+
+\item Lee, M. (2019) 'Insights from machine learning for predicting organic solar cell efficiency', \textit{Advanced Energy Materials}, 9(26), p. 1900891.
+
+\item Li, Y., Zhang, W. and Wang, H. (2024) 'Local environment interaction-based machine learning framework for molecular adsorption energy', \textit{Journal of Materials Informatics}, 4, p. 4.
+
+\item Md Yunos, N., Doroody, C., Ke Sheng, O., Rosly, H.N., Xu, C., Feng, Z.-J., Othman, Z. and Dong, Y. (2026) 'High-precision classification of transparent conductive oxides with optical signatures using XGBoost algorithm', \textit{Journal of Electronic Materials}. doi:10.1007/s11664-025-12663-3.
+
+\item Obi, J.C. (2023) 'A comparative study of several classification metrics and their performances on data', \textit{World Journal of Advanced Engineering Technology and Sciences}, 8(1), pp. 308--314.
+
+\item Prasad, S.V.S., Krishna, V.M. and Savithiri, T.S. (2017) 'Performance evaluation of SVM kernels on multispectral data', \textit{International Journal of Sensor Networks and Data Communications}, 10(4), pp. 1--16.
+
+\item Raghavendra, S., Santosh Kumar, J. and Rao, M. (2020) 'Competitive analysis of gradient boosting algorithms', in \textit{Proceedings of the IEEE International Conference on Advances in Computing, Communications and Control (ICACCCN)}, pp. 191--196.
+
+\item Rickert, C.A., Lieleg, O., Hayta, E.N., Selle, D.M., Kouroudis, I., Gagliardi, A. and Harth, M. (2021) 'Machine learning approach to analyze the surface properties of biological materials', \textit{ACS Biomaterials Science \& Engineering}, 7(9), pp. 4614--4625.
+
+\item Salman, H.A., Kalakech, A. and Steiti, A. (2024) 'Random forest algorithm overview', \textit{Babylonian Journal of Machine Learning}, 2024, pp. 69--79.
+
+\item Scardi, P., Leoni, M. and Delhez, R. (2004) 'Line broadening analysis using integral breadth methods', \textit{Journal of Applied Crystallography}, 37(3), pp. 381--390.
+
+\item Shaik, A.B. and Srinivasan, S. (2018) 'A brief survey on random forest ensembles in classification', in \textit{Proceedings of the International Conference on Intelligent Computing and Control Systems (ICICCS)}, pp. 253--260.
+
+\item Shi, J., Zhang, J., Zhang, K.H.L., Yang, L., Qi, D. and Qu, M. (2021) 'Wide bandgap oxide semiconductors: from materials physics to optoelectronic devices', \textit{Advanced Materials}, 33(50), p. 2006230.
+
+\item Stadler, A. (2012) 'Transparent conducting oxides: an up-to-date overview', \textit{Materials}, 5(4), pp. 661--683.
+
+\item Stoll, A. and Benner, P. (2021) 'Machine learning for material characterization', \textit{GAMM-Mitteilungen}, 44(1), p. e202100003.
+
+\item Wen, H., Zhang, R., Chen, L. and Li, Y. (2024) 'Advancements in transparent conductive oxides for photoelectrochemical applications', \textit{Nanomaterials}, 14(7), p. 591.
+
+\item Yang, Y. (2024) 'Evaluating classification performance: ROC and expected utility', \textit{Psychological Methods}, 29(5), pp. 827--843.
+
+\end{itemize}
+
+
+\newpage
+
+%%% APPENDICES %%%
+
+\begin{appendices}
+
+\section*{Appendix A: Sample XRD Data Files}
+\addcontentsline{toc}{section}{Appendix A: Sample XRD Data Files}
+\label{app:A}
+
+Sample XRD data files in \texttt{.xlsx} format containing two columns ($2\theta$ and Intensity) for each of the five TCO materials (AZO, FTO, ITO, MZO, ZnO) are provided as supplementary material to this report.
+
+
+\section*{Appendix B: Python Code --- Feature Extraction Pipeline}
+\addcontentsline{toc}{section}{Appendix B: Python Code --- Feature Extraction Pipeline}
+\label{app:B}
+
+The complete feature extraction and classification pipeline is implemented in \texttt{FYP\_improved\_v2.ipynb}. The notebook contains the six-group feature extraction code, all fifteen classifier implementations, hyperparameter tuning, and evaluation code.
+
+
+\section*{Appendix C: Python Code --- Data Augmentation and Simulation}
+\addcontentsline{toc}{section}{Appendix C: Python Code --- Data Augmentation and Simulation}
+\label{app:C}
+
+The data augmentation and JCPDS-based simulation pipeline is implemented in \texttt{XRD\_data\_generation.ipynb}. The notebook contains the eight physics-motivated augmentation transformations and the JCPDS reference pattern simulation code.
+
+
+\section*{Appendix D: Hyperparameter Search Results}
+\addcontentsline{toc}{section}{Appendix D: Hyperparameter Search Results}
+\label{app:D}
+
+Hyperparameter tuning was performed using \texttt{RandomizedSearchCV} (30 iterations, 5-fold CV) for XGBoost, LightGBM, and Random Forest. The tuning result showed zero improvement over the default settings for all three models ($\Delta = 0.000$ for XGBoost and LightGBM, $\Delta = -0.008$ for Random Forest), confirming that the initial manual hyperparameter selection was already well-calibrated for this dataset.
+
+
+\section*{Appendix E: Full Confusion Matrices for All Fifteen Classifiers}
+\addcontentsline{toc}{section}{Appendix E: Full Confusion Matrices for All Fifteen Classifiers}
+\label{app:E}
+
+Full confusion matrices for all fifteen classifiers evaluated on the holdout test set are provided in the supplementary notebook output (\texttt{FYP\_improved\_v2.ipynb}).
+
+\end{appendices}
+
+
+\end{document}

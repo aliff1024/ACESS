@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 export function WelcomeSection() {
   const router = useRouter();
   const [name, setName] = useState('Learner');
+  const [loadingName, setLoadingName] = useState(true);
   const currentHour = new Date().getHours();
   
   let greeting = 'Good evening';
@@ -16,9 +17,11 @@ export function WelcomeSection() {
   else if (currentHour < 18) greeting = 'Good afternoon';
 
   useEffect(() => {
+    setLoadingName(true);
     fetchLearnerProfile()
       .then((p) => setName(p.full_name || 'Learner'))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingName(false));
   }, []);
 
   return (
@@ -35,7 +38,7 @@ export function WelcomeSection() {
           </div>
           
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-white drop-shadow-sm">
-            {greeting}, <span className="text-blue-200">{name}</span>!
+            {greeting}, {loadingName ? <span className="text-blue-200"><div className="animate-pulse bg-gray-200 rounded-lg h-8 w-48 inline-block align-middle" /></span> : <span className="text-blue-200">{name}</span>}!
           </h1>
           <p className="text-lg md:text-xl text-blue-100 opacity-90 leading-relaxed max-w-md">
             Continue your learning journey today. Master new skills, track your progress, and earn certificates.

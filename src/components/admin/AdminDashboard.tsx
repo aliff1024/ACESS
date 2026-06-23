@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Users, BookOpen, Award, Activity, TrendingUp, ArrowRight, Loader2, School, BarChart3, PieChart, CheckCircle } from 'lucide-react';
-import { fetchAdminDashboardStats, fetchRecentActivity, getInstructorApplicationStats, fetchAdminEngagementData } from '@/lib/admin-api';
-import type { AdminDashboardStats, RecentActivity, EngagementData } from '@/lib/admin-api';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { fetchAdminDashboardStats, fetchRecentActivity, getInstructorApplicationStats, fetchAdminEngagementData, fetchSystemHealthMetrics } from '@/lib/admin-api';
+import type { AdminDashboardStats, RecentActivity, EngagementData, SystemHealthMetrics } from '@/lib/admin-api';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from 'recharts';
 
 interface AdminDashboardProps {
   onNavigate: (view: string) => void;
@@ -15,13 +15,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [instructorStats, setInstructorStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealthMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const id = setInterval(() => { setNow(Date.now()); }, 60000);
-    Promise.all([fetchAdminDashboardStats(), fetchRecentActivity(), getInstructorApplicationStats(), fetchAdminEngagementData()])
-      .then(([s, a, i, e]) => { setStats(s); setActivities(a); setInstructorStats(i); setEngagementData(e.reverse()); })
+    Promise.all([fetchAdminDashboardStats(), fetchRecentActivity(), getInstructorApplicationStats(), fetchAdminEngagementData(), fetchSystemHealthMetrics()])
+      .then(([s, a, i, e, h]) => { setStats(s); setActivities(a); setInstructorStats(i); setEngagementData(e.reverse()); setSystemHealth(h); })
       .catch(console.error)
       .finally(() => setLoading(false));
     return () => clearInterval(id);
@@ -155,15 +156,15 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             </h3>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={[
-                  { name: 'Mon', users: 120, views: 400 },
-                  { name: 'Tue', users: 150, views: 450 },
-                  { name: 'Wed', users: 180, views: 600 },
-                  { name: 'Thu', users: 140, views: 380 },
-                  { name: 'Fri', users: 200, views: 700 },
-                  { name: 'Sat', users: 250, views: 850 },
-                  { name: 'Sun', users: 220, views: 780 },
-                ]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={engagementData.length > 0 ? engagementData : [
+                  { name: 'Mon', users: 0, views: 0 },
+                  { name: 'Tue', users: 0, views: 0 },
+                  { name: 'Wed', users: 0, views: 0 },
+                  { name: 'Thu', users: 0, views: 0 },
+                  { name: 'Fri', users: 0, views: 0 },
+                  { name: 'Sat', users: 0, views: 0 },
+                  { name: 'Sun', users: 0, views: 0 },
+                ]} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                   <defs>
                     <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -178,8 +179,9 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
                   <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Area type="monotone" dataKey="views" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
-                  <Area type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
+                  <Legend verticalAlign="top" height={36} iconType="circle" />
+                  <Area type="monotone" dataKey="views" name="Lesson Views" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
+                  <Area type="monotone" dataKey="users" name="Registered Users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -194,29 +196,23 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <div className="space-y-6">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-indigo-200">Server Uptime</span>
-                  <span className="font-bold text-green-400">99.9%</span>
+                  <span className="text-indigo-200">Database Status</span>
+                  <span className={`font-bold ${systemHealth?.databaseStatus === 'Connected' ? 'text-green-400' : 'text-red-400'}`}>
+                    {systemHealth?.databaseStatus || 'Checking...'}
+                  </span>
                 </div>
                 <div className="w-full bg-indigo-950/50 rounded-full h-2">
-                  <div className="bg-green-400 h-2 rounded-full" style={{ width: '99.9%' }}></div>
+                  <div className={`${systemHealth?.databaseStatus === 'Connected' ? 'bg-green-400' : 'bg-red-400'} h-2 rounded-full`} style={{ width: '100%' }}></div>
                 </div>
               </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-indigo-200">Storage Used</span>
-                  <span className="font-bold">45%</span>
-                </div>
-                <div className="w-full bg-indigo-950/50 rounded-full h-2">
-                  <div className="bg-indigo-400 h-2 rounded-full" style={{ width: '45%' }}></div>
-                </div>
-              </div>
+              
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-indigo-200">API Latency</span>
-                  <span className="font-bold text-emerald-400">42ms</span>
+                  <span className="font-bold text-emerald-400">{systemHealth?.latencyMs || 0}ms</span>
                 </div>
                 <div className="w-full bg-indigo-950/50 rounded-full h-2">
-                  <div className="bg-emerald-400 h-2 rounded-full" style={{ width: '15%' }}></div>
+                  <div className="bg-emerald-400 h-2 rounded-full" style={{ width: `${Math.min(100, Math.max(5, (systemHealth?.latencyMs || 0) / 2))}%` }}></div>
                 </div>
               </div>
             </div>

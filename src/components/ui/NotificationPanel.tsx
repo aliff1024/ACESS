@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, UserPlus, CheckCircle, Award, FilePlus, Globe, Loader2, CheckCheck } from 'lucide-react';
+import { Bell, UserPlus, CheckCircle, Award, FilePlus, Globe, Loader2, CheckCheck, Trophy } from 'lucide-react';
 import { fetchNotifications, getUnreadCount, markAsRead, markAllAsRead } from '@/lib/notifications';
 import type { NotificationItem } from '@/lib/notifications';
 
@@ -11,6 +11,7 @@ const typeIcons: Record<string, typeof Bell> = {
   quiz_completed: Award,
   lesson_added: FilePlus,
   course_published: Globe,
+  badge_earned: Trophy,
 };
 
 function timeAgo(dateStr: string): string {
@@ -139,6 +140,7 @@ export default function NotificationPanel() {
                         notif.type === 'lesson_completed' ? 'bg-blue-100 text-blue-600' :
                         notif.type === 'quiz_completed' ? 'bg-purple-100 text-purple-600' :
                         notif.type === 'lesson_added' ? 'bg-orange-100 text-orange-600' :
+                        notif.type === 'badge_earned' ? 'bg-yellow-100 text-yellow-600' :
                         'bg-gray-100 text-gray-600'
                       }`}>
                         <Icon className="w-4 h-4" />

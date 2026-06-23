@@ -41,9 +41,11 @@ export function EducatorCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'pending_review'>('all');
+  const [disabilityFilter, setDisabilityFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'latest' | 'enrollments' | 'alphabetical'>('latest');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [togglingPublish, setTogglingPublish] = useState<string | null>(null);
 
   const loadCourses = async () => {
     setLoading(true);
@@ -62,28 +64,32 @@ export function EducatorCoursesPage() {
 
   useEffect(() => { loadCourses() }, []);
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
+  const handleDelete = async (courseId: string) => {
+    if (deleting) return;
+    setDeleting(true);
     try {
-      await deleteCourse(deleteId);
+      await deleteCourse(courseId);
       toast.success('Course deleted');
-      setCourses((prev) => prev.filter((c) => c.id !== deleteId));
+      setCourses((prev) => prev.filter((c) => c.id !== courseId));
     } catch (err) {
       toast.error('Failed to delete course');
-      console.error(err);
     } finally {
-      setDeleteId(null);
+      setDeleting(false);
     }
   };
 
   const handleTogglePublish = async (courseId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+    if (togglingPublish) return;
+    setTogglingPublish(courseId);
+    const newStatus = currentStatus === 'published' ? 'draft' : 'pending_review';
     try {
       await updateCourseStatus(courseId, newStatus as CourseStatus);
-      toast.success(newStatus === 'published' ? 'Course published!' : 'Course unpublished');
+      toast.success(newStatus === 'pending_review' ? 'Approval request sent to Admin!' : 'Course unpublished');
       loadCourses();
     } catch {
       toast.error('Failed to update status');
+    } finally {
+      setTogglingPublish(null);
     }
   };
 
@@ -92,6 +98,10 @@ export function EducatorCoursesPage() {
 
     if (statusFilter !== 'all') {
       filtered = filtered.filter(c => c.status === statusFilter);
+    }
+
+    if (disabilityFilter !== 'all') {
+      filtered = filtered.filter(c => c.primary_disability_focus === disabilityFilter);
     }
 
     if (debouncedSearch) {
@@ -115,7 +125,7 @@ export function EducatorCoursesPage() {
     }
 
     return filtered;
-  }, [courses, statusFilter, debouncedSearch, sortBy]);
+  }, [courses, statusFilter, disabilityFilter, debouncedSearch, sortBy]);
 
   const formatDate = (d: string) => {
     if (!d) return '';
@@ -182,7 +192,25 @@ export function EducatorCoursesPage() {
               >
                 <option value="all">All Statuses</option>
                 <option value="published">Published</option>
+                <option value="pending_review">Pending Approval</option>
                 <option value="draft">Drafts</option>
+              </select>
+            </div>
+
+            <div className="relative shrink-0">
+              <select
+                value={disabilityFilter}
+                onChange={(e) => setDisabilityFilter(e.target.value)}
+                className="w-full sm:w-48 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 font-medium"
+              >
+                <option value="all">All Disabilities</option>
+                <option value="visual">Visual Impairments</option>
+                <option value="hearing">Hearing Impairments</option>
+                <option value="cognitive">Cognitive/Learning</option>
+                <option value="motor">Motor/Physical</option>
+                <option value="speech">Speech/Language</option>
+                <option value="neurodivergent">Neurodivergent</option>
+                <option value="general">General Accessibility</option>
               </select>
             </div>
             
@@ -216,7 +244,7 @@ export function EducatorCoursesPage() {
               Create First Course
             </Button>
           ) : (
-            <Button variant="outline" onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}>
+            <Button variant="outline" onClick={() => { setSearchQuery(''); setStatusFilter('all'); setDisabilityFilter('all'); }}>
               Clear Filters
             </Button>
           )}
@@ -236,8 +264,8 @@ export function EducatorCoursesPage() {
                 >
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
                   <div className="absolute top-3 right-3 z-10">
-                    <Badge variant="secondary" className={`shadow-sm backdrop-blur-md bg-white/90 font-semibold ${course.status === 'published' ? 'text-green-700' : 'text-yellow-700'}`}>
-                      {course.status === 'published' ? 'Live' : 'Draft'}
+                    <Badge variant="secondary" className={`shadow-sm backdrop-blur-md bg-white/90 font-semibold ${course.status === 'published' ? 'text-green-700' : course.status === 'pending_review' ? 'text-blue-700' : 'text-yellow-700'}`}>
+                      {course.status === 'published' ? 'Live' : course.status === 'pending_review' ? 'Pending Approval' : 'Draft'}
                     </Badge>
                   </div>
                   {!hasThumbnail && (
@@ -280,17 +308,20 @@ export function EducatorCoursesPage() {
                       <Edit2 className="w-4 h-4 mr-2" /> Edit
                     </Button>
 
-                    <Button 
-                      variant="outline" 
-                      className={`border-gray-200 h-10 ${course.status === 'published' ? 'text-orange-600 hover:bg-orange-50 hover:border-orange-200' : 'text-green-600 hover:bg-green-50 hover:border-green-200'}`}
-                      onClick={() => handleTogglePublish(course.id, course.status)}
-                    >
-                      {course.status === 'published' ? (
-                        <><EyeOff className="w-4 h-4 mr-2" /> Unpublish</>
-                      ) : (
-                        <><Globe className="w-4 h-4 mr-2" /> Publish</>
-                      )}
-                    </Button>
+    <Button 
+      variant="outline" 
+      className={`border-gray-200 h-10 ${course.status === 'published' ? 'text-orange-600 hover:bg-orange-50 hover:border-orange-200' : 'text-green-600 hover:bg-green-50 hover:border-green-200'}`}
+      onClick={() => handleTogglePublish(course.id, course.status)}
+      disabled={togglingPublish === course.id}
+    >
+      {togglingPublish === course.id ? (
+        <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processing...</>
+      ) : course.status === 'published' ? (
+        <><EyeOff className="w-4 h-4 mr-2" /> Unpublish</>
+      ) : (
+        <><Globe className="w-4 h-4 mr-2" /> {course.status === 'pending_review' ? 'Cancel Request' : 'Publish'}</>
+      )}
+    </Button>
                     
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -307,9 +338,10 @@ export function EducatorCoursesPage() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => { setDeleteId(course.id); handleDelete(); }} className="bg-red-600 hover:bg-red-700">
-                            Delete
-                          </AlertDialogAction>
+        <AlertDialogAction onClick={() => handleDelete(course.id)} className="bg-red-600 hover:bg-red-700" disabled={deleting}>
+          {deleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+          {deleting ? 'Deleting...' : 'Delete'}
+        </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

@@ -1,0 +1,67 @@
+\babel@toc {english}{}\relax 
+\contentsline {section}{DECLARATION}{ii}{}%
+\contentsline {section}{DEDICATION}{iii}{}%
+\contentsline {section}{ACKNOWLEDGEMENT}{iv}{}%
+\contentsline {section}{ABSTRACT}{v}{}%
+\contentsline {section}{ABSTRAK}{vi}{}%
+\contentsline {section}{TABLE OF CONTENTS}{vii}{}%
+\addvspace {-10mm}
+\contentsline {section}{LIST OF TABLES}{viii}{}%
+\addvspace {-10mm}
+\contentsline {section}{LIST OF FIGURES}{ix}{}%
+\addvspace {-10mm}
+\contentsline {section}{LIST OF ABBREVIATIONS}{x}{}%
+\contentsline {section}{LIST OF ATTACHMENTS}{xi}{}%
+\addvspace {-10mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {\normalsize 0.0.1}D3. Section 508}{26}{}%
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}
+\addvspace {0mm}

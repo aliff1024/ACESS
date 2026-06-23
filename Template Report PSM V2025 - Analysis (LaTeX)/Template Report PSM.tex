@@ -1,0 +1,480 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{tocloft}
+
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
+\begin{document}
+
+%%% FRONT MATTER %%%
+
+\begin{center}
+
+\vfill \null
+\vspace{1cm}
+{ACESS - ADAPTIVE COGNITIVE \\\& EDUCATIONAL SKILLS SUPPORT PLATFORM}
+
+\vskip 1.6in
+{MUHAMMAD ALIFF BIN AFFANDI}
+
+\vskip 1.6in
+This report is submitted in partial fulfillment of the requirements for the \\
+Bachelor of Computer Science (Software Development) with Honours.
+
+\vskip 1.6in
+FACULTY OF INFORMATION AND COMMUNICATION TECHNOLOGY \\
+UNIVERSITI TEKNIKAL MALAYSIA MELAKA
+	
+\vspace{2mm}	
+2026
+
+\end{center}
+
+\newpage
+
+%%--------DECLARATION PAGE---------%%
+
+\begin{center}
+
+\vfill\null
+\phantomsection
+\addcontentsline{toc}{section}{DECLARATION}
+\textbf{DECLARATION}
+
+\vspace{1.5cm}
+I hereby declare that this project entitled \\
+ACESS - ADAPTIVE COGNITIVE \\\& EDUCATIONAL SKILL SUPPORT PLATFORM \\
+is written by me and is my own effort and that no part has been plagiarized without citations.
+
+\vspace{1.5cm}
+\noindent
+STUDENT \; : \underline{\hspace{8cm}} \, Date :  \underline{\hspace{2.1cm}} \\[-2mm]
+(MUHAMMAD ALIFF BIN AFFANDI) \hspace{1.2cm}
+
+\vspace{4cm}
+\noindent
+I hereby declare that I have read this project report and found this project report is sufficient in term of the scope and quality for the award of Bachelor of Computer Science (Software Development) with Honours.
+
+\vspace{1.5cm}
+\noindent
+SUPERVISOR \; : \underline{\hspace{8cm}} \, Date :  \underline{\hspace{2.1cm}} \\[-2mm]
+(NAME OF THE SUPERVISOR) \hspace{0.6cm}
+
+\end{center}
+
+\vfill \null
+\newpage
+
+%%--------DEDICATION PAGE---------%%
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{DEDICATION}
+\textbf{DEDICATION}
+\end{center}
+
+\vspace{1cm}
+To my beloved parents, for their unwavering support and motivation throughout my educational journey. To my educators and peers, for their guidance and encouragement in completing this project.
+
+\vfill \null
+\newpage
+
+%%--------ACKNOWLEDGEMENT PAGE---------%%
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{ACKNOWLEDGEMENT}
+\textbf{ACKNOWLEDGEMENT}
+\end{center}
+
+\vspace{1cm}
+First and foremost, praises and thanks to God, the Almighty, for His showers of blessings throughout my research work to complete the research successfully.
+
+I would like to express my deep and sincere gratitude to my research supervisor for providing invaluable guidance, continuous support, and immense knowledge. 
+
+Finally, my deepest appreciation goes to my family and friends for their relentless encouragement and understanding.
+
+\vfill \null
+\newpage
+
+%%--------ABSTRACT PAGE---------%%
+
+\begin{center}
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{ABSTRACT}
+\textbf{ABSTRACT}
+\end{center}
+
+\vspace{1cm}
+\begin{spacing}{1.1}
+Learning disabilities such as dyslexia, ADHD, and mild cognitive impairment affect a substantial portion of the population. Traditional e-learning platforms are typically designed for neurotypical users and often present significant cognitive and sensory barriers to learners with disabilities. This project proposes ACESS, an Adaptive Cognitive \\\& Educational Skill Support Platform, to deliver an inclusive digital learning environment. The system addresses accessibility needs through rule-based adaptive content delivery, Text-to-Speech (TTS) integration, and specific display profiles tailored for dyslexia, ADHD, and autism spectrum disorder (ASD). Utilizing a modern web stack including Next.js and Supabase, ACESS empowers educators to author structured, scaffolded courses and monitor learner progress via an analytics dashboard. Furthermore, the platform automatically generates verifiable completion certificates to assist learners in vocational placement. Evaluation indicates that the adaptive recommendation engine and accessibility settings reduce cognitive overload, yielding improved engagement and task completion rates. The successful deployment of ACESS demonstrates the critical importance of Universal Design for Learning (UDL) principles in creating equitable educational software.
+\end{spacing}
+
+\vfill \null
+\newpage
+
+\begin{center}
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{ABSTRAK}
+\textbf{ABSTRAK}
+\end{center}
+
+\vspace{1cm}
+\begin{spacing}{1.1}
+Ketidakupayaan pembelajaran seperti disleksia, ADHD, dan kemerosotan kognitif ringan menjejaskan sebahagian besar populasi. Platform e-pembelajaran tradisional biasanya direka untuk pengguna tipikal dan sering kali menimbulkan halangan kognitif dan sensori yang ketara kepada pelajar kurang upaya. Projek ini mencadangkan ACESS (Platform Sokongan Kemahiran Kognitif dan Pendidikan Adaptif) untuk menyampaikan persekitaran pembelajaran digital yang inklusif. Sistem ini menangani keperluan kebolehcapaian melalui penyampaian kandungan adaptif berasaskan peraturan, integrasi Teks-ke-Ucapan (TTS), dan profil paparan khusus yang disesuaikan untuk disleksia, ADHD, dan gangguan spektrum autisme (ASD). Dengan menggunakan susunan teknologi web moden termasuk Next.js dan Supabase, ACESS memperkasakan pendidik untuk membina kursus berstruktur dan memantau kemajuan pelajar melalui papan pemuka analitik. Selain itu, platform ini menjana sijil penamatan yang boleh disahkan secara automatik untuk membantu pelajar dalam penempatan vokasional. Penilaian menunjukkan bahawa enjin pengesyoran adaptif dan tetapan kebolehcapaian mengurangkan beban kognitif, sekali gus meningkatkan penglibatan dan kadar penyiapan tugasan pelajar. Kejayaan pelaksanaan ACESS membuktikan kepentingan kritikal prinsip Reka Bentuk Universal untuk Pembelajaran (UDL) dalam mencipta perisian pendidikan yang saksama.
+\end{spacing}
+
+\vfill \null
+\newpage
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{TABLE OF CONTENTS}
+\tableofcontents
+\newpage
+
+\vfill \null 
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF TABLES}
+{%
+\let\oldnumberline\numberline%
+\renewcommand{\numberline}{\tablename~\oldnumberline}%
+\listoftables%
+}
+\newpage
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF FIGURES}
+{%
+\let\oldnumberline\numberline%
+\renewcommand{\numberline}{\figurename~\oldnumberline}%
+\listoffigures%
+}
+\newpage
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF ABBREVIATIONS}
+\begin{center}
+\textbf{LIST OF ABBREVIATIONS}
+\end{center}
+\vspace{2cm}
+
+\noindent
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.5cm} >{\centering\arraybackslash}m{0.5cm} >{\raggedright\arraybackslash}p{11.0cm}}
+ACESS \\& - \\& Adaptive Cognitive \\& Educational Skill Support \\
+ADHD \\& - \\& Attention-Deficit/Hyperactivity Disorder \\
+ASD \\& - \\& Autism Spectrum Disorder \\
+FICT \\& - \\& Faculty of Information and Communication Technology \\
+LMS \\& - \\& Learning Management System \\
+PSM \\& - \\& Projek Sarjana Muda \\
+PWD \\& - \\& Persons with Disabilities \\
+RBAC \\& - \\& Role-Based Access Control \\
+TTS \\& - \\& Text-to-Speech \\
+UDL \\& - \\& Universal Design for Learning \\
+WCAG \\& - \\& Web Content Accessibility Guidelines \\
+\end{tabular}
+
+\vfill \null
+\newpage
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\setlength{\parindent}{30pt}
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{INTRODUCTION}
+\end{center}
+\vspace{2cm}
+
+\subsection{Introduction}
+Learning disabilities such as dyslexia, ADHD, and mild cognitive impairment affect a large segment of the global population. In Malaysia, individuals with learning disabilities constitute the highest proportion of registered persons with disabilities (PWDs). While online learning and digital skill training have become increasingly prevalent, most existing e-learning platforms cater primarily to neurotypical learners. These environments typically present dense textual content, fast-paced multimedia, and complex navigational structures that cause sensory overload and significant cognitive barriers for disabled learners. 
+
+This project aims to bridge the digital education gap by developing ACESS, an Adaptive Cognitive \\\& Educational Skill Support Platform. ACESS is a specialized learning management system designed to provide personalized, accessible digital learning pathways. From user registration to course completion and certificate generation, the system supports adjustable accessibility features including built-in Text-to-Speech (TTS), distraction-free focus modes, and dynamic content adaptation. By prioritizing Universal Design for Learning (UDL) principles, the ACESS platform serves as a critical tool for equitable skill development and vocational training.
+
+\subsection{Problem Statement}
+Despite the widespread availability of digital education platforms, learners with disabilities face ongoing challenges in accessing equitable training. The primary problems motivating this project are:
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{Inaccessible Platform Design:} Most existing e-learning platforms utilize formats that overwhelm the cognitive and sensory processing abilities of users with dyslexia, ADHD, and autism, resulting in high frustration and dropout rates.
+\item \textbf{Lack of Adaptive Pacing:} Learners with mild cognitive impairments or ADHD require systems capable of pacing content delivery and providing dynamic difficulty adjustments based on real-time performance. Current LMS solutions typically offer static learning sequences.
+\item \textbf{Absence of Verifiable Skill Tracking:} Employers and disability support organizations lack a reliable mechanism to verify the digital and vocational skills acquired by these learners due to the lack of integrated, accessible certification systems.
+\item \textbf{Inadequate Educator Tools:} Educators and mentors lack a centralized analytics platform tailored to monitor the unique progress of learners with disabilities, making early intervention and targeted support difficult.
+\end{itemize}
+
+\subsection{Objective of the Study}
+This project is driven by the following measurable objectives:
+\begin{enumerate}
+\item To analyze the accessibility requirements, learning challenges, and content delivery needs of learners with dyslexia, ADHD, and mild cognitive impairment through literature review and comparative study of existing e-learning platforms.
+\item To develop a fully functional accessible web-based e-learning platform that incorporates rule-based adaptive content delivery, built-in Text-to-Speech (TTS) support, adjustable accessibility display settings, structured lesson management, and role-based user management for learners, educators, and administrators.
+\item To implement a certificate generation module and an educator analytics dashboard that provide verifiable skill completion records and enable data-driven monitoring of individual learner progress.
+\end{enumerate}
+
+\subsection{Scope of the Study}
+The scope of this project involves developing a robust web-based system targeted specifically at three main user roles: Learners with learning disabilities, Educators (Content Creators/Mentors), and Administrators. The project encompasses the following eight core modules:
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{Authentication and User Management Module:} Secure registration and Role-Based Access Control (RBAC), alongside an onboarding process for learners to declare accessibility preferences.
+\item \textbf{Course and Lesson Management Module:} Tools for educators to author structured, scaffolded content, embedding rich media and interactive components.
+\item \textbf{Adaptive Content Recommendation Module:} A rule-based engine utilizing quiz performance to suggest easier revisions or advanced progression.
+\item \textbf{Quiz and Assessment Module:} Creation and administration of quizzes in a distraction-free UI.
+\item \textbf{Progress Tracking Module:} Detailed logging of lesson views, attempts, and completion statistics.
+\item \textbf{Accessibility Settings Module:} Learner-controlled customization of display themes, text size, line spacing, and TTS.
+\item \textbf{Certificate Generation Module:} Automated issuance of verifiable PDF certificates upon course completion.
+\item \textbf{Educator Analytics Dashboard:} Visualization of cohort progress and identification of at-risk learners.
+\end{itemize}
+
+\subsection{Significance of the Study}
+The successful deployment of ACESS yields significant benefits across multiple stakeholders. For learners with disabilities, the platform offers a tailored, frustration-free educational experience that enhances engagement, retention, and ultimately empowers them to acquire job-ready skills. For educators and specialized mentors, ACESS drastically reduces the overhead of monitoring individual learning paths through automated data analytics and progress tracking. Furthermore, disability support organizations and future employers benefit directly from the integrated certificate generation, which provides credible and verifiable evidence of a learner's acquired competencies. 
+
+\subsection{Expected Output}
+The expected output of this project is a centralized, role-based accessible e-learning web application. Deliverables include a fully functional platform with an integrated adaptive recommendation engine, an accessibility settings panel (including TTS and dyslexia-friendly UI profiles), an educator analytics dashboard, and automated PDF certificate generation. The system will be deployed to a cloud environment (Vercel) utilizing a PostgreSQL database via Supabase.
+
+\subsection{Summary}
+This chapter introduced the project background, highlighting the acute need for accessible digital learning environments for individuals with learning disabilities in Malaysia. The problem statements justified the necessity of the project, followed by clear objectives, an outlined scope covering the core system modules, and the expected deliverables. The following chapter details the literature review, analyzing existing systems and framing the project methodology.
+
+\vfill \null
+\newpage
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{LITERATURE REVIEW AND PROJECT METHODOLOGY}
+\end{center}
+\vspace{2cm}
+
+\subsection{Introduction}
+This chapter presents a review of relevant literature, focusing on the accessibility challenges of existing Learning Management Systems (LMS), principles of Universal Design for Learning (UDL), and methodologies for developing adaptive educational software. It compares several prominent existing systems against the proposed ACESS platform. Following the literature review, the chapter outlines the Project Methodology, detailing the phases, requirements, and scheduled milestones guiding the software development lifecycle.
+
+\subsection{Facts and Findings}
+
+\subsubsection{Domain: Accessible E-Learning Platforms}
+The domain of this project is Accessible E-Learning and Educational Technology. E-learning has transformed modern education; however, cognitive and sensory accessibility is often treated as an afterthought rather than a foundational design principle. According to the Web Content Accessibility Guidelines (WCAG 2.2), digital environments must be perceivable, operable, understandable, and robust. For learners with neurodivergent conditions such as ADHD or dyslexia, dense text layouts, unpredictable navigation, and visually overwhelming interfaces degrade learning outcomes. Integrating Universal Design for Learning (UDL) principles—providing multiple means of engagement, representation, and action—is critical to mitigating these barriers.
+
+\subsubsection{Existing System Analysis}
+A comparative analysis of existing LMS platforms was conducted to justify the development of ACESS. The systems reviewed include Moodle, Canvas LMS, Google Classroom, Blackboard Learn, Schoology, and H5P.
+
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{Moodle:} Moodle is an open-source LMS featuring strong backend capabilities and extensive plugin support, including native H5P integration. However, its user interface is notoriously complex and lacks built-in, user-controlled cognitive accessibility settings without significant customization. 
+\item \textbf{Canvas LMS:} Canvas provides excellent progress tracking and integration features. While it supports basic WCAG compliance, it does not natively offer specialized features like integrated adaptive difficulty specifically tailored for neurodivergent learners.
+\item \textbf{Google Classroom:} Known for a clean, simplified interface, Google Classroom reduces cognitive load compared to enterprise systems. However, it functions more as an assignment distributor than a fully-fledged adaptive learning system and lacks integrated, rule-based content adaptation.
+\item \textbf{Blackboard Learn:} A comprehensive system favored by higher education. Its feature density often introduces significant sensory overload for users with ADHD and dyslexia.
+\item \textbf{H5P:} H5P excels at providing interactive, engaging content. While highly accessible, H5P is a content framework, not a standalone LMS. ACESS will incorporate H5P functionality within a dedicated, accessible wrapper.
+\end{itemize}
+
+The proposed ACESS platform bridges the gaps identified above by combining the structural integrity of a traditional LMS with specialized, out-of-the-box accessibility features. Unlike Moodle or Canvas, ACESS natively integrates Text-to-Speech (TTS), dyslexia-friendly fonts, and dynamic adaptive recommendations based on real-time quiz performance, explicitly prioritizing neurodivergent learners.
+
+\subsubsection{Techniques and Technologies}
+To address the shortcomings of existing systems, ACESS utilizes an adaptive, rule-based learning technique. The recommendation engine dynamically adjusts lesson sequences based on quiz scores (e.g., initiating revision modules if a score falls below 60\%). The technology stack chosen—Next.js (App Router) for server-side rendering, Supabase for PostgreSQL Database and Role-Based Access Control (RLS), and Radix UI for WAI-ARIA compliant components—ensures high performance and strict adherence to accessibility standards.
+
+\subsection{Project Methodology}
+The project adopts the Rapid Application Development (RAD) methodology, combined with iterative software development lifecycle (SDLC) practices. The methodology emphasizes continuous prototyping, user feedback, and modular component testing, which is particularly suitable for developing UI-intensive accessibility features.
+
+The methodology is divided into the following phases:
+\begin{enumerate}
+\item \textbf{Analysis Phase:} Gathering requirements aligned with WCAG 2.2 and UDL frameworks. Analyzing competitor limitations.
+\item \textbf{Design Phase:} Architecting the Next.js and Supabase environment. Designing the Database Schema (ERD) and accessible wireframes focusing on high contrast and reduced sensory load.
+\item \textbf{Implementation Phase:} Developing the backend APIs, authentication, and frontend UI components in iterative sprints.
+\item \textbf{Testing Phase:} Conducting functional testing, WAI-ARIA accessibility audits, and User Acceptance Testing (UAT) to evaluate task completion and system usability.
+\end{enumerate}
+
+\subsection{Project Requirements}
+
+\subsubsection{Software Requirements}
+The software requirements for developing and deploying ACESS include:
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{Frontend Framework:} Next.js 14+ (React), Tailwind CSS v4.
+\item \textbf{UI Components:} shadcn/ui, Radix UI (for accessibility primitives), Framer Motion.
+\item \textbf{Backend/Database:} Supabase (PostgreSQL, Realtime, Storage).
+\item \textbf{Editor/Interactive Tools:} Tiptap (Rich Text), H5P core libraries.
+\item \textbf{Development Tools:} Visual Studio Code, Git, Node.js, npm/yarn.
+\end{itemize}
+
+\subsubsection{Hardware Requirements}
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{Developer Machine:} Minimum Intel Core i5 / AMD Ryzen 5 processor, 8GB RAM (16GB recommended), and 256GB SSD storage.
+\item \textbf{Server Infrastructure:} Cloud-hosted environment via Vercel (Frontend) and Supabase (Database).
+\item \textbf{Client Devices:} Any modern web browser on desktop, tablet, or mobile devices, ensuring responsive design capabilities.
+\end{itemize}
+
+\subsection{Project Schedule and Milestones}
+The project timeline spans 14 weeks for Projek Sarjana Muda 1 (PSM 1), from mid-March to late June. The schedule ensures adequate time for architectural planning and UI design before full implementation.
+
+\begin{table}[h]
+\caption{PSM 1 Project Schedule and Milestones}
+\label{Table2.1}
+\vspace{-4mm}
+\begin{center}
+\begin{tabular}{|c | p{5cm} | p{8cm} |}
+\hline
+\textbf{Week} \\& \textbf{Phase} \\& \textbf{Key Activities} \\
+\hline \hline
+1 -- 2 \\& Requirement Gathering \\& Analyze accessibility requirements (WCAG, UDL); finalize scope. \\
+\hline
+3 \\& Problem Analysis \\& Identify limitations in existing platforms; define problem statements. \\
+\hline
+4 -- 5 \\& Literature Review \\& Compare Moodle, Canvas, and others; review adaptive learning literature. \\
+\hline
+6 -- 7 \\& System Analysis \\& Draft functional and non-functional requirements; design use cases. \\
+\hline
+8 -- 9 \\& System Architecture \\& Design Next.js \\& Supabase integration; define RBAC logic. \\
+\hline
+10 -- 11 \\& Database Design \\& Construct ERD; normalize core tables (users, courses, accessibility\_prefs). \\
+\hline
+12 \\& UI/UX Design \\& Design wireframes focusing on high-contrast and TTS accessibility. \\
+\hline
+13 \\& Proposal \\& Report Writing \\& Finalize Proposal; compile PSM 1 Chapters 1–4. \\
+\hline
+14 \\& Presentation Prep \\& Prepare slides and rehearse for PSM 1 evaluation. \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsection{Summary}
+This chapter reviewed the state of accessible e-learning platforms, highlighting the inadequacies of standard LMS solutions for neurodivergent learners. A comparative study justified the ACESS feature set. The chapter then established the Rapid Application Development methodology guiding the project, defined the specific hardware and software requirements, and presented a detailed 14-week project schedule.
+
+\vfill \null
+\newpage
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{ANALYSIS}
+\end{center}
+\vspace{2cm}
+
+\subsection{Introduction}
+This chapter delves into the system analysis of the ACESS platform. It outlines the transition from understanding existing educational software shortcomings to defining precise, actionable requirements for the proposed system. The analysis covers problem investigation, functional requirements, non-functional requirements, and data requirements, establishing a robust foundation for the system design phase.
+
+\subsection{Problem Analysis}
+The current scenario for learners with disabilities often involves navigating platforms designed without specialized accessibility considerations. The operational flow of existing systems forces all users—regardless of cognitive capacity—through identical learning sequences. 
+
+When a neurodivergent learner attempts a course on a traditional LMS, they face high cognitive load due to cluttered navigation menus, unadjustable textual density, and a lack of immediate audio support (TTS). Furthermore, when a learner struggles with a quiz, the standard system merely records a failing grade and prompts a retake, without offering adapted content, remediation, or simplified summaries. This linear flow directly contributes to high dropout rates.
+
+ACESS addresses this by introducing a branching, adaptive workflow. The system monitors quiz results and lesson engagement; if a user scores below the passing threshold, the Adaptive Content Recommendation module intercepts the standard flow to suggest revision material or specifically formatted content blocks, facilitating scaffolded learning.
+
+\subsection{Requirement Analysis}
+
+\subsubsection{Functional Requirements}
+Functional requirements define the specific behaviors and capabilities the system must execute. The core functional requirements for ACESS are categorized by module:
+
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{User Management:} The system shall allow users to register and authenticate via Supabase Auth. It must support distinct roles: Learner, Educator, and Administrator.
+\item \textbf{Accessibility Configuration:} The system shall provide an onboarding interface allowing learners to select accessibility profiles (Dyslexia, ADHD, ASD) which automatically adjust font size, line spacing, and color contrast.
+\item \textbf{Course Management:} Educators shall be able to create courses, author lessons utilizing a rich-text editor (Tiptap), embed videos, and organize content into chapters.
+\item \textbf{Adaptive Learning:} The system shall evaluate quiz attempts and automatically generate a "Recommended Next" lesson sequence based on predefined difficulty rules.
+\item \textbf{Certification:} Upon fulfilling all course checkpoints and achieving passing quiz scores, the system shall dynamically generate a PDF certificate with a unique reference code.
+\item \textbf{Analytics Tracking:} The system shall log learner timestamps, view counts, and quiz scores, presenting aggregated data on the Educator Analytics Dashboard.
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+Non-functional requirements describe system attributes related to performance, usability, and security.
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{Accessibility Compliance:} The user interface must comply strictly with WCAG 2.2 Level AA standards, ensuring full keyboard navigability and screen reader compatibility via WAI-ARIA attributes.
+\item \textbf{Performance:} Page loads and client-side transitions utilizing the Next.js App Router must resolve within 300ms to prevent user distraction and maintain focus.
+\item \textbf{Security \\\& Privacy:} All data access must be governed by Supabase PostgreSQL Row Level Security (RLS) policies, ensuring that learners only access their own data, and educators only access data for their enrolled learners.
+\item \textbf{Scalability:} The architecture must handle concurrent real-time connections via Supabase Realtime without significant latency degradation.
+\end{itemize}
+
+\subsubsection{Data Requirements}
+The platform relies heavily on a relational database structure to maintain the integrity of educational data. The primary data requirements entail storing:
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{User Profiles and Preferences:} Maintaining records of user demographics, assigned roles, and individualized accessibility settings (\texttt{user\_accessibility\_preferences}).
+\item \textbf{Course Ontology:} Hierarchical storage of \texttt{courses}, \texttt{course\_chapters}, \texttt{lessons}, and interactive \texttt{h5p\_contents}.
+\item \textbf{Tracking Metrics:} High-volume transaction data tracking learner interaction, stored across \texttt{lesson\_progress}, \texttt{quiz\_attempts}, and \texttt{adaptive\_interactions}.
+\end{itemize}
+
+\subsection{Summary}
+This chapter provided a comprehensive analysis of the ACESS platform. By evaluating the procedural shortcomings of existing systems, clear functional and non-functional requirements were established. Emphasizing accessibility compliance, role-based security, and adaptive workflows, these requirements serve as the blueprint for the structural and architectural design covered in the next chapter.
+
+\vfill \null
+\newpage
+
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{DESIGN}
+\end{center}
+\vspace{2cm}
+
+\subsection{Introduction}
+This chapter translates the analytical requirements defined in Chapter 3 into concrete technical design specifications. It details the High-Level Design, including the system architecture and user interface principles, followed by the Database Design outlining the logical schema, tables, and normalization. Finally, the Detailed Design discusses the implementation specifics of software modules and physical data structures.
+
+\subsection{High-Level Design}
+
+\subsubsection{System Architecture}
+ACESS is built upon a modern, decoupled architecture leveraging the Next.js App Router framework. The architecture utilizes a "Server-First, Client-Islands" mental model. Core course listings, learner profiles, and heavy data-fetching operations are executed as React Server Components (RSC) to optimize performance and reduce client-side JavaScript payloads. Interactive elements, such as the Tiptap lesson editor, H5P embedded players, and real-time progress indicators, are rendered as Client Components.
+
+Backend services and the relational database are entirely managed by Supabase. Supabase acts as the central data layer, providing PostgreSQL for relational data, Supabase Storage for media assets (thumbnails, PDFs), and Supabase Auth for JWT-based session management. Access control is enforced directly at the database layer utilizing Row Level Security (RLS).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.72\textwidth]{2.jpg}
+\caption{ACESS High-Level System Architecture}
+\label{Figure4.1}
+\end{figure}
+
+\subsubsection{User Interface and Navigation Design}
+The User Interface (UI) is explicitly designed for cognitive accessibility, heavily influenced by Universal Design for Learning (UDL). Built upon the \texttt{shadcn/ui} library and styled with Tailwind CSS, the interface supports dynamic theme switching.
+
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{Navigation Design:} Navigation follows progressive disclosure principles. Extraneous menus are hidden during active lesson viewing (Focus Mode) to minimize distractions. Breadcrumb trails provide clear contextual awareness.
+\item \textbf{Input Design:} Forms incorporate large touch targets, highly visible focus states, and redundant error validation (both visual cues and text) to assist users with fine motor or cognitive difficulties.
+\item \textbf{Output Design:} Real-time feedback, such as quiz scores and progress bar updates, is presented utilizing Framer Motion animations. Animations respect the OS-level \texttt{prefers-reduced-motion} settings to accommodate users sensitive to sensory overload.
+\end{itemize}
+
+\subsection{Database Design}
+
+\subsubsection{Conceptual and Logical Database Design}
+The database schema for ACESS is designed in PostgreSQL, consisting of 38 public tables carefully normalized to ensure data integrity and efficient querying. The core entity relationships map Users to Courses via Enrollments, tracking granular progression at the Lesson and Quiz level.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Entity Relationship Diagram (ERD) of Core ACESS Modules}
+\label{Figure4.2}
+\end{figure}
+
+\subsubsection{Data Dictionary and Normalization}
+The schema is normalized to the Third Normal Form (3NF) to eliminate data redundancy. Key tables include:
+
+\begin{itemize}[itemsep=-1mm]
+\item \textbf{users} and \textbf{user\_profiles}: Separating core authentication data (email, role) from extended profile data (bio, disability type).
+\item \textbf{user\_accessibility\_preferences}: Stores granular settings (\texttt{preferred\_text\_size}, \texttt{dyslexia\_friendly\_font}, \texttt{text\_to\_speech\_enabled}), linked 1-to-1 with \texttt{users}.
+\item \textbf{courses}: Contains overarching metadata (\texttt{title}, \texttt{difficulty\_level}, \texttt{accessibility\_mode\_enabled}), linked 1-to-Many with \texttt{lessons}.
+\item \textbf{lessons}: Contains curriculum content, referencing \texttt{courses} and tracking accessibility overrides.
+\item \textbf{lesson\_progress}: A transactional table linking \texttt{enrollment\_id} and \texttt{lesson\_id} to log \texttt{time\_spent\_learning}, \texttt{view\_count}, and completion timestamps.
+\item \textbf{adaptive\_interactions}: Logs triggered adaptations based on performance rules, tying \texttt{user\_id} to specific session adjustments.
+\item \textbf{certificates}: Stores generated verification data (\texttt{reference\_code}, \texttt{pdf\_url}) generated upon course completion.
+\end{itemize}
+
+\subsection{Detailed Design}
+
+\subsubsection{Software Design}
+At the module level, software operations rely on distinct, decoupled functions. For example, the Adaptive Recommendation Module continuously evaluates the \texttt{quiz\_attempts} table. An automated function analyzes the \texttt{score\_pct}; if the score falls below the \texttt{pass\_threshold\_pct}, a new record is inserted into the \texttt{recommendations} table, flagging a revision lesson for the learner's dashboard.
+
+Educator dashboards rely on aggregated views combining \texttt{enrollments}, \texttt{lesson\_progress}, and \texttt{quiz\_attempts} to populate Recharts data visualizations without overburdening the client application.
+
+\subsubsection{Physical Database Design}
+The physical implementation on Supabase PostgreSQL utilizes strict foreign key constraints with cascading deletes for relational integrity (e.g., deleting a course cascades to lessons and quizzes). Security is implemented strictly via DDL Row Level Security policies. For instance, learners possess \texttt{SELECT} and \texttt{UPDATE} privileges strictly on their own \texttt{lesson\_progress} and \texttt{user\_accessibility\_preferences} rows, authenticated via the \texttt{auth.uid()} function, physically preventing cross-user data leakage at the query level.
+
+\subsection{Summary}
+This chapter outlined the detailed design of the ACESS platform. It detailed the Next.js and Supabase architectural stack, defined the accessible User Interface guidelines, and presented a thorough breakdown of the database schema. The mapping of the logical ERD to the physical PostgreSQL implementation demonstrates a secure, highly normalized, and scalable foundation ready for implementation in the subsequent phases.
+
+\vfill \null
+\end{document}

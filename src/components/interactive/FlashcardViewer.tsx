@@ -21,15 +21,16 @@ export function FlashcardViewer({ data, accessibilitySettings, onComplete }: Fla
   }
 
   const toggleFlip = (id: string) => {
-    setFlippedCards((prev) => {
-      const next = { ...prev, [id]: true }
-      // If they flip all cards, or even just one card, we can consider it completed for simplicity
-      // Or if Object.keys(next).length === cards.length
-      if (Object.keys(next).length >= Math.min(cards.length, 3)) {
-        onComplete?.()
+    setFlippedCards((prev) => ({ ...prev, [id]: !prev[id] }))
+    
+    if (!(id in flippedCards)) {
+      const newCount = Object.keys(flippedCards).length + 1
+      if (newCount >= Math.min(cards.length, 3)) {
+        // Use a small timeout to ensure we don't call onComplete synchronously during the current event cycle
+        // if it triggers a parent state update that conflicts, though moving it out of setState updater is usually enough.
+        setTimeout(() => onComplete?.(), 0)
       }
-      return next
-    })
+    }
   }
 
   const handleNext = () => {
@@ -50,10 +51,10 @@ export function FlashcardViewer({ data, accessibilitySettings, onComplete }: Fla
 
   const renderCardContent = (content: string, imageUrl?: string, layout: FlashcardLayout = 'text') => {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center h-[300px]">
+      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center">
         {(layout === 'image' || layout === 'both') && imageUrl && (
-          <div className="w-full h-40 mb-4 rounded-lg overflow-hidden shrink-0 bg-white/50 flex items-center justify-center">
-            <img src={imageUrl} alt="" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+          <div className={`w-full ${layout === 'image' ? 'flex-1 min-h-[200px]' : 'h-48'} mb-4 rounded-lg overflow-hidden shrink-0 bg-white/50 flex items-center justify-center`}>
+            <img src={imageUrl} alt="" className="w-full h-full object-contain mix-blend-multiply" />
           </div>
         )}
         {(layout === 'text' || layout === 'both') && (
@@ -70,7 +71,7 @@ export function FlashcardViewer({ data, accessibilitySettings, onComplete }: Fla
   const renderCard = (card: typeof cards[0]) => {
     const isFlipped = !!flippedCards[card.id]
     return (
-      <div className="relative w-full h-[320px]" style={{ perspective: '1200px' }}>
+      <div className="relative w-full h-[400px]" style={{ perspective: '1200px' }}>
         <button
           onClick={() => toggleFlip(card.id)}
           className="relative w-full h-full cursor-pointer transition-transform duration-700 ease-in-out focus:outline-none focus:ring-4 focus:ring-blue-500 rounded-2xl"

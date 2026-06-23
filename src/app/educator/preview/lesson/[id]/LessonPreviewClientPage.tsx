@@ -11,6 +11,7 @@ export default function LessonPreviewClientPage({ lessonId }: { lessonId: string
   const router = useRouter();
   const searchParams = useSearchParams();
   const courseId = searchParams.get('courseId') || '';
+  const returnTo = searchParams.get('returnTo');
   const [lessonIds, setLessonIds] = useState<string[]>([]);
   const { t } = useTranslation();
 
@@ -30,7 +31,13 @@ export default function LessonPreviewClientPage({ lessonId }: { lessonId: string
         <EyeOff className="w-4 h-4" />
         {t('dashboard.preview')}
         <button
-          onClick={() => router.push(`/educator/courses/${courseId}`)}
+          onClick={() => {
+            if (returnTo) {
+              router.push(returnTo);
+            } else {
+              router.push(`/educator/courses/${courseId}`);
+            }
+          }}
           className="ml-4 px-3 py-1 bg-white text-amber-700 rounded-lg hover:bg-amber-50 transition-colors text-xs font-semibold"
         >
           {t('dashboard.exitPreview')}
@@ -41,9 +48,18 @@ export default function LessonPreviewClientPage({ lessonId }: { lessonId: string
           lessonId={lessonId}
           courseId={courseId}
           isPreview={true}
-          onBack={() => router.push(`/educator/preview/course/${courseId}`)}
-          onNextLesson={nextLessonId ? () => router.push(`/educator/preview/lesson/${nextLessonId}?courseId=${courseId}`) : undefined}
-          onPreviousLesson={prevLessonId ? () => router.push(`/educator/preview/lesson/${prevLessonId}?courseId=${courseId}`) : undefined}
+          onBack={() => {
+            const returnQ = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
+            router.push(`/educator/preview/course/${courseId}${returnQ}`);
+          }}
+          onNextLesson={nextLessonId ? () => {
+            const returnQ = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : '';
+            router.push(`/educator/preview/lesson/${nextLessonId}?courseId=${courseId}${returnQ}`);
+          } : undefined}
+          onPreviousLesson={prevLessonId ? () => {
+            const returnQ = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : '';
+            router.push(`/educator/preview/lesson/${prevLessonId}?courseId=${courseId}${returnQ}`);
+          } : undefined}
         />
       </div>
     </div>

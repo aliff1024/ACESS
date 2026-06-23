@@ -140,7 +140,7 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
             <Card className="p-16 border-dashed border-2 border-gray-200 bg-gray-50/50 rounded-3xl text-center">
               <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">No courses yet</h3>
-              <p className="text-gray-500 max-w-sm mx-auto mb-6">You haven't enrolled in any courses. Browse the catalog to start your learning journey!</p>
+              <p className="text-gray-500 max-w-sm mx-auto mb-6">You haven&apos;t enrolled in any courses. Browse the catalog to start your learning journey!</p>
               <Button onClick={onBrowseCourses} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
                 Browse Catalog
               </Button>

@@ -78,6 +78,7 @@ export default function CourseAssets({ courseId }: CourseAssetsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<AssetTab>('all');
   const [previewAsset, setPreviewAsset] = useState<UnifiedAsset | null>(null);
+  const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -136,12 +137,15 @@ export default function CourseAssets({ courseId }: CourseAssetsProps) {
 
   const handleDelete = async (asset: UnifiedAsset) => {
     if (!asset.deletable) return;
+    if (deletingAssetId) return;
+    setDeletingAssetId(asset.id);
     try {
       await deleteLessonAsset(asset.id);
       toast.success('Asset removed');
       if (previewAsset?.id === asset.id) setPreviewAsset(null);
       setAllAssets(prev => prev.filter(a => a.id !== asset.id));
     } catch { toast.error('Failed to delete asset'); }
+    finally { setDeletingAssetId(null); }
   };
 
   const matchesTab = (asset: UnifiedAsset): boolean => {
@@ -352,8 +356,8 @@ export default function CourseAssets({ courseId }: CourseAssetsProps) {
                       {asset.kind === 'link' ? <><ExternalLink className="w-3 h-3 mr-1" />Open</> : <><Download className="w-3 h-3 mr-1" />Download</>}
                     </Button>
                     {asset.deletable && (
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(asset)} className="text-red-600 text-xs px-2">
-                        <Trash2 className="w-3.5 h-3.5" />
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(asset)} disabled={deletingAssetId === asset.id} className="text-red-600 text-xs px-2">
+                        {deletingAssetId === asset.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                       </Button>
                     )}
                   </div>

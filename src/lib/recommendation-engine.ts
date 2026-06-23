@@ -83,8 +83,7 @@ export async function generateRecommendations(userId: string): Promise<void> {
   const { data: courses } = await admin
     .from('courses')
     .select(`
-      id, title, category,
-      course_tags(tag),
+      id, title, category, tags,
       lessons(id, title, sequence_order)
     `)
     .in('id', enrolledCourseIds)
@@ -144,8 +143,8 @@ export async function generateRecommendations(userId: string): Promise<void> {
   const allUserTags = new Set<string>()
   const userCategories = new Set<string>()
   for (const c of courses || []) {
-    for (const t of c.course_tags || []) {
-      allUserTags.add((t as { tag: string }).tag)
+    for (const tag of c.tags || []) {
+      allUserTags.add(tag)
     }
     if (c.category) userCategories.add(c.category)
   }
@@ -171,7 +170,7 @@ export async function generateRecommendations(userId: string): Promise<void> {
       course_id: course.id,
       course_title: course.title,
       category: course.category,
-      tags: (course.course_tags || []).map((t: { tag: string }) => t.tag),
+      tags: course.tags || [],
       total_lessons: lessons.length,
       completed_count: viewedSet.size,
       lessons,
@@ -196,8 +195,7 @@ export async function generateRecommendations(userId: string): Promise<void> {
     const { data: unenrolled } = await admin
       .from('courses')
       .select(`
-        id, title, category,
-        course_tags(tag),
+        id, title, category, tags,
         lessons(id, title, sequence_order)
       `)
       .in('id', unenrolledIds)
@@ -206,7 +204,7 @@ export async function generateRecommendations(userId: string): Promise<void> {
 
     for (const c of unenrolled || []) {
       let score = 0
-      const courseTags = (c.course_tags || []).map((t: { tag: string }) => t.tag)
+      const courseTags = c.tags || []
       for (const tag of courseTags) {
         if (allUserTags.has(tag)) score += 2
       }
@@ -223,8 +221,7 @@ export async function generateRecommendations(userId: string): Promise<void> {
 
       if (xLessons.length === 0) continue
 
-      const matchTags = (course.course_tags || [])
-        .map((t: { tag: string }) => t.tag)
+      const matchTags = (course.tags || [])
         .filter((t: string) => allUserTags.has(t))
 
       const reason = matchTags.length > 0

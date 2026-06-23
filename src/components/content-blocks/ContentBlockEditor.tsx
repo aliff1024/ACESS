@@ -26,6 +26,8 @@ interface ContentBlockEditorProps {
   blocks: ContentBlock[]
   onChange: (blocks: ContentBlock[]) => void
   onHtmlChange?: (html: string) => void
+  onOpenMediaPicker?: (onSelect: (url: string, kind: string, title?: string) => void, accept?: string) => void
+  onImageUpload?: (file: File) => Promise<string>
 }
 
 function emptyBlock(type: BlockType): ContentBlock {
@@ -44,7 +46,7 @@ function emptyBlock(type: BlockType): ContentBlock {
   }
 }
 
-export function ContentBlockEditor({ blocks, onChange, onHtmlChange }: ContentBlockEditorProps) {
+export function ContentBlockEditor({ blocks, onChange, onHtmlChange, onOpenMediaPicker, onImageUpload }: ContentBlockEditorProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   const update = useCallback((newBlocks: ContentBlock[]) => {
@@ -83,7 +85,7 @@ export function ContentBlockEditor({ blocks, onChange, onHtmlChange }: ContentBl
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-h-[60vh] overflow-y-auto overflow-x-hidden break-words w-full pr-2">
       {blocks.length === 0 && (
         <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
           <p className="text-sm text-gray-500 mb-4">No content blocks yet. Add one to get started.</p>
@@ -209,10 +211,53 @@ export function ContentBlockEditor({ blocks, onChange, onHtmlChange }: ContentBl
                 />
               )}
               {block.type === 'image' && (
-                <div className="space-y-2">
-                  <Input value={(block.data as any).src || ''} onChange={(e) => updateBlockData(block.id, { src: e.target.value })} placeholder="Image URL..." />
-                  <Input value={(block.data as any).alt || ''} onChange={(e) => updateBlockData(block.id, { alt: e.target.value })} placeholder="Alt text..." />
-                  <Input value={(block.data as any).caption || ''} onChange={(e) => updateBlockData(block.id, { caption: e.target.value })} placeholder="Caption (optional)..." />
+                <div className="space-y-4">
+                  {/* Visual Preview / Upload Zone */}
+                  {(block.data as any).src ? (
+                    <div className="relative group rounded-lg overflow-hidden border border-gray-200">
+                      <img src={(block.data as any).src} alt={(block.data as any).alt || ''} className="w-full max-h-64 object-contain bg-gray-50" />
+                      {onOpenMediaPicker && (
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Button variant="secondary" onClick={() => onOpenMediaPicker((url) => updateBlockData(block.id, { src: url }), 'image/*')}>
+                            Change Image
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div 
+                      className="w-full h-40 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (onImageUpload && e.dataTransfer.files?.length > 0) {
+                          const file = e.dataTransfer.files[0];
+                          if (file.type.startsWith('image/')) {
+                            onImageUpload(file).then(url => {
+                              if (url) updateBlockData(block.id, { src: url });
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      {onOpenMediaPicker ? (
+                        <>
+                          <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
+                          <Button variant="outline" size="sm" onClick={() => onOpenMediaPicker((url) => updateBlockData(block.id, { src: url }), 'image/*')}>
+                            Upload or Drop Image
+                          </Button>
+                        </>
+                      ) : (
+                        <span className="text-gray-400 text-sm italic">Image URL required below</span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Input value={(block.data as any).src || ''} onChange={(e) => updateBlockData(block.id, { src: e.target.value })} placeholder="Or paste Image URL manually..." />
+                    <Input value={(block.data as any).alt || ''} onChange={(e) => updateBlockData(block.id, { alt: e.target.value })} placeholder="Alt text..." />
+                    <Input value={(block.data as any).caption || ''} onChange={(e) => updateBlockData(block.id, { caption: e.target.value })} placeholder="Caption (optional)..." />
+                  </div>
                 </div>
               )}
               {block.type === 'video' && (

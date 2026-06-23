@@ -8,15 +8,12 @@ import { Sun, Moon, Menu, X, LogOut, User } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { useAuth } from '@/providers/AuthProvider';
 import { getDashboardForRole } from '@/lib/auth-types';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
-interface NavbarProps {
-  onTryDemo: () => void;
-}
-
-export function Navbar({ onTryDemo }: NavbarProps) {
+export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -44,11 +41,6 @@ export function Navbar({ onTryDemo }: NavbarProps) {
       router.push('/' + href);
     }
     setMobileMenuOpen(false);
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
   };
 
   const navLinks = isLandingPage
@@ -108,15 +100,12 @@ export function Navbar({ onTryDemo }: NavbarProps) {
                   <User className="w-4 h-4" />
                   <span className="max-w-[120px] truncate">{user.fullName}</span>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </Button>
+                <LogoutButton asChild redirectTo="/">
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </Button>
+                </LogoutButton>
               </div>
             ) : (
               <>
@@ -133,11 +122,7 @@ export function Navbar({ onTryDemo }: NavbarProps) {
               </>
             )}
 
-            {isLandingPage && (
-              <Button onClick={onTryDemo} className="bg-blue-600 hover:bg-blue-700 text-white">
-                Try Demo
-              </Button>
-            )}
+
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -160,12 +145,14 @@ export function Navbar({ onTryDemo }: NavbarProps) {
                 >
                   Dashboard
                 </button>
-                <button
-                  onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
-                  className="block w-full text-left px-3 py-2 rounded-lg text-red-600 font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  Logout
-                </button>
+                <LogoutButton asChild redirectTo="/">
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full text-left px-3 py-2 rounded-lg text-red-600 font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </LogoutButton>
               </>
             ) : (
               <>

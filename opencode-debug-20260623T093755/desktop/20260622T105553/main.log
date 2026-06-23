@@ -1,0 +1,33 @@
+[2026-06-22 18:55:53.074] [info]          app starting { version: '1.17.9', packaged: true, onboardingTest: false }
+[2026-06-22 18:55:53.162] [info]          tauri migration: already done, skipping
+[2026-06-22 18:55:53.175] [info]          auto updater configured {
+  channel: 'latest',
+  allowPrerelease: false,
+  allowDowngrade: true,
+  currentVersion: '1.17.9'
+}
+[2026-06-22 18:55:53.179] [info]          updater state changed { from: 'idle', to: 'checking' }
+[2026-06-22 18:55:53.180] [info]          Checking for update
+[2026-06-22 18:55:53.248] [info]            sidecar connection started { url: 'http://127.0.0.1:60266' }
+[2026-06-22 18:55:53.249] [info]            spawning sidecar { url: 'http://127.0.0.1:60266' }
+[2026-06-22 18:55:54.082] [info]            Update for version 1.17.9 is not available (latest version: 1.17.9, downgrade is allowed).
+[2026-06-22 18:55:54.089] [info]            updater state changed { from: 'checking', to: 'up-to-date' }
+[2026-06-22 18:55:54.150] [info]            loading task finished
+[2026-06-22 18:55:54.490] [info]            awaiting server ready
+[2026-06-22 18:55:54.490] [info]            server ready { url: 'http://127.0.0.1:60266' }
+[2026-06-22 19:05:53.203] [info]            updater state changed { from: 'up-to-date', to: 'checking' }
+[2026-06-22 19:05:53.231] [info]            Checking for update
+[2026-06-22 19:05:58.917] [info]            Update for version 1.17.9 is not available (latest version: 1.17.9, downgrade is allowed).
+[2026-06-22 19:05:58.923] [info]            updater state changed { from: 'checking', to: 'up-to-date' }
+[2026-06-22 19:15:53.192] [info]            updater state changed { from: 'up-to-date', to: 'checking' }
+[2026-06-22 19:15:53.194] [info]            Checking for update
+[2026-06-22 19:15:53.745] [info]            Update for version 1.17.9 is not available (latest version: 1.17.9, downgrade is allowed).
+[2026-06-22 19:15:53.749] [info]            updater state changed { from: 'checking', to: 'up-to-date' }
+[2026-06-22 19:25:53.208] [info]            updater state changed { from: 'up-to-date', to: 'checking' }
+[2026-06-22 19:25:53.224] [info]            Checking for update
+[2026-06-22 19:25:54.812] [info]            Update for version 1.17.9 is not available (latest version: 1.17.9, downgrade is allowed).
+[2026-06-22 19:25:54.819] [info]            updater state changed { from: 'checking', to: 'up-to-date' }
+[2026-06-22 19:35:53.235] [info]            updater state changed { from: 'up-to-date', to: 'checking' }
+[2026-06-22 19:35:53.290] [info]            Checking for update
+[2026-06-22 19:35:54.959] [info]            Update for version 1.17.9 is not available (latest version: 1.17.9, downgrade is allowed).
+[2026-06-22 19:35:54.985] [info]            updater state changed { from: 'checking', to: 'up-to-date' }

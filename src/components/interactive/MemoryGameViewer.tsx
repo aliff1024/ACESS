@@ -191,8 +191,8 @@ export function MemoryGameViewer({ data, onComplete }: MemoryGameViewerProps) {
               style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
             >
               {card.image_url && (
-                <div className="flex-1 w-full flex items-center justify-center mb-2 overflow-hidden rounded-md bg-gray-50/50">
-                  <img src={card.image_url} alt="" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                <div className="flex-[2] w-full flex items-center justify-center mb-2 overflow-hidden rounded-md bg-transparent">
+                  <img src={card.image_url} alt="" className="w-full h-full object-contain mix-blend-multiply" />
                 </div>
               )}
               {card.text && (

@@ -4,7 +4,7 @@ import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import { Extension } from '@tiptap/core'
 import { Plugin } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
-import ImageExtension from '@tiptap/extension-image'
+import { ResizableImageExtension } from './ResizableImageExtension'
 import { Table as TableExtension } from '@tiptap/extension-table'
 import TableRowExtension from '@tiptap/extension-table-row'
 import TableCellExtension from '@tiptap/extension-table-cell'
@@ -20,7 +20,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code, Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Undo, Redo, Link, Image, Table, AlignLeft, AlignCenter, AlignRight,
   Highlighter, Minus, Code2, Heading4, Palette, RemoveFormatting, Info, FileCode, WrapText,
-  ListChecks, TextQuote,
+  ListChecks, TextQuote, Scissors,
 } from 'lucide-react'
 
 interface RichTextEditorProps {
@@ -30,6 +30,7 @@ interface RichTextEditorProps {
   editable?: boolean
   minHeight?: string
   onImageUpload?: (file: File) => Promise<string>
+  onOpenMediaPicker?: (onSelect: (url: string, kind: string, title?: string) => void, accept?: string) => void
 }
 
 function ToolbarButton({ onClick, active, children, title }: {
@@ -51,12 +52,14 @@ function ToolbarDivider() {
   return <div className="w-px h-5 bg-gray-300 mx-0.5" />
 }
 
-function MenuBar({ editor, showSource, onToggleSource, onImageUpload }: {
-  editor: Editor; showSource: boolean; onToggleSource: () => void; onImageUpload?: (file: File) => Promise<string>
+function MenuBar({ editor, showSource, onToggleSource, onImageUpload, onOpenMediaPicker }: {
+  editor: Editor; showSource: boolean; onToggleSource: () => void; onImageUpload?: (file: File) => Promise<string>; onOpenMediaPicker?: (onSelect: (url: string, kind: string, title?: string) => void, accept?: string) => void
 }) {
   const [linkUrl, setLinkUrl] = useState('')
   const [showLinkInput, setShowLinkInput] = useState(false)
   const [showBlockPicker, setShowBlockPicker] = useState(false)
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  const [showHeadingPicker, setShowHeadingPicker] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
 
@@ -170,18 +173,46 @@ function MenuBar({ editor, showSource, onToggleSource, onImageUpload }: {
         </ToolbarButton>
         <ToolbarDivider />
 
-        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="Heading 1">
-          <Heading1 className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="Heading 2">
-          <Heading2 className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="Heading 3">
-          <Heading3 className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} active={editor.isActive('heading', { level: 4 })} title="Heading 4">
-          <Heading4 className="w-4 h-4" />
-        </ToolbarButton>
+        <div className="relative mx-1">
+          <button
+            type="button"
+            onClick={() => setShowHeadingPicker(!showHeadingPicker)}
+            className="flex items-center justify-between w-28 h-8 px-2 text-sm text-left bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <span className="truncate">
+              {editor.isActive('heading', { level: 1 }) ? 'Heading 1' :
+               editor.isActive('heading', { level: 2 }) ? 'Heading 2' :
+               editor.isActive('heading', { level: 3 }) ? 'Heading 3' :
+               editor.isActive('heading', { level: 4 }) ? 'Heading 4' : 'Paragraph'}
+            </span>
+            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          
+          {showHeadingPicker && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-1 w-48">
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { editor.chain().focus().setParagraph().run(); setShowHeadingPicker(false); }}
+                className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${editor.isActive('paragraph') ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}>
+                Paragraph
+              </button>
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { editor.chain().focus().toggleHeading({ level: 1 }).run(); setShowHeadingPicker(false); }}
+                className={`w-full text-left px-4 py-2 hover:bg-gray-100 text-2xl font-bold ${editor.isActive('heading', { level: 1 }) ? 'bg-blue-50 text-blue-700' : 'text-gray-900'}`}>
+                Heading 1
+              </button>
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { editor.chain().focus().toggleHeading({ level: 2 }).run(); setShowHeadingPicker(false); }}
+                className={`w-full text-left px-4 py-2 hover:bg-gray-100 text-xl font-bold ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-50 text-blue-700' : 'text-gray-800'}`}>
+                Heading 2
+              </button>
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { editor.chain().focus().toggleHeading({ level: 3 }).run(); setShowHeadingPicker(false); }}
+                className={`w-full text-left px-4 py-2 hover:bg-gray-100 text-lg font-bold ${editor.isActive('heading', { level: 3 }) ? 'bg-blue-50 text-blue-700' : 'text-gray-800'}`}>
+                Heading 3
+              </button>
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { editor.chain().focus().toggleHeading({ level: 4 }).run(); setShowHeadingPicker(false); }}
+                className={`w-full text-left px-4 py-2 hover:bg-gray-100 text-base font-bold ${editor.isActive('heading', { level: 4 }) ? 'bg-blue-50 text-blue-700' : 'text-gray-800'}`}>
+                Heading 4
+              </button>
+            </div>
+          )}
+        </div>
         <ToolbarDivider />
 
         <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('left').run()} active={editor.isActive({ textAlign: 'left' })} title="Align left">
@@ -240,15 +271,35 @@ function MenuBar({ editor, showSource, onToggleSource, onImageUpload }: {
         <ToolbarButton onClick={insertCodeBlock} active={editor.isActive('codeBlock')} title="Code block">
           <FileCode className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal divider">
-          <Minus className="w-4 h-4" />
-        </ToolbarButton>
+        <button 
+          type="button" 
+          onClick={() => editor.chain().focus().setHorizontalRule().run()} 
+          title="Insert Page Break (creates a new slide)"
+          className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors ml-1"
+        >
+          <Scissors className="w-3.5 h-3.5" /> Page Break
+        </button>
         <ToolbarDivider />
 
         <ToolbarButton onClick={() => setShowLinkInput(!showLinkInput)} active={editor.isActive('link')} title="Insert link">
           <Link className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={addImage} title={onImageUpload ? 'Upload image' : 'Insert image'}>
+        <ToolbarButton 
+          onClick={() => {
+            if (onOpenMediaPicker) {
+              onOpenMediaPicker((url, kind, title) => {
+                if (kind === 'image') {
+                  editor.chain().focus().setImage({ src: url }).run();
+                } else if (kind === 'video' || kind === 'pdf' || kind === 'link') {
+                  editor.chain().focus().setLink({ href: url }).insertContent(title || url).run();
+                }
+              }, 'image/*');
+            } else {
+              addImage();
+            }
+          }} 
+          title={onOpenMediaPicker ? 'Insert media from library' : onImageUpload ? 'Upload image' : 'Insert image'}
+        >
           {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image className={`w-4 h-4 ${uploadingImage ? 'opacity-50' : ''}`} />
         </ToolbarButton>
@@ -257,12 +308,40 @@ function MenuBar({ editor, showSource, onToggleSource, onImageUpload }: {
         </ToolbarButton>
         <ToolbarDivider />
 
-        <ToolbarButton onClick={() => {
-          const color = window.prompt('Enter color hex (e.g. #ff0000):')
-          if (color) editor.chain().focus().setColor(color).run()
-        }} title="Text color">
-          <Palette className="w-4 h-4" />
-        </ToolbarButton>
+        <div className="relative">
+          <ToolbarButton onClick={() => setShowColorPicker(!showColorPicker)} active={showColorPicker} title="Text color">
+            <Palette className="w-4 h-4" />
+          </ToolbarButton>
+          {showColorPicker && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-2 w-48">
+              <p className="text-xs font-semibold text-gray-500 px-2 pb-1">Text Color</p>
+              <div className="grid grid-cols-5 gap-1 p-1">
+                {['#000000', '#4B5563', '#EF4444', '#F97316', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899'].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    className="w-6 h-6 rounded border border-gray-200 hover:scale-110 transition-transform"
+                    style={{ backgroundColor: c }}
+                    onClick={() => {
+                      editor.chain().focus().setColor(c).run()
+                      setShowColorPicker(false)
+                    }}
+                    title={c}
+                  />
+                ))}
+              </div>
+              <button 
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => { editor.chain().focus().unsetColor().run(); setShowColorPicker(false); }}
+                className="w-full text-xs text-center mt-2 text-gray-500 hover:text-gray-800 py-1 bg-gray-50 rounded"
+              >
+                Clear Color
+              </button>
+            </div>
+          )}
+        </div>
         <ToolbarDivider />
 
         <ToolbarButton onClick={onToggleSource} active={showSource} title="HTML source editor">
@@ -294,7 +373,7 @@ function MenuBar({ editor, showSource, onToggleSource, onImageUpload }: {
   )
 }
 
-export function RichTextEditor({ content: initialContent, onChange, placeholder = 'Start writing...', editable = true, minHeight = '300px', onImageUpload }: RichTextEditorProps) {
+export function RichTextEditor({ content: initialContent, onChange, placeholder = 'Start writing...', editable = true, minHeight = '300px', onImageUpload, onOpenMediaPicker }: RichTextEditorProps) {
   const [showSource, setShowSource] = useState(false)
   const [sourceHtml, setSourceHtml] = useState(initialContent)
 
@@ -318,6 +397,9 @@ export function RichTextEditor({ content: initialContent, onChange, placeholder 
                 handlePaste: (view, event) => {
                   const text = event.clipboardData?.getData('text/plain')
                   const html = event.clipboardData?.getData('text/html')
+                  // Allow native image pasting if it's a file
+                  if (event.clipboardData?.files?.length) return false;
+                  
                   if (text && !html && /<[a-z][\s\S]*>/i.test(text)) {
                     event.preventDefault()
                     editor.commands.insertContent(text)
@@ -325,12 +407,32 @@ export function RichTextEditor({ content: initialContent, onChange, placeholder 
                   }
                   return false
                 },
+                handleDrop: (view, event, slice, moved) => {
+                  if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                    const file = event.dataTransfer.files[0];
+                    if (file.type.startsWith('image/') && onImageUpload) {
+                      event.preventDefault();
+                      
+                      const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+                      if (!coordinates) return false;
+
+                      // Insert a placeholder or wait for upload
+                      onImageUpload(file).then(url => {
+                         if (url) {
+                            view.dispatch(view.state.tr.insert(coordinates.pos, view.state.schema.nodes.image.create({ src: url })));
+                         }
+                      });
+                      return true;
+                    }
+                  }
+                  return false;
+                }
               },
             }),
           ]
         },
       }),
-      ImageExtension,
+      ResizableImageExtension,
       TableExtension.configure({ resizable: true }),
       TableRowExtension,
       TableCellExtension,
@@ -365,7 +467,7 @@ export function RichTextEditor({ content: initialContent, onChange, placeholder 
 
   return (
     <div className="border border-gray-300 rounded-lg overflow-hidden">
-      {editable && editor && <MenuBar editor={editor} showSource={showSource} onToggleSource={handleToggleSource} onImageUpload={onImageUpload} />}
+      {editable && editor && <MenuBar editor={editor} showSource={showSource} onToggleSource={handleToggleSource} onImageUpload={onImageUpload} onOpenMediaPicker={onOpenMediaPicker} />}
       {showSource ? (
         <div>
           <div className="flex items-center gap-2 px-3 py-1.5 border-b border-gray-200 bg-gray-50">
@@ -399,10 +501,19 @@ export function RichTextEditor({ content: initialContent, onChange, placeholder 
         </div>
       ) : (
         <div
-          className="prose prose-sm max-w-none p-4"
-          style={{ minHeight }}
+          className="prose prose-sm max-w-none p-4 overflow-y-auto overflow-x-hidden break-words w-full"
+          style={{ minHeight: minHeight || '300px', maxHeight: '500px' }}
+          onClick={() => editor?.commands.focus()}
         >
           <EditorContent editor={editor} />
+        </div>
+      )}
+      
+      {/* Content length warning */}
+      {!showSource && editor && editor.getText().length > 1500 && (
+        <div className="px-4 py-2 bg-amber-50 border-t border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+          <Info className="w-4 h-4 text-amber-600" />
+          This content block is getting long ({editor.getText().length} characters). Consider creating a new Slide/Block for better student readability.
         </div>
       )}
     </div>

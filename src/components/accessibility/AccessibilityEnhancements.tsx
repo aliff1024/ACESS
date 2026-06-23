@@ -2,6 +2,7 @@
 
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useEffect } from 'react';
+import { TextToSpeechEngine } from './TextToSpeechEngine';
 
 export function AccessibilityEnhancements() {
   const { settings, userAgeGroup } = useAccessibility();
@@ -15,6 +16,7 @@ export function AccessibilityEnhancements() {
 
   return (
     <>
+      <TextToSpeechEngine />
       {showSkip && (
         <a href="#main-content" className="skip-to-main">
           Skip to main content

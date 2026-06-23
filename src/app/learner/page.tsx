@@ -6,6 +6,7 @@ import { AdaptiveRecommendations } from '@/components/learner/AdaptiveRecommenda
 import { MyCoursesSection } from '@/components/learner/MyCoursesSection';
 import { ProgressOverview } from '@/components/learner/ProgressOverview';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function LearnerDashboardPage() {
   const router = useRouter();
@@ -97,6 +98,27 @@ export default function LearnerDashboardPage() {
   // --- Dyslexia / Default Dashboard ---
   // Dyslexia largely relies on the CSS variables for font size, spacing, etc., 
   // which apply naturally to the default structure.
+  
+  if (settings.chunked_content_mode) {
+    return (
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 ${activePreset === 'dyslexia' ? 'space-y-16' : ''}`}>
+        <Tabs defaultValue="welcome" className="space-y-8">
+          <TabsList className="flex flex-wrap h-auto gap-2 p-1 bg-gray-100/50 rounded-xl w-full">
+            <TabsTrigger value="welcome" className="flex-1 text-sm md:text-base py-3 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">Welcome</TabsTrigger>
+            <TabsTrigger value="progress" className="flex-1 text-sm md:text-base py-3 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">Progress</TabsTrigger>
+            <TabsTrigger value="recommendations" className="flex-1 text-sm md:text-base py-3 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">Next Steps</TabsTrigger>
+            <TabsTrigger value="courses" className="flex-1 text-sm md:text-base py-3 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">Active Courses</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="welcome" className="m-0 mt-6"><WelcomeSection /></TabsContent>
+          <TabsContent value="progress" className="m-0 mt-6"><ProgressOverview /></TabsContent>
+          <TabsContent value="recommendations" className="m-0 mt-6"><AdaptiveRecommendations onStartLesson={(lessonId) => router.push(`/learner/lesson/${lessonId}?courseId=`)} /></TabsContent>
+          <TabsContent value="courses" className="m-0 mt-6"><MyCoursesSection onContinue={(courseId) => router.push(`/learner/courses/${courseId}`)} /></TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
+
   return (
     <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-12 ${activePreset === 'dyslexia' ? 'space-y-16' : ''}`}>
       {/* Hero Section */}

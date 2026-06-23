@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendInstructorApprovalEmail } from '@/lib/email'
+import { createServerSupabase } from '@/lib/supabase-server'
 
 function generatePassword() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -13,6 +14,23 @@ function generatePassword() {
 
 export async function POST(request: Request) {
   try {
+    const serverSupabase = await createServerSupabase()
+    const { data: { user } } = await serverSupabase.auth.getUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: userData } = await serverSupabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+      
+    if (userData?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const { applicationId, admin_notes } = await request.json()
 
     if (!applicationId) {

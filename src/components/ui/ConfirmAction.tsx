@@ -12,6 +12,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { Loader2 } from 'lucide-react';
 
 interface ConfirmActionProps {
   title: string;
@@ -24,6 +25,8 @@ interface ConfirmActionProps {
   children?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  loading?: boolean;
+  loadingText?: string;
 }
 
 export function ConfirmAction({
@@ -37,9 +40,11 @@ export function ConfirmAction({
   children,
   open,
   onOpenChange,
+  loading = false,
+  loadingText = 'Processing...',
 }: ConfirmActionProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(newOpen) => { if (!loading || newOpen) onOpenChange?.(newOpen); }}>
       {children && <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -50,9 +55,10 @@ export function ConfirmAction({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className={confirmClassName}>
-            {confirmText}
+          <AlertDialogCancel disabled={loading}>{cancelText}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} className={confirmClassName} disabled={loading}>
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {loading ? loadingText : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

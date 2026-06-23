@@ -80,7 +80,7 @@ export function CourseProgressDetailPage({
                 Incredible Work!
               </h3>
               <p className="text-yellow-50 text-lg font-medium opacity-90">
-                You've mastered this course. Claim your reward now.
+                You&apos;ve mastered this course. Claim your reward now.
               </p>
             </div>
           </div>

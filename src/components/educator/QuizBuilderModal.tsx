@@ -8,7 +8,8 @@ import { Textarea } from '../ui/textarea';
 import { Plus, X, CheckCircle, HelpCircle, Image, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { createFullQuiz, uploadContentImage, fetchQuizWithQuestions } from '@/lib/educator-api';
+import { createFullQuiz, fetchQuizWithQuestions } from '@/lib/educator-api';
+import { MediaPickerModal } from '@/components/educator/MediaPickerModal';
 
 interface AddQuizModalProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ const emptyQuestion = (): Question => ({
 export function QuizBuilderModal({ isOpen, onClose, onSave, lessonId, courseId }: AddQuizModalProps) {
   const [quizTitle, setQuizTitle] = useState('');
   const [questions, setQuestions] = useState<Question[]>([emptyQuestion()]);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [uploadingFor, setUploadingFor] = useState<{ questionId: string; optionIndex?: number } | null>(null);
   const [loadingExisting, setLoadingExisting] = useState(false);
   const [hasExistingQuiz, setHasExistingQuiz] = useState(false);
@@ -134,32 +136,22 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, lessonId, courseId }
   };
 
   const handleImageUpload = async (questionId: string, optionIndex?: number) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/png,image/jpeg,image/gif,image/webp';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      setUploadingFor({ questionId, optionIndex });
-      try {
-        const scope = courseId ? `${courseId}/quiz` : `quiz/${lessonId || 'new'}`;
-        const url = await uploadContentImage(file, scope);
-        setQuestions((prev) =>
-          prev.map((q) => {
-            if (q.id !== questionId) return q;
-            if (optionIndex === undefined) return { ...q, imageUrl: url };
-            const imgs = [...(q.optionImages || ['', '', '', ''])];
-            imgs[optionIndex] = url;
-            return { ...q, optionImages: imgs };
-          })
-        );
-      } catch {
-        toast.error('Failed to upload image');
-      } finally {
-        setUploadingFor(null);
-      }
-    };
-    input.click();
+    setUploadingFor({ questionId, optionIndex });
+    setMediaPickerOpen(true);
+  };
+
+  const onMediaSelected = (url: string) => {
+    if (!uploadingFor) return;
+    const { questionId, optionIndex } = uploadingFor;
+    setQuestions((prev) =>
+      prev.map((q) => {
+        if (q.id !== questionId) return q;
+        if (optionIndex === undefined) return { ...q, imageUrl: url };
+        const imgs = [...(q.optionImages || ['', '', '', ''])];
+        imgs[optionIndex] = url;
+        return { ...q, optionImages: imgs };
+      })
+    );
   };
 
   const [isSaving, setIsSaving] = useState(false);
@@ -223,7 +215,7 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, lessonId, courseId }
           <div className="flex gap-6">
             {/* ── Sidebar Question Navigator ── */}
             {questions.length > 0 && (
-              <div className="hidden md:flex flex-col gap-1.5 w-16 shrink-0 pt-2">
+              <div className="flex flex-col gap-1.5 w-16 shrink-0 pt-2 sticky top-0 max-h-[75vh] overflow-y-auto px-1 pb-4">
                 {questions.map((q, i) => {
                   const hasText = q.question.trim().length > 0;
                   const hasAllOptions = q.options.every((o) => o.trim().length > 0);
@@ -315,13 +307,13 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, lessonId, courseId }
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">Question Image (optional)</label>
                       {question.imageUrl ? (
-                        <div className="relative inline-block rounded-lg overflow-hidden border border-gray-300">
-                          <img src={question.imageUrl} alt="" className="max-h-24 object-contain" />
-                          <button type="button" onClick={() => updateQuestion(question.id, 'imageUrl', '')}
-                            className="absolute top-1 right-1 p-0.5 bg-white/90 rounded-full hover:bg-white shadow-sm">
-                            <X className="w-3.5 h-3.5 text-red-600" />
-                          </button>
-                        </div>
+                        <div className="relative mt-3 shrink-0 self-start">
+                        <img src={question.imageUrl} alt="" className="w-64 h-64 object-contain rounded-lg border border-gray-300 shadow-sm bg-gray-50" />
+                        <button type="button" onClick={() => updateQuestion(question.id, 'imageUrl', null)}
+                          className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-md hover:bg-gray-100">
+                          <X className="w-4 h-4 text-red-600" />
+                        </button>
+                      </div>
                       ) : (
                         <button type="button"
                           disabled={uploadingFor?.questionId === question.id && uploadingFor?.optionIndex === undefined}
@@ -359,8 +351,8 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, lessonId, courseId }
                             )}
 
                             {question.optionImages?.[oIndex] ? (
-                              <div className="relative shrink-0">
-                                <img src={question.optionImages[oIndex]} alt="" className="w-8 h-8 rounded object-cover border border-gray-300" />
+                              <div className="relative shrink-0 mt-2 w-full max-w-[250px]">
+                                <img src={question.optionImages[oIndex]} alt="" className="w-full h-48 rounded object-contain border border-gray-300 bg-gray-50" />
                                 <button type="button" onClick={() => {
                                   const imgs = [...(question.optionImages || ['', '', '', ''])];
                                   imgs[oIndex] = '';
@@ -441,6 +433,19 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, lessonId, courseId }
           </div>
         )}
       </DialogContent>
+
+      <MediaPickerModal
+        open={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        courseId={courseId || ''}
+        lessonId={lessonId || null}
+        accept="image/*"
+        onSelect={(url) => {
+          onMediaSelected(url);
+          setMediaPickerOpen(false);
+          setUploadingFor(null);
+        }}
+      />
     </Dialog>
   );
 }

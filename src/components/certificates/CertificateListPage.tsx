@@ -5,7 +5,8 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Award, Calendar, Hash, Eye, Download, Search, Loader2, Trophy, Footprints, GraduationCap, Zap, Star, Shield, User, FileText, Lock, BookOpen, Flame } from 'lucide-react';
-import { fetchCertificates, fetchLearnerBadges, type Certificate, type LearnerBadge } from '@/lib/learner-api';
+import { fetchCertificates, fetchLearnerBadges, fetchLearnerStats, type Certificate, type LearnerBadge, type LearnerStats } from '@/lib/learner-api';
+import { LearningLevelTab } from './LearningLevelTab';
 
 interface AchievementsDashboardProps {
   onViewCertificate: (certificateId: string) => void;
@@ -20,14 +21,16 @@ export function CertificateListPage({
 }: AchievementsDashboardProps) {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [badges, setBadges] = useState<LearnerBadge[]>([]);
+  const [stats, setStats] = useState<LearnerStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'badges' | 'system_certs' | 'custom_certs'>('badges');
+  const [activeTab, setActiveTab] = useState<'level' | 'badges' | 'system_certs' | 'custom_certs'>('level');
 
   useEffect(() => {
-    Promise.all([fetchCertificates(), fetchLearnerBadges()])
-      .then(([certsData, badgesData]) => {
+    Promise.all([fetchCertificates(), fetchLearnerBadges(), fetchLearnerStats()])
+      .then(([certsData, badgesData, statsData]) => {
         setCertificates(certsData);
         setBadges(badgesData);
+        setStats(statsData);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -80,6 +83,16 @@ export function CertificateListPage({
         {/* Navigation Tabs */}
         <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 p-2 flex flex-col sm:flex-row gap-2 mb-8">
           <button
+            onClick={() => setActiveTab('level')}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold transition-all ${
+              activeTab === 'level'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <Star className="w-5 h-5" /> Learning Level
+          </button>
+          <button
             onClick={() => setActiveTab('badges')}
             className={`flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold transition-all ${
               activeTab === 'badges'
@@ -120,6 +133,11 @@ export function CertificateListPage({
             )}
           </button>
         </div>
+
+        {/* Tab Content: Learning Level */}
+        {activeTab === 'level' && stats && (
+          <LearningLevelTab stats={stats} />
+        )}
 
         {/* Tab Content: Badges */}
         {activeTab === 'badges' && (

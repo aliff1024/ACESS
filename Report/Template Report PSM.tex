@@ -1,0 +1,1642 @@
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[12pt, oneside]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+\usepackage{mathptmx} % Use Times New Roman font
+\usepackage{times}
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS %%%
+\usepackage{geometry} % to change the page dimensions
+\geometry{
+	a4paper,
+	total={21.0cm,29.7cm},
+	top=2.5cm,
+	bottom=2.5cm,
+	right=2.5cm,
+	left=3.5cm} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+
+
+
+%%% HEADERS & FOOTERS %%%
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customize the layout...
+\lhead{}\chead{}\rhead{\thepage}
+\lfoot{}\cfoot{}\rfoot{}
+
+
+
+
+
+
+%%% PACKAGES %%%
+
+\usepackage{enumitem}
+%\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{pdfpages}  % to import and places other pdf file in this file
+\usepackage{ragged2e} % defines new commands \centering \justify etc
+
+\usepackage{graphicx, epstopdf} % support the \includegraphics command and options
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+\usepackage{caption, subcaption}
+
+\usepackage{array} % for better arrays (e.g. matrices) in maths
+\usepackage{amsmath, amssymb, amsfonts} 
+
+\usepackage{float}
+\usepackage{url}
+\usepackage{morefloats}
+%\usepackage[nottoc,notlot,notlof]{tocbibind} % making the bibliography appears in TOC
+
+%\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{indentfirst} % Activate each 1st paragraph with indent
+
+\usepackage{setspace}
+%\usepackage{times}
+\usepackage{csquotes}% Recommended
+
+
+\usepackage{color, colortbl}
+\urlstyle{tt}
+\newcommand{\tcode}[1]{\path{#1}} 
+	\definecolor{red}{rgb}{0.900, 0.200, 0.200}
+
+
+
+
+
+%%% INDENTATION %%%
+
+%\setlength{\parindent}{30pt} % paragraph indent size 
+\setlength{\parskip}{1.3em}  % paragraph spacing
+\renewcommand{\baselinestretch}{1.5}  % line spacing.. 1 for single spacing, 1.5 for one and half, 2 for double spacing
+
+
+
+
+
+%%%% SECTION TITLE APPEARANCE %%%%
+
+\usepackage{titlesec} % chapter heading
+\usepackage{sectsty} % to renew chapter style
+%\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+%% (This matches ConTeXt defaults)
+
+\sectionfont{\fontsize{12}{15}\selectfont}  %% Chapter font size
+\subsectionfont{\fontsize{12}{15}\selectfont}  %% Section font size
+
+%\titleformat{\section}{\centering}{}{1em}{}
+\renewcommand{\thesection}{CHAPTER \arabic{section}:}  %% Header chapter with number
+\renewcommand{\thesubsection}{\normalsize \arabic{section}.\arabic{subsection}}  %% Rename subsection with chapter number (remove perkataan Chapter)
+%\renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+
+
+
+%%% ToC (Table of Contents) APPEARANCE %%%
+
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents, List of figures and tables
+
+\usepackage[titletoc]{appendix}
+\usepackage{listings}
+
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+\usepackage[english]{babel}
+\addto\captionsenglish{
+\renewcommand{\contentsname}{
+\centering \normalsize TABLE OF CONTENTS   \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename name of table of contents
+\renewcommand{\listtablename}{
+\centering \normalsize LIST OF TABLES \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename list of tables
+\renewcommand{\listfigurename}{
+\centering \normalsize LIST OF FIGURES \\
+\vspace{1.8cm}
+\hfill PAGE \\[8mm]
+}  %% To rename list of figures
+}
+
+
+
+
+%% Renaming Table and Figure Caption based on Chapter, Example, to rename from default caption, Figure 1:, to Figure 1.1:
+
+\usepackage{chngcntr}
+
+\counterwithin{table}{section}
+\renewcommand{\thetable}{\arabic{section}.\arabic{table}}
+
+\counterwithin{figure}{section}
+\renewcommand{\thefigure}{\arabic{section}.\arabic{figure}}
+
+
+
+
+\usepackage{etoolbox} %setting line spacing in TOC/LOF/T
+\makeatletter
+\pretocmd{\section}{\addtocontents{toc}{\protect\addvspace{-10mm}}}{}{}
+\pretocmd{\subsection}{\addtocontents{toc}{\protect\addvspace{0mm}}}{}{}
+\pretocmd{\subsubsection}{\addtocontents{toc}{\protect\addvspace{0mm}}}{}{}
+\makeatother
+
+
+%\usepackage[titles]{tocloft}
+\setlength\cftbeforesecskip{2pt}  %% Set line spacing dalam ToC
+\setlength\cftsecnumwidth{2.8cm}  %% Set chapter numbering width dalam ToC
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}  %% Create dotted line di ToC
+%\renewcommand\cftfigafterpnum{\vskip-10pt\par}
+%\renewcommand\cfttabafterpnum{\vskip-10pt\par}
+
+
+
+
+
+%%% Prevent hyphenation %%
+
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+
+
+\relpenalty=10000
+\binoppenalty=10000
+
+
+
+
+%%% BIBLIOGRAPHY / REFERENCES %%%
+
+%\usepackage[backend=biber, style=stylename]{biblatex}
+% \addbibresource{bibfile}
+% \bibliographystyle{apa}
+
+%\usepackage{natbib}
+% \bibliographystyle{agsm}
+
+%\usepackage[backend=biber, style=stylename]{\biblatex}
+% \addbibresource{references}
+
+
+%\usepackage[style=authoryear-ibid,backend=biber]{biblatex}
+%\addbibresource{references.bib}% Syntax for version >= 1.2
+
+
+
+%%% END Article customizations
+      
+
+
+
+%%% COVER PAGE %%%
+
+\def \maketitleone{
+\centering
+\begin{titlepage}
+	\bf {
+	ACESS - ADAPTIVE COGNITIVE \& EDUCATIONAL \\ 
+	SKILL SUPPORT PLATFORM
+	}
+	\rm
+	\vskip 3in
+	\bf {MUHAMMAD ALIFF BIN AFFANDI}
+	\rm
+	\vskip 3in
+	\bf {UNIVERSITI TEKNIKAL MALAYSIA MELAKA}
+	
+	
+\end{titlepage}
+
+\thispagestyle{empty}
+
+\newpage
+}   
+
+
+%%% END OF COVER PAGE %%%
+      
+         
+         
+%%% The "real" document content comes below...         
+         
+          
+
+
+\begin{document}
+
+\pagenumbering{gobble}
+\newgeometry{top=5.5cm, bottom=3.5cm, right=2.5cm, left=2.5cm}
+\maketitleone
+
+\restoregeometry
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+\justifying
+
+
+%%% FRONT MATTER %%%
+
+\begin{center}
+
+\vfill \null
+\vspace{1cm}
+{ACESS - ADAPTIVE COGNITIVE \& EDUCATIONAL SKILL SUPPORT PLATFORM}
+
+\vskip 1.6in
+{MUHAMMAD ALIFF BIN AFFANDI}
+
+\vskip 1.6in
+This report is submitted in partial fulfillment of the requirements for the \\
+Bachelor of Computer Science (Software Development) with Honours.
+
+
+\vskip 1.6in
+FACULTY OF INFORMATION AND COMMUNICATION TECHNOLOGY \\
+UNIVERSITI TEKNIKAL MALAYSIA MELAKA
+	
+\vspace{2mm}	
+2026
+
+\end{center}
+
+\newpage
+
+%%--------DECLARATION PAGE---------%%
+
+\begin{center}
+
+\vfill\null
+\phantomsection
+\addcontentsline{toc}{section}{DECLARATION}
+\textbf{DECLARATION}
+
+\vspace{1.5cm}
+I hereby declare that this project entitled \\
+ACESS - ADAPTIVE COGNITIVE \& EDUCATIONAL SKILL SUPPORT PLATFORM \\
+is written by me and is my own effort and that no part has been plagiarized without citations.
+
+\vspace{1.5cm}
+\noindent
+STUDENT \; : \underline{\hspace{8cm}} \, Date :  \underline{\hspace{2.1cm}} \\[-2mm]
+(MUHAMMAD ALIFF BIN AFFANDI) \hspace{1.2cm}
+
+\vspace{4cm}
+\noindent
+I hereby declare that I have read this project report and found this project report is sufficient in term of the scope and quality for the award of Bachelor of Computer Science (Software Development) with Honours.
+
+\vspace{1.5cm}
+\noindent
+SUPERVISOR \; : \underline{\hspace{8cm}} \, Date :  \underline{\hspace{2.1cm}} \\[-2mm]
+(TS. DR. ZURAINI BINTI OTHMAN) \hspace{0.6cm}
+
+\end{center}
+
+\vfill \null
+
+\newpage
+
+%%--------DEDICATION PAGE---------%%
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{DEDICATION}
+\textbf{DEDICATION}
+\end{center}
+
+\vspace{1cm}
+To my beloved parents, whose endless sacrifices and unwavering faith have been my foundation through every challenge you faced to give me the opportunity to pursue my dreams. Your love and encouragement carried me through the most difficult moments of this journey.
+
+To Ts. Dr. Zuraini Binti Othman, whose mentorship, patience, and invaluable guidance shaped not only this research but also my growth as a researcher and software developer. Your dedication to accessibility and inclusive design inspired the very core of this project.
+
+To all neurodivergent learners who navigate a world not yet built for them, this work is dedicated to you. May ACESS serve as a small step toward a future where educational platforms adapt to every mind, rather than demanding that every mind adapt to them.
+
+\vfill \null
+
+\newpage
+
+%%--------ACKNOWLEDGEMENT PAGE---------%%
+
+\begin{center}
+\phantomsection
+\addcontentsline{toc}{section}{ACKNOWLEDGEMENT}
+\textbf{ACKNOWLEDGEMENT}
+\end{center}
+
+\vspace{1cm}
+I would like to express my deepest gratitude to my supervisor, Ts. Dr. Zuraini Binti Othman, for her continuous guidance, patience, and insightful feedback throughout the development of this project. Her expertise in software engineering and dedication to accessibility has been instrumental in shaping the ACESS platform into a functional and meaningful system.
+
+I also extend my sincere appreciation to the Faculty of Information and Communication Technology (FICT) at Universiti Teknikal Malaysia Melaka for providing the necessary resources, laboratory facilities, and learning environment that made this research possible. The knowledge imparted throughout my studies formed the bedrock upon which this project was built.
+
+My heartfelt thanks go to my family and friends, who offered unwavering emotional and moral support during the challenging moments of this journey. Their encouragement was a constant source of motivation during late nights and difficult debugging sessions.
+
+Finally, I am grateful to all the educators and learners who participated in the user acceptance testing. Their candid feedback was vital in refining the platform's accessibility features and ensuring that ACESS truly serves its intended purpose.
+
+\vfill \null
+
+\newpage
+
+%%--------ABSTRACT PAGE---------%%
+
+\begin{center}
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{ABSTRACT}
+\textbf{ABSTRACT}
+\end{center}
+
+\vspace{1cm}
+
+\begin{spacing}{1.1}
+Traditional e-learning platforms are predominantly designed with a one-size-fits-all approach, presenting significant accessibility barriers for neurodivergent learners, particularly those with Dyslexia, Attention Deficit Hyperactivity Disorder (ADHD), and Autism Spectrum Disorder (ASD). These systems typically feature dense typography, complex navigational structures, and rigid content delivery that contribute to cognitive overload and high dropout rates. This project presents the development of the Adaptive Cognitive and Educational Skill Support (ACESS) platform, a web-based learning management system engineered to dynamically accommodate diverse cognitive profiles through natively integrated accessibility features. The system was developed using the Agile Scrum methodology over six iterative sprints, employing Next.js with the App Router for server-rendered React components, Supabase for backend-as-a-service with PostgreSQL Row-Level Security, and Tailwind CSS v4 for dynamic theme injection. ACESS implements core features including a rule-based adaptive engine that automatically recommends remedial content based on assessment performance, configurable accessibility profiles that alter typography, spacing, and motion preferences in real time via CSS custom properties, a strict Focus Mode for learners with attention-related challenges, and comprehensive analytics dashboards for educators to monitor engagement and identify at-risk students. Evaluation through user acceptance testing demonstrated measurable improvements in task completion rates and user satisfaction scores among neurodivergent participants compared to baseline interactions with conventional platforms. The findings indicate that a purpose-built, architecturally adaptive system can significantly reduce cognitive friction and promote equitable educational outcomes for learners with diverse neurological needs.
+\end{spacing}
+
+\vfill \null
+
+\newpage
+
+\begin{center}
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{ABSTRAK}
+\textbf{ABSTRAK}
+\end{center}
+
+\vspace{1cm}
+
+\begin{spacing}{1.1}
+Platform e-pembelajaran tradisional kebanyakannya direka dengan pendekatan satu-saiz-untuk-semua, yang menimbulkan halangan kebolehcapaian yang signifikan bagi pelajar neurodivergen, terutamanya mereka yang mengalami Disleksia, Attention Deficit Hyperactivity Disorder (ADHD), dan Autism Spectrum Disorder (ASD). Sistem-sistem ini biasanya menampilkan tipografi yang padat, struktur navigasi yang kompleks, dan penyampaian kandungan yang tegar, yang menyumbang kepada beban kognitif dan kadar keciciran yang tinggi. Projek ini membentangkan pembangunan platform Adaptive Cognitive and Educational Skill Support (ACESS), sebuah sistem pengurusan pembelajaran berasaskan web yang direka untuk menampung profil kognitif yang pelbagai secara dinamik melalui ciri kebolehcapaian yang diintegrasikan secara natif. Sistem ini dibangunkan menggunakan metodologi Agile Scrum melalui enam lelaran sprint, menggunakan Next.js dengan App Router untuk komponen React yang dipaparkan di pelayan, Supabase sebagai backend-as-a-service dengan keselamatan peringkat baris PostgreSQL, dan Tailwind CSS v4 untuk suntikan tema dinamik. ACESS melaksanakan ciri teras termasuk enjin adaptif berasaskan peraturan yang secara automatik mengesyorkan kandungan pemulihan berdasarkan prestasi penilaian, profil kebolehcapaian boleh konfigurasi yang mengubah tipografi, jarak, dan keutamaan gerakan secara masa nyata melalui pemboleh ubah CSS, mod Fokus yang ketat untuk pelajar yang mempunyai cabaran berkaitan perhatian, serta papan pemuka analitik komprehensif untuk pendidik memantau penglibatan dan mengenal pasti pelajar berisiko. Penilaian melalui ujian penerimaan pengguna menunjukkan peningkatan yang boleh diukur dalam kadar penyelesaian tugas dan skor kepuasan pengguna dalam kalangan peserta neurodivergen berbanding interaksi asas dengan platform konvensional. Dapatan kajian menunjukkan bahawa sistem yang dibina secara adaptif dari segi seni bina dapat mengurangkan geseran kognitif dengan ketara dan menggalakkan hasil pendidikan yang saksama untuk pelajar dengan keperluan neurologi yang pelbagai.
+\end{spacing}
+
+\vfill \null
+
+\newpage
+
+%%% --------------------------- %%%
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{TABLE OF CONTENTS}
+\tableofcontents
+\newpage
+
+\vfill \null 
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF TABLES}
+{%
+\let\oldnumberline\numberline%
+\renewcommand{\numberline}{\tablename~\oldnumberline}%
+\listoftables%
+}
+\newpage
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF FIGURES}
+{%
+\let\oldnumberline\numberline%
+\renewcommand{\numberline}{\figurename~\oldnumberline}%
+\listoffigures%
+}
+\newpage
+
+\vfill \null
+\phantomsection
+\addcontentsline{toc}{section}{LIST OF ABBREVIATIONS}
+\begin{center}
+\textbf{LIST OF ABBREVIATIONS}
+\end{center}
+\vspace{2cm}
+
+\noindent
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.5cm} >{\centering\arraybackslash}m{0.5cm} >{\raggedright\arraybackslash}p{11.0cm}}
+ACESS & - & Adaptive Cognitive \& Educational Skill Support \\
+ADHD & - & Attention Deficit Hyperactivity Disorder \\
+ERD & - & Entity Relationship Diagram \\
+LMS & - & Learning Management System \\
+OOAD & - & Object-Oriented Analysis and Design \\
+PSM & - & Projek Sarjana Muda \\
+RBAC & - & Role-Based Access Control \\
+TTS & - & Text-to-Speech \\
+UDL & - & Universal Design for Learning \\
+WCAG & - & Web Content Accessibility Guidelines \\
+\end{tabular}
+
+\vfill \null
+\newpage
+
+%%% MAIN MATTER %%%
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\setlength{\parindent}{30pt}
+
+
+%==========================================================%
+
+\newpage
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{INTRODUCTION}
+\end{center}
+\vspace{2cm}
+
+\subsection{Background of Study}
+
+In the current educational landscape, instruction is delivered through a blend of traditional face-to-face classroom settings and online platforms. While digital tools have become increasingly common to support learning, many institutions still rely heavily on traditional teaching methods. This hybrid approach presents unique challenges for neurodivergent individuals, specifically those with Dyslexia, Attention Deficit Hyperactivity Disorder (ADHD), and Autism Spectrum Disorder (ASD). Whether learning occurs in a physical classroom or online, the tools used to deliver content often lack the flexibility required to accommodate diverse cognitive profiles.
+
+Existing Learning Management Systems (LMS) are typically designed with a ``one-size-fits-all'' approach. They present dense textual information, complex navigation structures, and rigid assessment formats. These standard interfaces can erect significant barriers for neurodivergent learners. For instance, learners with Dyslexia may struggle with standard typography and line spacing, while those with ADHD might find cluttered interfaces and unstructured learning paths overwhelming. 
+
+Therefore, there is a critical need for a natively adaptive learning platform that can seamlessly support both face-to-face and remote learning environments. The Adaptive Cognitive Education Support System (ACESS) is proposed to bridge this gap. ACESS is engineered to provide an inclusive digital learning environment that dynamically alters its interface and content delivery based on the specific cognitive requirements of the user. By integrating features such as dynamic typography adjustment, focus-driven layouts, and rule-based adaptive learning paths, ACESS aims to ensure that educational materials are accessible and equitable for all learners, regardless of the instructional setting.
+
+\subsection{Problem Statement}
+
+Despite the availability of various educational technologies, significant cognitive accessibility barriers persist. The core problem this project addresses is the systemic inadequacy of current educational platforms to dynamically support the specific neurological requirements of learners with Dyslexia, ADHD, and ASD.
+
+Existing platforms often rely on static content delivery. They require neurodivergent learners to manually seek out third-party browser extensions or external text-to-speech tools to consume content. This forces the burden of accessibility onto the learner. Furthermore, when learners struggle with specific topics, traditional systems lack the heuristic intelligence to automatically intervene and restructure the learning path.
+
+Specifically, the problems identified are:
+\begin{enumerate}
+    \item Standard educational platforms utilize rigid, non-adjustable typography and dense layouts that induce visual crowding and reading fatigue for learners with Dyslexia.
+    \item Current interfaces present excessive cognitive load through complex navigation and unstructured content delivery, which overwhelms learners with ADHD and executive dysfunction.
+    \item Existing systems lack the capability to autonomously identify knowledge gaps during assessments and dynamically route learners to required remedial materials.
+\end{enumerate}
+
+\subsection{Objectives}
+
+The primary goal of this project is to develop an inclusive Learning Management System that addresses the cognitive barriers faced by neurodivergent learners. The specific objectives are:
+
+\begin{itemize}
+    \item To design and develop an adaptive learning management system (ACESS) that integrates dynamic interface modifications, including dyslexia-friendly typography and focus-mode layouts.
+    \item To implement a rule-based adaptive engine that monitors learner assessment scores and automatically recommends specific prerequisite lessons to address identified knowledge gaps.
+    \item To evaluate the effectiveness of the system in providing an accessible and structured learning experience for users with diverse cognitive profiles.
+\end{itemize}
+
+\subsection{Scope}
+
+The scope of the ACESS platform defines the boundaries of the system architecture, target users, and core functional modules. The system is designed to act as a supportive educational tool for both traditional and online learning environments.
+
+\subsubsection{Target Users}
+\begin{itemize}
+    \item \textbf{Learners:} The primary consumers of the educational content. The interface is specifically optimized for neurodivergent individuals, though it remains highly beneficial for neurotypical users.
+    \item \textbf{Educators:} The course creators and administrators who require structured, intuitive tools to author accessible content, manage media assets, and monitor student progress.
+    \item \textbf{Administrators:} System operators responsible for platform governance, user role management, and global accessibility configuration.
+\end{itemize}
+
+\subsubsection{Core System Modules}
+The ACESS architecture is divided into the following core modules:
+\begin{itemize}
+    \item \textbf{Authentication and Profile Module:} Manages secure registration, login, role-based access control (learner, educator, admin), email verification, password reset, session timeout, and profile management.
+    \item \textbf{Accessibility and Personalization Engine:} The central differentiator of ACESS. Stores per-user \texttt{user\_accessibility\_settings} defining cognitive profiles (Dyslexia, ADHD, Autism, Dyscalculia, Universal) with granular controls over font, spacing, theme, tint, reading spotlight, focus mode, reduced motion, simplified UI, TTS, captions, and keyboard navigation. Settings are applied globally via CSS data attributes on the root element, requiring no manual configuration after onboarding.
+    \item \textbf{Educator Authoring Module:} Provides an interface for creating structured courses with chapters and milestones, writing lessons via Tiptap, uploading video assets with time-coded questions, designing interactive activities (flashcards, drag-and-drop, fill-in-the-blanks, memory games, timelines, H5P), managing lesson version history, and configuring quiz, certificate, and achievement criteria.
+    \item \textbf{Adaptive Learning Module:} Governs course enrollment, lesson progression, dynamic UI alterations based on accessibility profiles, and personalized recommendations triggered by quiz performance -- including a rule-based engine that suggests revision, standard, advanced, or cross-course content.
+    \item \textbf{Interactive Assessment Module:} Handles timed and untimed quiz delivery, multiple attempts, automated grading, answer review, and pass/fail threshold evaluation that triggers remedial recommendations when scores fall below configured thresholds.
+    \item \textbf{Analytics and Telemetry Module:} Tracks engagement metrics (time per lesson, completion rates, scores, enrollment trends) and provides educators with per-student dashboards with at-risk detection, plus platform-wide analytics and custom report generation for administrators.
+    \item \textbf{Certificate and Achievement Module:} Generates personalized PDF certificates upon course completion and administers a badge system that awards visual milestones based on predefined criteria to enhance motivation.
+    \item \textbf{Interactive Content Module:} Supports six activity types (flashcards, drag-and-drop, fill-in-the-blanks, memory games, timelines, H5P) with dedicated builder and viewer components, plus time-coded video questions and structured content blocks.
+    \item \textbf{Communication and Notification Module:} Manages threaded lesson discussions, a contact form for inquiries, and a database-triggered notification system that alerts users on enrollment, progress, quiz attempts, lesson additions, and course publication.
+\end{itemize}
+
+\subsection{Significance of Project}
+
+The development of the ACESS platform represents a significant step towards educational equity. By shifting the burden of accessibility from the user to the system architecture, the platform ensures that neurodivergent learners can focus entirely on comprehending the educational material rather than struggling with the interface.
+
+For learners, the project provides a calm, predictable, and highly customizable environment that mitigates anxiety and cognitive fatigue. For educators, it offers a streamlined toolset that enforces accessibility best practices during content creation, alongside deep analytical insights into student engagement. Ultimately, ACESS demonstrates how modern web architecture can be leveraged to create a truly inclusive educational ecosystem applicable in both physical classrooms and remote learning scenarios.
+
+\subsection{Expected Output}
+
+The ACESS platform is expected to produce the following deliverables upon completion:
+
+\begin{itemize}
+    \item \textbf{Adaptive Web Application:} A fully functional, production-ready learning management system deployed on Vercel, accessible via standard web browsers and capable of dynamically adjusting its interface based on user accessibility profiles.
+    \item \textbf{Role-Based Dashboards:} Three distinct interfaces for Learners, Educators, and Administrators, each with tailored navigation, permissions, and tooling appropriate to their respective responsibilities.
+    \item \textbf{Accessibility Customization System:} A comprehensive set of user-configurable accessibility presets covering Dyslexia, ADHD, Autism, and Dyscalculia profiles, including typography control, theme switching, focus mode, text-to-speech, reduced motion, and simplified UI toggles.
+    \item \textbf{Adaptive Recommendation Engine:} A rule-based engine that automatically analyzes quiz performance and generates personalized lesson recommendations to address identified knowledge gaps.
+    \item \textbf{Course Authoring Tools:} A rich-text editor (Tiptap) integrated with media upload, interactive activity builders (flashcards, drag-and-drop, fill-in-the-blanks, memory games, timelines), and H5P content embedding for educators.
+    \item \textbf{Quiz and Assessment System:} A complete assessment lifecycle including timed and untimed quizzes, automated grading, multiple attempt management, and answer review capabilities.
+    \item \textbf{Analytics Dashboard:} Visual engagement metrics and progress tracking using Recharts, with per-student and per-course views for educators, plus platform-wide analytics for administrators.
+    \item \textbf{Certificate and Achievement System:} Automated PDF certificate generation upon course completion and a badge-based achievement system to incentivize learner progress.
+    \item \textbf{Notification System:} Database-triggered real-time notifications for enrollment, quiz results, lesson additions, and course publication across all user roles.
+\end{itemize}
+
+\subsection{Conclusion}
+
+This chapter established the foundational context for the ACESS project by identifying the critical accessibility barriers present in current educational platforms, defining the specific problems to be addressed, and outlining the objectives and scope of the proposed system. The significance of the project was discussed in terms of its potential impact on educational equity for neurodivergent learners, and the expected deliverables were enumerated. The next chapter presents a comprehensive literature review, examining existing theoretical frameworks, analyzing current Learning Management Systems, describing the project methodology, and detailing the software and hardware requirements necessary to realize the ACESS platform.
+
+
+%==========================================================%
+
+\newpage
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{LITERATURE REVIEW AND PROJECT METHODOLOGY}
+\end{center}
+\vspace{2cm}
+
+\subsection{Introduction}
+
+The literature review provides the academic and technical foundation upon which the ACESS platform is conceptualized. This chapter synthesizes contemporary research regarding cognitive accessibility in digital education, evaluates established theoretical frameworks such as Universal Design for Learning (UDL), and rigorously analyzes existing Learning Management Systems (LMS). By comparing platforms like Moodle, Canvas, Blackboard, and Google Classroom against the specific requirements of neurodivergent learners, this chapter identifies the critical systemic gaps that justify the development of a natively adaptive, rule-based LMS architecture.
+
+\subsection{Theoretical Frameworks for Cognitive Accessibility}
+
+The design of digital interfaces for educational purposes must be grounded in empirically validated frameworks. The two primary pillars supporting the ACESS architecture are the Universal Design for Learning (UDL) guidelines and the Web Content Accessibility Guidelines (WCAG) 2.2.
+
+\subsubsection{Universal Design for Learning (UDL)}
+Universal Design for Learning is a framework developed by CAST \cite{udl_guidelines} aimed at optimizing teaching and learning for all individuals based on scientific insights into how humans learn. UDL is predicated on three primary principles:
+\begin{itemize}
+    \item \textbf{Multiple Means of Engagement:} Recognizing that learners differ markedly in the ways they are motivated. For neurodivergent learners, particularly those with ADHD, motivation can be severely hampered by unstructured environments. ACESS implements this by offering gamified achievements and structured, step-by-step progressive disclosure of course material to prevent cognitive overwhelm.
+    \item \textbf{Multiple Means of Representation:} Learners vary in how they perceive and comprehend information. A Dyslexic learner may struggle with printed text but excel with audio. ACESS implements this principle via integrated Text-to-Speech (TTS) capabilities and dynamic CSS injection that allows the user to radically alter the typography (e.g., using Atkinson Hyperlegible) and contrast ratios.
+    \item \textbf{Multiple Means of Action and Expression:} Learners differ in how they navigate a learning environment and express what they know. ACESS supports this by providing multiple quiz formats (scenario-based, multiple-choice) and allowing untimed assessments to reduce anxiety-induced performance degradation.
+\end{itemize}
+
+\subsubsection{Web Content Accessibility Guidelines (WCAG) 2.2}
+While UDL provides the pedagogical framework, WCAG 2.2 \cite{wcag22} provides the strict, measurable technical parameters for digital accessibility. The ACESS platform targets Level AA compliance. Key WCAG criteria directly addressed by ACESS include:
+\begin{itemize}
+    \item \textbf{Guideline 1.4.12 (Text Spacing):} The ability to override default text spacing (line height, letter spacing, word spacing) without loss of content or functionality. This is a critical requirement for Dyslexia, which ACESS solves via its Tailwind CSS \texttt{@theme} variable injection.
+    \item \textbf{Guideline 2.2.1 (Timing Adjustable):} Providing users the ability to turn off, adjust, or extend time limits. ACESS allows educators to configure untimed quizzes specifically to accommodate learners requiring extended processing time.
+    \item \textbf{Guideline 2.3.3 (Animation from Interactions):} Motion animation triggered by interaction can be disabled. The ACESS system implements a \texttt{data-reduced-motion} attribute that globally disables all Framer Motion \texttt{<motion.div>} animations, critical for learners prone to vestibular disorders or severe distraction (ADHD).
+\end{itemize}
+
+\subsection{Neurodivergent Profiles and Interface Interventions}
+
+Understanding the specific cognitive challenges faced by the target demographic is essential for architecting effective UI/UX interventions.
+
+\subsubsection{Attention Deficit Hyperactivity Disorder (ADHD)}
+ADHD is characterized by executive dysfunction, impacting working memory, task initiation, and sustained attention. In digital environments, learners with ADHD are highly susceptible to "saccadic fatigue" -- the exhaustion caused by the eye constantly darting across a busy screen to parse disorganized information.
+\textbf{ACESS Intervention:} The implementation of a strict "Focus Mode." This mode utilizes Next.js routing to conditionally hide the primary navigation sidebar, the global footer, and all extraneous dashboard widgets when a learner enters a \texttt{lesson\_id} route. The content is restricted to a narrow, center-aligned column (maximum 65 characters per line), minimizing required eye movement and drastically reducing peripheral distraction.
+
+\subsubsection{Dyslexia}
+Dyslexia involves difficulties with accurate or fluent word recognition and poor spelling and decoding abilities. Research indicates that specific typographical adjustments can significantly improve reading velocity and comprehension \cite{franceschini_dyslexia}.
+\textbf{ACESS Intervention:} The platform abandons reliance on browser-level zoom. Instead, it utilizes React Context to allow the user to select a "Dyslexia Profile." This injects CSS variables that alter the global font family to specialized typefaces designed to prevent letter mirroring (e.g., confusing 'b' and 'd'), increases the base line-height to 1.75, and manipulates letter-spacing (tracking) to prevent visual crowding.
+
+\subsubsection{Autism Spectrum Disorder (ASD)}
+Learners on the Autism Spectrum often thrive in highly structured, predictable environments and can experience severe distress when confronted with unexpected auditory or visual stimuli.
+\textbf{ACESS Intervention:} The platform enforces strict structural consistency. Educators utilizing the Tiptap rich-text editor are prevented from creating chaotic, ad-hoc layouts. Furthermore, the system defaults to suppressing autoplaying media and allows the user to globally toggle a "Reduced Motion" state, ensuring the interface remains a calm, predictable schedule of events.
+
+\subsection{Comparative Analysis of Existing LMS Platforms}
+
+To justify the development of ACESS, an extensive evaluation of existing market-leading platforms was conducted. The platforms analyzed include Moodle, Canvas LMS, Blackboard Learn, and Google Classroom. 
+
+\subsubsection{Moodle}
+Moodle is an open-source powerhouse, widely adopted globally \cite{moodle_architecture}. Its greatest strength is its modularity. However, this is also its critical failing regarding cognitive accessibility.
+\textbf{Limitations:} Moodle's native interface is notoriously dense and text-heavy. While administrators can install accessibility plugins (like the 'Accessibility block'), these are bolt-on solutions. They require the learner to actively engage with a separate menu to adjust settings, adding cognitive load. Furthermore, Moodle relies on educators to manually identify struggling students and assign remedial work; it lacks a native, real-time heuristic engine to automate this process.
+
+\subsubsection{Canvas LMS}
+Canvas by Instructure represents a more modern, streamlined UI compared to Moodle. It utilizes a card-based dashboard that is visually appealing to neurotypical users.
+\textbf{Limitations:} Canvas achieves basic WCAG compliance but fails to provide deep cognitive accommodations. It lacks native Text-to-Speech (forcing reliance on OS-level tools) and does not offer granular control over typography (e.g., specific Dyslexia fonts or adjusted inter-letter spacing). The platform is highly linear; if a student fails a Canvas quiz, the system cannot automatically restructure the module path to enforce revision.
+
+\subsubsection{Blackboard Learn}
+Blackboard is an enterprise-grade solution focused heavily on synchronous learning integrations and comprehensive grading rubrics.
+\textbf{Limitations:} Blackboard's interface is often criticized for complex, deeply nested navigation menus (often three or four clicks deep to access a specific assignment file). For learners with executive dysfunction (ADHD), this navigational friction is a massive barrier to task initiation. Like Moodle, Blackboard's accessibility features are largely reactive (e.g., Blackboard ALLY checks documents for screen-reader compatibility) rather than proactive (dynamically altering the interface for the user).
+
+\subsubsection{Google Classroom}
+Google Classroom is a stripped-down, lightweight system focused on integration with the Google Workspace ecosystem (Docs, Drive, Forms).
+\textbf{Limitations:} While its minimalist design reduces initial visual clutter, it is too rudimentary to function as a fully adaptive LMS. It completely lacks advanced features such as rule-based learning paths, granular progress telemetry (tracking time-spent-per-lesson), or integrated cognitive profiles. It functions more as an assignment drop-box than a pedagogical support engine.
+
+\subsection{Comparison Matrix}
+
+Table \ref{tab:lms_comparison} provides a structured summary comparing the features of the analyzed platforms against the proposed ACESS system.
+
+\begin{table}[h]
+\caption{LMS Feature Comparison Matrix}
+\label{tab:lms_comparison}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.3} % Add a bit of padding to rows
+\begin{tabular}{|>{\raggedright\arraybackslash}p{2.8cm}|>{\centering\arraybackslash}p{1.8cm}|>{\centering\arraybackslash}p{1.8cm}|>{\centering\arraybackslash}p{1.8cm}|>{\centering\arraybackslash}p{1.8cm}|>{\centering\arraybackslash}p{2.0cm}|}
+\hline
+\textbf{Feature Domain} & \textbf{Moodle} & \textbf{Canvas} & \textbf{Blackboard} & \textbf{Google Classroom} & \textbf{Proposed (ACESS)} \\
+\hline \hline
+\textbf{Native TTS} & Plugin Req. & No & No & OS Reliant & \textbf{Yes (Built-in)} \\ \hline
+\textbf{Dynamic Fonts (Dyslexia)} & Theme Req. & No & No & No & \textbf{Yes (CSS Vars)} \\ \hline
+\textbf{Automated Remedial Paths} & No & No & No & No & \textbf{Yes (Rule-based)} \\ \hline
+\textbf{Focus Mode (ADHD)} & No & No & No & Partial & \textbf{Yes (Strict Route)} \\ \hline
+\textbf{Gamification/ Achievements} & Plugin Req. & External App & No & No & \textbf{Yes (Native)} \\ \hline
+\textbf{WCAG 2.2 Level AA} & Partial & Yes & Yes & Yes & \textbf{Yes (Enforced)} \\ \hline
+\textbf{Granular Analytics} & Yes & Yes & Yes & No & \textbf{Yes (Recharts)} \\ \hline
+\textbf{Reduced Motion Toggle} & No & No & No & No & \textbf{Yes (Global State)} \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{Alternative Approaches and Justification}
+
+Several alternative technical approaches were evaluated during the design of the ACESS platform before arriving at the selected architecture:
+
+\begin{itemize}
+    \item \textbf{Monolithic Architecture vs. Decoupled Client-Server:} A monolithic Ruby on Rails or PHP Laravel application was considered for its simpler deployment model. However, this approach was rejected in favor of a decoupled Next.js frontend with Supabase backend-as-a-service, which allows the accessibility engine to dynamically inject CSS variables on the client without full page reloads, preserving the fluid user experience critical for ADHD learners.
+    \item \textbf{CSS-in-JS Libraries vs. Tailwind CSS:} Alternatives such as styled-components and Emotion were evaluated. While they offer dynamic styling, they introduce runtime overhead that degrades performance on low-end devices. Tailwind CSS v4 with Just-in-Time compilation and CSS custom properties was selected because it generates minimal production CSS and enables instantaneous theme switching through \texttt{data-attribute} selectors without JavaScript re-computation.
+    \item \textbf{Document Database vs. Relational Database:} MongoDB was considered for its schema flexibility. However, the relational integrity enforced by PostgreSQL with foreign key constraints and Row-Level Security was deemed essential for ensuring data consistency across enrollments, progress tracking, and quiz attempts, particularly given the complex relational model required by the adaptive recommendation engine.
+    \item \textbf{Traditional State Management vs. React Context:} Redux was considered for global state management but was deemed overly verbose for the accessibility settings use case. React Context with the \texttt{AccessibilityProvider} pattern was chosen for its simplicity, native React integration, and minimal boilerplate when propagating CSS theme attributes across the component tree.
+\end{itemize}
+
+\subsection{Project Methodology}
+
+The ACESS platform was developed using the \textbf{Agile Scrum} methodology, an iterative framework that emphasizes continuous delivery, regular stakeholder feedback, and adaptive planning. Scrum was selected over traditional sequential models such as Waterfall because designing for cognitive accessibility is an inherently empirical process -- assumptions about the effectiveness of specific interface interventions (e.g., a Dyslexia font or Focus Mode layout) must be validated through iterative user testing rather than deferred to the final stages of development.
+
+The development lifecycle was organized into six sprints, each spanning two weeks:
+
+\begin{itemize}
+    \item \textbf{Sprint 0 -- Requirements and Scaffolding:} Definition of the product backlog based on WCAG 2.2 guidelines and UDL principles. Establishment of the Next.js project structure, Supabase project initialization, and PostgreSQL schema design.
+    \item \textbf{Sprints 1-2 -- Core Architecture:} Implementation of user authentication with Supabase Auth, database schema normalization with Row-Level Security policies, and basic role-based routing via middleware.
+    \item \textbf{Sprints 3-4 -- Feature Development:} Development of the Educator authoring interface (Tiptap editor, course creation, quiz builder) and the Learner experience (course enrollment, lesson viewing, progress tracking).
+    \item \textbf{Sprints 5-6 -- Advanced Features and Refinement:} Integration of the rule-based adaptive recommendation engine, accessibility personalization engine with CSS variable injection, analytics dashboards, certificate generation, and notification triggers.
+\end{itemize}
+
+Each sprint concluded with a review and retrospective, ensuring continuous alignment with project objectives. A detailed breakdown of the Agile implementation is provided in Chapter 3.
+
+\subsection{Project Requirements}
+
+\subsubsection{Software Requirements}
+
+The following software tools and technologies were utilized in the development and deployment of the ACESS platform:
+
+\begin{itemize}
+    \item \textbf{Visual Studio Code:} Primary integrated development environment for writing and debugging code, with extensions for TypeScript, Tailwind CSS, and ESLint integration.
+    \item \textbf{Node.js:} JavaScript runtime environment required to execute the Next.js development server and build toolchain.
+    \item \textbf{Git and GitHub:} Version control system for source code management and collaboration, with the repository hosted on GitHub for continuous integration with Vercel.
+    \item \textbf{Supabase CLI:} Command-line tool for local database migrations, schema management, and TypeScript type generation for the PostgreSQL backend.
+    \item \textbf{Vercel:} Cloud platform for deploying the Next.js application, providing serverless edge functions, automatic HTTPS, and continuous deployment from the GitHub repository.
+    \item \textbf{Next.js 16:} React framework with App Router providing server-side rendering, static generation, and middleware-based route protection.
+    \item \textbf{TypeScript:} Statically typed superset of JavaScript used throughout the codebase for improved code quality and maintainability.
+    \item \textbf{Tailwind CSS v4:} Utility-first CSS framework with Just-in-Time compilation, enabling dynamic theme injection via CSS custom properties for accessibility customization.
+    \item \textbf{Supabase (PostgreSQL):} Backend-as-a-service providing a managed PostgreSQL database with Row-Level Security, authentication, and file storage capabilities.
+    \item \textbf{Framer Motion:} Animation library for React used to implement smooth transitions while respecting the user's reduced-motion accessibility preference.
+    \item \textbf{Tiptap:} Headless rich-text editor built on ProseMirror, integrated into the Educator authoring workflow for creating structured lesson content.
+    \item \textbf{Recharts:} Charting library for React used to render engagement analytics and progress visualizations on educator and administrator dashboards.
+    \item \textbf{Figma:} UI/UX design tool used to prototype interface layouts and accessibility component mockups prior to implementation.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{placeholder_software_tools.jpg}
+\caption{Software tools used in ACESS development}
+\label{fig:software_tools}
+\end{figure}
+
+\subsubsection{Hardware Requirements}
+
+The following hardware specifications were used during development and are recommended for optimal deployment:
+
+\begin{itemize}
+    \item \textbf{Development Workstation:} A personal computer with a minimum of 8 GB RAM, a multi-core processor (Intel Core i5 or equivalent), and a solid-state drive with at least 256 GB of storage for running the development server, database migrations, and local testing.
+    \item \textbf{Display:} A monitor with a minimum resolution of 1920x1080 pixels to adequately preview responsive layouts and accessibility adjustments across viewport sizes.
+    \item \textbf{Network Connectivity:} A stable broadband internet connection with at least 10 Mbps download speed for accessing cloud services (Supabase, Vercel, GitHub) and conducting user acceptance testing.
+    \item \textbf{Server Infrastructure:} Cloud-based infrastructure provided by Vercel (edge functions and static hosting) and Supabase (managed PostgreSQL and file storage), eliminating the need for dedicated physical server hardware.
+\end{itemize}
+
+\subsubsection{Other Requirements}
+
+\begin{itemize}
+    \item \textbf{Supabase Account:} A cloud-hosted Supabase project for database management, authentication configuration, and storage bucket policies.
+    \item \textbf{GitHub Account:} Repository hosting for source code version control and integration with Vercel for continuous deployment.
+    \item \textbf{Vercel Account:} Deployment platform account linked to the GitHub repository for automated builds and hosting.
+    \item \textbf{SMTP Email Service:} A Gmail SMTP configuration for sending password reset emails and account verification notifications via Nodemailer.
+    \item \textbf{Web Browser:} A modern browser (Google Chrome, Mozilla Firefox, or Microsoft Edge) for testing and accessing the deployed application.
+\end{itemize}
+
+\subsection{Project Schedule and Milestones}
+
+The ACESS project was executed across six Agile Scrum sprints, each spanning two weeks, for a total development duration of twelve weeks. Table \ref{tab:project_schedule} summarizes the milestone schedule.
+
+\begin{table}[H]
+\caption{Project Schedule and Milestones}
+\label{tab:project_schedule}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|l|p{7cm}|}
+\hline
+\textbf{Sprint} & \textbf{Focus Area} & \textbf{Key Deliverables} \\ \hline \hline
+0 & Requirements and Scaffolding & Product backlog, Next.js project setup, Supabase initialization, database schema design \\ \hline
+1 & Core Authentication & User registration and login, role-based middleware, email verification flow \\ \hline
+2 & Database and Security & Row-Level Security policies, storage bucket configuration, data dictionary implementation \\ \hline
+3 & Educator Authoring & Course creation interface, Tiptap editor integration, quiz builder, media upload \\ \hline
+4 & Learner Experience & Course enrollment, lesson viewer, progress tracking, Focus Mode implementation \\ \hline
+5 & Adaptive and Analytics & Recommendation engine, accessibility presets, analytics dashboards, certificates, notifications \\ \hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+The Gantt chart in Figure \ref{fig:gantt} provides a visual representation of the project timeline, illustrating the scheduling and duration of each sprint.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{placeholder_gantt_chart.jpg}
+\caption{Gantt chart of ACESS development sprint schedule}
+\label{fig:gantt}
+\end{figure}
+
+\subsection{Summary}
+
+The literature review demonstrates that while current LMS platforms provide robust administrative and content-hosting capabilities, they systematically fail to address the specific cognitive requirements of neurodivergent learners. Reliance on external plugins, static content delivery models, and dense navigation hierarchies induce significant extraneous cognitive load. The theoretical frameworks of UDL and WCAG 2.2 demand a more integrated approach. The comparative analysis definitively justifies the engineering of the ACESS platform: a system built from the database schema upward to be natively adaptive, utilizing dynamic CSS injection and rule-based server logic to provide an equitable, highly personalized learning environment. The project methodology, requirements, and schedule outlined in this chapter establish the roadmap for implementing the ACESS system in the subsequent phases.
+
+%==========================================================%
+
+\newpage
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{SYSTEM ANALYSIS}
+\end{center}
+\vspace{2cm}
+
+\subsection{Introduction}
+
+This chapter transitions the theoretical justifications established in the literature review into concrete software engineering specifications. It begins with a detailed problem analysis of existing educational platforms, followed by a comprehensive requirements analysis covering data, functional, non-functional, and other requirements. The chapter then presents the system architecture, module design, and deployment considerations necessary to execute a secure, highly accessible Learning Management System.
+
+\subsection{Problem Analysis}
+
+The ACESS platform is designed to address specific, systemic shortcomings in current educational technology. While the literature review in Chapter 2 established the general limitations of platforms such as Moodle, Canvas, Blackboard, and Google Classroom, this section analyzes the concrete operational problems that directly influenced the architectural decisions of ACESS.
+
+\subsubsection{Current System Scenario}
+
+Existing Learning Management Systems typically operate under a one-size-fits-all paradigm. Learners are presented with a fixed interface regardless of their cognitive profile, forcing neurodivergent users to seek third-party accommodations such as browser extensions for text-to-speech, external tools for font customization, or manual workarounds for managing visual clutter. This places the burden of accessibility on the learner rather than the system.
+
+From a data flow perspective, current platforms process learner interactions in a linear fashion: enrollment, content delivery, assessment, and completion. They lack the feedback loops necessary to detect when a learner is struggling and respond adaptively. For example, if a student performs poorly on a quiz about database normalization, the system continues to present the next topic as though no intervention is needed.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Current System Problem Analysis Diagram}
+\label{fig:problem_analysis}
+\end{figure}
+
+\subsubsection{Detailed Problem Breakdown}
+
+The problems identified in Chapter 1 are analyzed here in greater technical depth:
+
+\begin{enumerate}
+    \item \textbf{Rigid Typography and Layout:} Standard LMS platforms use fixed CSS stylesheets that do not respond to individual user needs. Learners with Dyslexia require specific typographic conditions -- increased letter spacing (tracking) of at least 0.12em, line height of 1.5 to 1.8, and sans-serif fonts such as Atkinson Hyperlegible designed to prevent letter confusion (e.g., differentiating 'b' from 'd'). Without these adjustments, reading velocity decreases and cognitive fatigue accelerates, leading to early lesson abandonment.
+    \item \textbf{Cognitive Overload from Navigation:} Platforms like Moodle and Blackboard present deeply nested navigation menus (often three to four levels deep) combined with dense dashboard widgets showing calendars, announcements, grades, and messages simultaneously. For learners with ADHD, this multi-stimulus environment triggers rapid attention fragmentation, making it difficult to sustain focus on a single learning objective. The absence of a distraction-free mode means learners must manually close or minimize interface elements.
+    \item \textbf{Lack of Adaptive Remediation:} Current assessment systems grade quizzes and record scores but do not analyze performance patterns to generate corrective action. When a learner fails a prerequisite concept, the system does not automatically unlock remedial content or recommend revision. This linear progression model assumes uniform learner readiness, which is particularly detrimental for neurodivergent students who may require repeated exposure to foundational topics before advancing.
+\end{enumerate}
+
+\subsection{Requirement Analysis}
+
+\subsubsection{Data Requirement}
+
+The ACESS platform requires a robust relational data model to manage the complex relationships between users, courses, lessons, assessments, and accessibility preferences. The system must store and process the following categories of data:
+
+\begin{itemize}
+    \item \textbf{User Data:} Authentication credentials (email, password hash), profile information (name, avatar, role), and notification preferences. User data must be isolated by role with strict access controls.
+    \item \textbf{Accessibility Data:} Per-user cognitive profile settings including disability type, preferred font family and size, theme (light, dark, high-contrast, soft), line spacing, text-to-speech and caption toggles, reduced motion preference, simplified UI mode, and keyboard navigation flags. These settings must persist across sessions and apply globally to all interface components.
+    \item \textbf{Curriculum Data:} Hierarchical course structures (courses, chapters, lessons) with rich-text HTML content, video assets, transcripts, and metadata such as difficulty level, estimated duration, and prerequisite relationships that drive the adaptive engine.
+    \item \textbf{Assessment Data:} Quiz configurations (time limits, pass thresholds, max attempts), question banks with multiple-choice and scenario formats, answer options with correctness flags, and learner attempt records including scores and answer selections.
+    \item \textbf{Telemetry Data:} Granular engagement metrics including lesson view status, time spent per lesson (in seconds), enrollment status (active, completed, dropped), and quiz attempt history with pass/fail outcomes.
+    \item \textbf{Content and Achievement Data:} Interactive activity configurations (flashcards, drag-and-drop, memory games, timelines), H5P embedded content, certificate records with unique reference codes, and badge/achievement definitions and user progress toward them.
+    \item \textbf{Notification and Communication Data:} System-generated notifications triggered by enrollment, quiz attempts, lesson additions, and course publications, along with lesson-level threaded comments and contact form submissions.
+\end{itemize}
+
+The detailed database schema and data dictionary for these entities are presented in Chapter 4, Section 4.3.
+
+\subsubsection{Functional Requirement}
+
+Functional requirements define the explicit behaviors, processes, and services the system must execute. They are derived directly from the system's operational architecture and are categorized by user role.
+
+\paragraph{Use Case Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Use Case Diagram}
+\label{fig:usecase_diagram}
+\end{figure}
+
+Figure \ref{fig:usecase_diagram} visually maps the interactions between the primary actors (Student, Educator, Admin) and the system's functional boundaries, which are explicitly detailed in the subsequent tables.
+
+\paragraph{Student Functions}
+
+\begin{table}[H]
+\caption{Functional Requirements: Student Module}
+\label{tab:fr_student}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.5cm}|>{\centering\arraybackslash}p{1.8cm}|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|}
+\hline
+\textbf{Req ID} & \textbf{Description} & \textbf{Actor} & \textbf{Inputs} & \textbf{Outputs} \\ \hline \hline
+FR-STU-01 & Registration and secure login. & Student & Email, Password & Authenticated JWT Session. \\ \hline
+FR-STU-02 & Accessibility profile selection. & Student & Theme, Font, TTS preferences & Updated \tcode{user_accessibility_settings} record; UI dynamically alters. \\ \hline
+FR-STU-03 & Course discovery and enrollment. & Student & \tcode{course_id} selection & INSERT into \tcode{enrollments}; unlocks course content. \\ \hline
+FR-STU-04 & Lesson viewing with Focus Mode. & Student & Navigation to `/lesson/[id]` & Renders sanitized HTML; hides global navigation elements. \\ \hline
+FR-STU-05 & Interactive video questions. & Student & Video timestamp trigger & Pauses video, renders embedded question overlay. \\ \hline
+FR-STU-06 & Quiz participation. & Student & Selected \tcode{quiz_options} & Evaluates score; INSERTs into \tcode{quiz_attempts}. \\ \hline
+FR-STU-07 & Automated Progress tracking. & Student & Dwell time on lesson route & UPDATEs \tcode{time_spent} in \tcode{lesson_progress}. \\ \hline
+FR-STU-08 & Achievement earning. & Student & 100\% module completion & Unlocks gamified badge in UI. \\ \hline
+FR-STU-09 & Certificate generation/viewing. & Student & 100\% course completion & Generates verifiable PDF; displays download link. \\ \hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\paragraph{Educator Functions}
+
+\begin{table}[H]
+\caption{Functional Requirements: Educator Module}
+\label{tab:fr_educator}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.5cm}|>{\centering\arraybackslash}p{1.8cm}|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|}
+\hline
+\textbf{Req ID} & \textbf{Description} & \textbf{Actor} & \textbf{Inputs} & \textbf{Outputs} \\ \hline \hline
+FR-EDU-01 & Course creation and editing. & Educator & Title, metadata, \tcode{difficulty_level} & INSERT/UPDATE \tcode{courses} table. \\ \hline
+FR-EDU-02 & Lesson creation via Tiptap. & Educator & Rich-text content & Sanitized HTML string saved to \tcode{lessons.content_html}. \\ \hline
+FR-EDU-03 & Quiz and Activity creation. & Educator & Question text, Correct option flag & Populates \tcode{quiz_questions} and \tcode{quiz_options} linked via FK. \\ \hline
+FR-EDU-04 & Asset management. & Educator & MP4/Image files & Uploads to Supabase Storage; returns secure URL. \\ \hline
+FR-EDU-05 & Student monitoring \& Analytics. & Educator & Selection of \tcode{course_id} & Renders Recharts graphs aggregating \tcode{lesson_progress} data. \\ \hline
+FR-EDU-06 & Achievement configuration. & Educator & Threshold values & Maps achievements to specific \tcode{course_milestones}. \\ \hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\paragraph{Admin Functions}
+
+\begin{table}[H]
+\caption{Functional Requirements: Admin Module}
+\label{tab:fr_admin}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{3.5cm}|>{\centering\arraybackslash}p{1.8cm}|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{4.5cm}|}
+\hline
+\textbf{Req ID} & \textbf{Description} & \textbf{Actor} & \textbf{Inputs} & \textbf{Outputs} \\ \hline \hline
+FR-ADM-01 & User role management. & Admin & Target \tcode{user_id}, new role string & UPDATEs \tcode{users.role} allowing bypass of middleware RBAC. \\ \hline
+FR-ADM-02 & Course moderation pipeline. & Admin & Review action (Approve/Reject) & UPDATEs \tcode{courses.status} from \tcode{pending_review} to \tcode{published}. \\ \hline
+FR-ADM-03 & Accessibility preset management. & Admin & Global CSS variable thresholds & Updates system default fallbacks for Dyslexia/ADHD themes. \\ \hline
+FR-ADM-04 & System course creation. & Admin & Course metadata & Flags course as \tcode{system_course=true}, bypassing educator limits. \\ \hline
+FR-ADM-05 & Global Analytics monitoring. & Admin & Date range filters & Aggregates platform-wide engagement metrics. \\ \hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\subsubsection{Non-Functional Requirement}
+
+Non-functional requirements (NFRs) specify the critical quality attributes and systemic constraints that govern the operation of the ACESS platform.
+
+\paragraph{Performance}
+\begin{itemize}
+    \item \textbf{Page Response Time:} Next.js Client-side route transitions must execute within \textbf{300ms} to prevent cognitive disruption and maintain user focus.
+    \item \textbf{Course Loading:} Server-side data fetching for initial course loads must resolve within \textbf{800ms}, leveraging edge caching where applicable.
+    \item \textbf{Video Loading:} Embedded instructional videos must commence playback within \textbf{2 seconds} utilizing adaptive bitrate streaming via Supabase Storage CDNs.
+    \item \textbf{Concurrent Users:} The PostgreSQL database, utilizing connection pooling (PgBouncer), must support a minimum of \textbf{500 concurrent} intensive operations (e.g., simultaneous quiz submissions) without degrading frontend TTFB (Time to First Byte).
+\end{itemize}
+
+\paragraph{Security}
+\begin{itemize}
+    \item \textbf{Authentication:} All user sessions must be cryptographically secured using JSON Web Tokens (JWT) managed by Supabase Auth, with a mandatory 15-minute inactivity timeout.
+    \item \textbf{Authorization (RBAC):} The Next.js `proxy.ts` middleware must definitively intercept and route requests based on the `role` claim within the JWT, achieving zero-trust client routing.
+    \item \textbf{Database Protection:} Strict Row-Level Security (RLS) must be enabled on 100\% of tables containing Personally Identifiable Information (PII) or cognitive telemetry, ensuring isolation at the storage layer.
+    \item \textbf{Input Validation:} All API endpoints must utilize Zod schema validation to sanitize incoming payloads, preventing SQL injection and Cross-Site Scripting (XSS).
+\end{itemize}
+
+\paragraph{Accessibility}
+\begin{itemize}
+    \item \textbf{WCAG Compliance:} The platform must strictly adhere to \textbf{WCAG 2.2 Level AA} standards. Minimum contrast ratios must exceed 4.5:1 for standard text.
+    \item \textbf{Dyslexia Support:} The system must natively provide the Atkinson Hyperlegible typeface and allow users to dynamically increase line-spacing to 1.75em.
+    \item \textbf{ADHD \& Autism Support:} The implementation of a `data-reduced-motion` global attribute must programmatically disable all CSS and Framer Motion animations. "Focus Mode" must isolate content to a 65-character maximum width to reduce saccadic fatigue.
+    \item \textbf{Screen Reader Compatibility:} All custom UI components (built via shadcn/ui) must natively handle WAI-ARIA states (e.g., `aria-expanded`, `aria-hidden`) and support complete keyboard navigation.
+\end{itemize}
+
+\paragraph{Usability}
+\begin{itemize}
+    \item \textbf{Consistent Navigation:} The primary navigational architecture must remain structurally identical across all modules to ensure predictability for Autistic learners.
+    \item \textbf{Error Prevention:} Destructive actions (e.g., an Educator deleting a course) must require a confirmed multi-step verification modal to prevent accidental data loss.
+\end{itemize}
+
+\paragraph{Reliability}
+\begin{itemize}
+    \item \textbf{Data Integrity:} The database schema must strictly enforce foreign key constraints (\texttt{ON DELETE CASCADE} where appropriate) to prevent orphaned records (e.g., a \texttt{lesson\_progress} record existing without a valid \texttt{enrollment\_id}).
+    \item \textbf{Backup Strategy:} The Supabase infrastructure must be configured to execute automated, daily Point-in-Time Recovery (PITR) backups of the entire PostgreSQL volume.
+\end{itemize}
+
+\paragraph{Maintainability and Scalability}
+\begin{itemize}
+    \item \textbf{Modular Architecture:} The codebase must adhere to strict separation of concerns, decoupling the data-fetching logic (Server Components) from the interactive accessibility logic (Client Components).
+    \item \textbf{Database Normalization:} The schema must adhere to the Third Normal Form (3NF) to eliminate data redundancy, ensuring the database scales efficiently as course and user volume increases.
+\end{itemize}
+
+\subsubsection{Others Requirement}
+
+The software and hardware tools selected for the ACESS platform, as listed in Chapter 2, Section 2.4, are justified by the following architectural considerations:
+
+\begin{itemize}
+    \item \textbf{Next.js 16 and React:} Server-side rendering and React Server Components reduce initial JavaScript payload, critical for rapid page loads that prevent cognitive drop-off for ADHD learners. The App Router provides middleware-based route protection that enforces role-based access at the edge.
+    \item \textbf{Supabase with PostgreSQL:} Row-Level Security provides data isolation at the database level rather than relying solely on application-layer guards, ensuring that cognitive telemetry and assessment data remain cryptographically isolated per user.
+    \item \textbf{Tailwind CSS v4:} Just-in-Time compilation enables dynamic CSS variable injection via \texttt{data-attribute} selectors, allowing instantaneous theme and typography switching without JavaScript re-evaluation -- essential for real-time accessibility adjustments.
+    \item \textbf{TypeScript:} Static typing across the full stack reduces runtime errors in critical paths such as quiz scoring and accessibility profile application, where a type mismatch could result in incorrect interface rendering.
+    \item \textbf{Vercel:} Serverless edge deployment provides global low-latency access to the platform, which is particularly important for learners whose cognitive focus may be disrupted by slow page transitions.
+\end{itemize}
+
+\subsection{System Architecture}
+
+The ACESS platform employs a modern, decoupled client-server architecture, leveraging edge computing paradigms to maximize performance and security.
+
+\subsubsection{Context Diagram}
+The Context Diagram establishes the highest-level view of the system, illustrating the boundaries of the ACESS platform and its interactions with external entities.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Context Diagram}
+\label{fig:context_diagram}
+\end{figure}
+
+As depicted in Figure \ref{fig:context_diagram}, the ACESS system acts as the central processing hub. The primary external entities are the Learner (who consumes content and provides telemetry), the Educator (who authors content and configures assessments), and the Administrator (who governs system integrity). The system also interfaces with external secure email providers (for authentication/password resets) and potentially external text-to-speech APIs, though native browser synthesis is prioritized.
+
+\subsubsection{System Architecture Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for System Architecture Diagram}
+\label{fig:system_architecture}
+\end{figure}
+
+Figure \ref{fig:system_architecture} details the three-tier decoupled architecture:
+\begin{itemize}
+    \item \textbf{Frontend Architecture (Next.js 16 \& React):} The presentation layer is built on the Next.js App Router. It utilizes React Server Components (RSC) to execute data fetching securely on the server, drastically reducing the JavaScript payload delivered to the client. This is crucial for rapid page loads, preventing cognitive drop-off for ADHD learners. Client components (`"use client"`) are restricted to highly interactive elements, such as the Tiptap editor and interactive quiz interfaces. The UI is styled utilizing Tailwind CSS v4, which enables the dynamic injection of `@theme` variables for accessibility toggling.
+    \item \textbf{Middleware \& Authentication Layer:} A Next.js Edge Middleware intercepts every incoming request. It interfaces with `@supabase/ssr` to validate JWT cookies, extracting the user's `role`. The middleware enforces strict Role-Based Access Control (RBAC), instantly redirecting unauthorized attempts (e.g., a Learner attempting to access `/educator/dashboard`) before the React tree is even evaluated.
+    \item \textbf{Backend \& Database Architecture (Supabase):} Supabase acts as the comprehensive Backend-as-a-Service (BaaS). It provides a managed PostgreSQL database, handling complex relational queries. Crucially, data security is not solely reliant on the API layer; PostgreSQL Row-Level Security (RLS) policies are inscribed directly into the database schema, ensuring users can only `SELECT`, `INSERT`, or `UPDATE` records they cryptographically own.
+    \item \textbf{Storage Architecture:} Supabase Storage buckets manage unstructured assets (course thumbnails, PDF certificates, embedded videos). These buckets are governed by parallel RLS policies, ensuring private assets remain inaccessible to unauthenticated requests.
+\end{itemize}
+
+\subsubsection{Deployment Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Deployment Diagram}
+\label{fig:deployment_diagram}
+\end{figure}
+
+The Deployment Diagram (Figure \ref{fig:deployment_diagram}) illustrates the physical distribution of the system components. The Next.js frontend is deployed to a serverless edge network (e.g., Vercel or AWS Amplify), ensuring high availability and low latency globally. The Supabase backend operates on dedicated cloud infrastructure, exposing a secure REST/GraphQL API via PostgREST, which the Next.js server components consume securely.
+
+\subsection{Module Design}
+
+The system is logically partitioned into discrete, highly cohesive modules to facilitate maintainability.
+
+\begin{itemize}
+    \item \textbf{Student Module:} Encapsulates all logic related to course discovery, enrollment (\texttt{enrollments} table), lesson consumption (\texttt{lesson\_progress}), and quiz execution (\texttt{quiz\_attempts}).
+    \item \textbf{Educator Module:} Manages the creation pipeline. Handles the Tiptap editor state, quiz generation (\texttt{quiz\_questions}, \texttt{quiz\_options}), and the uploading of media assets to Supabase Storage.
+    \item \textbf{Admin Module:} Provides a high-level oversight interface for user management, role reassignment, and global accessibility preset configurations.
+    \item \textbf{Accessibility Module:} A globally available React Context Provider (\texttt{AccessibilityProvider}). It subscribes to the user's preferences in the \texttt{user\_accessibility\_settings} table and dynamically manipulates the DOM root attributes (e.g., \texttt{data-theme="dyslexia"}, \texttt{data-reduced-motion="true"}).
+    \item \textbf{Interactive Activity Module:} Governs the execution of varied assessment types, including standard multiple-choice quizzes and embedded video questions, immediately evaluating responses against cryptographic hashes in the backend.
+    \item \textbf{Analytics Module:} Aggregates data from \texttt{lesson\_progress} and \texttt{quiz\_attempts} to render visualizations via the Recharts library, providing educators with actionable intelligence on cohort performance.
+\end{itemize}
+
+\subsection{Summary}
+
+This chapter analyzed the engineering specifications required to build the ACESS platform. It began with a detailed problem analysis of existing educational systems, followed by a comprehensive requirements analysis covering data, functional, non-functional, and other requirements. The system architecture was presented through Context, Architecture, and Deployment diagrams, and the modular decomposition of the system was described. The subsequent chapter will translate these requirements into concrete database schemas and interface designs.
+
+%==========================================================%
+
+\newpage
+\vfill \null
+\thispagestyle{empty}
+\begin{center}
+\section{SYSTEM DESIGN}
+\end{center}
+\vspace{2cm}
+
+\subsection{Introduction}
+
+This chapter translates the conceptual requirements established in the previous phase into concrete, highly granular engineering designs. It is structured according to the High-Level Design and Detailed Design phases. High-Level Design encompasses behavioral and interaction diagrams, user interface design specifications, and the conceptual database model. Detailed Design covers the software component architecture, physical database implementation, and systemic implementation details of the ACESS platform.
+
+\subsection{High-Level Design}
+
+\subsubsection{Behavioral Design (Activity Diagrams)}
+
+Activity diagrams model the workflow of the system, illustrating the procedural logic executed by the different actors.
+
+\paragraph{Student Activity Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Student Activity Diagram}
+\label{fig:act_student}
+\end{figure}
+
+As shown in Figure \ref{fig:act_student}, the Student workflow is highly structured. Upon authentication, the system evaluates the \texttt{user\_accessibility\_settings}. If incomplete, the user is routed to an onboarding profile setup. Once the dashboard loads, the core loop involves browsing the catalog, initializing an \texttt{enrollment}, and sequentially consuming \texttt{lessons}. The critical branching logic occurs post-assessment: if a quiz score is below the predefined threshold, the system diverges from the linear path, querying the \texttt{recommendations} table and forcing the student to review foundational material before progressing.
+
+\paragraph{Educator Activity Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Educator Activity Diagram}
+\label{fig:act_educator}
+\end{figure}
+
+Figure \ref{fig:act_educator} maps the Educator's authoring workflow. The process begins with establishing course metadata and structure (\texttt{course\_chapters}). The educator then enters a loop of content creation: drafting lessons via Tiptap, uploading video assets, and defining \texttt{quiz\_questions}. A critical validation node exists before publishing: the system checks for mandatory accessibility flags (e.g., verifying video transcripts are attached). Upon passing validation, the course status updates to \texttt{pending\_review}.
+
+\paragraph{Administrator Activity Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Administrator Activity Diagram}
+\label{fig:act_admin}
+\end{figure}
+
+The Administrator workflow (Figure \ref{fig:act_admin}) is primarily reactive. The admin monitors the moderation queue. When a course enters \texttt{pending\_review}, the admin evaluates it against overarching accessibility guidelines. If rejected, a notification payload is dispatched to the educator. If approved, the course is published. Furthermore, the admin workflow includes auditing user logs and modifying global system variables.
+
+\subsubsection{Interaction Design (Sequence Diagrams)}
+
+Sequence diagrams detail how objects interact over time to execute specific Use Cases, mapping the exact API calls between the Next.js client, the Edge Middleware, and the Supabase backend.
+
+\paragraph{Sequence: Course Enrollment}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Course Enrollment Sequence Diagram}
+\label{fig:seq_enrollment}
+\end{figure}
+
+Figure \ref{fig:seq_enrollment} illustrates the enrollment transaction.
+1. The Learner Client sends a \texttt{POST /api/enroll} request containing the \texttt{course\_id}.
+2. The Edge Middleware intercepts, verifying the JWT session.
+3. The API queries Supabase to check for existing enrollments (preventing duplicates).
+4. An `INSERT` operation is executed on the `enrollments` table.
+5. A PostgreSQL Trigger fires, executing a webhook that inserts a record into the `notifications` table, alerting the educator.
+6. The client is redirected to the `/course/[id]/learn` route.
+
+\paragraph{Sequence: Lesson Learning \& Telemetry}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Lesson Learning Sequence Diagram}
+\label{fig:seq_lesson}
+\end{figure}
+
+Figure \ref{fig:seq_lesson} maps the continuous telemetry tracking. When a learner mounts a lesson component, an \texttt{INSERT} establishes a \texttt{lesson\_progress} record. As the user dwells on the page, a client-side \texttt{setInterval} function fires every 30 seconds, dispatching an asynchronous \texttt{PATCH} request to update the \texttt{time\_spent\_learning} integer in the database. This guarantees highly accurate engagement metrics even if the user closes the browser abruptly.
+
+\paragraph{Sequence: Quiz Attempt \& Adaptive Recommendation}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Quiz Attempt Sequence Diagram}
+\label{fig:seq_quiz}
+\end{figure}
+
+Figure \ref{fig:seq_quiz} details the most complex systemic interaction: the adaptive engine.
+1. The Learner submits a JSON payload of \texttt{selected\_option\_id} values.
+2. The backend securely evaluates these against the \texttt{is\_correct} flags in \texttt{quiz\_options}, ensuring the client never possesses the answer key.
+3. The aggregate \texttt{score\_pct} is inserted into \texttt{quiz\_attempts}.
+4. The server evaluates the score against \texttt{quizzes.pass\_threshold\_pct}.
+5. If failed, the backend queries \texttt{lessons.prerequisite\_lesson\_id}.
+6. An \texttt{INSERT} is executed on the \texttt{recommendations} table, flagging the prerequisite for mandatory review.
+
+\paragraph{Sequence: Course Creation \& Media Upload}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Course Creation Sequence Diagram}
+\label{fig:seq_course_creation}
+\end{figure}
+
+Figure \ref{fig:seq_course_creation} shows the Educator authoring pipeline. When an educator uploads a video, the Next.js API requests a signed upload URL from Supabase Storage. The client then uploads the binary blob directly to the \texttt{course-assets} bucket, bypassing the Next.js server to prevent memory bottlenecks. The resulting public URL is then stored within the \texttt{lessons.video\_url} attribute.
+
+\subsubsection{User Interface Design}
+
+The interface architecture of ACESS is organized into three role-specific shells, each with distinct navigation structures, input mechanisms, and output presentations.
+
+\paragraph{Navigation Design}
+
+The navigation architecture follows a role-based shell pattern enforced by Next.js middleware:
+
+\begin{itemize}
+    \item \textbf{Public Navigation:} Unauthenticated users access the landing page, login, signup, and password reset routes. The landing page features a hero section, feature highlights, system capabilities showcase, and a role-based demo modal.
+    \item \textbf{Learner Navigation:} The learner shell (\texttt{LearnerShell}) contains a persistent collapsible sidebar with links to Dashboard, Courses, Progress, Certificates, Achievements, and Favorites. A top bar displays the accessibility settings toggle, notification bell with unread badge count, language switcher, and user profile menu. The sidebar auto-hides in Focus Mode when navigating to lesson routes.
+    \item \textbf{Educator Navigation:} The educator shell (\texttt{EducatorShell}) provides a sidebar with Dashboard, My Courses, All Courses, Students, Analytics, and Certificates. A course workspace sub-navigation includes tabs for Builder, Lessons, Quiz Settings, Assets, and Preview.
+    \item \textbf{Administrator Navigation:} The admin shell (\texttt{AdminShell}) includes links to Dashboard, Users, Courses, Certificates, Analytics, Reports, Instructor Applications, and Contact Messages, with CRUD sub-navigation for course and user management.
+\end{itemize}
+
+\paragraph{Input Design}
+
+The system implements structured input forms with client-side and server-side validation. Key input interfaces include:
+
+\begin{itemize}
+    \item \textbf{User Registration and Profile:} Registration form collects email, password, and role selection (learner/educator) with Zod validation for email format and password strength (minimum 8 characters, uppercase, number). Profile editing allows avatar upload via Supabase Storage with MIME type validation.
+    \item \textbf{Course Creation (Educator):} Course metadata form includes title (required, max 200 characters), slug (auto-generated with uniqueness validation), description, difficulty level (select: beginner/intermediate/advanced), category, and thumbnail upload. Validation prevents duplicate slugs at the database level.
+    \item \textbf{Lesson Editor (Tiptap):} Rich-text editor with constrained toolbar (headings, bold, italic, lists, links, code blocks, tables). Accessibility validation enforces heading hierarchy (no skipped levels), alt-text requirements on images, and caption requirements on video embeds. Content is sanitized server-side before persisting to \texttt{lessons.content\_html}.
+    \item \textbf{Quiz Builder (Educator):} Question creation interface supports multiple-choice and scenario types. Each question requires a minimum of two options with exactly one marked correct via radio button. Validation prevents publishing quizzes with unanswered questions or missing correct-option flags.
+    \item \textbf{Accessibility Settings (Learner):} A modal interface with toggle switches, dropdown selects, and slider controls for font size, line spacing, theme (light/dark/soft/high\_contrast), background tint picker, TTS enablement, captions, reduced motion, simplified UI, and keyboard navigation. All changes apply instantly via React Context without page reload.
+    \item \textbf{Interactive Activity Builder (Educator):} Form-based interfaces for creating flashcards (front/back text or image), drag-and-drop activities (categories and draggable items), fill-in-the-blanks (sentence with missing word), memory games (card pairs), and timelines (ordered events). Each activity type has dedicated validation rules.
+\end{itemize}
+
+\paragraph{Output Design}
+
+The system produces the following outputs:
+
+\begin{itemize}
+    \item \textbf{Progress Analytics (Recharts):} Educator dashboards render bar charts, line charts, and pie charts using Recharts components, visualizing enrollment rates, lesson completion percentages, average time spent per lesson, and quiz score distributions. Data is aggregated server-side via PostgreSQL queries and delivered as typed arrays to chart components.
+    \item \textbf{PDF Certificates (jsPDF):} Upon course completion, the system generates a landscape PDF certificate containing the learner's full name, course title, completion date, a unique alphanumeric reference code, and institutional branding. The PDF is generated server-side via \texttt{generatePDFCertificate()} in \texttt{certificate-utils.ts} and uploaded to Supabase Storage with the URL stored in the \texttt{certificates} table.
+    \item \textbf{Administrator Reports:} Custom report generation with configurable date ranges, user filters, and metric selection. Output is available as PDF or CSV download, generated via \texttt{/api/admin/reports}.
+    \item \textbf{Badge and Achievement Notifications:} Visual milestone badges are awarded and displayed on the learner dashboard and certificates page when predefined criteria (e.g., 100\% module completion, perfect quiz score) are met, evaluated by the \texttt{achievement-engine.ts}.
+    \item \textbf{Progress Summary:} The learner dashboard displays a progress overview card showing enrolled course count, completed lessons, certificates earned, and achievements unlocked, with a call-to-action for the next recommended lesson.
+\end{itemize}
+
+\subsubsection{Database Design \& Entity Relationship}
+
+The data architecture is completely normalized. Data isolation is guaranteed via Row-Level Security (RLS) policies.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{2.jpg}
+\caption{Placeholder for Database ERD}
+\label{fig:erd}
+\end{figure}
+
+Figure \ref{fig:erd} maps the complex relational lattice underpinning the system. The `users` table acts as the central hub, cascading outward to authorization profiles and created content.
+
+\subsection{Comprehensive Data Dictionary}
+
+The following tables constitute the exact physical schema of the ACESS PostgreSQL database. Due to LaTeX formatting requirements regarding underscores within text, attribute names have been formatted accordingly.
+
+
+
+\subsubsection{Core Identity and Configuration Tables}
+
+\textbf{Table: users} \newline
+\textit{Purpose:} Master registry for authentication. Syncs via trigger with Supabase Auth schema.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Cryptographic identifier linked to Auth. \\ \hline
+email & varchar & UNIQUE & Contact and login identifier. \\ \hline
+full\_name & text & None & User's display name. \\ \hline
+role & varchar & None & Enum: `learner`, `educator`, `admin`. \\ \hline
+is\_active & boolean & DEFAULT true & Soft-ban flag for administrators. \\ \hline
+created\_at & timestamptz & DEFAULT NOW() & Record initialization date. \\ \hline
+deleted\_at & timestamptz & NULLABLE & Supports soft-deletion requirements. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: user\_profiles} \newline
+\textit{Purpose:} Extended demographic and biographical information decoupled from core auth.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+user\_id & uuid & PK, FK(users) & 1:1 relationship with users table. \\ \hline
+username & varchar & UNIQUE & Public-facing handle. \\ \hline
+avatar\_url & text & NULLABLE & Pointer to Supabase Storage bucket. \\ \hline
+bio & text & NULLABLE & Educator credential description. \\ \hline
+preferred\_language & varchar & DEFAULT 'en' & i18n routing preference. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: user\_accessibility\_settings} \newline
+\textit{Purpose:} The absolute core of the adaptive engine. Stores granular UI preferences.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+user\_id & uuid & PK, FK(users) & 1:1 relationship constraint. \\ \hline
+disability\_type & varchar & None & E.g., `dyslexia`, `adhd`, `asd`. \\ \hline
+preferred\_theme & varchar & None & Drives CSS vars (`light`, `high\_contrast`). \\ \hline
+tts\_enabled & boolean & DEFAULT false & Auto-mounts speech synthesis component. \\ \hline
+reduced\_motion & boolean & DEFAULT false & Kills Framer Motion animations. \\ \hline
+simplified\_ui & boolean & DEFAULT false & Activates strict Focus Mode routing. \\ \hline
+dyslexia\_friendly\_font & boolean & DEFAULT false & Overrides sans-serif with Atkinson. \\ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Curriculum Structure Tables}
+
+\textbf{Table: courses} \newline
+\textit{Purpose:} The primary grouping entity for all educational modules.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+created\_by & uuid & FK(users) & Links to Educator who authored it. \\ \hline
+title & varchar & NOT NULL & Display title. \\ \hline
+slug & varchar & UNIQUE & URL-friendly routing identifier. \\ \hline
+difficulty\_level & varchar & None & `beginner`, `intermediate`, `advanced`. \\ \hline
+status & varchar & None & `draft`, `pending\_review`, `published`. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: course\_chapters} \newline
+\textit{Purpose:} Provides hierarchical grouping for lessons within massive courses.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+course\_id & uuid & FK(courses) & Parent course reference. \\ \hline
+title & text & NOT NULL & Chapter heading. \\ \hline
+sequence\_order & integer & UNIQUE per course & Defines display sorting. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: lessons} \newline
+\textit{Purpose:} The atomic unit of educational content.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+course\_id & uuid & FK(courses) & Parent course reference. \\ \hline
+chapter\_id & uuid & FK(chapters) & Optional hierarchical parent. \\ \hline
+content\_html & text & NOT NULL & Sanitized rich-text payload from Tiptap. \\ \hline
+video\_url & varchar & NULLABLE & Link to encoded MP4 asset. \\ \hline
+transcript & text & NULLABLE & WebVTT standard for Deaf accommodations. \\ \hline
+prerequisite\_lesson\_id & uuid & FK(lessons) & \textbf{Crucial:} Drives the adaptive engine. \\ \hline
+lesson\_type & varchar & None & `video`, `reading`, `quiz`. \\ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Telemetry and Assessment Tables}
+
+\textbf{Table: enrollments} \newline
+\textit{Purpose:} Resolves the many-to-many relationship between users and courses.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+user\_id & uuid & FK(users) & The Learner. \\ \hline
+course\_id & uuid & FK(courses) & The target curriculum. \\ \hline
+status & varchar & DEFAULT 'active' & `active`, `completed`, `dropped`. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: lesson\_progress} \newline
+\textit{Purpose:} Hyper-granular telemetry for engagement analytics.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+enrollment\_id & uuid & FK(enrollments) & Links progress to specific course attempt. \\ \hline
+lesson\_id & uuid & FK(lessons) & The specific node being consumed. \\ \hline
+is\_viewed & boolean & DEFAULT false & Simple binary completion flag. \\ \hline
+time\_spent\_learning & integer & DEFAULT 0 & Total seconds accumulated on route. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: quizzes} \newline
+\textit{Purpose:} Configuration metadata for summative and formative assessments.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+lesson\_id & uuid & FK(lessons) & 1:1 constraint. A quiz IS a lesson type. \\ \hline
+time\_limit\_seconds & integer & DEFAULT 0 & 0 implies untimed (crucial for anxiety). \\ \hline
+pass\_threshold\_pct & integer & DEFAULT 80 & Dictates pass/fail state for adaptations. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: quiz\_questions} \newline
+\textit{Purpose:} Houses specific assessment prompts.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+quiz\_id & uuid & FK(quizzes) & Parent quiz. \\ \hline
+question\_text & text & NOT NULL & The prompt content. \\ \hline
+question\_type & varchar & None & `multiple\_choice`, `scenario`. \\ \hline
+sequence\_order & integer & UNIQUE per quiz & Sorting index. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: quiz\_options} \newline
+\textit{Purpose:} Potential answers. Crucially, `is\_correct` is never sent to the client unprompted.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+question\_id & uuid & FK(quiz\_questions) & Parent question. \\ \hline
+option\_text & text & NOT NULL & The answer string. \\ \hline
+is\_correct & boolean & NOT NULL & The evaluation key. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: quiz\_attempts} \newline
+\textit{Purpose:} Records the historical outcomes of Learner submissions.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+enrollment\_id & uuid & FK(enrollments) & The specific learner/course context. \\ \hline
+quiz\_id & uuid & FK(quizzes) & The assessment taken. \\ \hline
+score\_pct & integer & None & Calculated post-submission. \\ \hline
+result & varchar & None & `pass`, `fail` based on threshold. \\ \hline
+\end{tabular}
+\end{center}
+
+
+
+\subsubsection{Specialized Feature Tables}
+
+\textbf{Table: recommendations} \newline
+\textit{Purpose:} The output artifact of the adaptive heuristic engine.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+enrollment\_id & uuid & FK(enrollments) & Context linkage. \\ \hline
+recommended\_lesson\_id & uuid & FK(lessons) & The node the learner is forced to review. \\ \hline
+trigger\_reason & text & None & Explanation generated for the learner. \\ \hline
+is\_acknowledged & boolean & DEFAULT false & Clears notification from UI. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: certificates} \newline
+\textit{Purpose:} Verifiable cryptographic proof of competency.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+enrollment\_id & uuid & FK(enrollments) & UNIQUE constraint (1 cert per course). \\ \hline
+reference\_code & varchar & UNIQUE & Used for public verification endpoint. \\ \hline
+pdf\_url & varchar & NOT NULL & Link to generated asset in Storage. \\ \hline
+\end{tabular}
+\end{center}
+
+\textbf{Table: notifications} \newline
+\textit{Purpose:} System-wide alerting, driven largely by PostgreSQL triggers.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|l|l|p{6.5cm}|}
+\hline
+\textbf{Attribute} & \textbf{Data Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PK & Unique identifier. \\ \hline
+user\_id & uuid & FK(users) & Target recipient. \\ \hline
+type & text & None & `course\_published`, `quiz\_failed`. \\ \hline
+title & text & NOT NULL & Notification header. \\ \hline
+is\_read & boolean & DEFAULT false & Controls UI indicator. \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection{Detailed Design}
+
+\subsubsection{Software Design}
+
+The ACESS platform follows a component-based architecture using React Server Components (RSC) and Client Components, organized by feature domain. The key software components are described below.
+
+\paragraph{Provider Components (Global State)}
+
+\begin{itemize}
+    \item \textbf{AuthProvider:} Wraps the application root. Initializes the Supabase client session via \texttt{@supabase/ssr}, exposes \texttt{user} object, \texttt{session}, \texttt{signIn()}, \texttt{signUp()}, \texttt{signOut()} through React Context. On mount, fetches the user's role and profile metadata. Responsible for session refresh and 15-minute inactivity timeout detection via \texttt{SessionTimeout} component.
+    \item \textbf{AccessibilityProvider:} Loads \texttt{user\_accessibility\_settings} from Supabase on authentication. Exposes setting values and a \texttt{updateSetting()} method through context. On every setting change, writes to the database and applies CSS \texttt{data-*} attributes to the \texttt{<html>} element (e.g., \texttt{data-theme="dyslexia"}, \texttt{data-reduced-motion="true"}) which Tailwind CSS v4 intercepts to re-theme the entire component tree.
+    \item \textbf{LanguageProvider:} Loads the user's \texttt{preferred\_language} from profile settings, provides a \texttt{t()} function that maps keys to locale strings in \texttt{src/locales/en.ts} and \texttt{ms.ts}. Supports runtime language switching without page reload.
+\end{itemize}
+
+\paragraph{Learner Components}
+
+\begin{itemize}
+    \item \textbf{LearnerDashboard:} Server component that fetches enrolled courses, recommendations, recent progress, and achievement summary. Renders \texttt{WelcomeSection}, \texttt{MyCoursesSection}, \texttt{ProgressOverview}, and \texttt{QuickActions} client sub-components for interactive elements.
+    \item \textbf{LessonPage:} Client component receiving \texttt{lessonId} as prop. Fetches lesson content (\texttt{content\_html}), video URL, and quiz configuration. Renders sanitized HTML via \texttt{LessonRenderer}. In Focus Mode, conditionally omits sidebar and header. Tracks time spent via \texttt{setInterval} dispatching \texttt{PATCH /api/lesson/[id]/progress} every 30 seconds.
+    \item \textbf{QuizPage:} Client component managing question navigation state, timer (derived from \texttt{quizzes.time\_limit\_seconds}), selected answers map, and auto-submit logic on timeout. On submission, sends \texttt{selected\_option\_id[]} to \texttt{POST /api/quiz/[id]/attempt} and displays \texttt{QuizResultModal} with score, pass/fail status, and answer review.
+    \item \textbf{AccessibilitySettingsModal:} Client component with toggle switches and dropdowns for all a11y settings. Each input calls \texttt{updateSetting()} on the \texttt{AccessibilityProvider} context, providing real-time preview of changes.
+\end{itemize}
+
+\paragraph{Educator Components}
+
+\begin{itemize}
+    \item \textbf{CourseWorkspace:} Client component acting as the educator's main working area. Manages tab state (Builder, Lessons, Quiz Settings, Assets, Preview). Contains nested routing for lesson editing within the course context.
+    \item \textbf{LessonEditor:} Client component wrapping the Tiptap editor instance. Configures the editor with extensions: StarterKit, Underline, Link, Image, Table, CodeBlockLowlight, TextAlign, Highlight, TextStyle, Color, and Placeholder. Strips disallowed tags on save. Calls \texttt{PUT /api/educator/lessons/[id]} to persist the sanitized HTML.
+    \item \textbf{QuizBuilderModal:} Client component for creating and editing quiz questions. Manages a dynamic list of questions each with a type selector (multiple-choice or scenario), question text input, and a dynamic list of option rows with radio-button correct-flag selection. Validates that each question has at least one correct option before allowing save.
+    \item \textbf{InteractiveActivityBuilder:} Client component with sub-builders for each activity type: \texttt{FlashcardBuilder}, \texttt{DragDropBuilder}, \texttt{FillBlanksBuilder}, \texttt{MemoryGameBuilder}, \texttt{TimelineBuilder}. Each sub-builder manages its specific data structure and emits a typed JSON object on save.
+\end{itemize}
+
+\paragraph{Administrator Components}
+
+\begin{itemize}
+    \item \textbf{UserManagement:} Client component with a TanStack Table (via shadcn/ui DataTable) for sorting, filtering, and paginating the users list. Supports role reassignment via \texttt{RoleEditModal} and soft-delete toggling.
+    \item \textbf{CourseManagement:} Client component listing all courses with status filters (draft, pending\_review, published). Includes \texttt{ThumbnailPicker} for assigning stock images and \texttt{AdminCourseSettingsTab} for system-wide course configuration.
+    \item \textbf{AnalyticsDashboard:} Client/server hybrid component. Server-fetches aggregated platform metrics (total users, enrollments, active courses, completion rates). Renders Recharts \texttt{<BarChart>}, \texttt{<LineChart>}, and \texttt{<PieChart>} components with interactive tooltips and date range filtering.
+\end{itemize}
+
+\paragraph{Core API Routes and Server Logic}
+
+\begin{itemize}
+    \item \textbf{POST /api/recommendations/generate:} Invoked server-side after quiz attempt evaluation. Executes the \texttt{recommendation-engine.ts} which analyzes the learner's enrollment context, quiz score, and prerequisite lesson chain to generate up to three recommendations (revision, standard, advanced, or cross-course). Uses Supabase service role to bypass RLS for cross-user queries.
+    \item \textbf{PUT /api/educator/lessons/[id]:} Receives sanitized HTML from Tiptap, validates with Zod, updates the \texttt{lessons} table, and creates a version snapshot in \texttt{lesson\_versions} for rollback support.
+    \item \textbf{POST /api/certificates/custom:} Receives a custom PDF certificate file from the educator, validates file type (PDF only) and size (max 5MB), uploads to Supabase Storage \texttt{course-assets} bucket, and stores the URL reference.
+    \item \textbf{Recommendation Engine (\texttt{recommendation-engine.ts}):} Contains \texttt{generateRecommendations()} function. Logic branches: revision (if recent quiz failed), standard (if unviewed lessons remain), advanced (if near course completion), cross-course (if tag-matched courses exist). Returns an ordered array of recommended lesson IDs with trigger reasons.
+    \item \textbf{Achievement Engine (\texttt{achievement-engine.ts}):} Contains \texttt{evaluateAchievements()} function called after quiz attempts and lesson completions. Checks learner's current progress against \texttt{course\_achievements} criteria and grants new badges via \texttt{user\_achievements} insertion.
+    \item \textbf{Adaptive Engine (\texttt{adaptive-engine.ts}):} Applies preset-based accessibility configuration (Dyslexia, ADHD, Autism, Dyscalculia, Universal) with age-adapted sub-variants. Each preset defines a combination of settings for font family, spacing, theme, tint, reading spotlight, focus mode, chunked content, TTS, and simplified UI, applied via CSS data attributes.
+\end{itemize}
+
+\paragraph{Data Access Layer}
+
+Data fetching is abstracted into three role-specific modules:
+\begin{itemize}
+    \item \textbf{learner-api.ts:} 46 exported functions covering profile management, course discovery, enrollment, lesson content retrieval, quiz attempts, progress tracking, certificate viewing, recommendation fetching, favorites, and accessibility settings CRUD.
+    \item \textbf{educator-api.ts:} 71 exported functions for course CRUD, lesson CRUD with versioning, quiz builder operations, asset upload, student progress queries, analytics aggregation, certificate management, instructor applications, and H5P content operations.
+    \item \textbf{admin-api.ts:} 40 exported functions for user management, system course creation with chapters/milestones/templates, certificate oversight, instructor application review, contact message management, report generation, and platform health metrics.
+\end{itemize}
+
+\subsubsection{Physical Database Design}
+
+The ACESS database is implemented on Supabase PostgreSQL 15. The physical schema enforces relational integrity through foreign keys, unique constraints, and Row-Level Security policies.
+
+\paragraph{Table Definitions (DDL)}
+
+Core tables are created with the following representative DDL:
+
+\textbf{users table:}
+\begin{verbatim}
+CREATE TABLE public.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'learner'
+        CHECK (role IN ('learner', 'educator', 'admin')),
+    is_active BOOLEAN DEFAULT true,
+    email_verified_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
+);
+\end{verbatim}
+
+\textbf{user\_accessibility\_settings table:}
+\begin{verbatim}
+CREATE TABLE public.user_accessibility_settings (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    disability_type VARCHAR(50),
+    preferred_font_size VARCHAR(10) DEFAULT 'medium',
+    preferred_theme VARCHAR(20) DEFAULT 'light',
+    line_spacing VARCHAR(10) DEFAULT 'normal',
+    tts_enabled BOOLEAN DEFAULT false,
+    captions_enabled BOOLEAN DEFAULT false,
+    reduced_motion BOOLEAN DEFAULT false,
+    simplified_ui BOOLEAN DEFAULT false,
+    dyslexia_friendly_font BOOLEAN DEFAULT false,
+    preferred_font VARCHAR(20) DEFAULT 'default',
+    preferred_language VARCHAR(5) DEFAULT 'en'
+);
+\end{verbatim}
+
+\textbf{enrollments table with unique constraint:}
+\begin{verbatim}
+CREATE TABLE public.enrollments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'active'
+        CHECK (status IN ('active', 'completed', 'dropped')),
+    enrolled_at TIMESTAMPTZ DEFAULT NOW(),
+    completed_at TIMESTAMPTZ,
+    UNIQUE(user_id, course_id)
+);
+\end{verbatim}
+
+\paragraph{Indexes}
+
+The following indexes are defined to optimize query performance:
+
+\begin{verbatim}
+CREATE INDEX idx_enrollments_user ON enrollments(user_id);
+CREATE INDEX idx_enrollments_course ON enrollments(course_id);
+CREATE INDEX idx_lesson_progress_enrollment ON lesson_progress(enrollment_id);
+CREATE INDEX idx_quiz_attempts_enrollment ON quiz_attempts(enrollment_id);
+CREATE INDEX idx_lessons_course ON lessons(course_id);
+CREATE INDEX idx_notifications_user ON notifications(user_id);
+CREATE INDEX idx_courses_created_by ON courses(created_by);
+CREATE INDEX idx_courses_status ON courses(status);
+\end{verbatim}
+
+\paragraph{Row-Level Security Policies}
+
+RLS is enabled on all tables containing user data. Representative policies include:
+
+\begin{verbatim}
+-- Learners can only read their own lesson progress
+CREATE POLICY lesson_progress_learner_select
+ON lesson_progress FOR SELECT
+USING (auth.uid() IN (
+    SELECT user_id FROM enrollments WHERE id = enrollment_id
+));
+
+-- Educators can CRUD their own courses
+CREATE POLICY courses_educator_insert
+ON courses FOR INSERT
+WITH CHECK (auth.uid() = created_by);
+
+-- Admins can read all rows
+CREATE POLICY users_admin_select
+ON users FOR SELECT
+USING (auth.role() = 'admin');
+\end{verbatim}
+
+\paragraph{Database Triggers}
+
+Five notification triggers are implemented as PL/pgSQL functions attached to INSERT and UPDATE events:
+
+\begin{verbatim}
+CREATE FUNCTION notify_on_quiz_attempt()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.score_pct < (SELECT pass_threshold_pct
+                         FROM quizzes WHERE id = NEW.quiz_id) THEN
+        INSERT INTO notifications (user_id, type, title, body, metadata)
+        VALUES (
+            (SELECT created_by FROM courses WHERE id = (
+                SELECT course_id FROM enrollments WHERE id = NEW.enrollment_id
+            )),
+            'quiz_failed',
+            'Student Failed Quiz',
+            'A learner scored below the passing threshold.',
+            jsonb_build_object('attempt_id', NEW.id, 'score', NEW.score_pct)
+        );
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notify_on_quiz_attempt_trigger
+AFTER INSERT ON quiz_attempts
+FOR EACH ROW EXECUTE FUNCTION notify_on_quiz_attempt();
+\end{verbatim}
+
+\paragraph{Storage Buckets}
+
+Unstructured assets are stored in Supabase Storage with the following configuration:
+
+\begin{itemize}
+    \item \textbf{course-assets bucket:} Upload-only for educators via signed URLs. No public read access. Files include lesson video files (MP4), image assets, and custom certificate PDFs.
+    \item \textbf{course-thumbnails bucket:} Stores course thumbnail images with public read access for unauthenticated landing page display.
+\end{itemize}
+
+\subsubsection{Systemic Implementation Details}
+
+\paragraph{Interactive Video Questions}
+To prevent passive consumption, ACESS implements embedded video questions. This is achieved by creating a custom React hook \texttt{useVideoTime()} connected to an HTML5 video player reference. An array of timestamp objects is loaded from the database. When the video's current time intersects a target timestamp, the state \texttt{isVideoPaused} is forced to true, and a z-index overlay modal is mounted containing a specific \texttt{quiz\_question}. The video cannot be resumed until the user interacts with the prompt.
+
+\paragraph{Database Trigger Architecture (Notifications)}
+To maintain a decoupled architecture and prevent the Next.js API routes from becoming bloated with notification logic, ACESS utilizes native PostgreSQL Triggers. For example, the \texttt{notify\_on\_quiz\_attempt} trigger is attached to the \texttt{quiz\_attempts} table. Upon an \texttt{INSERT} where \texttt{score\_pct < pass\_threshold}, the trigger executes a PL/pgSQL function that automatically formats a payload and executes an \texttt{INSERT} into the \texttt{notifications} table, targeting the \texttt{created\_by} ID of the parent course, instantly alerting the educator of the failure via real-time database subscription.
+
+\paragraph{Session Timeout and Security}
+A \texttt{SessionTimeout} component wraps authenticated routes. It tracks user activity via \texttt{mousemove} and \texttt{keydown} event listeners. After 15 minutes of inactivity, a warning modal appears with a 30-second countdown. If no response is received, the user is forcibly signed out via \texttt{supabase.auth.signOut()} and redirected to the login page.
+
+\subsection{Summary}
+
+This chapter translated the project's requirements into concrete engineering designs. The High-Level Design section presented behavioral activity diagrams and interaction sequence diagrams mapping critical system workflows, followed by a structured user interface design covering navigation patterns, input forms with validation rules, and output specifications. The conceptual and logical database design was documented through an Entity Relationship Diagram and an exhaustive data dictionary. The Detailed Design section specified the key software components, including provider contexts, role-specific React components, API routes, and core server engines, alongside the physical database implementation with DDL statements, indexes, Row-Level Security policies, and database triggers. The systemic implementation details described the interactive video question system, notification trigger architecture, and session timeout security mechanism.
+
+%==========================================================%
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

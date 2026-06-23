@@ -10,6 +10,13 @@ export interface CourseFields {
   difficulty_level: DifficultyLevel
   category?: string
   thumbnail_url?: string
+  tags?: string[]
+  accessibility_categories?: string[]
+  primary_disability_focus?: string
+  secondary_disability_focuses?: string[]
+  target_reading_age?: number
+  recommended_age_group?: string
+  educator_custom_guide?: string
 }
 
 export interface LessonFields {
@@ -39,6 +46,8 @@ export interface LessonFields {
   chunked_content_enabled?: boolean
   checkpoints_enabled?: boolean
   adaptive_learning_enabled?: boolean
+  allow_discussions?: boolean
+  allow_download?: boolean
 }
 
 export interface QuizFields {
@@ -65,6 +74,7 @@ export interface CourseSummary {
   difficulty_level: DifficultyLevel
   category: string | null
   thumbnail_url: string | null
+  primary_disability_focus?: string | null
   lastUpdated: string
   lessons: number
   students: number
@@ -114,7 +124,7 @@ export async function fetchCourses(educatorId: string): Promise<CourseSummary[]>
     .from('courses')
     .select(`
       id, title, description, status, difficulty_level, category,
-      thumbnail_url, updated_at
+      thumbnail_url, updated_at, primary_disability_focus
     `)
     .eq('created_by', educatorId)
     .is('deleted_at', null)
@@ -147,6 +157,7 @@ export async function fetchCourses(educatorId: string): Promise<CourseSummary[]>
     lastUpdated: c.updated_at as string,
     lessons: lessonCounts.get(c.id as string) ?? 0,
     students: enrollmentCounts.get(c.id as string) ?? 0,
+    primary_disability_focus: c.primary_disability_focus as string | null,
   }))
 }
 
@@ -164,7 +175,9 @@ export async function fetchCourseById(courseId: string) {
     .select(`
       id, title, description, status, difficulty_level, category,
       thumbnail_url, created_at, updated_at, certificate_enabled,
-      certificate_settings, certification_locked
+      certificate_settings, certification_locked,
+      primary_disability_focus, secondary_disability_focuses, target_reading_age,
+      educator_custom_guide
     `)
     .eq('id', courseId)
     .is('deleted_at', null)
@@ -191,6 +204,13 @@ export async function createCourse(educatorId: string, fields: CourseFields) {
       difficulty_level: fields.difficulty_level,
       category: fields.category || null,
       thumbnail_url: fields.thumbnail_url || null,
+      tags: fields.tags || [],
+      accessibility_categories: fields.accessibility_categories || [],
+      primary_disability_focus: fields.primary_disability_focus || null,
+      secondary_disability_focuses: fields.secondary_disability_focuses || [],
+      target_reading_age: fields.target_reading_age || 13,
+      recommended_age_group: fields.recommended_age_group || null,
+      educator_custom_guide: fields.educator_custom_guide || '',
     })
     .select()
     .maybeSingle()
@@ -540,6 +560,20 @@ interface EnrollmentWithUser {
   users: { id: string; full_name: string; email: string } | null
 }
 
+export function getSmartStatus(
+  baseStatus: string,
+  lastActive: string,
+  progressPercent: number
+): string {
+  if (baseStatus === 'completed' || baseStatus === 'dropped') {
+    return baseStatus;
+  }
+  const daysSinceActive = (Date.now() - new Date(lastActive).getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSinceActive > 14) return 'inactive';
+  if (daysSinceActive > 7 && progressPercent < 20) return 'at-risk';
+  return 'active';
+}
+
 export async function fetchStudentsWithProgress(educatorId: string): Promise<StudentProgress[]> {
   const { data: courses, error: coursesError } = await supabase
     .from('courses')
@@ -567,9 +601,69 @@ export async function fetchStudentsWithProgress(educatorId: string): Promise<Stu
 
   const courseMap = new Map<string, string>((courses || []).map((c: { id: string; title: string }) => [c.id, c.title]))
 
+  if (enrollments.length === 0) return []
+  const enrollmentIds = enrollments.map(e => e.id);
+
+  // 1. Fetch lesson counts for all these courses
+  const { data: lessons } = await supabase
+    .from('lessons')
+    .select('id, course_id')
+    .in('course_id', courseIds)
+    .eq('status', 'published');
+    
+  const lessonCounts = new Map<string, number>();
+  for (const l of lessons || []) {
+    lessonCounts.set(l.course_id, (lessonCounts.get(l.course_id) || 0) + 1);
+  }
+
+  // 2. Fetch lesson_progress for all enrollments
+  const { data: progressData } = await supabase
+    .from('lesson_progress')
+    .select('enrollment_id, is_viewed, last_viewed_at')
+    .in('enrollment_id', enrollmentIds);
+    
+  const progressMap = new Map<string, number>();
+  const lastActiveMap = new Map<string, string>();
+  
+  for (const p of progressData || []) {
+    if (p.is_viewed) {
+      progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
+    }
+    if (p.last_viewed_at) {
+      const currentLast = lastActiveMap.get(p.enrollment_id);
+      if (!currentLast || new Date(p.last_viewed_at) > new Date(currentLast)) {
+        lastActiveMap.set(p.enrollment_id, p.last_viewed_at);
+      }
+    }
+  }
+
+  // 3. Fetch quiz_attempts
+  const { data: qaData } = await supabase
+    .from('quiz_attempts')
+    .select('enrollment_id, score_pct, submitted_at, started_at')
+    .in('enrollment_id', enrollmentIds);
+    
+  const quizScoresMap = new Map<string, number[]>();
+  for (const qa of qaData || []) {
+    if (!quizScoresMap.has(qa.enrollment_id)) {
+      quizScoresMap.set(qa.enrollment_id, []);
+    }
+    if (qa.score_pct != null) {
+      quizScoresMap.get(qa.enrollment_id)!.push(qa.score_pct);
+    }
+    // Also factor into lastActive
+    const actTime = qa.submitted_at || qa.started_at;
+    if (actTime) {
+      const currentLast = lastActiveMap.get(qa.enrollment_id);
+      if (!currentLast || new Date(actTime) > new Date(currentLast)) {
+        lastActiveMap.set(qa.enrollment_id, actTime);
+      }
+    }
+  }
+
   const studentMap = new Map<string, StudentProgress>()
 
-  for (const raw of (enrollments || []) as unknown as EnrollmentWithUser[]) {
+  for (const raw of (enrollments || []) as unknown as any[]) {
     const userId = raw.users?.id
     if (!userId) continue
 
@@ -579,22 +673,44 @@ export async function fetchStudentsWithProgress(educatorId: string): Promise<Stu
         name: raw.users?.full_name || 'Unknown',
         email: raw.users?.email || '',
         courses: [],
-        lastActive: formatRelativeTime(raw.enrolled_at),
+        lastActive: raw.enrolled_at, // Will override later
         totalProgress: 0,
       })
     }
 
     const student = studentMap.get(userId)!
-    const progress = raw.status === 'completed' ? 100 : 0
+    
+    // Compute exact progress
+    const totalLessons = lessonCounts.get(raw.course_id) || 0;
+    const completed = progressMap.get(raw.id) || 0;
+    let progressPercent = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
+    
+    // Compute avg score
+    const scores = quizScoresMap.get(raw.id) || [];
+    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+    // Compute status
+    const lastActiveStr = lastActiveMap.get(raw.id) || raw.enrolled_at;
+    const finalStatus = getSmartStatus(raw.status, lastActiveStr, progressPercent);
+    
+    // Update global student lastActive if this course is more recent
+    if (new Date(lastActiveStr) > new Date(student.lastActive)) {
+      student.lastActive = lastActiveStr;
+    }
+
     student.courses.push({
       title: courseMap.get(raw.course_id) || 'Unknown',
-      progress,
-      avgScore: 0,
-      status: raw.status === 'completed' ? 'completed' : raw.status === 'dropped' ? 'at-risk' : 'on-track',
+      progress: progressPercent,
+      avgScore,
+      status: finalStatus,
     })
-    student.totalProgress = Math.round(
-      student.courses.reduce((sum, c) => sum + c.progress, 0) / student.courses.length
-    )
+  }
+
+  for (const student of studentMap.values()) {
+    student.lastActive = formatRelativeTime(student.lastActive);
+    student.totalProgress = student.courses.length > 0 
+      ? Math.round(student.courses.reduce((sum, c) => sum + c.progress, 0) / student.courses.length)
+      : 0;
   }
 
   return Array.from(studentMap.values())
@@ -612,6 +728,9 @@ export interface CourseStudentProgress {
   progressPercent: number;
   hasCertificate?: boolean;
   certificateUrl?: string;
+  lastActive?: string;
+  timeSpentSeconds: number;
+  avgScore: number;
 }
 
 export async function fetchCourseStudentsProgress(courseId: string): Promise<CourseStudentProgress[]> {
@@ -642,15 +761,47 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
   // Get progress for these enrollments
   const { data: progressData, error: progressError } = await supabase
     .from('lesson_progress')
-    .select('enrollment_id, is_viewed')
-    .in('enrollment_id', enrollmentIds)
-    .eq('is_viewed', true);
+    .select('enrollment_id, is_viewed, last_viewed_at, time_spent_learning')
+    .in('enrollment_id', enrollmentIds);
 
   if (progressError) throw progressError;
 
   const progressMap = new Map<string, number>();
+  const lastActiveMap = new Map<string, string>();
+  const timeSpentMap = new Map<string, number>();
+
   for (const p of progressData || []) {
-    progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
+    if (p.is_viewed) {
+      progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
+    }
+    
+    // Calculate last active
+    if (p.last_viewed_at) {
+      const currentLast = lastActiveMap.get(p.enrollment_id);
+      if (!currentLast || new Date(p.last_viewed_at) > new Date(currentLast)) {
+        lastActiveMap.set(p.enrollment_id, p.last_viewed_at);
+      }
+    }
+
+    // Calculate time spent
+    const spent = p.time_spent_learning || (p.is_viewed ? 1200 : 0);
+    timeSpentMap.set(p.enrollment_id, (timeSpentMap.get(p.enrollment_id) || 0) + spent);
+  }
+
+  // Fetch quiz scores for avg calculation
+  const { data: qaData } = await supabase
+    .from('quiz_attempts')
+    .select('enrollment_id, score_pct')
+    .in('enrollment_id', enrollmentIds);
+
+  const quizScoresMap = new Map<string, number[]>();
+  for (const qa of qaData || []) {
+    if (!quizScoresMap.has(qa.enrollment_id)) {
+      quizScoresMap.set(qa.enrollment_id, []);
+    }
+    if (qa.score_pct != null) {
+      quizScoresMap.get(qa.enrollment_id)!.push(qa.score_pct);
+    }
   }
 
   // Fetch certificates for these enrollments
@@ -668,18 +819,28 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
     const completed = progressMap.get(raw.id) || 0;
     const progressPercent = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
     
+    const scores = quizScoresMap.get(raw.id) || [];
+    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    
+    // Status calculation
+    const lastActive = lastActiveMap.get(raw.id) || raw.enrolled_at;
+    const status = getSmartStatus(raw.status, lastActive, progressPercent);
+
     return {
       enrollmentId: raw.id,
       studentId: raw.user_id,
       studentName: raw.users?.full_name || 'Unknown',
       studentEmail: raw.users?.email || '',
       enrolledAt: raw.enrolled_at,
-      status: raw.status,
+      status,
       completedLessons: Math.min(completed, totalLessons), // Just in case
       totalLessons,
       progressPercent,
       hasCertificate: certMap.has(raw.id),
-      certificateUrl: certMap.get(raw.id) || undefined
+      certificateUrl: certMap.get(raw.id) || undefined,
+      lastActive,
+      timeSpentSeconds: timeSpentMap.get(raw.id) || 0,
+      avgScore
     };
   });
 }
@@ -849,8 +1010,10 @@ export async function uploadCourseFile(
 }
 
 export async function uploadThumbnail(file: File, courseId: string): Promise<string> {
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) throw new Error('Not authenticated')
   const ext = file.name.split('.').pop() || 'png'
-  const filePath = `courses/${courseId}/thumbnail.${ext}`
+  const filePath = `${user.user.id}/courses/${courseId}/thumbnail.${ext}`
 
   const { error: uploadError } = await supabase.storage
     .from(STORAGE_BUCKET)
@@ -864,7 +1027,6 @@ export async function uploadThumbnail(file: File, courseId: string): Promise<str
 
   const url = signedUrlData?.signedUrl ?? ''
 
-  const { data: user } = await supabase.auth.getUser()
   if (user.user) {
     await supabase.from('media_assets').insert({
       user_id: user.user.id,
@@ -880,9 +1042,11 @@ export async function uploadThumbnail(file: File, courseId: string): Promise<str
 }
 
 export async function uploadContentImage(file: File, scopeId: string): Promise<string> {
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) throw new Error('Not authenticated')
   const ext = file.name.split('.').pop() || 'png'
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const filePath = `courses/${scopeId}/content/${fileName}`
+  const filePath = `${user.user.id}/courses/${scopeId}/content/${fileName}`
 
   const { error: uploadError } = await supabase.storage
     .from(STORAGE_BUCKET)
@@ -896,7 +1060,6 @@ export async function uploadContentImage(file: File, scopeId: string): Promise<s
 
   const url = signedUrlData?.signedUrl ?? ''
   
-  const { data: user } = await supabase.auth.getUser()
   if (user.user) {
     await supabase.from('media_assets').insert({
       user_id: user.user.id,
@@ -912,9 +1075,11 @@ export async function uploadContentImage(file: File, scopeId: string): Promise<s
 }
 
 export async function uploadMediaImage(courseId: string, file: File): Promise<string> {
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) throw new Error('Not authenticated')
   const ext = file.name.split('.').pop() || 'png'
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const filePath = `courses/${courseId}/media/${fileName}`
+  const filePath = `${user.user.id}/courses/${courseId}/media/${fileName}`
 
   const { error: uploadError } = await supabase.storage
     .from(STORAGE_BUCKET)
@@ -928,7 +1093,6 @@ export async function uploadMediaImage(courseId: string, file: File): Promise<st
 
   const url = signedUrlData?.signedUrl ?? ''
   
-  const { data: user } = await supabase.auth.getUser()
   if (user.user) {
     await supabase.from('media_assets').insert({
       user_id: user.user.id,
@@ -1076,7 +1240,7 @@ export async function fetchLessonById(lessonId: string) {
       summary_source, summary_word_target, summary_key_points, summary_reflection_questions,
       summary_ai_feedback_enabled, lesson_layout,
       simplified_summary, focus_mode_enabled, chunked_content_enabled,
-      checkpoints_enabled, adaptive_learning_enabled,
+      checkpoints_enabled, adaptive_learning_enabled, allow_discussions,
       created_at, updated_at
     `)
     .eq('id', lessonId)
@@ -1246,6 +1410,7 @@ export interface EducatorCertificate {
   issued_at: string
   status: string
   revoked_at?: string
+  revoke_reason?: string
   verification_url?: string
   enrollment_id: string
   pdf_url?: string
@@ -1292,7 +1457,7 @@ export async function fetchEducatorCertificates(educatorId: string): Promise<Edu
   const { data, error } = await supabase
     .from('certificates')
     .select(`
-      id, reference_code, status, issued_at, revoked_at, verification_url, enrollment_id,
+      id, reference_code, status, issued_at, revoked_at, revoke_reason, verification_url, enrollment_id,
       learner_name, course_title, pdf_url, metadata
     `)
     .in('course_id', (
@@ -1403,12 +1568,17 @@ export async function fetchEducatorCertStats(educatorId: string) {
   return { totalIssued, valid, revoked, thisMonth, completionRate, totalEnrollments, completions }
 }
 
-export async function revokeEducatorCertificate(certId: string, reason: string): Promise<void> {
-  const { error } = await supabase
-    .from('certificates')
-    .update({ status: 'revoked', revoked_at: new Date().toISOString(), revoke_reason: reason })
-    .eq('id', certId)
-  if (error) throw error
+export async function revokeEducatorCertificate(certId: string, reason: string, scope: 'both' | 'system' | 'custom' = 'both'): Promise<void> {
+  const res = await fetch(`/api/educator/certificates/${certId}/revoke`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason, scope })
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to revoke certificate');
+  }
 }
 
 export async function issueCertificate(params: {
@@ -2001,3 +2171,53 @@ export async function reorderH5PContent(
   }
 }
 
+// ─── Content Versioning ──────────────────────────────────────────────
+
+export interface LessonVersion {
+  id: string;
+  lesson_id: string;
+  content_html: string;
+  version_name: string;
+  created_at: string;
+  created_by: string;
+}
+
+export async function fetchLessonVersions(lessonId: string): Promise<LessonVersion[]> {
+  const { data, error } = await supabase
+    .from('lesson_versions')
+    .select('*')
+    .eq('lesson_id', lessonId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data as LessonVersion[];
+}
+
+export async function saveLessonVersion(lessonId: string, contentHtml: string, versionName: string): Promise<LessonVersion> {
+  const { data: user } = await supabase.auth.getUser();
+  const userId = user.user?.id;
+  if (!userId) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('lesson_versions')
+    .insert({
+      lesson_id: lessonId,
+      content_html: contentHtml,
+      version_name: versionName,
+      created_by: userId
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as LessonVersion;
+}
+
+export async function deleteLessonVersion(versionId: string): Promise<void> {
+  const { error } = await supabase
+    .from('lesson_versions')
+    .delete()
+    .eq('id', versionId);
+
+  if (error) throw error;
+}

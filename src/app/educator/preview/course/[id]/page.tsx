@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { CourseDetailPage } from '@/components/courses/CourseDetailPage';
 import { EyeOff } from 'lucide-react';
 import { useTranslation } from '@/lib/useTranslation';
@@ -8,6 +8,8 @@ import { useTranslation } from '@/lib/useTranslation';
 export default function EducatorPreviewCoursePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const courseId = params.id ?? '1';
   const { t } = useTranslation();
 
@@ -17,7 +19,13 @@ export default function EducatorPreviewCoursePage() {
         <EyeOff className="w-4 h-4" />
         {t('dashboard.preview')}
         <button
-          onClick={() => router.push(`/educator/courses/${courseId}`)}
+          onClick={() => {
+            if (returnTo) {
+              router.push(returnTo);
+            } else {
+              router.push(`/educator/courses/${courseId}`);
+            }
+          }}
           className="ml-4 px-3 py-1 bg-white text-amber-700 rounded-lg hover:bg-amber-50 transition-colors text-xs font-semibold"
         >
           {t('dashboard.exitPreview')}
@@ -27,8 +35,17 @@ export default function EducatorPreviewCoursePage() {
         <CourseDetailPage
           courseId={courseId}
           isPreview={true}
-          onBack={() => router.push(`/educator/courses/${courseId}`)}
-          onStartLesson={(lessonId) => router.push(`/educator/preview/lesson/${lessonId}?courseId=${courseId}`)}
+          onBack={() => {
+            if (returnTo) {
+              router.push(returnTo);
+            } else {
+              router.push(`/educator/courses/${courseId}`);
+            }
+          }}
+          onStartLesson={(lessonId) => {
+            const returnQ = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : '';
+            router.push(`/educator/preview/lesson/${lessonId}?courseId=${courseId}${returnQ}`);
+          }}
         />
       </div>
     </div>

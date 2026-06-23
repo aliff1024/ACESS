@@ -1,15 +1,16 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface RoleEditModalProps {
   user: { id: string; full_name: string; email: string; role: string };
   onClose: () => void;
   onSave: (userId: string, newRole: string) => void;
+  loading?: boolean;
 }
 
-export default function RoleEditModal({ user, onClose, onSave }: RoleEditModalProps) {
+export default function RoleEditModal({ user, onClose, onSave, loading = false }: RoleEditModalProps) {
   const [selectedRole, setSelectedRole] = useState<string>(user.role);
 
   const handleSave = () => {
@@ -67,8 +68,9 @@ export default function RoleEditModal({ user, onClose, onSave }: RoleEditModalPr
           <button onClick={onClose} className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
             Cancel
           </button>
-          <button onClick={handleSave} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-            Save Changes
+          <button onClick={handleSave} disabled={loading} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
+            {loading ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>

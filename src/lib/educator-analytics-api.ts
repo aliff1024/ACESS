@@ -17,6 +17,7 @@ export interface DetailedStudentProgress {
   totalProgress: number
   learningStreak: number
   status: 'active' | 'inactive' | 'at-risk'
+  accessibility_prefs?: Record<string, any> | null
 }
 
 export interface TimelineEvent {
@@ -50,13 +51,53 @@ export interface CourseDeepAnalytics {
 // Helper to determine risk
 function determineStudentRisk(lastActive: Date, completionPct: number, hasFails: boolean): 'active' | 'inactive' | 'at-risk' {
   const daysInactive = (Date.now() - lastActive.getTime()) / (1000 * 60 * 60 * 24)
-  if (daysInactive > 7 || hasFails || (daysInactive > 3 && completionPct < 10)) {
-    return 'at-risk'
-  }
   if (daysInactive > 14) {
     return 'inactive'
   }
+  if (daysInactive > 7 || hasFails || (daysInactive > 3 && completionPct < 10)) {
+    return 'at-risk'
+  }
   return 'active'
+}
+
+function calculateStreak(lps: any[]): number {
+  if (!lps || lps.length === 0) return 0;
+  const dates = lps
+    .filter(lp => lp.last_viewed_at)
+    .map(lp => {
+      const d = new Date(lp.last_viewed_at);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    });
+  if (dates.length === 0) return 0;
+  dates.sort((a, b) => b - a);
+  const uniqueDates = [...new Set(dates)];
+  
+  let streak = 0;
+  const today = new Date();
+  const todayTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  let checkDate = todayTime;
+  
+  if (uniqueDates[0] === todayTime) {
+    streak = 1;
+    checkDate = todayTime - 86400000;
+  } else if (uniqueDates[0] === todayTime - 86400000) {
+    streak = 1;
+    checkDate = todayTime - 86400000 * 2;
+  } else {
+    return 0;
+  }
+  
+  for (let i = 1; i < uniqueDates.length; i++) {
+    if (uniqueDates[i] === checkDate) {
+      streak++;
+      checkDate -= 86400000;
+    } else if (uniqueDates[i] > checkDate) {
+      continue;
+    } else {
+      break;
+    }
+  }
+  return streak;
 }
 
 export async function fetchStudentsDeepProgress(educatorId: string): Promise<DetailedStudentProgress[]> {
@@ -87,8 +128,36 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
 
   const enrollmentIds = (enrollments || []).map((e: any) => e.id)
   
+  const { data: lessonCountsData } = await supabase
+    .from('lessons')
+    .select('course_id')
+    .in('course_id', courseIds)
+    .in('status', ['published', 'draft']);
+    
+  const courseLessonCounts = new Map<string, number>();
+  if (lessonCountsData) {
+    for (const l of lessonCountsData) {
+      courseLessonCounts.set(l.course_id, (courseLessonCounts.get(l.course_id) || 0) + 1);
+    }
+  }
+
+  const quizAttemptsMap = new Map<string, any[]>();
+  if (enrollmentIds.length > 0) {
+    const { data: qaData } = await supabase
+      .from('quiz_attempts')
+      .select('enrollment_id, score_pct, result')
+      .in('enrollment_id', enrollmentIds);
+      
+    for (const qa of qaData || []) {
+      if (!quizAttemptsMap.has(qa.enrollment_id)) {
+        quizAttemptsMap.set(qa.enrollment_id, []);
+      }
+      quizAttemptsMap.get(qa.enrollment_id)!.push(qa);
+    }
+  }
+  
   // Fetch lesson progress for all these enrollments
-  let lessonProgressMap = new Map<string, any[]>()
+  const lessonProgressMap = new Map<string, any[]>()
   if (enrollmentIds.length > 0) {
     const { data: lpData } = await supabase
       .from('lesson_progress')
@@ -100,6 +169,19 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
         lessonProgressMap.set(lp.enrollment_id, [])
       }
       lessonProgressMap.get(lp.enrollment_id)!.push(lp)
+    }
+  }
+
+  // Fetch accessibility profiles
+  const studentUserIds = [...new Set((enrollments || []).map((e: any) => e.users?.id).filter(Boolean))] as string[];
+  const userProfilesMap = new Map<string, any>();
+  if (studentUserIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('id, accessibility_prefs')
+      .in('id', studentUserIds);
+    for (const p of profiles || []) {
+      userProfilesMap.set(p.id, p.accessibility_prefs);
     }
   }
 
@@ -115,8 +197,9 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
         courses: [],
         lastActive: raw.enrolled_at,
         totalProgress: 0,
-        learningStreak: Math.floor(Math.random() * 5), // Mock streak
-        status: 'active'
+        learningStreak: 0,
+        status: 'active',
+        accessibility_prefs: userProfilesMap.get(userId) || null
       })
     }
 
@@ -139,18 +222,24 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
       student.lastActive = courseLastActive.toISOString()
     }
 
-    // Mock total lessons per course as 5 for progress calculation if we don't have it
-    // In a real app we'd fetch the total lesson count per course
-    const totalLessons = Math.max(completedLessons, 5) 
-    const progress = Math.min(Math.round((completedLessons / totalLessons) * 100), 100)
+    const totalLessons = courseLessonCounts.get(raw.course_id) || 1;
+    const progress = Math.min(Math.round((completedLessons / totalLessons) * 100), 100);
 
-    const hasFails = false // Mock for now
+    const qas = quizAttemptsMap.get(raw.id) || [];
+    const hasFails = qas.some(qa => qa.result === 'failed');
+    const avgScore = qas.length > 0 ? Math.round(qas.reduce((acc, qa) => acc + (qa.score_pct || 0), 0) / qas.length) : 0;
+    
+    // Update streak based on all course lesson progress
+    const courseStreak = calculateStreak(lps);
+    if (courseStreak > student.learningStreak) {
+      student.learningStreak = courseStreak;
+    }
 
     student.courses.push({
       id: raw.course_id,
       title: courseMap.get(raw.course_id) || 'Unknown',
       progress: raw.status === 'completed' ? 100 : progress,
-      avgScore: Math.floor(Math.random() * 20) + 80, // Mock score 80-100
+      avgScore: avgScore,
       status: determineStudentRisk(courseLastActive, progress, hasFails) as any,
       lastActive: courseLastActive.toISOString(),
       timeSpentSeconds: totalTimeSpent

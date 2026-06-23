@@ -1,0 +1,224 @@
+ACESS - ADAPTIVE COGNITIVE & EDUCATIONAL SKILL SUPPORT PLATFORM
+muhammad aliff bin affandi
+UNIVERSITI TEKNIKAL MALAYSIA MELAKA
+BORANG PENGESAHAN STATUS LAPORAN JUDUL:  [TITLE OF FINAL YEAR PROJECT]SESI PENGAJIAN: [20xx / 20xx]Saya:  ____[NAME OF STUDENT IN CAPITAL LETTER]___________________mengaku membenarkan tesis Projek Sarjana Muda ini disimpan di Perpustakaan Universiti Teknikal Malaysia Melaka dengan syarat-syarat kegunaan seperti berikut:Tesis dan projek adalah hakmilik Universiti Teknikal Malaysia Melaka.Perpustakaan Fakulti Kecerdasan Buatan dan Keselamatan Siber dibenarkan membuat salinan untuk tujuan pengajian sahaja.Perpustakaan Fakulti Fakulti Kecerdasan Buatan dan Keselamatan Siber dibenarkan membuat salinan tesis ini sebagai bahan pertukaran antara institusi pengajian tinggi. * Sila tandakan ()__________SULIT(Mengandungi maklumat yang berdarjah keselamatan atau kepentingan Malaysia seperti yang termaktub di dalam AKTA RAHSIA RASMI 1972)__________TERHAD(Mengandungi maklumat TERHAD yang telah ditentukan oleh organisasi / badan di mana penyelidikan dijalankan)__________TIDAK TERHAD(TANDATANGAN PELAJAR)(TANDATANGAN PENYELIA)Alamat tetap: ______________________________________________________________________________________Nama PenyeliaTarikh: __________________________Tarikh: __________________________CATATAN:* Jika tesis ini SULIT atau TERHAD, sila lampirkan surat daripada pihak berkuasa.BORANG PENGESAHAN STATUS LAPORAN JUDUL:  [TITLE OF FINAL YEAR PROJECT]SESI PENGAJIAN: [20xx / 20xx]Saya:  ____[NAME OF STUDENT IN CAPITAL LETTER]___________________mengaku membenarkan tesis Projek Sarjana Muda ini disimpan di Perpustakaan Universiti Teknikal Malaysia Melaka dengan syarat-syarat kegunaan seperti berikut:Tesis dan projek adalah hakmilik Universiti Teknikal Malaysia Melaka.Perpustakaan Fakulti Kecerdasan Buatan dan Keselamatan Siber dibenarkan membuat salinan untuk tujuan pengajian sahaja.Perpustakaan Fakulti Fakulti Kecerdasan Buatan dan Keselamatan Siber dibenarkan membuat salinan tesis ini sebagai bahan pertukaran antara institusi pengajian tinggi. * Sila tandakan ()__________SULIT(Mengandungi maklumat yang berdarjah keselamatan atau kepentingan Malaysia seperti yang termaktub di dalam AKTA RAHSIA RASMI 1972)__________TERHAD(Mengandungi maklumat TERHAD yang telah ditentukan oleh organisasi / badan di mana penyelidikan dijalankan)__________TIDAK TERHAD(TANDATANGAN PELAJAR)(TANDATANGAN PENYELIA)Alamat tetap: ______________________________________________________________________________________Nama PenyeliaTarikh: __________________________Tarikh: __________________________CATATAN:* Jika tesis ini SULIT atau TERHAD, sila lampirkan surat daripada pihak berkuasa.
+BORANG PENGESAHAN STATUS LAPORAN 
+JUDUL:  [TITLE OF FINAL YEAR PROJECT]
+SESI PENGAJIAN: [20xx / 20xx]
+Saya:  ____[NAME OF STUDENT IN CAPITAL LETTER]___________________
+mengaku membenarkan tesis Projek Sarjana Muda ini disimpan di Perpustakaan Universiti Teknikal Malaysia Melaka dengan syarat-syarat kegunaan seperti berikut:
+Tesis dan projek adalah hakmilik Universiti Teknikal Malaysia Melaka.
+Perpustakaan Fakulti Kecerdasan Buatan dan Keselamatan Siber dibenarkan membuat salinan untuk tujuan pengajian sahaja.
+Perpustakaan Fakulti Fakulti Kecerdasan Buatan dan Keselamatan Siber dibenarkan membuat salinan tesis ini sebagai bahan pertukaran antara institusi pengajian tinggi. 
+* Sila tandakan ()
+__________
+SULIT
+(Mengandungi maklumat yang berdarjah keselamatan atau kepentingan Malaysia seperti yang termaktub di dalam AKTA RAHSIA RASMI 1972)
+__________
+TERHAD
+(Mengandungi maklumat TERHAD yang telah ditentukan oleh organisasi / badan di mana penyelidikan dijalankan)
+__________
+TIDAK TERHAD
+(TANDATANGAN PELAJAR)
+(TANDATANGAN PENYELIA)
+Alamat tetap: _____________________
+________________________________
+_________________________________
+Nama Penyelia
+Tarikh: __________________________
+Tarikh: __________________________
+CATATAN:* Jika tesis ini SULIT atau TERHAD, sila lampirkan surat daripada pihak berkuasa.
+BORANG PENGESAHAN STATUS LAPORAN 
+JUDUL:  [TITLE OF FINAL YEAR PROJECT]
+SESI PENGAJIAN: [20xx / 20xx]
+Saya:  ____[NAME OF STUDENT IN CAPITAL LETTER]___________________
+mengaku membenarkan tesis Projek Sarjana Muda ini disimpan di Perpustakaan Universiti Teknikal Malaysia Melaka dengan syarat-syarat kegunaan seperti berikut:
+Tesis dan projek adalah hakmilik Universiti Teknikal Malaysia Melaka.
+Perpustakaan Fakulti Kecerdasan Buatan dan Keselamatan Siber dibenarkan membuat salinan untuk tujuan pengajian sahaja.
+Perpustakaan Fakulti Fakulti Kecerdasan Buatan dan Keselamatan Siber dibenarkan membuat salinan tesis ini sebagai bahan pertukaran antara institusi pengajian tinggi. 
+* Sila tandakan ()
+__________
+SULIT
+(Mengandungi maklumat yang berdarjah keselamatan atau kepentingan Malaysia seperti yang termaktub di dalam AKTA RAHSIA RASMI 1972)
+__________
+TERHAD
+(Mengandungi maklumat TERHAD yang telah ditentukan oleh organisasi / badan di mana penyelidikan dijalankan)
+__________
+TIDAK TERHAD
+(TANDATANGAN PELAJAR)
+(TANDATANGAN PENYELIA)
+Alamat tetap: _____________________
+________________________________
+_________________________________
+Nama Penyelia
+Tarikh: __________________________
+Tarikh: __________________________
+CATATAN:* Jika tesis ini SULIT atau TERHAD, sila lampirkan surat daripada pihak berkuasa.
+[TITLE OF FINAL YEAR PROJECT]
+[NAME OF STUDENT]
+This report is submitted in partial fulfillment of the requirements for the 
+Bachelor of [Computer Science (Computer Security)] with Honours.
+FACULTY OF ARTIFICIAL INTELLIGENCE AND CYBER SECURITY UNIVERSITI TEKNIKAL MALAYSIA MELAKA
+[YEAR OF SUBMISSION]
+DECLARATIONI hereby declare that this project report entitled  [TITLE OF FINAL YEAR PROJECT]is written by me and is my own effort and that no part has been plagiarized without citations.STUDENT: ______________________________________   Date : ________([NAME OF STUDENT])I hereby declare that I have read this project report and foundthis project report is sufficient in term of the scope and quality for the award of Bachelor of [Computer Science (Computer Security)] with Honours.SUPERVISOR : ______________________________________   Date : ________([NAME OF THE SUPERVISOR])DECLARATIONI hereby declare that this project report entitled  [TITLE OF FINAL YEAR PROJECT]is written by me and is my own effort and that no part has been plagiarized without citations.STUDENT: ______________________________________   Date : ________([NAME OF STUDENT])I hereby declare that I have read this project report and foundthis project report is sufficient in term of the scope and quality for the award of Bachelor of [Computer Science (Computer Security)] with Honours.SUPERVISOR : ______________________________________   Date : ________([NAME OF THE SUPERVISOR])
+DECLARATION
+I hereby declare that this project report entitled  
+[TITLE OF FINAL YEAR PROJECT]
+is written by me and is my own effort and that no part has been plagiarized 
+without citations.
+STUDENT: ______________________________________   Date : ________
+([NAME OF STUDENT])
+I hereby declare that I have read this project report and found
+this project report is sufficient in term of the scope and quality for the award of
+ Bachelor of [Computer Science (Computer Security)] with Honours.
+SUPERVISOR : ______________________________________   Date : ________
+([NAME OF THE SUPERVISOR])
+DECLARATION
+I hereby declare that this project report entitled  
+[TITLE OF FINAL YEAR PROJECT]
+is written by me and is my own effort and that no part has been plagiarized 
+without citations.
+STUDENT: ______________________________________   Date : ________
+([NAME OF STUDENT])
+I hereby declare that I have read this project report and found
+this project report is sufficient in term of the scope and quality for the award of
+ Bachelor of [Computer Science (Computer Security)] with Honours.
+SUPERVISOR : ______________________________________   Date : ________
+([NAME OF THE SUPERVISOR])
+DEDICATION
+[To my beloved parents...]
+ACKNOWLEDGEMENTS
+[I would like to thank En. Muhammad bin Ahmad for giving assistant to complete this project successfully…...
+I would also like to thank my beloved parents who have been giving me support and motivation throughout my project…]
+ABSTRACT
+[Abstract must start from here. Abstracts should be concise, WRITTEN IN ONE SPACING and justification and NOT MORE THAN 300 WORDS IN A SINGLE PAGE. Abstract is not the same as synopsis or report summary. Abstracts are WRITTEN WITH ONE PARAGRAPH. It should briefly state the field of report studies, problems to be solved, solutions, research processes; and the results obtained.]
+ABSTRAK
+[Abstrak mesti bermula disini. Abstrak mestilah ringkas, DITULIS DALAM SATU LANGKAU dan justifikasi TIDAK LEBIH DARIPADA 300 PERKATAAN DALAM SATU MUKASURAT sahaja. Abstrak tidak sama dengan sinopsis atau ringkasan tesis. Abstrak DITULIS DALAM SATU PERENGGAN. Ia hendaklah menyatakan dengan ringkas bidang kajian tesis, masalah yang hendak diselesaikan, cara penyelesaian, proses penyelidikan; dan keputusan yang diperolehi.]
+table of contents
+PAGE
+DECLARATIONii
+DEDICATIONiii
+ACKNOWLEDGEMENTSiv
+ABSTRACTv
+ABSTRAKvi
+table of contentsvii
+list of tablesix
+list of figuresx
+List of Abbreviationsxi
+List of ATTACHMENTSxii
+Chapter 1: INTRODUCTION1
+1.1About Chapters and First Subtitle1
+1.1.1Second Subtitles2
+1.1.1.1Third Subtitles2
+Chapter 2: literature review AND PROJECT METHODOLOGY3
+2.1About Figures3
+Chapter 3: ANALYSIS5
+3.1About Tables5
+Chapter 4: DESIGN7
+4.1About Table of Content7
+Chapter 5: IMPLEMENTATION9
+5.1About List of Tables9
+5.2About List of Figures9
+5.3About List of Figures9
+5.4About List of Figures9
+5.5About List of Figures10
+Chapter 6: TESTING11
+6.1About References11
+Chapter 7: PROJECT CONCLUSION12
+7.1Wrap-Up12
+references13
+list of tables
+PAGE
+Table 3.1: Table Example5
+list of figures
+PAGE
+Figure 2.1: Caption Window3
+Figure 2.2:  Caption Numbering Window4
+Figure 2.3: Example Figure with citation from a book  (Pike, 2008. Used with permission)4
+Figure 4.1: How to update Table of Contents in this template7
+Figure 4.2: Updating the whole list7
+List of Abbreviations
+FYP
+-
+Final Year Project
+List of ATTACHMENTS
+PAGE
+Appendix A
+Sample of data
+19
+Appendix B
+Analysis of data collection
+78
+……..
+…………
+……..
+…………
+INTRODUCTION
+This template is intended to assist students in writing their FYP reports, by referring to the report structure for BAXZ program. You should change accordingly to your program as stated in the guidelines. Any changes of the structure can still be made depending on the your supervisor's consent.
+Students are advised not to change any of the templates formatting and style since this template was built based on the FYP writing guide.
+For the body of the text, students must use “Body Text 2” style in the “Styles” window under Home tab. 
+About Chapters and First Subtitle
+For each chapter, type in the name of the chapter (e.g. Introduction) and apply “Heading 1” style.  The style will automatically add numbering starting with ‘Chapter’ in front of the numbering.  
+Create three empty lines before each chapter name.  After each chapter name, leave four empty lines for the new paragraph.  Use “Body Text” style for the empty lines before and after the chapter names only.  For the rest of the normal paragraph, use “Body Text 2” style, as indicated earlier.  For next or new chapter, student must start on a new page.
+For the first subtopic in each chapter, student can use Heading 2 style for the title.  Do not leave any empty line before starting a new subtitle.
+Second Subtitles
+For the second subtopic of each chapter, students can choose “Heading 3” style accordingly.  Do not leave any empty line before starting a new subtitle.
+Third Subtitles
+For the second subtopic of each chapter, students can choose “Heading 4” style accordingly.  Do not leave any empty line before starting a new subtitle.
+Other Subtitles
+For other subtopics in each chapter use “Heading 5” style for title, with numbering (a), (b), and so on.
+literature review AND PROJECT METHODOLOGY
+About Figures
+Figures are printed within the body of the text at the center of the page and labelled according to the chapter in which they appear. Thus, for example, figures in Chapter 2 are numbered sequentially: Figure 2.1, Figure 2.2.
+Figures contain graphs, illustrations or photographs and their labels are placed at the bottom of the figure.  To insert label below a figure, click “Insert Caption” under the “References” tab and select “Figure” in the dropdown list as shown in Figure 2.1. 
+Figure 2.1: Caption Window
+Click on “Numbering” and tick the “Include chapter number” and select “period (.)” as separator, as shown in Figure 2.2. Click “Update Table” to update the List of Figures.
+Figure 2.2:  Caption Numbering Window
+If the figure contains a citation, the source of the reference should be placed at the bottom, after the label.
+Figure 2.3: Example Figure with citation from a book (Pike, 2008. Used with permission)
+ANALYSIS
+About Tables
+Tables are printed within the body of the text at the center of the frame and labeled according to the chapter in which they appear. Thus, for example, tables in Chapter 3 are numbered sequentially: Table 3.1, Table 3.2.  The label should be placed above the table itself and has the format shown in Table 3.1.  Any text inside a table must follow “Table Text” style. 
+Table 3.1: Table Example
+Column Name
+Column Name
+Text
+Text
+To insert label above a table, click “Insert Caption” under the “References” tab and select “Table” in the dropdown list, as shown in Figure 2.1. Click on “Numbering” and tick the “Include chapter number” and select “period (.)” as separator, as shown in Figure 2.2. When done, click “Update Table” to update the List of Tables.  
+If the table contains a citation, the source of the reference should be placed below the table.
+To insert label above a table, click “Insert Caption” under the “References” tab and select “Table” in the dropdown list, as shown in Figure 2.1. Click on “Numbering” and tick the “Include chapter number” and select “period (.)” as separator, as shown in Figure 2.2. When done, click “Update Table” to update the List of Tables.  
+If the table contains a citation, the source of the reference should be placed below the table
+DESIGN
+About Table of Content
+In this template, the table of contents rely on the use of styles to format chapter headings and subtitles and generates the table of content automatically.  To generate the table of content in this template, place the cursor on the current table of content.  Next, go to “References” tab and click on the “Update Table” icon, as shown in Figure 4.1.  
+Figure 4.1: How to update Table of Contents in this template
+In the “Update Table of Contents” window, choose option “Update the entire table” and click OK.  Microsoft Word will generate a new table of contents based on the student’s updates.  
+Figure 4.2: Updating the whole list 
+In the “Update Table of Contents” window, choose option “Update the entire table” and click OK.  Microsoft Word will generate a new table of contents based on the student’s
+IMPLEMENTATION
+About List of Tables
+To update List of Tables, place the cursor on the list that needs to be updated.  Similar to the Table of Content, click on the icon “Update Table” under References tab to list down the updates, as shown in Figure 4.1
+About List of Figures
+To update List of Figures, place the cursor on the list that needs to be updated.  Next, click on the icon “Update Table” under References tab to list down the updates, as shown in Figure 4.1. 
+About List of Figures
+To update List of Figures, place the cursor on the list that needs to be updated.  Next, click on the icon “Update Table” under References tab to list down the updates, as shown in Figure 4.1. 
+About List of Figures
+To update List of Figures, place the cursor on the list that needs to be updated.  Next, click on the icon “Update Table” under References tab to list down the updates, as shown in Figure 4.1. 
+About List of Figures
+To update List of Figures, place the cursor on the list that needs to be updated.  Next, click on the icon “Update Table” under References tab to list down the updates, as shown in Figure 4.1. 
+TESTING
+About References
+All works or studies referred to in the research report in the form of quotations or citations must be included in the references. The references should be written consistently in the American Psychological Association (APA) format or in another format approved by the faculty.  Students are encouraged to use reference manager software such as Mendeley to assist in creating citations and references.  
+Choose “Body Text 3” style for the list of the references.
+PROJECT CONCLUSION
+Wrap-Up
+Please enjoy writing your FYP
+references
+Buchwalow, I. B., and Böcker, W. (2010). “Immunohistochemistry: basics and methods.” Berlin: Springer Verlag.
+Caamaño-Tubío, R. I., Pérez, J., Ferreiro, S., and Aldegunde, M. (2007). “Peripheral serotonin dynamics in the rainbow trout (Oncorhynchus mykiss)” Comparative Biochemistry and Physiology Part C: Toxicology & Pharmacology. 145(2): 245-255.
+Cameron, A. A., Plenderleith, M. B. and Snow, P. J. (1990). “Organization of the spinal cord in four species of elasmobranch fishes: cytoarchitecture and distribution of serotonin and selected neuropeptides.” The Journal of Comparative Neurology. 297: 201-218.
+Desa, M.I (1995).  “Bus fleet maintenance modeling in a developing country.” Ph.D Thesis, University of Salford.
+Improve indigenous housing now, government told, 2007. accessed 8 February 2009, <http://www.architecture.com.au/i-cms?page=10220>.
+International  Narcotics  Control  Board  1999,  United  Nations,  accessed  1  October  1999, <http://www.incb.org>.
+Theusen, G. J. and Fabrycky, W. J. (1984). “Engineering Economy.” 6th. Ed. Englewood Cliffs, N. J.: Prentice Hall. 150-178.
+ 

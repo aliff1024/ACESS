@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, BookOpen, Award, BarChart3, FileText, LogOut, ChevronDown, Loader2, User, School, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, Award, BarChart3, FileText, LogOut, ChevronDown, Loader2, User, School, MessageSquare, Home } from 'lucide-react';
 import NotificationPanel from '@/components/ui/NotificationPanel';
 import { useEffect, useState } from 'react';
 import {
@@ -15,13 +15,14 @@ import { ProfileDialog } from '@/components/profile/ProfileDialog';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useRole } from '@/providers/AuthProvider';
 import { Logo } from '@/components/ui/Logo';
+import { UniversalSearch } from '@/components/ui/UniversalSearch';
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
   { id: 'users', label: 'User Management', icon: Users, path: '/admin/users' },
   { id: 'courses', label: 'Course Management', icon: BookOpen, path: '/admin/courses' },
   { id: 'instructor-applications', label: 'Educators', icon: School, path: '/admin/instructor-applications' },
-  { id: 'contact-messages', label: 'Contact Messages', icon: MessageSquare, path: '/admin/contact-messages' },
+  { id: 'contact-messages', label: 'Feedback', icon: MessageSquare, path: '/admin/contact-messages' },
   { id: 'certificates', label: 'Certificates', icon: Award, path: '/admin/certificates' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
   { id: 'reports', label: 'Reports', icon: FileText, path: '/admin/reports' },
@@ -105,7 +106,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             const isActive = activeView === item.id;
             return (
               <button key={item.id} onClick={() => handleNavigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium ${
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-left ${
                   isActive 
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/50' 
                     : 'text-gray-400 hover:text-white hover:bg-gray-800 hover:ring-1 hover:ring-white/5'
@@ -116,7 +117,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             );
           })}
         </nav>
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 space-y-2">
+          <button onClick={() => router.push('/')} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white hover:ring-1 hover:ring-white/5 transition-all duration-300 font-medium text-sm">
+            <Home className="w-5 h-5" />
+            <span>Back to Landing Page</span>
+          </button>
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-red-500/10 hover:text-red-400 hover:ring-1 hover:ring-red-500/20 transition-all duration-300 font-medium text-sm">
             <LogOut className="w-5 h-5" />
             <span>Logout</span>
@@ -128,7 +133,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <header className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-1 justify-end items-center gap-4">
+              <UniversalSearch role="admin" />
               <NotificationPanel />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
