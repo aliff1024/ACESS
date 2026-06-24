@@ -174,7 +174,7 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
   const { containerWidth, textClass, itemGap, blockPadding } = getPresetStyles();
 
   return (
-    <aside className={`${containerWidth} bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col flex-shrink-0 shadow-xl z-20 transition-all duration-300 ${className}`}>
+    <aside data-sidebar className={`${containerWidth} bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col flex-shrink-0 shadow-xl z-20 transition-all duration-300 ${className}`}>
       {/* Brand */}
       <div className="px-6 py-7 border-b border-sidebar-border">
         <Logo href="/learner" size="md" showSubtitle subtitle="Learner Portal" />

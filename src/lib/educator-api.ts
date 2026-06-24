@@ -552,14 +552,6 @@ export async function fetchAtRiskStudents(educatorId: string): Promise<AtRiskStu
 
 // ─── Students ──────────────────────────────────────────────────────────
 
-interface EnrollmentWithUser {
-  id: string
-  status: string
-  enrolled_at: string
-  course_id: string
-  users: { id: string; full_name: string; email: string } | null
-}
-
 export function getSmartStatus(
   baseStatus: string,
   lastActive: string,
@@ -663,8 +655,9 @@ export async function fetchStudentsWithProgress(educatorId: string): Promise<Stu
 
   const studentMap = new Map<string, StudentProgress>()
 
-  for (const raw of (enrollments || []) as unknown as any[]) {
-    const userId = raw.users?.id
+  for (const raw of (enrollments || []) as unknown as Record<string, unknown>[]) {
+    const rawUsers = raw.users as { id?: string; full_name?: string; email?: string } | null;
+    const userId = rawUsers?.id;
     if (!userId) continue
 
     if (!studentMap.has(userId)) {
@@ -681,17 +674,17 @@ export async function fetchStudentsWithProgress(educatorId: string): Promise<Stu
     const student = studentMap.get(userId)!
     
     // Compute exact progress
-    const totalLessons = lessonCounts.get(raw.course_id) || 0;
-    const completed = progressMap.get(raw.id) || 0;
-    let progressPercent = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
+    const totalLessons = lessonCounts.get(raw.course_id as string) || 0;
+    const completed = progressMap.get(raw.id as string) || 0;
+    const progressPercent = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
     
     // Compute avg score
-    const scores = quizScoresMap.get(raw.id) || [];
+    const scores = quizScoresMap.get(raw.id as string) || [];
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
     // Compute status
-    const lastActiveStr = lastActiveMap.get(raw.id) || raw.enrolled_at;
-    const finalStatus = getSmartStatus(raw.status, lastActiveStr, progressPercent);
+    const lastActiveStr = lastActiveMap.get(raw.id as string) || (raw.enrolled_at as string);
+    const finalStatus = getSmartStatus(raw.status as string, lastActiveStr, progressPercent);
     
     // Update global student lastActive if this course is more recent
     if (new Date(lastActiveStr) > new Date(student.lastActive)) {
@@ -815,31 +808,32 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
     certMap.set(c.enrollment_id, c.verification_url || c.pdf_url || '');
   }
 
-  return enrollments.map((raw: any) => {
-    const completed = progressMap.get(raw.id) || 0;
+  return enrollments.map((raw: Record<string, unknown>) => {
+    const completed = progressMap.get(raw.id as string) || 0;
     const progressPercent = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
     
-    const scores = quizScoresMap.get(raw.id) || [];
+    const scores = quizScoresMap.get(raw.id as string) || [];
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
     
     // Status calculation
-    const lastActive = lastActiveMap.get(raw.id) || raw.enrolled_at;
-    const status = getSmartStatus(raw.status, lastActive, progressPercent);
+    const lastActive = lastActiveMap.get(raw.id as string) || (raw.enrolled_at as string);
+    const status = getSmartStatus(raw.status as string, lastActive, progressPercent);
+    const rawUsers = raw.users as { full_name?: string; email?: string } | null;
 
     return {
       enrollmentId: raw.id,
       studentId: raw.user_id,
-      studentName: raw.users?.full_name || 'Unknown',
-      studentEmail: raw.users?.email || '',
+      studentName: rawUsers?.full_name || 'Unknown',
+      studentEmail: rawUsers?.email || '',
       enrolledAt: raw.enrolled_at,
       status,
       completedLessons: Math.min(completed, totalLessons), // Just in case
       totalLessons,
       progressPercent,
-      hasCertificate: certMap.has(raw.id),
-      certificateUrl: certMap.get(raw.id) || undefined,
+      hasCertificate: certMap.has(raw.id as string),
+      certificateUrl: certMap.get(raw.id as string) || undefined,
       lastActive,
-      timeSpentSeconds: timeSpentMap.get(raw.id) || 0,
+      timeSpentSeconds: timeSpentMap.get(raw.id as string) || 0,
       avgScore
     };
   });
@@ -1414,7 +1408,7 @@ export interface EducatorCertificate {
   verification_url?: string
   enrollment_id: string
   pdf_url?: string
-  metadata?: any
+  metadata?: Record<string, unknown>
 }
 
 export async function fetchCourseCertSettings(courseId: string) {
@@ -1704,7 +1698,7 @@ export async function uploadCustomCertificate(
   // Now upsert into certificates table
   // If we don't have a specific column, we'll store it in verification_url or update status
   // We'll see if there's an existing certificate
-  const { data: existing } = await supabase
+  await supabase
     .from('certificates')
     .select('id')
     .eq('enrollment_id', enrollmentId)
@@ -2078,7 +2072,7 @@ export interface H5PContent {
   thumbnail_url?: string | null
   h5p_mode: 'external' | 'self_hosted'
   library_name?: string | null
-  content_json?: Record<string, any> | null
+  content_json?: Record<string, unknown> | null
   folder_path?: string | null
 }
 
@@ -2093,7 +2087,7 @@ export interface H5PContentFields {
   thumbnail_url?: string | null
   h5p_mode?: 'external' | 'self_hosted'
   library_name?: string | null
-  content_json?: Record<string, any> | null
+  content_json?: Record<string, unknown> | null
   folder_path?: string | null
 }
 

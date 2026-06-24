@@ -1411,10 +1411,31 @@ async function createEnrollmentsAndProgress(users: Map<string, any>, courseData:
 
         await supabase.from('lesson_progress').insert({
           enrollment_id: enrollment.id, lesson_id: lesson.id,
-          is_viewed: true, last_viewed_at: progressDate.toISOString(),
+          is_viewed: true, is_completed: true, last_viewed_at: progressDate.toISOString(),
           first_viewed_at: progressDate.toISOString(),
           time_spent_learning: timeSpent + randInt(-60, 120),
         });
+      }
+
+      // Add some "viewed but not completed" lessons for at-risk / inactive students
+      const totalLessons = courseEntry.lessons.length;
+      const lastDoneIdx = plan.lessonsDone.length > 0 ? Math.max(...plan.lessonsDone) : -1;
+      if (plan.status !== 'completed' && lastDoneIdx >= 0 && lastDoneIdx < totalLessons - 1) {
+        const skippedIdx = lastDoneIdx + 1;
+        const skippedLesson = courseEntry.lessons[skippedIdx];
+        if (skippedLesson) {
+          const skipDate = randomDate(
+            daysAgo(Math.max(plan.enrolledDaysAgo - 2, 1)),
+            new Date()
+          );
+          await supabase.from('lesson_progress').insert({
+            enrollment_id: enrollment.id, lesson_id: skippedLesson.id,
+            is_viewed: true, is_completed: false,
+            last_viewed_at: skipDate.toISOString(),
+            first_viewed_at: skipDate.toISOString(),
+            time_spent_learning: randInt(60, 300),
+          });
+        }
       }
 
       // Quiz attempts

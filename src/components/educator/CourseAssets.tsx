@@ -33,7 +33,7 @@ function extractActivityImages(
 ): UnifiedAsset[] {
   const assets: UnifiedAsset[] = [];
   for (const item of items) {
-    const data = item.content_data as any;
+    const data = item.content_data as Record<string, unknown>;
     if (item.content_type === 'flashcards') {
       for (const card of (data.cards || [])) {
         if (card.front_image) {

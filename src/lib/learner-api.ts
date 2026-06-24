@@ -1328,7 +1328,7 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
         completedSet.add(p.lesson_id)
       }
     }
-    completedCount = completedSet.size
+    completedCount = (lessons || []).filter(l => completedSet.has(l.id)).length
 
     const { data: quizAttempts } = await supabase
       .from('quiz_attempts')
@@ -1768,6 +1768,8 @@ export interface AccessibilitySettingsData {
   reading_spotlight?: boolean | null
   distraction_free_mode?: boolean | null
   chunked_content_mode?: boolean | null
+  layout_mode?: 'scroll' | 'slide' | 'chunked' | null
+  structure_mode?: 'full' | 'minimal' | 'checklist' | null
   animation_level?: string | null
   high_contrast?: boolean | null
   low_contrast?: boolean | null
@@ -2159,6 +2161,7 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
     .from('lessons')
     .select('id', { count: 'exact', head: true })
     .eq('course_id', courseId)
+    .eq('status', 'published')
     .or('visibility_status.eq.visible,visibility_status.is.null')
 
   const { count: completedLessons } = await supabase
@@ -2166,6 +2169,10 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
     .select('id', { count: 'exact', head: true })
     .eq('enrollment_id', enrollment.id)
     .eq('is_viewed', true)
+
+  if (completedLessons === null || totalLessons === null) {
+    return { eligible: false, reason: 'Error counting lessons' }
+  }
 
   if (completedLessons < totalLessons) {
     return {
@@ -2180,12 +2187,17 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
   const settings = course.certificate_settings as Record<string, unknown> | null
   const quizThreshold = (settings?.completion_rules as Record<string, unknown>)?.quiz_threshold_pct as number || 80
 
+  const { data: lessonsQuery } = await supabase
+    .from('lessons')
+    .select('id')
+    .eq('course_id', courseId)
+    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
+
   const { data: quizzes } = await supabase
     .from('quizzes')
     .select('id')
-    .in('lesson_id', (
-      await supabase.from('lessons').select('id').eq('course_id', courseId)
-    ).data?.map(l => l.id) || [])
+    .in('lesson_id', lessonsQuery?.map(l => l.id) || [])
 
   if (quizzes && quizzes.length > 0) {
     const quizIds = quizzes.map(q => q.id)

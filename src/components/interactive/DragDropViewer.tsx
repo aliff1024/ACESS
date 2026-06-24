@@ -122,11 +122,13 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
 
   // Reset when data changes
   useEffect(() => {
-    setUnplaced(items)
-    setDroppedCategories({})
-    setDroppedZones({})
-    setRevealed(false)
-    setScore(null)
+    queueMicrotask(() => {
+      setUnplaced(items)
+      setDroppedCategories({})
+      setDroppedZones({})
+      setRevealed(false)
+      setScore(null)
+    });
   }, [data])
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
@@ -195,7 +197,7 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
 
   const checkAnswers = () => {
     let correct = 0
-    let total = items.length
+    const total = items.length
 
     if (mode === 'categories') {
       for (const [cat, catItems] of Object.entries(droppedCategories)) {

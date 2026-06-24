@@ -187,7 +187,7 @@ export function EducatorCoursesPage() {
             <div className="relative shrink-0">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e) => setStatusFilter(e.target.value as Record<string, unknown>)}
                 className="w-full sm:w-48 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 font-medium"
               >
                 <option value="all">All Statuses</option>
@@ -217,7 +217,7 @@ export function EducatorCoursesPage() {
             <div className="relative shrink-0">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as Record<string, unknown>)}
                 className="w-full sm:w-48 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 font-medium"
               >
                 <option value="latest">Last Updated</option>
@@ -236,7 +236,7 @@ export function EducatorCoursesPage() {
           <h3 className="text-xl font-bold text-gray-900 mb-2">No courses found</h3>
           <p className="text-gray-500 mb-6 max-w-md mx-auto">
             {courses.length === 0 
-              ? "You haven't created any courses yet. Get started by building your first curriculum."
+              ? "You haven&apos;t created any courses yet. Get started by building your first curriculum."
               : "We couldn't find any courses matching your current filters."}
           </p>
           {courses.length === 0 ? (

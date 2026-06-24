@@ -648,7 +648,7 @@ export function CourseBuilder({ role, onComplete, onBack }: CourseBuilderProps) 
                   </div>
                   {lessons.length === 0 && (
                     <p className="text-sm text-amber-600 mt-2 flex items-center gap-1">
-                      <span>⚠</span> You need at least one lesson to publish. Selecting "Publish Now" will save as draft instead.
+                      <span>⚠</span> You need at least one lesson to publish. Selecting &quot;Publish Now&quot; will save as draft instead.
                     </p>
                   )}
                 </div>

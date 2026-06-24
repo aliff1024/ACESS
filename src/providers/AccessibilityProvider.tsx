@@ -43,6 +43,8 @@ const defaultSettings: AccessibilitySettingsData = {
   reading_spotlight: false,
   distraction_free_mode: false,
   chunked_content_mode: false,
+  layout_mode: 'slide',
+  structure_mode: 'full',
   animation_level: 'normal',
   high_contrast: false,
   low_contrast: false,
@@ -87,16 +89,17 @@ function applySettingsToDOM(settings: AccessibilitySettingsData) {
   root.setAttribute('data-bg-tint', backgroundTint);
   root.setAttribute('data-reading-spotlight', String(!!settings.reading_spotlight));
   root.setAttribute('data-distraction-free', String(!!settings.distraction_free_mode));
-  root.setAttribute('data-chunked-content', String(!!settings.chunked_content_mode));
+  root.setAttribute('data-chunked', String(!!settings.chunked_content_mode));
+  root.setAttribute('data-layout-mode', settings.layout_mode || 'slide');
+  root.setAttribute('data-structure-mode', settings.structure_mode || 'full');
   root.setAttribute('data-animation-level', animationLevel);
-  root.setAttribute('data-high-contrast', String(!!settings.high_contrast));
   root.setAttribute('data-low-contrast', String(!!settings.low_contrast));
   root.setAttribute('data-muted-colors', String(!!settings.muted_colors));
 
   // ─── CSS custom properties for continuous values ──────────────────
   root.style.setProperty('--user-font-size', `${fontSizePx}px`);
   root.style.setProperty('--user-line-spacing', String(lineSpacingMultiplier));
-  root.style.setProperty('--user-word-spacing', `${(wordSpacingPct / 100) * 0.5}em`);
+  root.style.setProperty('--user-word-spacing', `${(wordSpacingPct / 100) * 0.3}em`);
 
   // ─── Theme class management ───────────────────────────────────────
   const isDarkPreset = backgroundTint.startsWith('dark_');

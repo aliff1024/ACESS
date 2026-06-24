@@ -7,6 +7,7 @@ import { Clock, CheckCircle, Loader2, Flag, AlertTriangle, ChevronLeft, ChevronR
 import { fetchQuizData, checkQuizAttempts, fetchQuizAttemptHistory } from '@/lib/learner-api';
 import type { QuizData } from '@/lib/learner-api';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface QuizPageProps {
   lessonId: string;
@@ -31,8 +32,9 @@ export function QuizPage({
   onSuggestReview,
   hideBackButton = false,
 }: QuizPageProps) {
+  const { t } = useTranslation();
   const { settings } = useAccessibility();
-  const activePreset = settings?.active_preset || 'none';
+  const [activeTab, setActiveTab] = useState<'info' | 'history'>('info');
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState<{ reason: string } | null>(null);
@@ -232,25 +234,25 @@ export function QuizPage({
           {blocked.reason === 'no_quiz' && (
             <>
               <HelpCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">No quiz available for this lesson</p>
+              <p className="text-gray-600 mb-4">{t('quiz.noQuiz')}</p>
             </>
           )}
           {blocked.reason === 'max_attempts' && (
             <>
               <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-              <p className="text-gray-800 font-semibold mb-2">Maximum attempts reached</p>
-              <p className="text-gray-600 mb-4">You have used all available attempts for this quiz.</p>
+              <p className="text-gray-800 font-semibold mb-2">{t('quiz.maxAttempts')}</p>
+              <p className="text-gray-600 mb-4">{t('quiz.maxAttemptsDesc')}</p>
             </>
           )}
           {blocked.reason === 'error' && (
             <>
               <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">Failed to load quiz. Please try again.</p>
+              <p className="text-gray-600 mb-4">{t('quiz.failedToLoad')}</p>
             </>
           )}
           {!hideBackButton && (
             <Button onClick={onBack} className="bg-blue-600 text-white">
-              Back to Lesson
+              {t('quiz.backToLesson')}
             </Button>
           )}
         </Card>
@@ -276,11 +278,11 @@ export function QuizPage({
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-1">{quizData.title}</h1>
-                <p className="text-gray-500">{questions.length} question{questions.length !== 1 ? 's' : ''}</p>
+                <p className="text-gray-500">{t(questions.length === 1 ? 'quiz.questions' : 'quiz.questions_plural', { n: questions.length })}</p>
               </div>
               {bestScore !== null && (
                 <div className="text-right">
-                  <p className="text-sm text-gray-500 mb-0.5">Best Score</p>
+                  <p className="text-sm text-gray-500 mb-0.5">{t('quiz.bestScore')}</p>
                   <p className={`text-3xl font-bold ${bestScore >= (quizData.pass_threshold_pct ?? 80) ? 'text-green-600' : 'text-amber-600'}`}>
                     {bestScore}%
                   </p>
@@ -290,36 +292,36 @@ export function QuizPage({
 
             <div className="grid grid-cols-4 gap-3 mb-6">
               <div className="bg-blue-50 rounded-xl p-4">
-                <p className="text-xs text-blue-600 font-medium mb-1">Questions</p>
+                <p className="text-xs text-blue-600 font-medium mb-1">{t('quiz.questionsLabel')}</p>
                 <p className="text-2xl font-bold text-blue-900">{questions.length}</p>
               </div>
               <div className="bg-purple-50 rounded-xl p-4">
-                <p className="text-xs text-purple-600 font-medium mb-1">Time Limit</p>
+                <p className="text-xs text-purple-600 font-medium mb-1">{t('quiz.timeLimit')}</p>
                 <p className="text-2xl font-bold text-purple-900">
-                  {quizData.time_limit_seconds ? `${Math.round(quizData.time_limit_seconds / 60)} min` : 'None'}
+                  {quizData.time_limit_seconds ? `${Math.round(quizData.time_limit_seconds / 60)} min` : t('quiz.noTimeLimit')}
                 </p>
               </div>
               <div className="bg-amber-50 rounded-xl p-4">
-                <p className="text-xs text-amber-600 font-medium mb-1">Pass Threshold</p>
+                <p className="text-xs text-amber-600 font-medium mb-1">{t('quiz.passThreshold')}</p>
                 <p className="text-2xl font-bold text-amber-900">{quizData.pass_threshold_pct ?? 80}%</p>
               </div>
               <div className="bg-green-50 rounded-xl p-4">
-                <p className="text-xs text-green-600 font-medium mb-1">Attempts</p>
+                <p className="text-xs text-green-600 font-medium mb-1">{t('quiz.attempts')}</p>
                 <p className="text-2xl font-bold text-green-900">
                   {usedAttempts}{maxAttempts ? ` / ${maxAttempts}` : ''}
                 </p>
               </div>
             </div>
 
-            {activePreset === 'autism' && (
+            {settings.structure_mode === 'checklist' && (
               <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-5 mb-6 text-blue-900">
-                <h3 className="font-bold flex items-center gap-2 mb-2"><Info className="w-5 h-5 text-blue-600"/> Clear Expectations</h3>
+                <h3 className="font-bold flex items-center gap-2 mb-2"><Info className="w-5 h-5 text-blue-600"/> {t('quiz.clearExpectations')}</h3>
                 <ul className="list-disc pl-5 space-y-1 text-sm">
-                  <li>This quiz contains {questions.length} multiple-choice questions.</li>
-                  {quizData.time_limit_seconds ? <li>You will have {Math.round(quizData.time_limit_seconds / 60)} minutes to finish. A timer will be visible.</li> : <li>There is no time limit. Take your time.</li>}
-                  <li>You must score at least {quizData.pass_threshold_pct ?? 80}% to pass.</li>
-                  {maxAttempts ? <li>You have {maxAttempts - usedAttempts} attempt(s) remaining.</li> : <li>You have unlimited attempts.</li>}
-                  <li>There are no trick questions. Read carefully and do your best.</li>
+                  <li>{t('quiz.expectation1', { n: questions.length })}</li>
+                  {quizData.time_limit_seconds ? <li>{t('quiz.expectationTimed', { n: Math.round(quizData.time_limit_seconds / 60) })}</li> : <li>{t('quiz.expectationUntimed')}</li>}
+                  <li>{t('quiz.expectationPass', { pct: quizData.pass_threshold_pct ?? 80 })}</li>
+                  {maxAttempts ? <li>{t('quiz.expectationAttempts', { n: maxAttempts - usedAttempts })}</li> : <li>{t('quiz.expectationUnlimited')}</li>}
+                  <li>{t('quiz.expectationNoTricks')}</li>
                 </ul>
               </div>
             )}
@@ -327,17 +329,17 @@ export function QuizPage({
             {attemptHistory.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 font-medium">Average</p>
+                  <p className="text-xs text-gray-500 font-medium">{t('quiz.average')}</p>
                   <p className={`text-lg font-bold ${avgScore !== null && avgScore >= (quizData.pass_threshold_pct ?? 80) ? 'text-green-600' : 'text-amber-600'}`}>
                     {avgScore !== null ? `${avgScore}%` : '-'}
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 font-medium">Passed</p>
+                  <p className="text-xs text-gray-500 font-medium">{t('quiz.passed')}</p>
                   <p className="text-lg font-bold text-green-600">{passedCount}/{attemptHistory.length}</p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 font-medium">Highest</p>
+                  <p className="text-xs text-gray-500 font-medium">{t('quiz.highest')}</p>
                   <p className={`text-lg font-bold ${bestScore !== null && bestScore >= (quizData.pass_threshold_pct ?? 80) ? 'text-green-600' : 'text-amber-600'}`}>
                     {bestScore !== null ? `${bestScore}%` : '-'}
                   </p>
@@ -348,8 +350,8 @@ export function QuizPage({
             {maxAttempts && usedAttempts >= maxAttempts ? (
               <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6 text-center">
                 <AlertTriangle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-                <p className="text-red-800 font-semibold">No attempts remaining</p>
-                <p className="text-red-600 text-sm mt-1">You have used all {maxAttempts} allowed attempts for this quiz.</p>
+                <p className="text-red-800 font-semibold">{t('quiz.noAttempts')}</p>
+                <p className="text-red-600 text-sm mt-1">{t('quiz.noAttemptsDesc', { n: maxAttempts })}</p>
               </div>
             ) : (
               <div className="flex gap-3">
@@ -357,7 +359,7 @@ export function QuizPage({
                   onClick={() => setShowStartScreen(false)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg flex-1"
                 >
-                  Start Attempt
+                  {t('quiz.startAttempt')}
                 </Button>
                 {!hideBackButton && (
                   <Button
@@ -365,7 +367,7 @@ export function QuizPage({
                     variant="outline"
                     className="px-6 py-6 text-lg"
                   >
-                    Back to Lesson
+                    {t('quiz.backToLesson')}
                   </Button>
                 )}
               </div>
@@ -377,7 +379,7 @@ export function QuizPage({
             <Card className="p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-gray-500" />
-                Attempt History
+                {t('quiz.attemptHistory')}
               </h2>
               <div className="space-y-2">
                 {attemptHistory.map((attempt) => {
@@ -395,7 +397,7 @@ export function QuizPage({
                             <RotateCcw className={`w-4 h-4 ${attempt.result === 'pass' ? 'text-green-600' : 'text-red-600'}`} />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900 text-sm">Attempt {attempt.attempt_number}</p>
+                            <p className="font-medium text-gray-900 text-sm">{t('quiz.attempt', { n: attempt.attempt_number })}</p>
                             <p className="text-xs text-gray-500">{formatDate(attempt.created_at)}</p>
                           </div>
                         </div>
@@ -408,7 +410,7 @@ export function QuizPage({
                           <p className={`text-xs font-medium ${
                             attempt.result === 'pass' ? 'text-green-500' : 'text-red-500'
                           }`}>
-                            {attempt.result === 'pass' ? 'Passed' : 'Failed'}
+                            {attempt.result === 'pass' ? t('quiz.passedLabel') : t('quiz.failedLabel')}
                           </p>
                         </div>
                       </div>
@@ -435,7 +437,7 @@ export function QuizPage({
               </div>
               {maxAttempts && (
                 <p className="text-xs text-gray-400 mt-4 text-center">
-                  {usedAttempts} of {maxAttempts} attempt{maxAttempts > 1 ? 's' : ''} used
+                  {t('quiz.attemptsUsed', { used: usedAttempts, total: maxAttempts })}
                 </p>
               )}
             </Card>
@@ -456,7 +458,7 @@ export function QuizPage({
         {!hideBackButton ? (
           <button onClick={onBack} className="text-blue-600 hover:text-blue-700 flex items-center gap-1.5 text-sm font-medium">
             <ChevronLeft className="w-4 h-4" />
-            Back to Lesson
+            {t('quiz.backToLesson')}
           </button>
         ) : (
           <div />
@@ -465,7 +467,7 @@ export function QuizPage({
         <div className="flex items-center gap-3 shrink-0">
           {timeRemaining !== null ? (
             <div className={`quiz-timer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
-              timeLow && activePreset !== 'autism' && activePreset !== 'adhd' ? 'bg-red-50 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700'
+              timeLow && !settings.distraction_free_mode && !settings.simplified_ui ? 'bg-red-50 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700'
             }`}>
               <Clock className="w-4 h-4" />
               <span className="tabular-nums">{formatTime(timeRemaining)}</span>
@@ -473,7 +475,7 @@ export function QuizPage({
           ) : (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-sm">
               <Clock className="w-4 h-4" />
-              No time limit
+              {t('quiz.noTimeLimit')}
             </div>
           )}
         </div>
@@ -481,13 +483,13 @@ export function QuizPage({
 
       <div className="flex-1 flex overflow-hidden">
         {/* ── Left sidebar ── */}
-        {activePreset !== 'adhd' && activePreset !== 'autism' && (
+        {!settings.distraction_free_mode && !settings.simplified_ui && (
           <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0 question-sidebar simplifiable">
           <div className="p-4 border-b border-gray-100">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Questions</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {answeredCount} of {questions.length} answered
-              {reviewCount > 0 && ` · ${reviewCount} flagged`}
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('quiz.sidebarQuestions')}</p>
+            <p className="text-xs text-gray-400">
+              {t('quiz.answeredOf', { answered: answeredCount, total: questions.length })}
+              {reviewCount > 0 && ` \u00B7 ${t('quiz.flaggedCount', { n: reviewCount })}`}
             </p>
           </div>
           <nav className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -527,15 +529,15 @@ export function QuizPage({
           <div className="p-3 border-t border-gray-100 space-y-1.5">
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <span className="w-3 h-3 rounded-full bg-green-500 shrink-0" />
-              Answered
+              {t('quiz.answered')}
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <span className="w-3 h-3 rounded-full bg-amber-400 shrink-0" />
-              Flagged for review
+              {t('quiz.flaggedForReview')}
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <span className="w-3 h-3 rounded-full border-2 border-gray-300 shrink-0" />
-              Unanswered
+              {t('quiz.unanswered')}
             </div>
           </div>
         </aside>
@@ -545,7 +547,7 @@ export function QuizPage({
         <main className="flex-1 overflow-y-auto p-6 relative">
           <div className={settings.distraction_free_mode ? "max-w-full px-4 sm:px-8 xl:px-12 mx-auto" : "max-w-3xl mx-auto"}>
             
-            {!(settings.chunked_content_mode || activePreset === 'adhd' || activePreset === 'autism') ? (
+            {!(settings.chunked_content_mode || settings.layout_mode === 'slide') ? (
               // ── FULL SCROLL VIEW (CHUNKED OFF) ──
               <div className="space-y-12 pb-24">
                 {questions.map((q, qIndex) => {
@@ -556,7 +558,7 @@ export function QuizPage({
                     <div key={q.id} id={`question-${qIndex}`} className="pt-8 border-t border-gray-200 first:border-0 first:pt-0">
                       <div className="flex items-center justify-between mb-4">
                         <span className="text-sm font-medium text-gray-500">
-                          Question {qIndex + 1} of {questions.length}
+                          {t('quiz.questionOf', { n: qIndex + 1, total: questions.length })}
                         </span>
                         <Button
                           variant="ghost"
@@ -572,7 +574,7 @@ export function QuizPage({
                           className={`text-sm gap-1.5 ${isMarked ? 'text-amber-600 bg-amber-50 hover:bg-amber-100' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                           <Flag className={`w-4 h-4 ${isMarked ? 'fill-amber-500' : ''}`} />
-                          {isMarked ? 'Flagged for Review' : 'Flag for Review'}
+                          {isMarked ? t('quiz.flaggedForReview') : t('quiz.flagForReview')}
                         </Button>
                       </div>
 
@@ -641,7 +643,7 @@ export function QuizPage({
                     className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-6 text-lg w-full md:w-auto"
                   >
                     {submitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
-                    {submitting ? 'Submitting...' : 'Submit Quiz'}
+                    {submitting ? t('quiz.submitting') : t('quiz.submitQuiz')}
                   </Button>
                 </div>
               </div>
@@ -654,7 +656,7 @@ export function QuizPage({
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-500">
-                      Question {currentQuestionIndex + 1} of {questions.length}
+                      {t('quiz.questionOf', { n: currentQuestionIndex + 1, total: questions.length })}
                     </span>
                     <Button
                       variant="ghost"
@@ -667,14 +669,14 @@ export function QuizPage({
                       }`}
                     >
                       <Flag className={`w-4 h-4 ${markedForReview.has(currentQuestion.id) ? 'fill-amber-500' : ''}`} />
-                      {markedForReview.has(currentQuestion.id) ? 'Flagged for Review' : 'Flag for Review'}
+                      {markedForReview.has(currentQuestion.id) ? t('quiz.flaggedForReview') : t('quiz.flagForReview')}
                     </Button>
                   </div>
                   <div className="flex items-start justify-between gap-4">
                     <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
                       {currentQuestion.question_text}
                     </h2>
-                    {(activePreset === 'dyslexia' || settings.tts_enabled) && (
+                    {(settings.tts_enabled) && (
                       <Button
                         variant="outline"
                         size="icon"
@@ -684,7 +686,7 @@ export function QuizPage({
                           const u = new SpeechSynthesisUtterance(currentQuestion.question_text);
                           window.speechSynthesis.speak(u);
                         }}
-                        title="Read question aloud"
+                        title={t('quiz.readAloud')}
                       >
                         <Volume2 className="w-5 h-5" />
                       </Button>
@@ -744,11 +746,11 @@ export function QuizPage({
 
                 {adaptiveHint && (
                   <Card className="p-4 mb-4 border-2 border-violet-200 bg-violet-50">
-                    <p className="text-sm font-semibold text-violet-900 mb-1">Try again</p>
+                    <p className="text-sm font-semibold text-violet-900 mb-1">{t('quiz.tryAgain')}</p>
                     <p className="text-sm text-violet-800 mb-3">{adaptiveHint}</p>
                     {onSuggestReview && (
                       <Button type="button" variant="outline" size="sm" onClick={onSuggestReview} className="border-violet-300 text-violet-800">
-                        Review lesson content
+                        {t('quiz.reviewLesson')}
                       </Button>
                     )}
                   </Card>
@@ -763,7 +765,7 @@ export function QuizPage({
                     className="gap-1.5"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    Previous
+                    {t('quiz.previous')}
                   </Button>
 
                   <div className="flex gap-1.5 hidden md:flex">
@@ -780,7 +782,7 @@ export function QuizPage({
                           key={index}
                           onClick={() => navigateToQuestion(index)}
                           className={`w-2.5 h-2.5 rounded-full ${bg} transition-colors`}
-                          title={`Question ${index + 1}${isAnswered ? ' (answered)' : ''}${isMarked ? ' (flagged)' : ''}`}
+                          title={t('quiz.questionTooltip', { n: index + 1, answered: isAnswered ? t('quiz.answered') : '', flagged: isMarked ? t('quiz.flagged') : '' })}
                         />
                       );
                     })}
@@ -798,10 +800,10 @@ export function QuizPage({
                     {submitting ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : isLastQuestion ? (
-                      'Submit Quiz'
+                      t('quiz.submitQuiz')
                     ) : (
                       <>
-                        Next
+                        {t('quiz.next')}
                         <ChevronRight className="w-4 h-4" />
                       </>
                     )}

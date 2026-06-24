@@ -78,9 +78,9 @@ export function ContactMessages() {
   }
 
   const filtered = messages.filter(m =>
-    !search || m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.email.toLowerCase().includes(search.toLowerCase()) ||
-    m.subject.toLowerCase().includes(search.toLowerCase())
+    !search || (m.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (m.email || '').toLowerCase().includes(search.toLowerCase()) ||
+    (m.subject || '').toLowerCase().includes(search.toLowerCase())
   )
 
   return (

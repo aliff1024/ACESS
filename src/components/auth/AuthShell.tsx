@@ -77,7 +77,7 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
         </div>
       </main>
 
-      <Footer />
+      <Footer variant="simple" />
     </div>
   );
 }

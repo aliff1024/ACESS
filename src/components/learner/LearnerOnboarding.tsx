@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Accessibility, User, Loader2 } from 'lucide-react';
 import { fetchFullProfile, saveUserProfile, saveAccessibilitySettings } from '@/lib/learner-api';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
+import { useTranslation } from '@/lib/useTranslation';
 import { applyPreset } from '@/lib/adaptive-engine';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function LearnerOnboarding() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -23,21 +25,30 @@ export function LearnerOnboarding() {
 
   const { settings, updateSettings } = useAccessibility();
 
+  const retryRef = useRef(0);
+
   useEffect(() => {
+    let cancelled = false;
     async function checkProfile() {
       try {
         const fullProfile = await fetchFullProfile();
+        if (cancelled) return;
         if (!fullProfile.profile?.birth_date) {
-          // No birth_date means they haven't completed onboarding
-          setTimeout(() => setOpen(true), 1000);
+          setTimeout(() => { if (!cancelled) setOpen(true); }, 1000);
         }
       } catch (error) {
         console.error('Error checking profile for onboarding:', error);
+        retryRef.current += 1;
+        if (retryRef.current < 3) {
+          setTimeout(() => { if (!cancelled) checkProfile(); }, 3000 * retryRef.current);
+          return;
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     checkProfile();
+    return () => { cancelled = true; };
   }, []);
 
   const handleFinish = async () => {
@@ -81,7 +92,7 @@ export function LearnerOnboarding() {
         onInteractOutside={(e) => e.preventDefault()} 
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Personalized Setup</DialogTitle>
+        <DialogTitle className="sr-only">{t('onboarding.title')}</DialogTitle>
         <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-white relative">
           
           <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm">
@@ -92,18 +103,18 @@ export function LearnerOnboarding() {
           <div className="min-h-[220px]">
             {step === 1 && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <h2 className="text-2xl font-bold mb-3">Welcome to ACESS!</h2>
+                <h2 className="text-2xl font-bold mb-3">{t('onboarding.welcome')}</h2>
                 <p className="text-blue-100 leading-relaxed text-sm mb-6">
-                  To provide you with the best learning experience, we need to know a little bit about you.
+                  {t('onboarding.description')}
                 </p>
 
                 <div className="space-y-4">
                   <div className="space-y-2 text-left">
-                    <Label htmlFor="age" className="text-white">How old are you?</Label>
+                    <Label htmlFor="age" className="text-white">{t('onboarding.age')}</Label>
                     <Input 
                       id="age"
                       type="number" 
-                      placeholder="e.g., 15" 
+                      placeholder={t('onboarding.agePlaceholder')} 
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
                       className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
@@ -115,23 +126,23 @@ export function LearnerOnboarding() {
             
             {step === 2 && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300 text-left">
-                <h2 className="text-2xl font-bold mb-3">Learning Needs</h2>
+                <h2 className="text-2xl font-bold mb-3">{t('onboarding.learningNeeds')}</h2>
                 <p className="text-blue-100 leading-relaxed text-sm mb-6">
-                  Do you require any specific learning accommodations? We will automatically adjust your fonts, colors, and layout.
+                  {t('onboarding.needsDesc')}
                 </p>
                 
                 <div className="space-y-2">
-                  <Label className="text-white">Select a profile (Optional)</Label>
+                  <Label className="text-white">{t('onboarding.selectProfile')}</Label>
                   <Select value={preset} onValueChange={setPreset}>
                     <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                      <SelectValue placeholder="Select a learning profile" />
+                      <SelectValue placeholder={t('onboarding.profilePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None / Standard Setup</SelectItem>
-                      <SelectItem value="dyslexia">Dyslexia Support</SelectItem>
-                      <SelectItem value="adhd">ADHD Focus Mode</SelectItem>
-                      <SelectItem value="autism">Autism Sensory Relief</SelectItem>
-                      <SelectItem value="vision">Visual Impairment</SelectItem>
+                      <SelectItem value="none">{t('onboarding.standard')}</SelectItem>
+                      <SelectItem value="dyslexia">{t('onboarding.dyslexia')}</SelectItem>
+                      <SelectItem value="adhd">{t('onboarding.adhd')}</SelectItem>
+                      <SelectItem value="autism">{t('onboarding.autism')}</SelectItem>
+                      <SelectItem value="vision">{t('onboarding.vision')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -155,16 +166,16 @@ export function LearnerOnboarding() {
           <div className="flex items-center gap-2">
             {step === 2 && (
               <Button variant="ghost" className="text-gray-500 hover:text-gray-700" onClick={() => setStep(1)} disabled={saving}>
-                Back
+                {t('common.back')}
               </Button>
             )}
             {step === 1 ? (
               <Button onClick={() => setStep(2)} disabled={!age} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[100px]">
-                Next
+                {t('common.next')}
               </Button>
             ) : (
               <Button onClick={handleFinish} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[100px]">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finish Setup'}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('onboarding.finish')}
               </Button>
             )}
           </div>

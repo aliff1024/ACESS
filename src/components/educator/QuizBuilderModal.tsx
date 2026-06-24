@@ -87,14 +87,14 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, lessonId, courseId }
           setHasExistingQuiz(true);
           setQuizTitle(quiz.title || '');
           setQuestions(
-            (quiz.quiz_questions || []).sort((a: any, b: any) => a.sequence_order - b.sequence_order).map((q: any) => ({
+            (quiz.quiz_questions || []).sort((a: Record<string, unknown>, b: Record<string, unknown>) => a.sequence_order - b.sequence_order).map((q: Record<string, unknown>) => ({
               id: q.id,
               question: q.question_text,
-              options: (q.quiz_options || []).sort((a: any, b: any) => a.sequence_order - b.sequence_order).map((o: any) => o.option_text),
-              correctAnswer: (q.quiz_options || []).findIndex((o: any) => o.is_correct),
+              options: (q.quiz_options || []).sort((a: Record<string, unknown>, b: Record<string, unknown>) => a.sequence_order - b.sequence_order).map((o: Record<string, unknown>) => o.option_text),
+              correctAnswer: (q.quiz_options || []).findIndex((o: Record<string, unknown>) => o.is_correct),
               explanation: '',
               imageUrl: q.image_url || '',
-              optionImages: (q.quiz_options || []).sort((a: any, b: any) => a.sequence_order - b.sequence_order).map((o: any) => o.image_url || ''),
+              optionImages: (q.quiz_options || []).sort((a: Record<string, unknown>, b: Record<string, unknown>) => a.sequence_order - b.sequence_order).map((o: Record<string, unknown>) => o.image_url || ''),
             }))
           );
         } else {

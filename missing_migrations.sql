@@ -42,6 +42,18 @@ DROP POLICY IF EXISTS "Users can delete their own assets" ON public.media_assets
 CREATE POLICY "Users can delete their own assets" ON public.media_assets FOR DELETE
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Enrolled learners can read lesson assets" ON public.media_assets;
+CREATE POLICY "Enrolled learners can read lesson assets" ON public.media_assets FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.lessons l
+            JOIN public.courses c ON c.id = l.course_id
+            JOIN public.enrollments e ON e.course_id = c.id AND e.user_id = auth.uid()
+            WHERE l.id = media_assets.lesson_id
+            AND e.status != 'dropped'
+        )
+    );
+
 
 -- =====================================================
 -- ACHIEVEMENTS & MILESTONES
@@ -695,4 +707,157 @@ CREATE POLICY "Educators can manage versions for their courses" ON public.lesson
 CREATE INDEX IF NOT EXISTS idx_lesson_versions_lesson_id ON public.lesson_versions(lesson_id);
 CREATE INDEX IF NOT EXISTS idx_lesson_versions_created_at ON public.lesson_versions(created_at);
 
+
+-- MIGRATION: 20260701_add_is_completed_to_lesson_progress.sql
+-- ============================================================================
+-- Migration: Add is_completed to lesson_progress for course engagement analytics
+-- ============================================================================
+ALTER TABLE public.lesson_progress
+ADD COLUMN IF NOT EXISTS is_completed boolean DEFAULT false;
+
+COMMENT ON COLUMN public.lesson_progress.is_completed IS 'Tracks whether the learner fully completed the lesson (not just viewed)';
+
+
+-- MIGRATION: 20260702_add_educator_quiz_attempts_policy.sql
+-- ============================================================================
+-- Migration: Allow educators to view quiz attempts in their courses
+-- ============================================================================
+DROP POLICY IF EXISTS "Educators can view attempts in their courses" ON public.quiz_attempts;
+CREATE POLICY "Educators can view attempts in their courses" ON public.quiz_attempts
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM enrollments e
+      JOIN courses c ON c.id = e.course_id
+      WHERE e.id = quiz_attempts.enrollment_id
+      AND c.created_by = auth.uid()
+    )
+  );
+
+
+-- MIGRATION: 20260703_fix_learner_checkpoints_rls.sql
+-- ============================================================================
+-- Migration: Add RLS policies for learner_checkpoints (had RLS, zero policies)
+-- ============================================================================
+ALTER TABLE public.learner_checkpoints ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Learners can manage their own checkpoints" ON public.learner_checkpoints;
+CREATE POLICY "Learners can manage their own checkpoints" ON public.learner_checkpoints
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.enrollments e
+      WHERE e.id = learner_checkpoints.enrollment_id
+      AND e.user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.enrollments e
+      WHERE e.id = learner_checkpoints.enrollment_id
+      AND e.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Educators can view learner checkpoints in their courses" ON public.learner_checkpoints;
+CREATE POLICY "Educators can view learner checkpoints in their courses" ON public.learner_checkpoints
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.enrollments e
+      JOIN public.courses c ON c.id = e.course_id
+      WHERE e.id = learner_checkpoints.enrollment_id
+      AND c.created_by = auth.uid()
+    )
+  );
+
+
+-- MIGRATION: 20260704_fix_lesson_checkpoints_rls.sql
+-- ============================================================================
+-- Migration: Add RLS policies for lesson_checkpoints (had RLS, zero policies)
+-- ============================================================================
+ALTER TABLE public.lesson_checkpoints ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Educators can manage lesson checkpoints" ON public.lesson_checkpoints;
+CREATE POLICY "Educators can manage lesson checkpoints" ON public.lesson_checkpoints
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.lessons l
+      JOIN public.courses c ON c.id = l.course_id
+      WHERE l.id = lesson_checkpoints.lesson_id
+      AND c.created_by = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.lessons l
+      JOIN public.courses c ON c.id = l.course_id
+      WHERE l.id = lesson_checkpoints.lesson_id
+      AND c.created_by = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Learners can view lesson checkpoints" ON public.lesson_checkpoints;
+CREATE POLICY "Learners can view lesson checkpoints" ON public.lesson_checkpoints
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.lessons l
+      JOIN public.courses c ON c.id = l.course_id
+      WHERE l.id = lesson_checkpoints.lesson_id
+      AND (c.status = 'published' OR c.created_by = auth.uid())
+    )
+  );
+
+
+-- MIGRATION: 20260705_fix_recommendations_rls.sql
+-- ============================================================================
+-- Migration: Add RLS policy for recommendations (had RLS, zero policies)
+-- ============================================================================
+ALTER TABLE public.recommendations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Learners can view their own recommendations" ON public.recommendations;
+CREATE POLICY "Learners can view their own recommendations" ON public.recommendations
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.enrollments e
+      WHERE e.id = recommendations.enrollment_id
+      AND e.user_id = auth.uid()
+    )
+  );
+
+
+-- MIGRATION: 20260706_create_h5p_responses_table.sql
+-- ============================================================================
+-- Migration: Create h5p_responses table (referenced in learner-api.ts but missing)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.h5p_responses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    h5p_content_id UUID NOT NULL REFERENCES public.h5p_contents(id) ON DELETE CASCADE,
+    score INTEGER,
+    max_score INTEGER,
+    completed BOOLEAN NOT NULL DEFAULT false,
+    raw_statement JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE public.h5p_responses IS 'Tracks learner responses to H5P interactive content';
+
+CREATE INDEX IF NOT EXISTS idx_h5p_responses_user ON public.h5p_responses(user_id);
+CREATE INDEX IF NOT EXISTS idx_h5p_responses_content ON public.h5p_responses(h5p_content_id);
+
+ALTER TABLE public.h5p_responses ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Learners can insert their own h5p responses" ON public.h5p_responses;
+CREATE POLICY "Learners can insert their own h5p responses" ON public.h5p_responses
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Learners can view their own h5p responses" ON public.h5p_responses;
+CREATE POLICY "Learners can view their own h5p responses" ON public.h5p_responses
+  FOR SELECT
+  USING (auth.uid() = user_id);
 

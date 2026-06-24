@@ -22,7 +22,6 @@ export function InteractiveActivityViewer({
   onComplete,
 }: InteractiveActivityViewerProps) {
   const { settings } = useAccessibility();
-  const activePreset = settings?.active_preset || 'none';
   const renderActivity = () => {
     switch (contentType) {
       case 'flashcards':
@@ -47,12 +46,12 @@ export function InteractiveActivityViewer({
   };
 
   return (
-    <div className={`border border-gray-200 rounded-xl bg-white p-6 ${activePreset === 'adhd' ? 'ring-4 ring-blue-400 ring-offset-4 shadow-xl' : ''}`}>
+    <div className={`border border-gray-200 rounded-xl bg-white p-6 ${settings.reading_spotlight ? 'ring-4 ring-blue-400 ring-offset-4 shadow-xl' : ''}`}>
       <div className="flex items-start gap-3 mb-4">
-        {activePreset === 'adhd' && <Target className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />}
+        {settings.reading_spotlight && <Target className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />}
         <div>
           <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-          {activePreset === 'autism' && (
+          {settings.structure_mode === 'checklist' && (
             <div className="flex items-center gap-2 mt-2 bg-blue-50 text-blue-800 px-3 py-2 rounded-lg text-sm border border-blue-100">
               <Info className="w-4 h-4" />
               <span><strong>Instruction:</strong> {instructionsMap[contentType] || 'Complete this activity.'}</span>

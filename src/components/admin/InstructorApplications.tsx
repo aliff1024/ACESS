@@ -97,8 +97,8 @@ export function InstructorApplications() {
   }
 
   const filtered = applications.filter(a =>
-    !search || a.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    a.email.toLowerCase().includes(search.toLowerCase())
+    !search || (a.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (a.email || '').toLowerCase().includes(search.toLowerCase())
   )
 
   const statCards = [

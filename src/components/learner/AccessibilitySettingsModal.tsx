@@ -10,7 +10,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { Loader2, Type, Target, Eye, ListChecks, Volume2, Globe, FileText } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useTranslation } from '@/lib/useTranslation';
-import type { AccessibilitySettingsData } from '@/lib/learner-api';
 import { dedupeSpeechVoices, TTS_SPEED_OPTIONS, FONT_FAMILIES, ANIMATION_LEVELS } from '@/lib/accessibility-utils';
 import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, getAllPresets } from '@/lib/adaptive-engine';
 import { SliderSetting } from '@/components/accessibility/SliderSetting';
@@ -25,7 +24,7 @@ export function AccessibilitySettingsModal({
   isOpen,
   onClose,
 }: AccessibilitySettingsModalProps) {
-  const { settings, updateSettings, previewSettings, revertSettings, applyPreset: applyPresetContext } = useAccessibility();
+  const { settings, updateSettings, previewSettings, revertSettings } = useAccessibility();
   const { t, setLocale } = useTranslation();
 
   const [activePreset, setActivePreset] = useState<string>(() => settings.active_preset || 'none');
@@ -44,10 +43,13 @@ export function AccessibilitySettingsModal({
   const [saving, setSaving] = useState(false);
 
   // Focus
+  const [layoutMode, setLayoutMode] = useState<'scroll'|'slide'|'chunked'>(() => settings.layout_mode || 'slide');
+  const [structureMode, setStructureMode] = useState<'full'|'minimal'|'checklist'>(() => settings.structure_mode || 'full');
   const [readingSpotlight, setReadingSpotlight] = useState<boolean>(() => !!settings.reading_spotlight);
   const [distractionFreeMode, setDistractionFreeMode] = useState<boolean>(() => !!settings.distraction_free_mode);
   const [chunkedContentMode, setChunkedContentMode] = useState<boolean>(() => !!settings.chunked_content_mode);
   const [reducedMotion, setReducedMotion] = useState<boolean>(() => !!settings.reduced_motion);
+  const [simplifiedUi, setSimplifiedUi] = useState<boolean>(() => !!settings.simplified_ui);
 
   // Sensory
   const [preferredTheme, setPreferredTheme] = useState<string>(() => settings.preferred_theme || 'light');
@@ -88,7 +90,10 @@ export function AccessibilitySettingsModal({
     setReadingSpotlight(!!settings.reading_spotlight);
     setDistractionFreeMode(!!settings.distraction_free_mode);
     setChunkedContentMode(!!settings.chunked_content_mode);
+    setLayoutMode(settings.layout_mode || 'slide');
+    setStructureMode(settings.structure_mode || 'full');
     setReducedMotion(!!settings.reduced_motion);
+    setSimplifiedUi(!!settings.simplified_ui);
     setPreferredTheme(settings.preferred_theme || 'light');
     setAnimationLevel(settings.animation_level || 'normal');
     setMutedColors(!!settings.muted_colors);
@@ -121,7 +126,10 @@ export function AccessibilitySettingsModal({
       reading_spotlight: readingSpotlight,
       distraction_free_mode: distractionFreeMode,
       chunked_content_mode: chunkedContentMode,
+      layout_mode: layoutMode,
+      structure_mode: structureMode,
       reduced_motion: reducedMotion,
+      simplified_ui: simplifiedUi,
       preferred_theme: preferredTheme,
       animation_level: animationLevel,
       muted_colors: mutedColors,
@@ -141,7 +149,7 @@ export function AccessibilitySettingsModal({
     });
   }, [
     isOpen, activePreset, fontFamily, fontSizePx, lineSpacingMultiplier, wordSpacingPct, backgroundTint, ttsEnabled,
-    ttsRate, ttsVoiceUri, preferredLanguage, readingSpotlight, distractionFreeMode, chunkedContentMode, reducedMotion,
+    ttsRate, ttsVoiceUri, preferredLanguage, readingSpotlight, distractionFreeMode, chunkedContentMode, layoutMode, structureMode, reducedMotion, simplifiedUi,
     preferredTheme, animationLevel, mutedColors, lowContrast, captionsEnabled, screenReaderOptimized, keyboardNavigationEnabled,
     taskChecklistEnabled, visualScheduleEnabled, stepByStepEnabled, autoSaveEnabled, progressTimelineEnabled, previewSettings
   ]);
@@ -164,10 +172,14 @@ export function AccessibilitySettingsModal({
       setLineSpacingMultiplier(s.line_spacing_multiplier);
       setWordSpacingPct(s.word_spacing_pct);
       setBackgroundTint(s.background_tint);
+      setTtsEnabled(s.tts_enabled);
       setReadingSpotlight(s.reading_spotlight);
       setDistractionFreeMode(s.distraction_free_mode);
       setChunkedContentMode(s.chunked_content_mode);
       setReducedMotion(s.reduced_motion);
+      setSimplifiedUi(s.simplified_ui);
+      setLayoutMode(s.layout_mode || 'slide');
+      setStructureMode(s.structure_mode || 'full');
       setAnimationLevel(s.animation_level);
       setMutedColors(s.muted_colors);
       setLowContrast(s.low_contrast);
@@ -200,7 +212,10 @@ export function AccessibilitySettingsModal({
         reading_spotlight: readingSpotlight,
         distraction_free_mode: distractionFreeMode,
         chunked_content_mode: chunkedContentMode,
+        layout_mode: layoutMode,
+        structure_mode: structureMode,
         reduced_motion: reducedMotion,
+        simplified_ui: simplifiedUi,
         preferred_theme: preferredTheme,
         animation_level: animationLevel,
         muted_colors: mutedColors,
@@ -313,7 +328,7 @@ export function AccessibilitySettingsModal({
                 label="Line Spacing"
                 value={lineSpacingMultiplier}
                 min={1.0}
-                max={2.0}
+                max={3.0}
                 step={0.1}
                 unit="x"
                 onChange={(v) => { setLineSpacingMultiplier(Math.round(v * 10) / 10); setCustom(); }}
@@ -415,6 +430,14 @@ export function AccessibilitySettingsModal({
 
             {/* Focus Tab */}
             <TabsContent value="focus" className="space-y-4 m-0">
+              <div className="border border-gray-200 rounded-xl p-4">
+                <Label className="text-sm font-semibold mb-3 block">Layout Mode</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button variant={layoutMode === 'scroll' ? 'default' : 'outline'} onClick={() => { setLayoutMode('scroll'); setCustom(); }} className="h-auto py-2"><span className="text-xs">Scroll View</span></Button>
+                  <Button variant={layoutMode === 'slide' ? 'default' : 'outline'} onClick={() => { setLayoutMode('slide'); setCustom(); }} className="h-auto py-2"><span className="text-xs">Slide View</span></Button>
+                  <Button variant={layoutMode === 'chunked' ? 'default' : 'outline'} onClick={() => { setLayoutMode('chunked'); setCustom(); }} className="h-auto py-2"><span className="text-xs">Chunked View</span></Button>
+                </div>
+              </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <Label className="text-sm font-semibold">Reading Spotlight</Label>
@@ -442,6 +465,13 @@ export function AccessibilitySettingsModal({
                   <p className="text-xs text-gray-500">Minimize all animations</p>
                 </div>
                 <Switch checked={reducedMotion} onCheckedChange={(v) => { setReducedMotion(v); setCustom(); }} />
+              </div>
+              <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-semibold">Simplified UI</Label>
+                  <p className="text-xs text-gray-500">Remove decorative elements, timers, and secondary navigation</p>
+                </div>
+                <Switch checked={simplifiedUi} onCheckedChange={(v) => { setSimplifiedUi(v); setCustom(); }} />
               </div>
             </TabsContent>
 
@@ -529,10 +559,18 @@ export function AccessibilitySettingsModal({
 
             {/* Supports Tab */}
             <TabsContent value="supports" className="space-y-4 m-0">
+              <div className="border border-gray-200 rounded-xl p-4">
+                <Label className="text-sm font-semibold mb-3 block">Lesson Structure</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button variant={structureMode === 'full' ? 'default' : 'outline'} onClick={() => { setStructureMode('full'); setCustom(); }} className="h-auto py-2"><span className="text-xs text-center">Full Schedule</span></Button>
+                  <Button variant={structureMode === 'minimal' ? 'default' : 'outline'} onClick={() => { setStructureMode('minimal'); setCustom(); }} className="h-auto py-2"><span className="text-xs text-center">Minimal Progress</span></Button>
+                  <Button variant={structureMode === 'checklist' ? 'default' : 'outline'} onClick={() => { setStructureMode('checklist'); setCustom(); }} className="h-auto py-2"><span className="text-xs text-center">Checklist Mode</span></Button>
+                </div>
+              </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <Label className="text-sm font-semibold">Task Checklist</Label>
-                  <p className="text-xs text-gray-500">Show today's tasks as a checklist</p>
+                  <p className="text-xs text-gray-500">Show today&apos;s tasks as a checklist</p>
                 </div>
                 <Switch checked={taskChecklistEnabled} onCheckedChange={(v) => { setTaskChecklistEnabled(v); setCustom(); }} />
               </div>

@@ -181,10 +181,10 @@ export function LessonEditor({
     const initPlayer = () => {
       if (!document.getElementById('yt-hidden-player')) return;
       try {
-        new (window as any).YT.Player('yt-hidden-player', {
+        new (window as Record<string, unknown>).YT.Player('yt-hidden-player', {
           videoId: ytid,
           events: {
-            onReady: (event: any) => {
+            onReady: (event: Record<string, unknown>) => {
               const dur = event.target.getDuration();
               if (dur && dur > 0) setVideoDuration(dur);
             }
@@ -192,13 +192,13 @@ export function LessonEditor({
         });
       } catch (err) {}
     };
-    if (!(window as any).YT) {
+    if (!(window as Record<string, unknown>).YT) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-      (window as any).onYouTubeIframeAPIReady = initPlayer;
-    } else if ((window as any).YT && (window as any).YT.Player) {
+      (window as Record<string, unknown>).onYouTubeIframeAPIReady = initPlayer;
+    } else if ((window as Record<string, unknown>).YT && (window as Record<string, unknown>).YT.Player) {
       initPlayer();
     }
   }, [form.video_url, activeTab]);
@@ -410,14 +410,14 @@ export function LessonEditor({
       if (savedLessonId) {
         for (const item of interactiveItems) {
           let hasContent = false;
-          const d: any = item.content_data;
+          const d: Record<string, unknown> = item.content_data;
           if (item.content_type === 'flashcards' && d?.cards?.length > 0) hasContent = true;
           else if (item.content_type === 'drag_drop' && d?.items?.length > 0) hasContent = true;
           else if (item.content_type === 'fill_blanks' && d?.segments?.length > 0) hasContent = true;
           else if (item.content_type === 'memory_game' && d?.cards?.length > 0) hasContent = true;
           else if (item.content_type === 'timeline' && d?.events?.length > 0) hasContent = true;
 
-          const isDraft = (item as any).is_draft || !hasContent;
+          const isDraft = (item as Record<string, unknown>).is_draft || !hasContent;
 
           if (dbItemIdsRef.current.has(item.id)) {
             await updateInteractiveContent(item.id, {
@@ -553,7 +553,7 @@ export function LessonEditor({
       setLessonAssets(updated);
       toast.success('Resource uploaded successfully', { id: loadingToastId });
       setIsDirty(true);
-    } catch (err: any) { 
+    } catch (err: Record<string, unknown>) { 
       toast.error(err.message || 'Upload failed', { id: loadingToastId }); 
     }
     finally { setUploadingAsset(false); }
@@ -900,7 +900,7 @@ export function LessonEditor({
                                 </div>
                               </div>
                               <div className="p-0 sm:p-4">
-                                <InteractiveActivityViewer contentType={activeItem.content_type as any} title={activeItem.title} data={activeItem.content_data as any} />
+                                <InteractiveActivityViewer contentType={activeItem.content_type as Record<string, unknown>} title={activeItem.title} data={activeItem.content_data as Record<string, unknown>} />
                               </div>
                             </div>
                           )}
@@ -911,7 +911,7 @@ export function LessonEditor({
                 )}
 
                 {/* ── QUIZ TAB ── */}
-                {activeTab === 'quiz' as any && (
+                {activeTab === 'quiz' as Record<string, unknown> && (
                   <div className="space-y-6 animate-in fade-in duration-300">
                     <h3 className="text-lg font-semibold text-gray-900">End-of-Lesson Quiz</h3>
                     <p className="text-sm text-gray-500 mb-6">Manage the primary quiz associated with this lesson.</p>
@@ -977,7 +977,7 @@ export function LessonEditor({
                     ) : (
                       <div className="space-y-2">
                         {lessonAssets.map((asset) => {
-                          let Icon = FileText;
+                          const Icon = FileText;
                           let bg = 'bg-orange-100 text-orange-700';
                           let desc = 'Document';
                           if (asset.kind === 'pdf') { desc = 'PDF Document'; bg = 'bg-red-100 text-red-700'; }
@@ -1165,7 +1165,7 @@ export function LessonEditor({
                   const editingItem = editingInteractiveId ? interactiveItems.find(i => i.id === editingInteractiveId) : interactiveItems[interactiveItems.length - 1];
                   if (editingItem) {
                      let hasContent = false;
-                     const d: any = editingItem.content_data;
+                     const d: Record<string, unknown> = editingItem.content_data;
                      if (editingItem.content_type === 'flashcards' && d?.cards?.length > 0) hasContent = true;
                      else if (editingItem.content_type === 'drag_drop' && d?.items?.length > 0) hasContent = true;
                      else if (editingItem.content_type === 'fill_blanks' && d?.segments?.length > 0) hasContent = true;
@@ -1198,7 +1198,7 @@ export function LessonEditor({
               Accessibility Guide
             </SheetTitle>
             <SheetDescription>
-              Tailored suggestions for your course's primary focus: <strong className="capitalize text-gray-900">{coursePrimaryFocus}</strong>
+              Tailored suggestions for your course&apos;s primary focus: <strong className="capitalize text-gray-900">{coursePrimaryFocus}</strong>
             </SheetDescription>
           </SheetHeader>
 
@@ -1283,7 +1283,7 @@ export function LessonEditor({
                   </li>
                   <li className="flex items-start gap-3 text-sm text-indigo-900/80">
                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-indigo-900">Left-aligned text:</strong> Don't center-align or justify long blocks of text to avoid uneven spacing.</span>
+                    <span><strong className="text-indigo-900">Left-aligned text:</strong> Don&apos;t center-align or justify long blocks of text to avoid uneven spacing.</span>
                   </li>
                   <li className="flex items-start gap-3 text-sm text-indigo-900/80">
                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />

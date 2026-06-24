@@ -1,6 +1,7 @@
 'use client';
 
 import { useAccessibility } from '@/providers/AccessibilityProvider';
+import { useTranslation } from '@/lib/useTranslation';
 import { CalendarDays, Clock, PlayCircle } from 'lucide-react';
 
 interface ScheduleItem {
@@ -11,6 +12,7 @@ interface ScheduleItem {
 }
 
 export function VisualSchedule({ schedule }: { schedule?: ScheduleItem[] }) {
+  const { t } = useTranslation();
   const { settings } = useAccessibility();
 
   const items = schedule || [
@@ -27,7 +29,7 @@ export function VisualSchedule({ schedule }: { schedule?: ScheduleItem[] }) {
         <div className="bg-indigo-100 p-1.5 rounded-lg">
           <CalendarDays className="w-5 h-5 text-indigo-700" />
         </div>
-        <h3 className="font-bold text-gray-900">Visual Schedule</h3>
+        <h3 className="font-bold text-gray-900">{t('accessibility.visualSchedule')}</h3>
       </div>
 
       <div className="relative border-l-2 border-indigo-100 ml-3 pl-6 space-y-6">
@@ -41,7 +43,7 @@ export function VisualSchedule({ schedule }: { schedule?: ScheduleItem[] }) {
               <div className={`p-3 rounded-lg border ${isNow ? 'bg-indigo-50 border-indigo-200 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    {isNow && <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 mb-1 block">Happening Now</span>}
+                    {isNow && <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 mb-1 block">{t('accessibility.happeningNow')}</span>}
                     <h4 className={`font-medium text-sm ${isNow ? 'text-indigo-900' : 'text-gray-600'}`}>
                       {item.title}
                     </h4>

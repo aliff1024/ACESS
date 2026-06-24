@@ -23,10 +23,13 @@ const themeScript = `
       bgTint = parsed.background_tint || 'white';
       document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.setAttribute('data-preset', parsed.active_preset || 'none');
-      if (parsed.high_contrast) document.documentElement.setAttribute('data-high-contrast', 'true');
       if (parsed.preferred_font) document.documentElement.setAttribute('data-font-type', parsed.preferred_font);
       if (parsed.font_family) document.documentElement.setAttribute('data-font-family', parsed.font_family);
       if (parsed.background_tint) document.documentElement.setAttribute('data-bg-tint', parsed.background_tint);
+      if (parsed.simplified_ui) document.documentElement.setAttribute('data-simplified-ui', 'true');
+      if (parsed.chunked_content_mode) document.documentElement.setAttribute('data-chunked', 'true');
+      if (parsed.reading_spotlight) document.documentElement.setAttribute('data-reading-spotlight', 'true');
+      if (parsed.distraction_free_mode) document.documentElement.setAttribute('data-distraction-free', 'true');
     }
     const isDarkPreset = bgTint.startsWith('dark_');
     if (theme === 'dark' || isDarkPreset) {

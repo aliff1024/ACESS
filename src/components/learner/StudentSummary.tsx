@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, CheckCircle, Save, Send, Target, Lightbulb, AlertCircle, Loader2, FileText, Video, Type, Layers, Maximize2, Minimize2, Eye, EyeOff, ListChecks, ChevronRight, Sparkles } from 'lucide-react'
+import { BookOpen, CheckCircle, Save, Send, Target, Lightbulb, AlertCircle, Loader2, FileText, Video, Type, Layers, Maximize2, Minimize2, Eye, EyeOff, ListChecks, ChevronRight } from 'lucide-react'
 import { fetchLessonSummary, saveLessonSummary, submitLessonSummary, completeLesson } from '@/lib/learner-api'
+import { useTranslation } from '@/lib/useTranslation'
 
 interface StudentSummaryProps {
   lessonId: string
@@ -19,6 +20,7 @@ interface StudentSummaryProps {
 }
 
 export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, reflectionQuestions, source, onComplete }: StudentSummaryProps) {
+  const { t } = useTranslation()
   const [content, setContent] = useState('')
   const [status, setStatus] = useState<'loading' | 'draft' | 'submitted'>('loading')
   const [completed, setCompleted] = useState(false)
@@ -26,8 +28,6 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
   const [, setSummaryId] = useState<string | null>(null)
   const [focusMode, setFocusMode] = useState(false)
   const [showHints, setShowHints] = useState(true)
-  const [aiFeedback, setAiFeedback] = useState<string | null>(null)
-  const [checking, setChecking] = useState(false)
   const [completing, setCompleting] = useState(false)
 
   useEffect(() => {
@@ -66,34 +66,6 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
     }
   }
 
-  const handleCheckSummary = async () => {
-    setChecking(true)
-    setAiFeedback(null)
-    if (!content.trim()) { setChecking(false); return }
-
-    const covered = keyPoints.filter(kp => content.toLowerCase().includes(kp.toLowerCase()))
-    const missing = keyPoints.filter(kp => !content.toLowerCase().includes(kp.toLowerCase()))
-
-    let feedback = ''
-    if (covered.length > 0) {
-      feedback += `✅ Covered key points: ${covered.length}/${keyPoints.length}\n`
-    }
-    if (missing.length > 0) {
-      feedback += `\n📋 Missing key points to consider:\n${missing.map(m => `  • ${m}`).join('\n')}\n`
-    }
-    if (wordCount < wordTarget) {
-      feedback += `\n📏 Try to reach ${wordTarget} words (currently ${wordCount})`
-    } else if (wordCount >= wordTarget) {
-      feedback += `\n✅ Word count target met (${wordCount}/${wordTarget})`
-    }
-    if (covered.length === keyPoints.length && wordCount >= wordTarget) {
-      feedback += '\n\n🌟 Great job! Your summary covers all key points!'
-    }
-
-    setAiFeedback(feedback)
-    setChecking(false)
-  }
-
   const sourceLabels: Record<string, string> = {
     video: 'the lesson video',
     pdf: 'the PDF resources',
@@ -112,7 +84,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
     return (
       <Card className="p-10 rounded-2xl border border-indigo-100 bg-white/50 backdrop-blur-sm shadow-sm flex flex-col items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-4" />
-        <p className="text-sm font-medium text-indigo-600 animate-pulse">Loading summary activity...</p>
+        <p className="text-sm font-medium text-indigo-600 animate-pulse">{t('summary.loading')}</p>
       </Card>
     )
   }
@@ -149,24 +121,24 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
             <CheckCircle className="w-8 h-8 text-emerald-600" />
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-emerald-900 mb-1">Summary Submitted</h3>
-            <p className="text-sm text-emerald-700/80 mb-4">Brilliant work! Your summary has been saved and submitted for review.</p>
+            <h3 className="text-xl font-bold text-emerald-900 mb-1">{t('summary.submitted')}</h3>
+            <p className="text-sm text-emerald-700/80 mb-4">{t('summary.submittedDesc')}</p>
             {content && (
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-emerald-100 shadow-sm mb-4">
                 <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{content}</p>
                 <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
-                  <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">{wordCount} words</Badge>
+                  <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">{t('summary.words', { n: wordCount })}</Badge>
                 </div>
               </div>
             )}
             {!completed && (
               <Button onClick={handleMarkComplete} disabled={completing} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all">
-                {completing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />} Mark Lesson Complete
+                {completing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />} {t('summary.markComplete')}
               </Button>
             )}
             {completed && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-lg text-emerald-800 font-semibold border border-emerald-200 shadow-sm">
-                <CheckCircle className="w-5 h-5" /> Lesson Completed
+                <CheckCircle className="w-5 h-5" /> {t('summary.completed')}
               </div>
             )}
           </div>
@@ -187,16 +159,16 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
               <BookOpen className="w-6 h-6 text-indigo-600" />
             </div>
             <div>
-              <h3 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-900 to-blue-800">Student Summary</h3>
+              <h3 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-900 to-blue-800">{t('summary.title')}</h3>
               <p className="text-sm text-slate-600 mt-0.5">
-                Write a summary based on <span className="font-semibold text-slate-700">{sourceLabels[source] || 'the lesson content'}</span>.
+                {t('summary.writeBasedOn', { source: sourceLabels[source] || 'the lesson content' })}
               </p>
               <div className="flex flex-wrap items-center gap-2 mt-3">
                 <Badge variant="outline" className="text-[11px] text-indigo-700 border-indigo-200 bg-indigo-50/50 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full">
                   <SourceIcon className="w-3.5 h-3.5" /> {source.charAt(0).toUpperCase() + source.slice(1).replace('_', ' ')}
                 </Badge>
                 <Badge variant="outline" className="text-[11px] text-purple-700 border-purple-200 bg-purple-50/50 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full">
-                  <Target className="w-3.5 h-3.5" /> Target: {wordTarget} words
+                  <Target className="w-3.5 h-3.5" /> {t('summary.target', { n: wordTarget })}
                 </Badge>
               </div>
             </div>
@@ -204,7 +176,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
           <button
             onClick={() => setFocusMode(!focusMode)}
             className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors bg-white/50 border border-slate-100 shadow-sm"
-            title={focusMode ? 'Exit focus mode' : 'Focus mode'}
+            title={focusMode ? t('summary.exitFocus') : t('summary.enterFocus')}
           >
             {focusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
@@ -217,13 +189,13 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <Lightbulb className="w-3.5 h-3.5" /> Key Concepts
+                <Lightbulb className="w-3.5 h-3.5" /> {t('summary.keyConcepts')}
               </h4>
               <button 
                 onClick={() => setShowHints(!showHints)} 
                 className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
               >
-                {showHints ? <><EyeOff className="w-3.5 h-3.5" /> Hide</> : <><Eye className="w-3.5 h-3.5" /> Show</>}
+                {showHints ? <><EyeOff className="w-3.5 h-3.5" /> {t('summary.hide')}</> : <><Eye className="w-3.5 h-3.5" /> {t('summary.show')}</>}
               </button>
             </div>
             
@@ -242,7 +214,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
         {reflectionQuestions.length > 0 && (
           <div className="mb-6 bg-blue-50/50 border border-blue-100 rounded-xl p-4 shadow-sm">
             <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
-              <ListChecks className="w-4 h-4 text-blue-600" /> Reflection Questions:
+              <ListChecks className="w-4 h-4 text-blue-600" /> {t('summary.reflection')}
             </h4>
             <ul className="space-y-1.5">
               {reflectionQuestions.map((q, i) => (
@@ -259,7 +231,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your summary here. Focus on the key concepts and demonstrate your understanding..."
+            placeholder={t('summary.placeholder')}
             rows={focusMode ? 16 : 8}
             className={`text-base bg-white/70 backdrop-blur-md border-indigo-100 shadow-inner focus:bg-white focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl resize-y ${focusMode ? 'min-h-[400px] text-lg leading-relaxed' : ''}`}
             style={focusMode ? { fontSize: '1.125rem', lineHeight: '1.8' } : undefined}
@@ -277,31 +249,11 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className={`text-sm font-bold ${meetsTarget ? 'text-emerald-600' : 'text-slate-600'}`}>
-                {wordCount} <span className="text-slate-400 font-medium">/ {wordTarget} words</span>
+                <span className="text-sm font-bold">{wordCount}</span> <span className="text-slate-400 font-medium">/ {wordTarget} {t('summary.words', { n: wordTarget })}</span>
               </span>
               {meetsTarget && <CheckCircle className="w-5 h-5 text-emerald-500 animate-in zoom-in" />}
             </div>
           </div>
-        </div>
-
-        {/* AI Feedback Section */}
-        <div className="mt-6 flex flex-col items-start">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCheckSummary}
-            disabled={!content.trim() || checking}
-            className="group text-indigo-700 border-indigo-200 bg-indigo-50/30 hover:bg-indigo-100 hover:border-indigo-300 transition-all rounded-xl px-4 py-2"
-          >
-            {checking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2 text-indigo-500 group-hover:animate-pulse" />}
-            <span className="font-semibold">Get AI Feedback</span>
-          </Button>
-          
-          {aiFeedback && (
-            <div className="mt-3 w-full p-4 bg-white border border-indigo-100 rounded-xl shadow-sm text-sm whitespace-pre-wrap text-slate-700 animate-in slide-in-from-top-2">
-              {aiFeedback}
-            </div>
-          )}
         </div>
 
         {/* Action Buttons */}
@@ -313,7 +265,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
             className="flex-1 rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold"
           >
             {saving && !meetsTarget ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Save Draft
+            {t('summary.saveDraft')}
           </Button>
           <Button 
             onClick={handleSubmitAndComplete} 
@@ -321,7 +273,7 @@ export function StudentSummary({ lessonId, courseId, wordTarget, keyPoints, refl
             className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-600/20 transition-all"
           >
             {saving && meetsTarget ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-            Submit Summary
+            {t('summary.submit')}
           </Button>
         </div>
       </div>

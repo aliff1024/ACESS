@@ -4,7 +4,17 @@ import Link from 'next/link';
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from 'react-icons/fa';
 import { Logo } from '../ui/Logo';
 
-export function Footer() {
+export function Footer({ variant }: { variant?: 'full' | 'simple' }) {
+  if (variant === 'simple') {
+    return (
+      <footer className="bg-gray-900 text-white py-8 px-6">
+        <div className="max-w-7xl mx-auto text-center text-gray-400 text-sm">
+          <p>&copy; 2026 ACESS - Adaptive Cognitive & Educational Skill Support Platform. All rights reserved.</p>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer className="bg-gray-900 text-white py-12 px-6">
       <div className="max-w-7xl mx-auto">

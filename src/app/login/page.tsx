@@ -70,7 +70,7 @@ export default function LoginPage() {
       if (role === 'learner' && !redirectTo) {
         try {
           const profile = await fetchFullProfile();
-          if (!profile.accessibility) {
+          if (!profile.profile?.birth_date) {
             toast.success('Welcome! Please set up your preferences.');
             setTimeout(() => router.push('/learner/onboarding'), 500);
             return;

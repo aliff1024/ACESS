@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
+import { useTranslation } from '@/lib/useTranslation';
 import { CheckCircle2, Circle, ListTodo } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -13,6 +14,7 @@ interface Task {
 }
 
 export function TaskChecklist({ tasks = [] }: { tasks?: Task[] }) {
+  const { t } = useTranslation();
   const { settings } = useAccessibility();
 
   if (!settings.task_checklist_enabled || tasks.length === 0) return null;
@@ -26,9 +28,9 @@ export function TaskChecklist({ tasks = [] }: { tasks?: Task[] }) {
         <div className="bg-blue-100 p-1.5 rounded-lg">
           <ListTodo className="w-5 h-5 text-blue-700" />
         </div>
-        <h3 className="font-bold text-gray-900">Today's Tasks</h3>
+        <h3 className="font-bold text-gray-900">{t('accessibility.todaysTasks')}</h3>
         <span className="ml-auto text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-          {progress}% Done
+          {t('accessibility.percentDone', { n: progress })}
         </span>
       </div>
       

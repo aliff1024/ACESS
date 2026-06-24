@@ -7,7 +7,6 @@ import { Hero } from '@/components/figma/Hero';
 import { Features } from '@/components/figma/Features';
 import { CoursesPreview } from '@/components/figma/CoursesPreview';
 import { SystemCapabilities } from '@/components/figma/SystemCapabilities';
-import { Footer } from '@/components/figma/Footer';
 import { supabase } from '@/lib/supabase';
 
 export default function LandingPage() {
@@ -34,8 +33,6 @@ export default function LandingPage() {
         <CoursesPreview />
         <SystemCapabilities />
       </main>
-
-      <Footer />
     </div>
   );
 }

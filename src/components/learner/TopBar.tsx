@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Settings, LogOut, Menu } from 'lucide-react';
+import { Settings, LogOut, Menu } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,15 +26,12 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [notifLoading, setNotifLoading] = useState(true);
 
   useEffect(() => {
-    setProfileLoading(true);
     fetchLearnerProfile()
       .then((p) => setProfile(p))
       .catch(() => {})
       .finally(() => setProfileLoading(false));
-    setNotifLoading(true);
     supabase
       .from('user_profiles')
       .select('avatar_url')
@@ -42,8 +39,7 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
       .then(({ data }) => {
         if (data?.avatar_url) setAvatarUrl(data.avatar_url);
       })
-      .catch(() => {})
-      .finally(() => setNotifLoading(false));
+      .catch(() => {});
   }, []);
 
   const initial = profile?.full_name?.charAt(0)?.toUpperCase() || 'L';
@@ -92,10 +88,6 @@ export function TopBar({ onMenuClick }: TopBarProps = {}) {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setProfileOpen(true)}>
-                <User className="w-4 h-4 mr-2" />
-                {t('topbar.viewProfile')}
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setProfileOpen(true)}>
                 <Settings className="w-4 h-4 mr-2" />
                 {t('topbar.settings')}

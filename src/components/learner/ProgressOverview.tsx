@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { CheckCircle2, BookOpen, TrendingUp, Award, Loader2, Target, Zap } from 'lucide-react';
 import { fetchLearnerStats } from '@/lib/learner-api';
+import { useTranslation } from '@/lib/useTranslation';
 
 export function ProgressOverview() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<{
     courses_completed: number;
     lessons_completed: number;
@@ -23,7 +25,7 @@ export function ProgressOverview() {
 
   const statCards = [
     {
-      label: 'Courses Completed',
+      label: t('progress.coursesCompleted'),
       value: stats?.courses_completed ?? 0,
       icon: CheckCircle2,
       color: 'from-green-400 to-emerald-600',
@@ -31,7 +33,7 @@ export function ProgressOverview() {
       iconColor: 'text-green-600',
     },
     {
-      label: 'Lessons Mastered',
+      label: t('stats.lessonsMastered'),
       value: stats?.lessons_completed ?? 0,
       icon: BookOpen,
       color: 'from-blue-400 to-indigo-600',
@@ -39,7 +41,7 @@ export function ProgressOverview() {
       iconColor: 'text-blue-600',
     },
     {
-      label: 'Average Score',
+      label: t('progress.avgScore'),
       value: `${stats?.avg_score ?? 0}%`,
       icon: Target,
       color: 'from-purple-400 to-fuchsia-600',
@@ -47,7 +49,7 @@ export function ProgressOverview() {
       iconColor: 'text-purple-600',
     },
     {
-      label: 'Certificates Earned',
+      label: t('certificates.earned'),
       value: stats?.certificates_count ?? 0,
       icon: Award,
       color: 'from-orange-400 to-rose-500',
@@ -61,9 +63,9 @@ export function ProgressOverview() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-            <Zap className="w-6 h-6 text-yellow-500" /> Your Learning Stats
+            <Zap className="w-6 h-6 text-yellow-500" /> {t('stats.title')}
           </h2>
-          <p className="text-gray-500 font-medium">Keep up the great work! Here are your all-time achievements.</p>
+          <p className="text-gray-500 font-medium">{t('stats.description')}</p>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { CheckCircle, PlayCircle, Lock, Trophy, TrendingUp, Loader2, ArrowLeft, Star, Clock, BookOpen } from 'lucide-react';
 import { fetchCourseProgress } from '@/lib/learner-api';
 import type { CourseProgress } from '@/lib/learner-api';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface CourseProgressDetailPageProps {
   courseId: string;
@@ -21,6 +22,7 @@ export function CourseProgressDetailPage({
   onGenerateCertificate,
   onStartLesson,
 }: CourseProgressDetailPageProps) {
+  const { t } = useTranslation();
   const [course, setCourse] = useState<CourseProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +37,7 @@ export function CourseProgressDetailPage({
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-        <p className="text-gray-500 font-medium animate-pulse">Loading course details...</p>
+        <p className="text-gray-500 font-medium animate-pulse">{t('courseProgress.loading')}</p>
       </div>
     );
   }
@@ -43,24 +45,24 @@ export function CourseProgressDetailPage({
   if (!course) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
-        <p className="text-gray-500 font-medium text-lg">Course not found</p>
+        <p className="text-gray-500 font-medium text-lg">{t('course.notFound')}</p>
       </div>
     );
   }
 
   const completedLessons = course.lessons.filter((l) => l.status === 'completed').length;
   const totalLessons = course.lessons.length;
-  const isCompleted = course.status === 'completed';
+  const isCompleted = course.progress >= 100;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-10 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-10 space-y-8 readable-content">
       {/* Back Button */}
       <button 
         onClick={onBack} 
         className="text-gray-500 hover:text-gray-900 font-medium flex items-center gap-2 transition-colors group"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> 
-        Back to Progress
+        {t('courseProgress.back')}
       </button>
 
       {/* Celebratory Banner */}
@@ -74,13 +76,13 @@ export function CourseProgressDetailPage({
             </div>
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-bold tracking-wider uppercase mb-2 shadow-sm">
-                <Star className="w-3.5 h-3.5 fill-current" /> Course Completed
+                <Star className="w-3.5 h-3.5 fill-current" /> {t('courseProgress.courseCompleted')}
               </div>
               <h3 className="text-3xl font-extrabold tracking-tight mb-1 drop-shadow-sm">
-                Incredible Work!
+                {t('courseProgress.incredibleWork')}
               </h3>
               <p className="text-yellow-50 text-lg font-medium opacity-90">
-                You&apos;ve mastered this course. Claim your reward now.
+                {t('courseProgress.masteredDesc')}
               </p>
             </div>
           </div>
@@ -89,7 +91,7 @@ export function CourseProgressDetailPage({
             onClick={() => onGenerateCertificate(course.id)}
             className="z-10 bg-white text-yellow-600 hover:bg-yellow-50 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all px-8 py-7 text-lg font-bold rounded-2xl w-full md:w-auto whitespace-nowrap border-0"
           >
-            Generate Certificate
+            {t('courseProgress.generateCert')}
           </Button>
         </div>
       )}
@@ -110,7 +112,7 @@ export function CourseProgressDetailPage({
               <TrendingUp className="w-6 h-6 text-blue-600" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Completion</p>
+              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">{t('courseProgress.completion')}</p>
               <div className="flex items-center gap-3">
                 <span className="text-3xl font-extrabold text-gray-900">{course.progress}%</span>
               </div>
@@ -123,7 +125,7 @@ export function CourseProgressDetailPage({
               <CheckCircle className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Lessons</p>
+              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">{t('courseProgress.lessons')}</p>
               <p className="text-3xl font-extrabold text-gray-900">
                 {completedLessons}<span className="text-gray-400 text-xl font-medium">/{totalLessons}</span>
               </p>
@@ -135,7 +137,7 @@ export function CourseProgressDetailPage({
               <Star className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Avg Score</p>
+              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">{t('courseProgress.avgScore')}</p>
               <p className="text-3xl font-extrabold text-gray-900">{course.avg_score}%</p>
             </div>
           </div>
@@ -145,7 +147,7 @@ export function CourseProgressDetailPage({
       {/* Lesson Timeline */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <BookOpen className="w-6 h-6 text-blue-500" /> Journey Map
+          <BookOpen className="w-6 h-6 text-blue-500" /> {t('courseProgress.journeyMap')}
         </h2>
         
         <div className="space-y-4 relative before:absolute before:inset-0 before:ml-7 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
@@ -176,7 +178,7 @@ export function CourseProgressDetailPage({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Lesson {index + 1}</span>
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('courseProgress.lessonNum', { n: index + 1 })}</span>
                         {isInProgress && (
                           <span className="flex h-2 w-2 relative">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -187,7 +189,7 @@ export function CourseProgressDetailPage({
                       <h3 className={`text-lg font-bold ${isLocked ? 'text-gray-500' : 'text-gray-900'} mb-2`}>{lesson.title}</h3>
                       {lesson.score !== undefined && lesson.score > 0 && (
                         <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 bg-white px-2.5 py-1 rounded-lg border border-gray-100 inline-flex">
-                          <Trophy className="w-3.5 h-3.5 text-yellow-500" /> Score: {lesson.score}%
+                          <Trophy className="w-3.5 h-3.5 text-yellow-500" /> {t('courseProgress.score', { score: lesson.score })}
                         </div>
                       )}
                     </div>
@@ -202,7 +204,7 @@ export function CourseProgressDetailPage({
                         }`}
                         variant={isCompleted ? 'outline' : 'default'}
                       >
-                        {isCompleted ? 'Review' : 'Continue'}
+                        {isCompleted ? t('courseProgress.review') : t('courseProgress.continue')}
                       </Button>
                     )}
                   </div>

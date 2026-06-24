@@ -80,7 +80,7 @@ export function StudentDetailDashboard({ studentId }: { studentId: string }) {
     return (
       <div className="p-8 max-w-7xl mx-auto space-y-6">
         <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200">
-          Student not found or you don't have access.
+          Student not found or you don&apos;t have access.
         </div>
         <Link href="/educator/students">
           <Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2"/> Back to Students</Button>
@@ -171,7 +171,7 @@ export function StudentDetailDashboard({ studentId }: { studentId: string }) {
             <Input 
               value={messageText}
               onChange={e => setMessageText(e.target.value)}
-              placeholder="e.g. 'I noticed you haven't logged in recently, please catch up on Lesson 3.'" 
+              placeholder="e.g. 'I noticed you haven&apos;t logged in recently, please catch up on Lesson 3.'" 
               className="bg-white border-purple-200 focus:border-purple-500 focus:ring-purple-500"
             />
             <Button 
@@ -275,7 +275,7 @@ export function StudentDetailDashboard({ studentId }: { studentId: string }) {
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">Learning Preferences</h4>
-                  <p className="text-sm text-gray-600 mb-4">Understanding the student's accessibility needs can help tailor interventions.</p>
+                  <p className="text-sm text-gray-600 mb-4">Understanding the student&apos;s accessibility needs can help tailor interventions.</p>
                   
                   <div className="flex flex-wrap gap-2">
                     {student.accessibility_prefs ? (

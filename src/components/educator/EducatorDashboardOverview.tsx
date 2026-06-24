@@ -76,7 +76,7 @@ export function EducatorDashboardOverview({
   }
 
   // Aggregate Stats
-  const activeStudents = students.filter(s => (s as any).status === 'active' || (s as any).status === 'on-track').length;
+  const activeStudents = students.filter(s => (s as Record<string, unknown>).status === 'active' || (s as Record<string, unknown>).status === 'on-track').length;
   const needsAttentionStudents = students.filter(s => s.status === 'at-risk' || s.status === 'inactive');
   const avgCompletion = students.length > 0 
     ? Math.round(students.reduce((acc, s) => acc + s.totalProgress, 0) / students.length)
@@ -288,7 +288,7 @@ export function EducatorDashboardOverview({
             {courses.length === 0 ? (
               <Card className="p-8 text-center border-dashed border-2 border-gray-200 bg-gray-50 rounded-2xl">
                 <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-sm mb-4">You haven't created any courses yet.</p>
+                <p className="text-gray-500 text-sm mb-4">You haven&apos;t created any courses yet.</p>
                 <Button onClick={onCreateCourse} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">Create Course</Button>
               </Card>
             ) : (

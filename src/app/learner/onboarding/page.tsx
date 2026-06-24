@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -37,6 +38,9 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [existingProfile, setExistingProfile] = useState(false);
+
+  // ─── Profile ─────────────────────────────────────────────────────
+  const [age, setAge] = useState('');
 
   // ─── Preset selection ──────────────────────────────────────────────
   const [activePreset, setActivePreset] = useState('none');
@@ -135,7 +139,11 @@ export default function OnboardingPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await saveUserProfile({ bio: `Accessibility preset: ${activePreset}` });
+      const numAge = parseInt(age, 10);
+      const birthDateStr = !isNaN(numAge)
+        ? `${new Date().getFullYear() - numAge}-01-01`
+        : '2000-01-01';
+      await saveUserProfile({ bio: `Accessibility preset: ${activePreset}`, birth_date: birthDateStr });
 
       const data: AccessibilitySettingsData = {
         active_preset: activePreset,
@@ -245,6 +253,20 @@ export default function OnboardingPage() {
                 </p>
               </div>
 
+              {/* Age Input */}
+              <div className="border border-gray-200 rounded-xl p-4">
+                <Label htmlFor="age" className="text-sm font-semibold mb-2 block">How old are you?</Label>
+                <p className="text-xs text-gray-500 mb-3">We use this to tailor content to your age group.</p>
+                <Input
+                  id="age"
+                  type="number"
+                  placeholder="e.g., 15"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className="max-w-[200px]"
+                />
+              </div>
+
               {/* Preset cards grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <PresetCard
@@ -271,7 +293,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex justify-end pt-4">
-                <Button onClick={() => setStep(2)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button onClick={() => setStep(2)} disabled={!age} className="bg-blue-600 hover:bg-blue-700 text-white">
                   Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>

@@ -114,7 +114,7 @@ export default function BecomeInstructorApplyPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       {renderContent()}
-      <Footer />
+      <Footer variant="simple" />
     </div>
   )
 }

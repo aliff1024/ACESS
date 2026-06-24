@@ -121,7 +121,7 @@ export async function performUniversalSearch(
   if (role === 'admin') {
     const qLower = query.toLowerCase();
     ADMIN_FEATURES.forEach(feat => {
-      if (feat.title.toLowerCase().includes(qLower)) {
+      if ((feat.title || '').toLowerCase().includes(qLower)) {
         results.push({
           id: feat.id,
           type: 'feature',

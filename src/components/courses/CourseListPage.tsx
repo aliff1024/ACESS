@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Search, Filter, BookOpen, Loader2, Heart, Shield, Crown, Star, User, Clock, Users, ArrowLeft, PlayCircle, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Filter, BookOpen, Loader2, Heart, Shield, Crown, Star, User, Clock, Users, ArrowLeft, PlayCircle, Sparkles, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { fetchAvailableCourses, fetchEnrolledCourses, toggleFavorite, fetchFavoriteCourseIds } from '@/lib/learner-api';
 import type { AvailableCourse, EnrolledCourse } from '@/lib/learner-api';
@@ -43,11 +43,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
   const filterParam = searchParams.get('filter');
   
   const { settings } = useAccessibility();
-  let preferredFocus: string = 'All';
-  if (settings.active_preset === 'adhd') preferredFocus = 'adhd';
-  else if (settings.active_preset === 'dyslexia') preferredFocus = 'dyslexia';
-  else if (settings.active_preset === 'autism') preferredFocus = 'autism';
-  else if (settings.active_preset === 'dyscalculia') preferredFocus = 'cognitive';
+
   
   const [allCourses, setAllCourses] = useState<(AvailableCourse | EnrolledCourse)[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,13 +54,40 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
   
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
   const [enrollmentStatus, setEnrollmentStatus] = useState<string>(filterParam === 'enrolled' ? 'Enrolled' : 'All');
+
+  // Reset filters when switching tabs (Enrolled / All Courses)
+  const filterParamRef = useRef(filterParam);
+  useEffect(() => {
+    if (filterParam !== filterParamRef.current) {
+      filterParamRef.current = filterParam;
+      setSearchQuery('');
+      setSelectedDifficulty('All');
+      setEnrollmentStatus(filterParam === 'enrolled' ? 'Enrolled' : 'All');
+      setCourseType('All');
+      setRequireGuided(false);
+      setSelectedCategory('All');
+      setShowFavoritesOnly(false);
+      setDurationFilter('All');
+      setSortBy('newest');
+      setSelectedDisability('All');
+    }
+  }, [filterParam]);
   const [courseType, setCourseType] = useState<string>('All');
   const [requireGuided, setRequireGuided] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedDisability, setSelectedDisability] = useState<string>(preferredFocus);
+  const [selectedDisability, setSelectedDisability] = useState<string>('All');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [durationFilter, setDurationFilter] = useState<string>('All');
   const [sortBy, setSortBy] = useState<string>('newest');
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const isPaginated = settings.layout_mode === 'slide' || settings.chunked_content_mode;
+  const itemsPerPage = 6;
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, requireGuided, selectedCategory, showFavoritesOnly, durationFilter, sortBy, selectedDisability]);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Favorites state
@@ -118,9 +141,9 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
       
       // Search Filter
       const tags = (course as any).tags as string[] | undefined;
-      const matchesSearch = course.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        course.description.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        (tags && tags.some(t => t.toLowerCase().includes(debouncedSearch.toLowerCase())));
+      const matchesSearch = (course.title || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (course.description || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (tags && tags.some(t => (t || '').toLowerCase().includes(debouncedSearch.toLowerCase())));
         
       // Difficulty Filter
       const matchesDifficulty = selectedDifficulty === 'All' ||
@@ -174,17 +197,16 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
       result.sort((a, b) => ((b as any).student_count || 0) - ((a as any).student_count || 0));
     }
     
-    // Sort Recommended (Matching Disability Focus) to the top
-    if (preferredFocus) {
-      result.sort((a, b) => {
-        const aMatch = (a as any).primary_disability_focus === preferredFocus ? 1 : 0;
-        const bMatch = (b as any).primary_disability_focus === preferredFocus ? 1 : 0;
-        return bMatch - aMatch;
-      });
-    }
-
     return result;
-  }, [allCourses, debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, requireGuided, selectedCategory, showFavoritesOnly, durationFilter, sortBy, favoriteIds, preferredFocus, selectedDisability]);
+  }, [allCourses, debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, requireGuided, selectedCategory, showFavoritesOnly, durationFilter, sortBy, favoriteIds, selectedDisability]);
+  
+  const paginatedCourses = useMemo(() => {
+    if (!isPaginated) return processedCourses;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return processedCourses.slice(startIndex, startIndex + itemsPerPage);
+  }, [processedCourses, currentPage, isPaginated, itemsPerPage]);
+  
+  const totalPages = Math.ceil(processedCourses.length / itemsPerPage);
 
   if (loading) {
     return (
@@ -213,11 +235,11 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
     setShowFavoritesOnly(false);
     setDurationFilter('All');
     setSortBy('newest');
-    setSelectedDisability(preferredFocus);
+    setSelectedDisability('All');
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 animate-in fade-in duration-500 readable-content">
       {/* Header */}
       <div>
         <button
@@ -390,7 +412,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
       {/* Course Grid */}
       {processedCourses.length === 0 ? (
         <Card className="p-16 border-dashed border-2 border-gray-200 bg-gray-50/50 rounded-3xl text-center">
-          <Filter className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <Filter className="w-16 h-16 text-gray-300 mx-auto mb-4 simplifiable" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">No courses match your filters</h3>
           <p className="text-gray-500 mb-6 max-w-md mx-auto">
             We couldn't find any courses matching your specific combination of search terms and filters.
@@ -401,7 +423,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {processedCourses.map((course, index) => {
+          {paginatedCourses.map((course, index) => {
             const isEnrolled = 'isEnrolled' in course && course.isEnrolled;
             const progress = isEnrolled ? (course as EnrolledCourse).progress : undefined;
             const lessonCount = isEnrolled ? (course as EnrolledCourse).total_lessons : (course as AvailableCourse).lesson_count;
@@ -410,7 +432,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
             const gradient = gradients[index % gradients.length];
             const diffLvl = course.difficulty_level || 'beginner';
             const courseCategory = course.category || 'Programming';
-            const isRecommended = preferredFocus && (course as any).primary_disability_focus === preferredFocus;
+            const isRecommended = false; // Removed legacy preset logic
 
             return (
               <Card
@@ -544,6 +566,35 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {isPaginated && totalPages > 1 && processedCourses.length > 0 && (
+        <div className="flex items-center justify-center gap-4 mt-12">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setCurrentPage(p => Math.max(1, p - 1));
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" /> Previous
+          </Button>
+          <span className="text-sm font-medium text-gray-500">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setCurrentPage(p => Math.min(totalPages, p + 1));
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            disabled={currentPage === totalPages}
+          >
+            Next <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       )}
     </div>

@@ -1,19 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Loader2, ArrowLeft } from 'lucide-react';
+import { Heart, Loader2, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchFavoriteCourses } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
+import { useAccessibility } from '@/providers/AccessibilityProvider';
 
 export default function FavoritesPage() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { settings } = useAccessibility();
   const [courses, setCourses] = useState<Array<{ id: string; title: string; description: string; thumbnail_url: string | null; difficulty_level: string; category: string | null }>>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchFavoriteCourses()
@@ -21,6 +24,20 @@ export default function FavoritesPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [settings.chunked_content_mode]);
+
+  const isPaginated = settings.chunked_content_mode;
+  const itemsPerPage = 3;
+  const totalPages = Math.ceil(courses.length / itemsPerPage);
+
+  const visibleCourses = useMemo(() => {
+    if (!isPaginated) return courses;
+    const start = (currentPage - 1) * itemsPerPage;
+    return courses.slice(start, start + itemsPerPage);
+  }, [courses, currentPage, isPaginated, itemsPerPage]);
 
   if (loading) {
     return (
@@ -32,12 +49,12 @@ export default function FavoritesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto readable-content">
         <button onClick={() => router.push('/learner')} className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" /> {t('course.backToDashboard')}
         </button>
         <div className="flex items-center gap-3 mb-8">
-          <Heart className="w-8 h-8 text-red-500" />
+          <Heart className="w-8 h-8 text-red-500 simplifiable" />
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('favorites.title')}</h1>
             <p className="text-gray-600">{t('favorites.description')}</p>
@@ -46,7 +63,7 @@ export default function FavoritesPage() {
 
         {courses.length === 0 ? (
           <div className="text-center py-20">
-            <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4 simplifiable" />
             <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('favorites.empty')}</h3>
             <p className="text-gray-500 mb-4">{t('favorites.emptyDesc')}</p>
             <Button onClick={() => router.push('/learner/courses')} className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -54,30 +71,53 @@ export default function FavoritesPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <Card key={course.id} className="p-6 rounded-2xl border-2 border-gray-200 hover:border-red-300 hover:shadow-lg transition-all duration-200 flex flex-col cursor-pointer"
-                onClick={() => router.push(`/learner/courses/${course.id}`)}>
-                {course.thumbnail_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={course.thumbnail_url} alt={course.title} className="w-full h-40 object-cover rounded-lg mb-4" />
-                ) : (
-                  <div className="w-full h-40 bg-red-100 rounded-lg mb-4 flex items-center justify-center">
-                    <Heart className="w-12 h-12 text-red-400" />
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {visibleCourses.map((course) => (
+                <Card key={course.id} className="p-6 rounded-2xl border-2 border-gray-200 hover:border-red-300 hover:shadow-lg transition-all duration-200 flex flex-col cursor-pointer"
+                  onClick={() => router.push(`/learner/courses/${course.id}`)}>
+                  {course.thumbnail_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={course.thumbnail_url} alt={course.title} className="w-full h-40 object-cover rounded-lg mb-4" />
+                  ) : (
+                    <div className="w-full h-40 bg-red-100 rounded-lg mb-4 flex items-center justify-center">
+                      <Heart className="w-12 h-12 text-red-400 simplifiable" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge className="bg-gray-100 text-gray-700 border">{course.difficulty_level || 'Beginner'}</Badge>
+                    {course.category && <Badge variant="outline" className="text-gray-600">{course.category}</Badge>}
                   </div>
-                )}
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge className="bg-gray-100 text-gray-700 border">{course.difficulty_level || 'Beginner'}</Badge>
-                  {course.category && <Badge variant="outline" className="text-gray-600">{course.category}</Badge>}
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{course.title}</h3>
-                <p className="text-sm text-gray-600 line-clamp-2 mb-4">{course.description}</p>
-                <div className="mt-auto">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">{t('course.viewCourse')}</Button>
-                </div>
-              </Card>
-            ))}
-          </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{course.title}</h3>
+                  <p className="text-sm text-gray-600 line-clamp-2 mb-4">{course.description}</p>
+                  <div className="mt-auto">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">{t('course.viewCourse')}</Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            {isPaginated && totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" /> Previous
+                </Button>
+                <span className="text-sm font-medium text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

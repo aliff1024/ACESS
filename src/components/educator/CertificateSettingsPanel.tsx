@@ -120,7 +120,7 @@ export default function CertificateSettingsPanel({
   };
 
   const getPreviewEducatorName = () => {
-    return educatorName || (user as any)?.profile?.display_name || 'Course Educator';
+    return educatorName || (user as Record<string, unknown>)?.profile?.display_name || 'Course Educator';
   };
 
   const handlePreviewDownload = async () => {

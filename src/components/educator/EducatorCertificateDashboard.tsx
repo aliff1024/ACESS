@@ -94,7 +94,7 @@ export default function EducatorCertificateDashboard() {
       await uploadEducatorCustomCertificate(certId, file);
       toast.success('Custom certificate uploaded successfully');
       loadData();
-    } catch (err: any) {
+    } catch (err: Record<string, unknown>) {
       toast.error(err.message || 'Failed to upload custom certificate');
     } finally {
       setUploadingId(null);

@@ -28,12 +28,11 @@ export function EducatorTopBar({ title, subtitle, onMenuClick }: EducatorTopBarP
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [notifLoading, setNotifLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfileLoading(true);
     fetchEducatorProfile().then(setProfile).catch(() => {}).finally(() => setProfileLoading(false));
-    setNotifLoading(true);
     supabase
       .from('user_profiles')
       .select('avatar_url')
@@ -41,8 +40,7 @@ export function EducatorTopBar({ title, subtitle, onMenuClick }: EducatorTopBarP
       .then(({ data }) => {
         if (data?.avatar_url) setAvatarUrl(data.avatar_url);
       })
-      .catch(() => {})
-      .finally(() => setNotifLoading(false));
+      .catch(() => {});
   }, []);
 
   const handleLogout = async () => {

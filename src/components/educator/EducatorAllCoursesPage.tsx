@@ -69,10 +69,10 @@ export function EducatorAllCoursesPage() {
       const creatorIds = [...new Set((data || []).map((c) => c.created_by).filter(Boolean))];
 
       // Fetch lesson counts
-      let lessonCounts = new Map<string, number>();
-      let enrollmentCounts = new Map<string, number>();
-      let creatorNames = new Map<string, string>();
-      let tagsMap = new Map<string, string[]>();
+      const lessonCounts = new Map<string, number>();
+      const enrollmentCounts = new Map<string, number>();
+      const creatorNames = new Map<string, string>();
+      const tagsMap = new Map<string, string[]>();
 
       if (courseIds.length > 0) {
         const [{ data: lessons }, { data: enrollments }] = await Promise.all([
@@ -218,7 +218,7 @@ export function EducatorAllCoursesPage() {
           <BookMarked className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">No courses found</h3>
           <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            We couldn't find any courses matching your filters.
+            We couldn&apos;t find any courses matching your filters.
           </p>
           <Button 
             variant="outline" 

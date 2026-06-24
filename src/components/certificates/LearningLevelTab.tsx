@@ -5,6 +5,7 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Trophy, Star, Target, CheckCircle2, Lock, ArrowUpRight, BookOpen, GraduationCap, Percent, Award } from 'lucide-react';
 import type { LearnerStats } from '@/lib/learner-api';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface LearningLevelTabProps {
   stats: LearnerStats;
@@ -28,11 +29,12 @@ interface LevelDef {
 }
 
 export function LearningLevelTab({ stats }: LearningLevelTabProps) {
+  const { t } = useTranslation();
   const levels = useMemo<LevelDef[]>(() => [
     {
       id: 'beginner',
-      name: 'Beginner',
-      description: 'You are just starting your learning journey. Complete some lessons to move up!',
+      name: t('level.beginner'),
+      description: t('level.beginnerDesc'),
       icon: <Star className="w-6 h-6" />,
       color: 'text-gray-500',
       bg: 'bg-gray-100',
@@ -40,41 +42,41 @@ export function LearningLevelTab({ stats }: LearningLevelTabProps) {
     },
     {
       id: 'intermediate',
-      name: 'Intermediate',
-      description: 'You have shown dedication and are building a solid foundation of knowledge.',
+      name: t('level.intermediate'),
+      description: t('level.intermediateDesc'),
       icon: <Target className="w-6 h-6" />,
       color: 'text-blue-500',
       bg: 'bg-blue-100',
       requirements: [
-        { label: 'Lessons Completed', current: stats.lessons_completed, target: 5, icon: <BookOpen className="w-4 h-4" /> },
-        { label: 'Courses Completed', current: stats.courses_completed, target: 1, icon: <GraduationCap className="w-4 h-4" /> },
+        { label: t('req.lessonsCompleted'), current: stats.lessons_completed, target: 5, icon: <BookOpen className="w-4 h-4" /> },
+        { label: t('req.coursesCompleted'), current: stats.courses_completed, target: 1, icon: <GraduationCap className="w-4 h-4" /> },
       ],
     },
     {
       id: 'advanced',
-      name: 'Advanced',
-      description: 'You are tackling complex topics and earning real credentials.',
+      name: t('level.advanced'),
+      description: t('level.advancedDesc'),
       icon: <Award className="w-6 h-6" />,
       color: 'text-purple-500',
       bg: 'bg-purple-100',
       requirements: [
-        { label: 'Lessons Completed', current: stats.lessons_completed, target: 15, icon: <BookOpen className="w-4 h-4" /> },
-        { label: 'Courses Completed', current: stats.courses_completed, target: 3, icon: <GraduationCap className="w-4 h-4" /> },
-        { label: 'Certificates Earned', current: stats.certificates_count, target: 1, icon: <Trophy className="w-4 h-4" /> },
+        { label: t('req.lessonsCompleted'), current: stats.lessons_completed, target: 15, icon: <BookOpen className="w-4 h-4" /> },
+        { label: t('req.coursesCompleted'), current: stats.courses_completed, target: 3, icon: <GraduationCap className="w-4 h-4" /> },
+        { label: t('req.certificatesEarned'), current: stats.certificates_count, target: 1, icon: <Trophy className="w-4 h-4" /> },
       ],
     },
     {
       id: 'expert',
-      name: 'Expert',
-      description: 'You have mastered multiple disciplines with flying colors.',
+      name: t('level.expert'),
+      description: t('level.expertDesc'),
       icon: <Trophy className="w-6 h-6" />,
       color: 'text-amber-500',
       bg: 'bg-amber-100',
       requirements: [
-        { label: 'Lessons Completed', current: stats.lessons_completed, target: 30, icon: <BookOpen className="w-4 h-4" /> },
-        { label: 'Courses Completed', current: stats.courses_completed, target: 5, icon: <GraduationCap className="w-4 h-4" /> },
-        { label: 'Certificates Earned', current: stats.certificates_count, target: 3, icon: <Trophy className="w-4 h-4" /> },
-        { label: 'Average Quiz Score', current: Math.round(stats.avg_score), target: 80, icon: <Percent className="w-4 h-4" /> },
+        { label: t('req.lessonsCompleted'), current: stats.lessons_completed, target: 30, icon: <BookOpen className="w-4 h-4" /> },
+        { label: t('req.coursesCompleted'), current: stats.courses_completed, target: 5, icon: <GraduationCap className="w-4 h-4" /> },
+        { label: t('req.certificatesEarned'), current: stats.certificates_count, target: 3, icon: <Trophy className="w-4 h-4" /> },
+        { label: t('req.avgQuizScore'), current: Math.round(stats.avg_score), target: 80, icon: <Percent className="w-4 h-4" /> },
       ],
     },
   ], [stats]);
@@ -109,7 +111,7 @@ export function LearningLevelTab({ stats }: LearningLevelTabProps) {
               {currentLevel.icon}
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Current Level</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">{t('learningLevel.currentLevel')}</p>
               <h2 className="text-3xl font-bold text-gray-900">{currentLevel.name}</h2>
               <p className="text-gray-600 mt-1 max-w-md">{currentLevel.description}</p>
             </div>
@@ -118,7 +120,7 @@ export function LearningLevelTab({ stats }: LearningLevelTabProps) {
           {nextLevel ? (
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 min-w-[240px]">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-600">Next: {nextLevel.name}</span>
+                <span className="text-sm font-medium text-gray-600">{t('learningLevel.next', { name: nextLevel.name })}</span>
                 <ArrowUpRight className="w-4 h-4 text-gray-400" />
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
@@ -136,8 +138,8 @@ export function LearningLevelTab({ stats }: LearningLevelTabProps) {
             <div className="bg-amber-50 text-amber-700 rounded-xl p-4 border border-amber-100 flex items-center gap-3">
               <Trophy className="w-8 h-8" />
               <div>
-                <p className="font-bold">Maximum Level Reached</p>
-                <p className="text-sm opacity-90">You are a true master.</p>
+                <p className="font-bold">{t('learningLevel.maxReached')}</p>
+                <p className="text-sm opacity-90">{t('learningLevel.maxDesc')}</p>
               </div>
             </div>
           )}
@@ -180,10 +182,10 @@ export function LearningLevelTab({ stats }: LearningLevelTabProps) {
                       <h3 className={`text-xl font-bold ${isLocked ? 'text-gray-500' : 'text-gray-900'}`}>{level.name}</h3>
                     </div>
                     {isCompleted && index !== 0 && (
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Unlocked</Badge>
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">{t('learningLevel.unlocked')}</Badge>
                     )}
                     {isCurrent && (
-                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">Current Level</Badge>
+                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">{t('learningLevel.current')}</Badge>
                     )}
                   </div>
                   
@@ -194,7 +196,7 @@ export function LearningLevelTab({ stats }: LearningLevelTabProps) {
                     <div className="mt-4 pt-4 border-t border-gray-100/80">
                       <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <Target className="w-4 h-4 text-gray-400" /> 
-                        Requirements to unlock
+                        {t('learningLevel.requirements')}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {level.requirements.map((req, rIdx) => {

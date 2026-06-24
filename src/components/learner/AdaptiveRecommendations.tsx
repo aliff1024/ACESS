@@ -7,26 +7,27 @@ import { Badge } from '@/components/ui/badge';
 import { RotateCcw, Book, TrendingUp, Loader2, Sparkles, PlayCircle } from 'lucide-react';
 import { fetchRecommendations } from '@/lib/learner-api';
 import type { Recommendation } from '@/lib/learner-api';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface AdaptiveRecommendationsProps {
   onStartLesson: (lessonId: string, courseId?: string) => void;
 }
 
-const tierConfig: Record<string, { label: string; color: string; badgeColor: string; icon: typeof Book }> = {
+const tierConfig: Record<string, { labelKey: string; color: string; badgeColor: string; icon: typeof Book }> = {
   revision: {
-    label: 'Needs Review',
+    labelKey: 'recommendations.needsReview',
     color: 'from-orange-400 to-rose-500',
     badgeColor: 'bg-orange-100 text-orange-700 border-orange-200',
     icon: RotateCcw,
   },
   standard: {
-    label: 'Up Next',
+    labelKey: 'recommendations.upNext',
     color: 'from-blue-400 to-indigo-600',
     badgeColor: 'bg-blue-100 text-blue-700 border-blue-200',
     icon: Book,
   },
   advanced: {
-    label: 'Challenge',
+    labelKey: 'recommendations.challenge',
     color: 'from-purple-400 to-fuchsia-600',
     badgeColor: 'bg-purple-100 text-purple-700 border-purple-200',
     icon: TrendingUp,
@@ -34,6 +35,7 @@ const tierConfig: Record<string, { label: string; color: string; badgeColor: str
 };
 
 export function AdaptiveRecommendations({ onStartLesson }: AdaptiveRecommendationsProps) {
+  const { t } = useTranslation();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,11 +59,11 @@ export function AdaptiveRecommendations({ onStartLesson }: AdaptiveRecommendatio
   return (
     <div className="py-2">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-purple-500" /> AI Recommendations
-        </h2>
+<h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+  <Sparkles className="w-6 h-6 text-purple-500" /> {t('recommendations.title')}
+</h2>
         <p className="text-gray-500 font-medium">
-          Personalized paths based on your learning progress and quiz performance
+          {t('recommendations.description')}
         </p>
       </div>
 
@@ -84,7 +86,7 @@ export function AdaptiveRecommendations({ onStartLesson }: AdaptiveRecommendatio
                   <Icon className="w-6 h-6" />
                 </div>
                 <Badge className={`${config.badgeColor} border font-semibold shadow-sm px-3 py-1`}>
-                  {config.label}
+                  {t(config.labelKey)}
                 </Badge>
               </div>
 
@@ -93,7 +95,7 @@ export function AdaptiveRecommendations({ onStartLesson }: AdaptiveRecommendatio
               </h3>
 
               <p className="text-sm font-medium text-gray-500 leading-relaxed mb-6 flex-1 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Why this?</span>
+                <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{t('recommendations.whyThis')}</span>
                 {rec.trigger_reason}
               </p>
 
@@ -101,7 +103,7 @@ export function AdaptiveRecommendations({ onStartLesson }: AdaptiveRecommendatio
                 onClick={() => onStartLesson(rec.lesson_id, rec.course_id)}
                 className="w-full h-11 bg-gray-900 hover:bg-purple-600 text-white font-medium shadow-md hover:shadow-lg transition-all group-hover:-translate-y-0.5"
               >
-                <PlayCircle className="w-4 h-4 mr-2" /> Start Lesson
+                <PlayCircle className="w-4 h-4 mr-2" /> {t('recommendations.startLesson')}
               </Button>
             </Card>
           );

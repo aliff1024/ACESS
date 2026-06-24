@@ -52,7 +52,7 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
           <h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-blue-500" /> {t('myCourses.title')}
           </h2>
-          <p className="text-gray-500 font-medium">Jump right back into your active learning paths.</p>
+          <p className="text-gray-500 font-medium">{t('myCourses.subtitle')}</p>
         </div>
       </div>
 
@@ -82,12 +82,12 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
                   <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                     {isSys && (
                       <Badge className="bg-white/90 text-indigo-700 backdrop-blur-md border-0 shadow-sm font-semibold flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-indigo-700" /> Featured
+                        <Star className="w-3 h-3 fill-indigo-700" /> {t('myCourses.featured')}
                       </Badge>
                     )}
                     {isSys && course.guided_learning_enabled && (
                       <Badge className="bg-amber-100 text-amber-800 border-0 shadow-sm font-semibold flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" /> Guided
+                        <Sparkles className="w-3 h-3" /> {t('myCourses.guided')}
                       </Badge>
                     )}
                   </div>
@@ -101,13 +101,13 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
 
                   <div className="flex items-center gap-4 text-xs font-medium text-gray-500 mb-5 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
                     <span className="flex items-center gap-1">
-                      <BookOpen className="w-3.5 h-3.5 text-blue-500" /> {course.completed_lessons}/{course.total_lessons} Done
+                      <BookOpen className="w-3.5 h-3.5 text-blue-500" /> {t('myCourses.done', { completed: course.completed_lessons, total: course.total_lessons })}
                     </span>
                     {course.total_lessons > 0 && course.completed_lessons < course.total_lessons && (
                       <>
                         <div className="w-px h-3 bg-gray-300" />
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-orange-500" /> {course.total_lessons - course.completed_lessons} Left
+                          <Clock className="w-3.5 h-3.5 text-orange-500" /> {t('myCourses.left', { left: course.total_lessons - course.completed_lessons })}
                         </span>
                       </>
                     )}
@@ -115,7 +115,7 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
 
                   <div className="mt-auto">
                     <div className="flex justify-between items-end mb-2">
-                      <span className="text-sm font-medium text-gray-600">Progress</span>
+                      <span className="text-sm font-medium text-gray-600">{t('myCourses.progress')}</span>
                       <span className="text-sm font-bold text-gray-900">{course.progress}%</span>
                     </div>
                     <Progress
@@ -128,7 +128,7 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
                       className="w-full h-11 bg-gray-900 hover:bg-blue-600 text-white font-medium shadow-md hover:shadow-lg transition-all group-hover:-translate-y-0.5"
                     >
                       <PlayCircle className="w-4 h-4 mr-2" />
-                      {course.progress === 100 ? 'Review Course' : 'Continue Learning'}
+                      {course.progress === 100 ? t('myCourses.review') : t('myCourses.continue')}
                     </Button>
                   </div>
                 </div>

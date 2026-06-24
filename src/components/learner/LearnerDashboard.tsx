@@ -52,7 +52,7 @@ export function LearnerDashboard() {
 
   useEffect(() => {
     if (currentView !== 'certificateView' || !selectedCertificate) return;
-    setCertDataLoading(true);
+    queueMicrotask(() => setCertDataLoading(true));
     fetchCertificateDetail(selectedCertificate)
       .then((data) => setCertificateData(data))
       .catch(() => {})

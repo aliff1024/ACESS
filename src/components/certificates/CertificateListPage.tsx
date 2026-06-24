@@ -7,6 +7,8 @@ import { Badge } from '../ui/badge';
 import { Award, Calendar, Hash, Eye, Download, Search, Loader2, Trophy, Footprints, GraduationCap, Zap, Star, Shield, User, FileText, Lock, BookOpen, Flame } from 'lucide-react';
 import { fetchCertificates, fetchLearnerBadges, fetchLearnerStats, type Certificate, type LearnerBadge, type LearnerStats } from '@/lib/learner-api';
 import { LearningLevelTab } from './LearningLevelTab';
+import { useAccessibility } from '@/providers/AccessibilityProvider';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface AchievementsDashboardProps {
   onViewCertificate: (certificateId: string) => void;
@@ -19,6 +21,8 @@ export function CertificateListPage({
   onBrowseCourses,
   onDownload,
 }: AchievementsDashboardProps) {
+  const { t } = useTranslation();
+  const { settings } = useAccessibility();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [badges, setBadges] = useState<LearnerBadge[]>([]);
   const [stats, setStats] = useState<LearnerStats | null>(null);
@@ -40,7 +44,7 @@ export function CertificateListPage({
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-        <p className="text-gray-500 font-medium animate-pulse">Loading achievements...</p>
+        <p className="text-gray-500 font-medium animate-pulse">{t('certificates.loading')}</p>
       </div>
     );
   }
@@ -63,17 +67,17 @@ export function CertificateListPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20 readable-content">
       {/* Hero Header */}
       <div className="bg-gradient-to-br from-indigo-900 via-blue-900 to-blue-800 text-white pt-16 pb-12 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8">
-          <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-xl shrink-0">
+          <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-xl shrink-0 simplifiable">
             <Trophy className="w-12 h-12 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
           </div>
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">My Achievements</h1>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">{t('certificates.myAchievements')}</h1>
             <p className="text-blue-100 text-lg max-w-2xl">
-              Track your learning milestones, platform badges, and official certificates all in one place.
+              {t('certificates.heroDesc')}
             </p>
           </div>
         </div>
@@ -90,7 +94,7 @@ export function CertificateListPage({
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
-            <Star className="w-5 h-5" /> Learning Level
+            <Star className="w-5 h-5" /> {t('certificates.tabLevel')}
           </button>
           <button
             onClick={() => setActiveTab('badges')}
@@ -100,7 +104,7 @@ export function CertificateListPage({
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
-            <Trophy className="w-5 h-5" /> Badges
+            <Trophy className="w-5 h-5" /> {t('certificates.tabBadges')}
           </button>
           <button
             onClick={() => setActiveTab('system_certs')}
@@ -110,7 +114,7 @@ export function CertificateListPage({
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
-            <Shield className="w-5 h-5" /> System Certificates
+            <Shield className="w-5 h-5" /> {t('certificates.tabSystemCerts')}
             {systemCerts.length > 0 && (
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'system_certs' ? 'bg-white/20' : 'bg-gray-200'}`}>
                 {systemCerts.length}
@@ -125,7 +129,7 @@ export function CertificateListPage({
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
-            <Award className="w-5 h-5" /> Educator Certificates
+            <Award className="w-5 h-5" /> {t('certificates.tabCustomCerts')}
             {customCerts.length > 0 && (
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'custom_certs' ? 'bg-white/20' : 'bg-gray-200'}`}>
                 {customCerts.length}
@@ -161,9 +165,9 @@ export function CertificateListPage({
                     <h3 className="text-xl font-bold text-gray-900 mb-1">{badge.title}</h3>
                     <p className="text-sm text-gray-600 mb-3 leading-snug">{badge.description}</p>
                     {badge.unlocked ? (
-                      <Badge className="bg-yellow-100 text-yellow-800 border-0">Unlocked</Badge>
+                      <Badge className="bg-yellow-100 text-yellow-800 border-0">{t('certificates.unlocked')}</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-gray-500 bg-white">Locked</Badge>
+                      <Badge variant="outline" className="text-gray-500 bg-white">{t('certificates.locked')}</Badge>
                     )}
                   </div>
                 </div>
@@ -176,16 +180,16 @@ export function CertificateListPage({
         {activeTab === 'system_certs' && (
           systemCerts.length === 0 ? (
             <Card className="max-w-2xl mx-auto p-12 rounded-3xl border-dashed border-2 border-gray-200 text-center bg-transparent">
-              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 simplifiable">
                 <Shield className="w-12 h-12 text-blue-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">No System Certificates Yet</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">{t('certificates.noSystem')}</h2>
               <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                Complete official ACESS System courses to earn verified platform certificates.
+                {t('certificates.noSystemDesc')}
               </p>
               <Button onClick={onBrowseCourses} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 px-8">
                 <Search className="w-5 h-5 mr-2" />
-                Browse System Courses
+                {t('certificates.browseSystem')}
               </Button>
             </Card>
           ) : (
@@ -197,7 +201,7 @@ export function CertificateListPage({
                       <Shield className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <Badge className="bg-indigo-100 text-indigo-700 border-0 mb-1.5">Official ACESS</Badge>
+                      <Badge className="bg-indigo-100 text-indigo-700 border-0 mb-1.5">{t('certificates.officialACESS')}</Badge>
                       <h3 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{cert.course_title}</h3>
                     </div>
                   </div>
@@ -215,10 +219,10 @@ export function CertificateListPage({
 
                   <div className="flex gap-3 mt-auto">
                     <Button onClick={() => onViewCertificate(cert.id)} className="flex-1 bg-gray-900 hover:bg-blue-600 text-white rounded-xl">
-                      <Eye className="w-4 h-4 mr-2" /> View
+                      <Eye className="w-4 h-4 mr-2" /> {t('certificates.view')}
                     </Button>
                     <Button onClick={() => onDownload(cert.id)} variant="outline" className="flex-1 rounded-xl hover:bg-gray-50">
-                      <Download className="w-4 h-4 mr-2" /> Download
+                      <Download className="w-4 h-4 mr-2" /> {t('certificates.download')}
                     </Button>
                   </div>
                 </Card>
@@ -231,12 +235,12 @@ export function CertificateListPage({
         {activeTab === 'custom_certs' && (
           customCerts.length === 0 ? (
             <Card className="max-w-2xl mx-auto p-12 rounded-3xl border-dashed border-2 border-gray-200 text-center bg-transparent">
-              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 simplifiable">
                 <User className="w-12 h-12 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">No Educator Certificates</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">{t('certificates.noCustom')}</h2>
               <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                Certificates uploaded directly by your educators will appear here.
+                {t('certificates.noCustomDesc')}
               </p>
             </Card>
           ) : (
@@ -248,7 +252,7 @@ export function CertificateListPage({
                       <Award className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <Badge className="bg-emerald-100 text-emerald-700 border-0 mb-1.5">Educator Issued</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 border-0 mb-1.5">{t('certificates.educatorIssued')}</Badge>
                       <h3 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{cert.course_title}</h3>
                     </div>
                   </div>
@@ -260,18 +264,18 @@ export function CertificateListPage({
                     </div>
                     <div className="flex items-center gap-2.5 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
                       <FileText className="w-4 h-4 text-gray-400" />
-                      <span>Custom PDF Document</span>
+                      <span>{t('certificates.customPDF')}</span>
                     </div>
                   </div>
 
                   <div className="flex gap-3 mt-auto">
                     {cert.pdf_url ? (
                       <Button onClick={() => window.open(cert.pdf_url, '_blank')} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
-                        <Eye className="w-4 h-4 mr-2" /> View Certificate
+                        <Eye className="w-4 h-4 mr-2" /> {t('certificates.viewCertificate')}
                       </Button>
                     ) : (
                       <Button onClick={() => onViewCertificate(cert.id)} className="w-full bg-gray-900 hover:bg-blue-600 text-white rounded-xl">
-                        <Eye className="w-4 h-4 mr-2" /> View Details
+                        <Eye className="w-4 h-4 mr-2" /> {t('certificates.viewDetails')}
                       </Button>
                     )}
                   </div>

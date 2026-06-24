@@ -66,7 +66,7 @@ export default function CourseManagement() {
 
   const getFilteredCourses = () => {
     return courses.filter(course => {
-      const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch = (course.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                            (course.creator_name || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
       return matchesSearch && matchesStatus;
@@ -75,7 +75,7 @@ export default function CourseManagement() {
 
   const getFilteredSystemCourses = () => {
     return systemCourses.filter(course => {
-      const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch = (course.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                            (course.creator_name || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
       return matchesSearch && matchesStatus;

@@ -29,7 +29,8 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    setIsMobileMenuOpen(false);
+    const id = requestAnimationFrame(() => setIsMobileMenuOpen(false));
+    return () => cancelAnimationFrame(id);
   }, [pathname]);
 
   const activeView = (() => {

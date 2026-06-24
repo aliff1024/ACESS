@@ -69,7 +69,7 @@ export function ContactForm({ initialCategory = 'general' }: { initialCategory?:
             </button>
           </div>
         </main>
-        <Footer />
+        <Footer variant="simple" />
       </div>
     )
   }

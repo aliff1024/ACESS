@@ -44,7 +44,6 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
   const [accessibilityCategories, setAccessibilityCategories] = useState<string[]>([]);
   const [courseAchievements, setCourseAchievements] = useState<any[]>([]);
   const { settings } = useAccessibility();
-  const activePreset = settings?.active_preset || 'none';
 
   const isSystem = course?.system_course === true;
   const isGuided = isSystem && course?.guided_learning_enabled;
@@ -236,7 +235,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         {PreviewBanner}
-        <div className="max-w-5xl mx-auto p-6">
+        <div className="max-w-5xl mx-auto p-6 readable-content">
           <button
             onClick={onBack}
             className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2"
@@ -465,8 +464,8 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
 
             <div className="space-y-4">
               {course.lessons.map((lesson) => {
-                // ADHD: Hide locked lessons to prevent overwhelm
-                if (activePreset === 'adhd' && lesson.status === 'locked') return null;
+                // Chunked mode: Hide locked lessons to prevent overwhelm
+                if ((settings.layout_mode === 'slide' || settings.chunked_content_mode) && lesson.status === 'locked') return null;
                 
                 return (
                 <Card
@@ -508,7 +507,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                         )}
                       </div>
                       <h3 className="text-lg font-bold text-gray-900">{lesson.title}</h3>
-                      {activePreset === 'autism' && (
+                      {!settings.simplified_ui && (
                         <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
                           <Clock className="w-4 h-4" /> Estimated time: {lesson.estimated_duration ? `${lesson.estimated_duration} mins` : '15 mins'}
                         </p>
@@ -546,7 +545,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       {PreviewBanner}
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-6 readable-content">
         <button
           onClick={onBack}
           className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2"
@@ -619,38 +618,42 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-6">
-            {course.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-sm px-3 py-1">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-
-          {courseAchievements.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-bold text-yellow-800 mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5" /> Earnable Badges
-              </h3>
-              <div className="flex flex-wrap gap-4">
-                {courseAchievements.map(ach => (
-                  <div key={ach.id} className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm border border-yellow-100 min-w-[200px]">
-                    {ach.icon_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ach.icon_url} alt={ach.name} className="w-10 h-10 object-contain" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                        <Award className="w-5 h-5" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-bold text-sm text-gray-900">{ach.name}</p>
-                      <p className="text-xs text-gray-500">{ach.requirement_type} {ach.requirement_threshold}</p>
-                    </div>
-                  </div>
+          {!settings.distraction_free_mode && (
+            <>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {course.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-sm px-3 py-1">
+                    {tag}
+                  </Badge>
                 ))}
               </div>
-            </div>
+
+              {courseAchievements.length > 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
+                  <h3 className="text-lg font-bold text-yellow-800 mb-4 flex items-center gap-2">
+                    <Trophy className="w-5 h-5" /> Earnable Badges
+                  </h3>
+                  <div className="flex flex-wrap gap-4">
+                    {courseAchievements.map(ach => (
+                      <div key={ach.id} className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm border border-yellow-100 min-w-[200px]">
+                        {ach.icon_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={ach.icon_url} alt={ach.name} className="w-10 h-10 object-contain" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                            <Award className="w-5 h-5" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-sm text-gray-900">{ach.name}</p>
+                          <p className="text-xs text-gray-500">{ach.requirement_type} {ach.requirement_threshold}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {course.enrollment_id ? (
@@ -751,7 +754,9 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
           <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('course.lessonsLabel')}</h2>
 
           <div className="space-y-3">
-            {course.lessons.map((lesson) => (
+            {course.lessons.map((lesson) => {
+              if ((settings.layout_mode === 'slide' || settings.chunked_content_mode) && lesson.status === 'locked') return null;
+              return (
               <Card
                 key={lesson.id}
                 className={`p-5 rounded-xl border-2 transition-all duration-200 ${
@@ -804,7 +809,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                   )}
                 </div>
               </Card>
-            ))}
+            )})}
           </div>
         </div>
       </div>

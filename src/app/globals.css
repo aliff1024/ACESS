@@ -367,9 +367,7 @@ html[data-simplified-ui="true"] .simplifiable {
   display: none !important;
 }
 
-html[data-simplified-ui="true"] .tab-bar {
-  display: none !important;
-}
+
 
 html[data-simplified-ui="true"] .bottom-lesson-nav .previous-btn {
   display: none !important;
@@ -387,13 +385,6 @@ html[data-simplified-ui="true"] .flag-for-review {
   display: none !important;
 }
 
-html[data-simplified-ui="true"] .calm-mode-nav {
-  display: flex !important;
-}
-
-.calm-mode-nav {
-  display: none;
-}
 
 /* ─── Accessibility: Keyboard Navigation ─────────────────────────────── */
 html[data-keyboard-nav="true"] *:focus-visible {
@@ -520,12 +511,14 @@ html[data-bg-tint]:not([data-bg-tint="white"]):not([data-bg-tint="none"]):not([d
 }
 
 /* ─── Accessibility Presets: Reading Spotlight ────────────────────────── */
-html[data-reading-spotlight="true"] .prose:has(> *:hover) > * {
+html[data-reading-spotlight="true"] .prose:has(> *:hover) > *,
+html[data-reading-spotlight="true"] .readable-content:has(> *:hover) > * {
   opacity: 0.15;
   filter: blur(0.5px);
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
-html[data-reading-spotlight="true"] .prose > *:hover {
+html[data-reading-spotlight="true"] .prose > *:hover,
+html[data-reading-spotlight="true"] .readable-content > *:hover {
   opacity: 1 !important;
   filter: none !important;
   background: var(--spotlight-bg, rgba(100, 150, 255, 0.05));

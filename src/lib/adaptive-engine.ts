@@ -21,6 +21,8 @@ export interface PresetSettings {
   reading_spotlight: boolean
   distraction_free_mode: boolean
   chunked_content_mode: boolean
+  layout_mode: 'scroll' | 'slide' | 'chunked'
+  structure_mode: 'full' | 'minimal' | 'checklist'
   reduced_motion: boolean
   animation_level: string
   tts_enabled: boolean
@@ -75,6 +77,8 @@ export const DEFAULT_PRESET_SETTINGS: PresetSettings = {
   reading_spotlight: false,
   distraction_free_mode: false,
   chunked_content_mode: false,
+  layout_mode: 'slide',
+  structure_mode: 'full',
   reduced_motion: false,
   animation_level: 'normal',
   tts_enabled: false,
@@ -106,13 +110,15 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       background_tint: 'cream',
       reading_spotlight: true,
       chunked_content_mode: true,
+      layout_mode: 'chunked',
+      structure_mode: 'full',
       reduced_motion: true,
       animation_level: 'low',
       tts_enabled: false,
       preferred_theme: 'light',
       auto_save_enabled: true,
     },
-    additional_features: ['Text-to-Speech', 'Reading Ruler', 'Word Highlighting'],
+    additional_features: ['Text-to-Speech', 'Reading Spotlight'],
   },
   adhd: {
     id: 'adhd',
@@ -128,6 +134,8 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       reading_spotlight: true,
       distraction_free_mode: true,
       chunked_content_mode: true,
+      layout_mode: 'slide',
+      structure_mode: 'minimal',
       reduced_motion: true,
       animation_level: 'low',
       preferred_theme: 'light',
@@ -135,7 +143,7 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       auto_save_enabled: true,
       progress_timeline_enabled: true,
     },
-    additional_features: ['Task Checklist', 'Focus Timer', 'Visual Progress Bar', 'Auto Save', 'Resume Where Left Off'],
+    additional_features: ['Task Checklist', 'Progress Timeline', 'Auto Save'],
   },
   autism: {
     id: 'autism',
@@ -148,7 +156,8 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       line_spacing_multiplier: 1.5,
       word_spacing_pct: 10,
       background_tint: 'pale_blue',
-      reading_spotlight: false,
+      layout_mode: 'scroll',
+      structure_mode: 'checklist',
       distraction_free_mode: true,
       chunked_content_mode: true,
       reduced_motion: true,
@@ -160,7 +169,7 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       progress_timeline_enabled: true,
       auto_save_enabled: true,
     },
-    additional_features: ['Visual Schedule', 'Clear Instructions', 'Progress Timeline', 'Predictable Layout', 'Transition Warnings'],
+    additional_features: ['Visual Schedule', 'Step-by-Step Guidance', 'Progress Timeline', 'Distraction-Free'],
   },
   dyscalculia: {
     id: 'dyscalculia',
@@ -177,16 +186,48 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       chunked_content_mode: true,
       reduced_motion: true,
       animation_level: 'low',
+      low_contrast: true,
       preferred_theme: 'light',
+      tts_enabled: true,
       step_by_step_enabled: true,
       auto_save_enabled: true,
       progress_timeline_enabled: true,
     },
-    additional_features: ['Number Line Support', 'Formula Helper', 'Step-by-Step Solutions', 'Color-Coded Numbers', 'Visual Diagrams'],
+    additional_features: ['Chunked Content', 'Step-by-Step Guidance', 'Progress Timeline', 'Text-to-Speech'],
   },
 }
 
 // ─── Legacy Disability Presets (backward compatibility) ──────────────────
+
+const DEFAULT_LESSON_MODES = {
+  focus_mode: false,
+  chunked_content: false,
+  guided_mode: false,
+  checkpoints: false,
+  simplified_summary: false,
+}
+
+/** Maps active_preset to lesson modes */
+const PRESET_LESSON_MODES: Record<string, Partial<typeof DEFAULT_LESSON_MODES>> = {
+  dyslexia: {
+    chunked_content: true,
+  },
+  adhd: {
+    chunked_content: true,
+    checkpoints: true,
+  },
+  autism: {
+    chunked_content: true,
+    guided_mode: true,
+    focus_mode: true,
+    checkpoints: true,
+    simplified_summary: true,
+  },
+  dyscalculia: {
+    chunked_content: true,
+    guided_mode: true,
+  },
+}
 
 const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
   cognitive_impairment: {
@@ -429,16 +470,30 @@ export function computeAdaptiveSettings(
 ): EffectiveAccessibilitySettings {
   const recommendation = getAdaptiveRecommendation(disabilityType)
 
+  const defaultLessonModes = { ...DEFAULT_LESSON_MODES }
+
+  // Merge lesson modes from disability recommendation
+  let lessonModes = { ...defaultLessonModes }
+  if (recommendation) {
+    lessonModes = {
+      ...lessonModes,
+      ...recommendation.recommended_lesson_modes,
+    }
+  }
+
+  // Merge lesson modes from active_preset (presets act as a stronger signal)
+  const activePreset = userSettings.active_preset
+  if (activePreset && activePreset !== 'none' && PRESET_LESSON_MODES[activePreset]) {
+    lessonModes = {
+      ...lessonModes,
+      ...PRESET_LESSON_MODES[activePreset],
+    }
+  }
+
   if (!recommendation) {
     return {
       ui: { ...userSettings },
-      lesson_modes: {
-        focus_mode: false,
-        chunked_content: false,
-        guided_mode: false,
-        checkpoints: false,
-        simplified_summary: false,
-      },
+      lesson_modes: lessonModes,
       active_recommendation: null,
       active_disability: null,
     }
@@ -450,20 +505,9 @@ export function computeAdaptiveSettings(
     ...userSettings,
   }
 
-  const defaultLessonModes = {
-    focus_mode: false,
-    chunked_content: false,
-    guided_mode: false,
-    checkpoints: false,
-    simplified_summary: false,
-  }
-
   return {
     ui: mergedUi,
-    lesson_modes: {
-      ...defaultLessonModes,
-      ...recommendation.recommended_lesson_modes,
-    },
+    lesson_modes: lessonModes,
     active_recommendation: recommendation,
     active_disability: disabilityType ?? null,
   }

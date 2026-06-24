@@ -551,7 +551,7 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
     return <div className="p-8 text-center"><p className="text-xl mb-4">Course not found</p><Button onClick={onBack}>Back to Courses</Button></div>;
   }
 
-  const tabs: { id: 'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'admin'; label: string; icon: any }[] = [
+  const tabs: { id: 'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'admin'; label: string; icon: Record<string, unknown> }[] = [
     { id: 'overview', label: 'Overview', icon: BookOpen },
     { id: 'lessons', label: 'Lessons', icon: FileText },
     { id: 'assets', label: 'Assets', icon: FileType },
