@@ -33,38 +33,38 @@ function extractActivityImages(
 ): UnifiedAsset[] {
   const assets: UnifiedAsset[] = [];
   for (const item of items) {
-    const data = item.content_data as Record<string, unknown>;
+    const data = item.content_data as any;
     if (item.content_type === 'flashcards') {
       for (const card of (data.cards || [])) {
         if (card.front_image) {
-          assets.push({ id: `${item.id}-front-${card.id}`, kind: 'image', title: `${item.title} – Card front (${card.front || 'image'})`, url: card.front_image, lessonTitle, lessonOrder, source: 'activity', deletable: false });
+          assets.push({ id: `${item.id}-front-${card.id}`, kind: 'image', title: `${item.title} – Card front (${card.front || 'image'})`, url: card.front_image as string, lessonTitle, lessonOrder, source: 'activity', deletable: false });
         }
         if (card.back_image) {
-          assets.push({ id: `${item.id}-back-${card.id}`, kind: 'image', title: `${item.title} – Card back (${card.back || 'image'})`, url: card.back_image, lessonTitle, lessonOrder, source: 'activity', deletable: false });
+          assets.push({ id: `${item.id}-back-${card.id}`, kind: 'image', title: `${item.title} – Card back (${card.back || 'image'})`, url: card.back_image as string, lessonTitle, lessonOrder, source: 'activity', deletable: false });
         }
         if (card.image_url && !card.front_image) {
-          assets.push({ id: `${item.id}-img-${card.id}`, kind: 'image', title: `${item.title} – Card image`, url: card.image_url, lessonTitle, lessonOrder, source: 'activity', deletable: false });
+          assets.push({ id: `${item.id}-img-${card.id}`, kind: 'image', title: `${item.title} – Card image`, url: card.image_url as string, lessonTitle, lessonOrder, source: 'activity', deletable: false });
         }
       }
     } else if (item.content_type === 'drag_drop') {
       if (data.background_image) {
-        assets.push({ id: `${item.id}-bg`, kind: 'image', title: `${item.title} – Background`, url: data.background_image, lessonTitle, lessonOrder, source: 'activity', deletable: false });
+        assets.push({ id: `${item.id}-bg`, kind: 'image', title: `${item.title} – Background`, url: data.background_image as string, lessonTitle, lessonOrder, source: 'activity', deletable: false });
       }
       for (const di of (data.items || [])) {
         if (di.image_url) {
-          assets.push({ id: `${item.id}-item-${di.id}`, kind: 'image', title: `${item.title} – "${di.text}"`, url: di.image_url, lessonTitle, lessonOrder, source: 'activity', deletable: false });
+          assets.push({ id: `${item.id}-item-${di.id}`, kind: 'image', title: `${item.title} – "${di.text}"`, url: di.image_url as string, lessonTitle, lessonOrder, source: 'activity', deletable: false });
         }
       }
     } else if (item.content_type === 'memory_game') {
       for (const card of (data.cards || [])) {
         if (card.image_url) {
-          assets.push({ id: `${item.id}-card-${card.id}`, kind: 'image', title: `${item.title} – "${card.text}"`, url: card.image_url, lessonTitle, lessonOrder, source: 'activity', deletable: false });
+          assets.push({ id: `${item.id}-card-${card.id}`, kind: 'image', title: `${item.title} – "${card.text}"`, url: card.image_url as string, lessonTitle, lessonOrder, source: 'activity', deletable: false });
         }
       }
     } else if (item.content_type === 'timeline') {
       for (const ev of (data.events || [])) {
         if (ev.image_url) {
-          assets.push({ id: `${item.id}-ev-${ev.id}`, kind: 'image', title: `${item.title} – "${ev.title}"`, url: ev.image_url, lessonTitle, lessonOrder, source: 'activity', deletable: false });
+          assets.push({ id: `${item.id}-ev-${ev.id}`, kind: 'image', title: `${item.title} – "${ev.title}"`, url: ev.image_url as string, lessonTitle, lessonOrder, source: 'activity', deletable: false });
         }
       }
     }

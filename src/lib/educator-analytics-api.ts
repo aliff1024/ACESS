@@ -102,7 +102,7 @@ function calculateStreak(lps: Record<string, unknown>[]): number {
   const dates = lps
     .filter(lp => lp.last_viewed_at)
     .map(lp => {
-      const d = new Date(lp.last_viewed_at);
+      const d = new Date(lp.last_viewed_at as string);
       return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     });
   if (dates.length === 0) return 0;
@@ -223,16 +223,16 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
   }
 
   for (const raw of (enrollments || []) as Record<string, unknown>[]) {
-    const userId = raw.users?.id
+    const userId = (raw.users as any)?.id
     if (!userId) continue
 
     if (!studentMap.has(userId)) {
       studentMap.set(userId, {
         id: userId,
-        name: raw.users?.full_name || 'Unknown',
-        email: raw.users?.email || '',
+        name: (raw.users as any)?.full_name || 'Unknown',
+        email: (raw.users as any)?.email || '',
         courses: [],
-        lastActive: raw.enrolled_at,
+        lastActive: raw.enrolled_at as string,
         totalProgress: 0,
         learningStreak: 0,
         status: 'active',
@@ -243,15 +243,15 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
     const student = studentMap.get(userId)!
     
     // Calculate progress based on lessons
-    const lps = lessonProgressMap.get(raw.id) || []
+    const lps = lessonProgressMap.get((raw as any).id) || []
     const completedLessons = lps.filter(lp => lp.is_viewed).length
-    const totalTimeSpent = lps.reduce((acc, lp) => acc + (lp.time_spent_learning || (lp.is_viewed ? 1200 : 0)), 0)
+    const totalTimeSpent = lps.reduce((acc, lp) => acc + ((lp.time_spent_learning as number) || ((lp.is_viewed as boolean) ? 1200 : 0)), 0)
     
     // Find last active from lps
-    let courseLastActive = new Date(raw.enrolled_at)
+    let courseLastActive = new Date(raw.enrolled_at as string)
     lps.forEach(lp => {
-      if (lp.last_viewed_at && new Date(lp.last_viewed_at) > courseLastActive) {
-        courseLastActive = new Date(lp.last_viewed_at)
+      if (lp.last_viewed_at && new Date(lp.last_viewed_at as string) > courseLastActive) {
+        courseLastActive = new Date(lp.last_viewed_at as string)
       }
     })
 
@@ -259,12 +259,12 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
       student.lastActive = courseLastActive.toISOString()
     }
 
-    const totalLessons = courseLessonCounts.get(raw.course_id) || 1;
+    const totalLessons = courseLessonCounts.get((raw as any).course_id) || 1;
     const progress = Math.min(Math.round((completedLessons / totalLessons) * 100), 100);
 
-    const qas = quizAttemptsMap.get(raw.id) || [];
+    const qas = quizAttemptsMap.get((raw as any).id) || [];
     const hasFails = qas.some(qa => qa.result === 'failed');
-    const avgScore = qas.length > 0 ? Math.round(qas.reduce((acc, qa) => acc + (qa.score_pct || 0), 0) / qas.length) : 0;
+    const avgScore = qas.length > 0 ? Math.round(qas.reduce((acc, qa) => acc + ((qa.score_pct as number) || 0), 0) / qas.length) : 0;
     
     // Update streak based on all course lesson progress
     const courseStreak = calculateStreak(lps);
@@ -273,11 +273,11 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
     }
 
     student.courses.push({
-      id: raw.course_id,
-      title: courseMap.get(raw.course_id) || 'Unknown',
-      progress: raw.status === 'completed' ? 100 : progress,
+      id: (raw as any).course_id,
+      title: courseMap.get((raw as any).course_id) || 'Unknown',
+      progress: (raw as any).status === 'completed' ? 100 : progress,
       avgScore: avgScore,
-      status: determineStudentRisk(courseLastActive, progress, hasFails),
+      status: determineStudentRisk(courseLastActive, progress, hasFails) as any,
       lastActive: courseLastActive.toISOString(),
       timeSpentSeconds: totalTimeSpent
     })
@@ -338,9 +338,9 @@ export async function fetchStudentTimeline(studentId: string, educatorId: string
         events.push({
           id: `lp-${lp.id}`,
           type: 'lesson_view',
-          title: `Viewed Lesson: ${lp.lessons?.title || 'Unknown'}`,
+          title: `Viewed Lesson: ${(lp.lessons as any)?.title || 'Unknown'}`,
           courseTitle: courseMap.get(e?.course_id || '') || 'Unknown',
-          timestamp: lp.first_viewed_at
+          timestamp: lp.first_viewed_at as string
         })
       }
     })
@@ -359,9 +359,9 @@ export async function fetchStudentTimeline(studentId: string, educatorId: string
         events.push({
           id: `qa-${qa.id}`,
           type: 'quiz_attempt',
-          title: `Submitted Quiz: ${qa.quizzes?.title || 'Unknown'} (Score: ${qa.score_pct}%)`,
+          title: `Submitted Quiz: ${(qa.quizzes as any)?.title || 'Unknown'} (Score: ${qa.score_pct}%)`,
           courseTitle: courseMap.get(e?.course_id || '') || 'Unknown',
-          timestamp: qa.submitted_at,
+          timestamp: qa.submitted_at as string,
           metadata: { score: qa.score_pct, result: qa.result }
         })
       }
@@ -639,7 +639,7 @@ export async function fetchCourseDetailData(courseId: string, educatorId: string
     const lps = lpByLesson.get(lesson.id) || []
     const completed = lps.filter(lp => lp.is_completed).length
     const skipped = lps.filter(lp => lp.is_viewed && !lp.is_completed).length
-    const totalTime = lps.reduce((acc, lp) => acc + (lp.time_spent_learning || 0), 0)
+    const totalTime = lps.reduce((acc, lp) => acc + ((lp.time_spent_learning as number) || 0), 0)
     const avgTime = lps.length > 0 ? Math.round(totalTime / lps.length) : 0
 
     const quizEntry = quizzes?.find(q => q.lesson_id === lesson.id)
@@ -648,7 +648,7 @@ export async function fetchCourseDetailData(courseId: string, educatorId: string
       const scores: number[] = []
       for (const qas of qaByEnrollment.values()) {
         for (const qa of qas) {
-          if (qa.quiz_id === quizEntry.id) scores.push(qa.score_pct || 0)
+          if (qa.quiz_id === quizEntry.id) scores.push((qa.score_pct as number) || 0)
         }
       }
       if (scores.length > 0) avgQuizScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
@@ -667,14 +667,14 @@ export async function fetchCourseDetailData(courseId: string, educatorId: string
 
   const totalLessons = lessons?.length || 1
   const studentsDetail: EnrolledStudentDetail[] = (enrollments || []).map(e => {
-    const user = (e as Record<string, unknown>).users || {}
+    const user = ((e as Record<string, unknown>).users || {}) as any
     const lps = lpByEnrollment.get(e.id) || []
     const completedCount = lps.filter(lp => lp.is_completed).length
     const progress = Math.min(Math.round((completedCount / totalLessons) * 100), 100)
 
     const qas = qaByEnrollment.get(e.id) || []
     const avgScore = qas.length > 0
-      ? Math.round(qas.reduce((acc, qa) => acc + (qa.score_pct || 0), 0) / qas.length)
+      ? Math.round(qas.reduce((acc, qa) => acc + ((qa.score_pct as number) || 0), 0) / qas.length)
       : 0
 
     let lastActive = e.enrolled_at
@@ -683,7 +683,7 @@ export async function fetchCourseDetailData(courseId: string, educatorId: string
     }
 
     const daysSinceActive = (Date.now() - new Date(lastActive).getTime()) / (1000 * 60 * 60 * 24)
-    const hasFails = qas.some(qa => qa.score_pct !== null && qa.score_pct < 50)
+    const hasFails = qas.some(qa => qa.score_pct !== null && (qa.score_pct as number) < 50)
     let status: 'active' | 'at-risk' | 'inactive' = 'active'
     if (daysSinceActive > 14) status = 'inactive'
     else if (daysSinceActive > 7 || hasFails || (daysSinceActive > 3 && progress < 10)) status = 'at-risk'

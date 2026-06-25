@@ -127,13 +127,13 @@ export function StudentDetailDashboard({ studentId }: { studentId: string }) {
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <span className="text-sm font-semibold text-gray-500 mr-1"><ShieldAlert className="w-4 h-4 inline mr-1 text-indigo-500" /> UDL Profile:</span>
                 {student.accessibility_prefs.active_preset && student.accessibility_prefs.active_preset !== 'none' && (
-                  <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-200">{student.accessibility_prefs.active_preset.replace('_friendly', '').toUpperCase()}</Badge>
+                  <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-200">{String(student.accessibility_prefs.active_preset).replace('_friendly', '').toUpperCase()}</Badge>
                 )}
                 {student.accessibility_prefs.dyslexia_friendly_font && (
                   <Badge className="bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200">Dyslexia Font</Badge>
                 )}
                 {student.accessibility_prefs.animation_level && student.accessibility_prefs.animation_level !== 'normal' && (
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200">Animation: {student.accessibility_prefs.animation_level}</Badge>
+                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200">Animation: {String(student.accessibility_prefs.animation_level)}</Badge>
                 )}
                 {student.accessibility_prefs.chunked_content_mode && (
                   <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200">Chunked Content</Badge>

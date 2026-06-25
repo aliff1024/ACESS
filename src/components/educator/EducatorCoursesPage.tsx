@@ -187,7 +187,7 @@ export function EducatorCoursesPage() {
             <div className="relative shrink-0">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as Record<string, unknown>)}
+                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
                 className="w-full sm:w-48 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 font-medium"
               >
                 <option value="all">All Statuses</option>
@@ -217,7 +217,7 @@ export function EducatorCoursesPage() {
             <div className="relative shrink-0">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as Record<string, unknown>)}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                 className="w-full sm:w-48 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 font-medium"
               >
                 <option value="latest">Last Updated</option>

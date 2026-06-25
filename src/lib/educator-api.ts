@@ -663,10 +663,10 @@ export async function fetchStudentsWithProgress(educatorId: string): Promise<Stu
     if (!studentMap.has(userId)) {
       studentMap.set(userId, {
         id: userId,
-        name: raw.users?.full_name || 'Unknown',
-        email: raw.users?.email || '',
+        name: rawUsers?.full_name || 'Unknown',
+        email: rawUsers?.email || '',
         courses: [],
-        lastActive: raw.enrolled_at, // Will override later
+        lastActive: raw.enrolled_at as string, // Will override later
         totalProgress: 0,
       })
     }
@@ -692,7 +692,7 @@ export async function fetchStudentsWithProgress(educatorId: string): Promise<Stu
     }
 
     student.courses.push({
-      title: courseMap.get(raw.course_id) || 'Unknown',
+      title: courseMap.get(raw.course_id as string) || 'Unknown',
       progress: progressPercent,
       avgScore,
       status: finalStatus,

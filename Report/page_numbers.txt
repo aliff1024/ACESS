@@ -1,0 +1,162 @@
+=== TABLE OF CONTENTS (corrected page numbers) ===
+
+TABLE OF CONTENTS
+
+PAGE
+
+DECLARATION                                                          ii
+DEDICATION                                                           iii
+ACKNOWLEDGEMENT                                                      iv
+ABSTRACT                                                             v
+ABSTRAK                                                              vi
+TABLE OF CONTENTS                                                    vii
+LIST OF TABLES                                                       x
+LIST OF FIGURES                                                      xii
+LIST OF ABBREVIATIONS                                                xiii
+
+CHAPTER 1: INTRODUCTION                                              1
+  Background of Study                                                1
+  Problem Statement                                                  2
+  Objectives                                                         2
+  Scope                                                              3
+    Target Users                                                     3
+    Core System Modules                                              4
+  Significance of Project                                            5
+  Expected Output                                                    5
+  Conclusion                                                         7
+
+CHAPTER 2: LITERATURE REVIEW AND PROJECT METHODOLOGY                8
+  Introduction                                                       8
+  Theoretical Frameworks for Cognitive Accessibility                 8
+    Universal Design for Learning (UDL)                              9
+    Web Content Accessibility Guidelines (WCAG) 2.2                  9
+  Neurodivergent Profiles and Interface Interventions                10
+    Attention Deficit Hyperactivity Disorder (ADHD)                  10
+    Dyslexia                                                        11
+    Autism Spectrum Disorder (ASD)                                   11
+  Comparative Analysis of Existing LMS Platforms                     11
+    Moodle                                                          12
+    Canvas LMS                                                      12
+    Blackboard Learn                                                12
+    Google Classroom                                                13
+  Comparison Matrix                                                 13
+    Alternative Approaches and Justification                        13
+  Project Methodology                                               15
+  Project Requirements                                              16
+    Software Requirements                                           16
+    Hardware Requirements                                           17
+    Other Requirements                                              18
+  Project Schedule and Milestones                                   18
+  Summary                                                           20
+
+CHAPTER 3: SYSTEM ANALYSIS                                          21
+  Introduction                                                      21
+  Problem Analysis                                                  21
+    Current System Scenario                                         21
+    Detailed Problem Breakdown                                      22
+  Requirement Analysis                                              23
+    Data Requirement                                                23
+    Functional Requirement                                          25
+    Non-Functional Requirement                                      28
+    Others Requirement                                              30
+  System Architecture                                               31
+    Context Diagram                                                 31
+    System Architecture Diagram                                     33
+    Deployment Diagram                                              35
+  Module Design                                                     36
+  Summary                                                           37
+
+CHAPTER 4: SYSTEM DESIGN                                            38
+  Introduction                                                      38
+  High-Level Design                                                 38
+    Behavioral Design (Activity Diagrams)                           38
+    Interaction Design (Sequence Diagrams)                          45
+    User Interface Design                                           50
+    Database Design & Entity Relationship                           52
+  Comprehensive Data Dictionary                                     54
+    Core Identity and Configuration                                 54
+    Curriculum Structure                                            58
+    Telemetry and Assessment                                        65
+    Learner Progress and Checkpoints                                69
+    Content and Media                                               73
+  Detailed Design                                                   75
+    Software Design                                                 75
+    Physical Database Design                                        79
+    Systemic Implementation Details                                 81
+  Summary                                                           82
+
+References                                                          83
+
+
+=== LIST OF TABLES (corrected page numbers) ===
+
+LIST OF TABLES
+
+PAGE
+
+Table 2.1    LMS Feature Comparison Matrix                         14
+Table 2.2    Project Schedule and Milestones                       19
+Table 3.1    Functional Requirements: Student Module               26
+Table 3.2    Functional Requirements: Educator Module              27
+Table 3.3    Functional Requirements: Admin Module                 27
+Table 4.1    Users Data Dictionary                                 54
+Table 4.2    User Profiles Data Dictionary                         55
+Table 4.3    User Accessibility Preferences Data Dictionary        55
+Table 4.4    Enrollments Data Dictionary                           56
+Table 4.5    Accessibility Templates Data Dictionary               56
+Table 4.6    Adaptive Interactions Data Dictionary                 56
+Table 4.7    Instructor Applications Data Dictionary               57
+Table 4.8    Password Reset Tokens Data Dictionary                 57
+Table 4.9    Referral Codes Data Dictionary                        58
+Table 4.10   Courses Data Dictionary                               59
+Table 4.11   Lessons Data Dictionary                               60
+Table 4.12   Quizzes Data Dictionary                               61
+Table 4.13   Quiz Questions Data Dictionary                        61
+Table 4.14   Quiz Options Data Dictionary                          61
+Table 4.15   Course Chapters Data Dictionary                       62
+Table 4.16   Course Milestones Data Dictionary                     62
+Table 4.17   Course Achievements Data Dictionary                   63
+Table 4.18   Course Accessibility Categories Data Dictionary       63
+Table 4.19   Course Favorites Data Dictionary                      63
+Table 4.20   Quiz Attempts Data Dictionary                         64
+Table 4.21   Quiz Answers Data Dictionary                          64
+Table 4.22   Lesson Progress Data Dictionary                       65
+Table 4.23   Lesson Checkpoints Data Dictionary                    65
+Table 4.24   Learner Checkpoints Data Dictionary                   66
+Table 4.25   Learner Milestones Data Dictionary                    66
+Table 4.26   Video Questions Data Dictionary                       67
+Table 4.27   Recommendations Data Dictionary                       67
+Table 4.28   User Achievements Data Dictionary                     68
+Table 4.29   Lesson Comments Data Dictionary                       68
+Table 4.30   Lesson Summaries Data Dictionary                      69
+Table 4.31   Lesson Versions Data Dictionary                       69
+Table 4.32   Lesson Interactive Content Data Dictionary            70
+Table 4.33   Lesson Templates Data Dictionary                      70
+Table 4.34   Media Assets Data Dictionary                          71
+Table 4.35   Notifications Data Dictionary                         71
+Table 4.36   Contact Messages Data Dictionary                      72
+Table 4.37   Certificates Data Dictionary                          72
+Table 4.38   Certificate Templates Data Dictionary                 73
+Table 4.39   Certificate Verifications Data Dictionary             73
+
+
+=== LIST OF FIGURES (corrected page numbers) ===
+
+LIST OF FIGURES
+
+PAGE
+
+Figure 2.1   Gantt Chart of ACESS Development Schedule            19
+Figure 3.1   Current System Problem Analysis Diagram              22
+Figure 3.2   Use Case Diagram                                     25
+Figure 3.3   Context Diagram                                      32
+Figure 3.4   System Architecture Diagram                          34
+Figure 3.5   Deployment Diagram                                   36
+Figure 4.1   Student Activity Diagram                             40
+Figure 4.2   Educator Activity Diagram                            42
+Figure 4.3   Administrator Activity Diagram                       43
+Figure 4.4   Course Enrollment Sequence Diagram                   46
+Figure 4.5   Lesson Learning Sequence Diagram                     47
+Figure 4.6   Quiz Attempt Sequence Diagram                        48
+Figure 4.7   Course Creation Sequence Diagram                     49
+Figure 4.8   Entity Relationship Diagram                          53

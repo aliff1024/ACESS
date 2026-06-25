@@ -77,7 +77,7 @@ export function EducatorDashboardOverview({
   }
 
   // Aggregate Stats
-  const activeStudents = students.filter(s => (s as Record<string, unknown>).status === 'active' || (s as Record<string, unknown>).status === 'on-track').length;
+  const activeStudents = students.filter(s => s.status === 'active').length;
   const needsAttentionStudents = students.filter(s => s.status === 'at-risk' || s.status === 'inactive');
   const avgCompletion = students.length > 0 
     ? Math.round(students.reduce((acc, s) => acc + s.totalProgress, 0) / students.length)
