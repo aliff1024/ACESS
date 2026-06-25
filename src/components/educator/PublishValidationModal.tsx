@@ -15,9 +15,10 @@ interface PublishValidationModalProps {
   onClose: () => void;
   onPublish: () => void;
   checks: ValidationCheck[];
+  isAdmin?: boolean;
 }
 
-export default function PublishValidationModal({ isOpen, onClose, onPublish, checks }: PublishValidationModalProps) {
+export default function PublishValidationModal({ isOpen, onClose, onPublish, checks, isAdmin = false }: PublishValidationModalProps) {
   if (!isOpen) return null;
 
   const failedChecks = checks.filter(c => c.status === 'fail');
@@ -78,7 +79,7 @@ export default function PublishValidationModal({ isOpen, onClose, onPublish, che
           <div className="flex gap-3 mt-8">
             <Button onClick={onClose} variant="outline" className="flex-1">Cancel</Button>
             <Button onClick={canPublish ? onPublish : undefined} disabled={!canPublish} className={`flex-1 ${canPublish ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
-              {canPublish ? 'Request Publish Approval' : 'Fix Issues First'}
+              {canPublish ? (isAdmin ? 'Publish Course' : 'Request Publish Approval') : 'Fix Issues First'}
             </Button>
           </div>
         </div>

@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { useRole } from '@/providers/AuthProvider';
 
 // Helper to debounce
 function useDebounce<T>(value: T, delay: number): T {
@@ -37,6 +38,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export function EducatorCoursesPage() {
   const router = useRouter();
+  const role = useRole();
   const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,10 +83,21 @@ export function EducatorCoursesPage() {
   const handleTogglePublish = async (courseId: string, currentStatus: string) => {
     if (togglingPublish) return;
     setTogglingPublish(courseId);
-    const newStatus = currentStatus === 'published' ? 'draft' : 'pending_review';
+    
+    let newStatus = 'pending_review';
+    if (currentStatus === 'published') {
+      newStatus = 'draft';
+    } else {
+      newStatus = role === 'admin' ? 'published' : 'pending_review';
+    }
+    
     try {
       await updateCourseStatus(courseId, newStatus as CourseStatus);
-      toast.success(newStatus === 'pending_review' ? 'Approval request sent to Admin!' : 'Course unpublished');
+      toast.success(
+        newStatus === 'pending_review' ? 'Approval request sent to Admin!' : 
+        newStatus === 'published' ? 'Course published successfully' : 
+        'Course unpublished'
+      );
       loadCourses();
     } catch {
       toast.error('Failed to update status');

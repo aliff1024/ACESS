@@ -191,7 +191,7 @@ export async function createCourse(educatorId: string, fields: CourseFields) {
   const slug = fields.title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
+    .replace(/^-|-$/g, '') + '-' + Math.random().toString(36).substring(2, 8)
 
   const { data, error } = await supabase
     .from('courses')

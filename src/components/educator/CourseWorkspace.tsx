@@ -429,16 +429,24 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
       setQuizId(quiz.id);
       setQuizLessonId(lessonId);
       setQuizTitle(quiz.title || `Quiz for ${lessons.find((l) => l.id === lessonId)?.title || 'Lesson'}`);
-      setQuizQuestions((quiz.quiz_questions || []).sort((a, b) => a.sequence_order - b.sequence_order).map((question) => ({
-        id: question.id, question: question.question_text,
-        options: [...question.quiz_options.sort((a, b) => a.sequence_order - b.sequence_order).map((opt) => opt.option_text), '', '', '', ''].slice(0, 4),
-        correctAnswer: question.quiz_options.findIndex((opt) => opt.is_correct) ?? 0,
-        explanation: '',
-        imageUrl: question.image_url || '',
-        optionImages: [...question.quiz_options.sort((a, b) => a.sequence_order - b.sequence_order).map((opt) => opt.image_url || ''), '', '', '', ''].slice(0, 4),
-      })));
+      setQuizQuestions((quiz.quiz_questions || []).sort((a, b) => a.sequence_order - b.sequence_order).map((question) => {
+        const sortedOptions = [...(question.quiz_options || [])].sort((a, b) => a.sequence_order - b.sequence_order);
+        const correctIdx = sortedOptions.findIndex((opt) => opt.is_correct);
+        return {
+          id: question.id, 
+          question: question.question_text,
+          options: [...sortedOptions.map((opt) => opt.option_text), '', '', '', ''].slice(0, 4),
+          correctAnswer: correctIdx !== -1 ? correctIdx : 0,
+          explanation: '',
+          imageUrl: question.image_url || '',
+          optionImages: [...sortedOptions.map((opt) => opt.image_url || ''), '', '', '', ''].slice(0, 4),
+        };
+      }));
       setQuizModalOpen(true);
-    } catch { openNewQuiz(lessonId) }
+    } catch (error) { 
+      console.error('Failed to open edit quiz:', error);
+      openNewQuiz(lessonId); 
+    }
   };
 
   const saveQuiz = async () => {
@@ -500,10 +508,21 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   const togglePublish = async () => {
     if (!course || publishing) return;
     setPublishing(true);
-    const newStatus = course.status === 'published' ? 'draft' : 'pending_review';
+    
+    let newStatus: CourseStatus = 'pending_review';
+    if (course.status === 'published') {
+      newStatus = 'draft';
+    } else {
+      newStatus = mode === 'admin' ? 'published' : 'pending_review';
+    }
+    
     try {
       await updateCourseStatus(courseId, newStatus);
-      toast.success(newStatus === 'pending_review' ? 'Approval request sent to Admin!' : 'Course unpublished');
+      toast.success(
+        newStatus === 'pending_review' ? 'Approval request sent to Admin!' : 
+        newStatus === 'published' ? 'Course published successfully' : 
+        'Course unpublished'
+      );
       load();
     } catch { toast.error('Failed to update status') }
     finally { setPublishing(false) }
@@ -1080,13 +1099,15 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
       <PublishValidationModal
         isOpen={showPublishModal}
         onClose={() => setShowPublishModal(false)}
+        isAdmin={mode === 'admin'}
         onPublish={async () => {
           // If certificate is enabled, lock the course
           if (course.certificate_enabled) {
             await supabase.from('courses').update({ certification_locked: true }).eq('id', courseId)
           }
-          await updateCourseStatus(courseId, 'pending_review');
-          toast.success('Approval request sent to Admin!');
+          const publishStatus = mode === 'admin' ? 'published' : 'pending_review';
+          await updateCourseStatus(courseId, publishStatus);
+          toast.success(mode === 'admin' ? 'Course published successfully!' : 'Approval request sent to Admin!');
           setShowPublishModal(false);
           load();
         }}

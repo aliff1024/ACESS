@@ -43,6 +43,7 @@ export function AddLessonModal({ isOpen, onClose, onSave, courseId }: AddLessonM
 
       toast.success('Lesson added successfully!');
       onSave();
+      onClose();
       setLessonTitle('');
       setLessonContent('');
       setHasVideo(false);

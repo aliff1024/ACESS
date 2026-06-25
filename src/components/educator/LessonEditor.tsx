@@ -1157,7 +1157,7 @@ export function LessonEditor({
           )}
           <div className="flex gap-3 pt-4 border-t sticky bottom-0 bg-white">
             <Button onClick={attemptClose} variant="outline">Cancel</Button>
-            <Button onClick={handleSave} disabled={saving || !form.title.trim()} className="bg-blue-600 hover:bg-blue-700 text-white ml-auto">
+            <Button onClick={handleSave} disabled={saving || !form.title.trim() || (isEditing && !isDirty)} className="bg-blue-600 hover:bg-blue-700 text-white ml-auto">
               {saving ? 'Saving...' : isEditing ? 'Update Lesson' : 'Save Lesson'}
             </Button>
           </div>
