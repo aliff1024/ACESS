@@ -2215,3 +2215,44 @@ export async function deleteLessonVersion(versionId: string): Promise<void> {
 
   if (error) throw error;
 }
+
+export interface StudentSummarySubmission {
+  id: string;
+  response_data: { content: string; wordCount: number };
+  created_at: string;
+  enrollments: {
+    id: string;
+    course_id: string;
+    users: {
+      id: string;
+      full_name: string;
+      email: string;
+    } | null;
+  } | null;
+}
+
+export async function fetchLessonSummaries(lessonId: string, courseId: string): Promise<StudentSummarySubmission[]> {
+  const { data, error } = await supabase
+    .from('learner_checkpoints')
+    .select(`
+      id,
+      response_data,
+      created_at,
+      enrollments!inner (
+        id,
+        course_id,
+        users:user_id (
+          id,
+          full_name,
+          email
+        )
+      )
+    `)
+    .eq('lesson_id', lessonId)
+    .eq('enrollments.course_id', courseId)
+    .is('checkpoint_id', null)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as any) as StudentSummarySubmission[];
+}

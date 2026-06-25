@@ -1,9 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.21)  22 JUN 2026 19:58
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.21)  25 JUN 2026 15:31
 entering extended mode
  restricted \write18 enabled.
+ file:line:error style messages enabled.
  %&-line parsing enabled.
-**"./Template Report PSM.tex"
-(Template Report PSM.tex
+**"c:/Users/user/OneDrive/Documents/PSM/ACESS-main/Report/Template Report PSM.tex"
+(c:/Users/user/OneDrive/Documents/PSM/ACESS-main/Report/Template Report PSM.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
 (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
@@ -22,13 +23,11 @@ File: size12.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
 \abovecaptionskip=\skip49
 \belowcaptionskip=\skip50
 \bibindent=\dimen148
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
 Package: inputenc 2024/02/08 v1.3d Input encoding file
 \inpenc@prehook=\toks17
 \inpenc@posthook=\toks18
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\mathptmx.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\mathptmx.sty
 Package: mathptmx 2020/03/25 PSNFSS-v9.3 Times w/ Math, improved (SPQR, WaS) 
 LaTeX Font Info:    Redeclaring symbol font `operators' on input line 28.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
@@ -63,21 +62,16 @@ LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 (Font)                  OT1/cmr/bx/it --> OT1/ptm/m/it on input line 35.
 LaTeX Info: Redefining \hbar on input line 50.
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\times.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\times.sty
 Package: times 2020/03/25 PSNFSS-v9.3 (SPQR) 
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
 Package: geometry 2026/03/07 v6.0 Page Geometry
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
 Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
 \KV@toks@=\toks19
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
 Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
 Package: iftex 2024/12/12 v1.0g TeX engine tests
 ))
 \Gm@cnth=\count283
@@ -92,8 +86,7 @@ Package: iftex 2024/12/12 v1.0g TeX engine tests
 \Gm@layouthoffset=\dimen155
 \Gm@layoutvoffset=\dimen156
 \Gm@dimlist=\toks20
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg))
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg))
 
 Package geometry Warning: Over-specification in `h'-direction.
     `width' (597.50787pt) is ignored.
@@ -104,7 +97,6 @@ Package geometry Warning: Over-specification in `v'-direction.
 
 (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/fancyhdr\fancyhdr.sty
 Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
-
 \f@nch@headwidth=\skip51
 \f@nch@offset@elh=\skip52
 \f@nch@offset@erh=\skip53
@@ -120,8 +112,7 @@ Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
 \f@nch@widthC=\skip63
 \f@nch@widthR=\skip64
 \@temptokenb=\toks21
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/enumitem\enumitem.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/enumitem\enumitem.sty
 Package: enumitem 2025/02/06 v3.11 Customized lists
 \labelindent=\skip65
 \enit@outerparindent=\dimen157
@@ -129,14 +120,11 @@ Package: enumitem 2025/02/06 v3.11 Customized lists
 \enit@inbox=\box53
 \enit@count@id=\count286
 \enitdp@description=\count287
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdfpages\pdfpages.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdfpages\pdfpages.sty
 Package: pdfpages 2026/03/30 v0.6h Insert pages of external PDF documents (AM)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
 Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tools\calc.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tools\calc.sty
 Package: calc 2025/03/01 v4.3b Infix arithmetic (KKT,FJ)
 \calc@Acount=\count288
 \calc@Bcount=\count289
@@ -148,24 +136,19 @@ LaTeX Info: Redefining \setlength on input line 86.
 LaTeX Info: Redefining \addtolength on input line 87.
 \calc@Ccount=\count290
 \calc@Cskip=\skip68
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/eso-pic\eso-pic.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/eso-pic\eso-pic.sty
 Package: eso-pic 2026/05/31 v3.0e eso-pic (RN)
 \ESO@tempdima=\dimen160
 \ESO@tempdimb=\dimen161
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
 Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package xcolor Info: Driver file: pdftex.def on input line 274.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.def
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.def
 File: pdftex.def 2025/09/29 v1.2d Graphics/color driver for pdftex
-) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx
-)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx)
 Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
 Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1353.
 Package xcolor Info: Model `RGB' extended on input line 1365.
@@ -180,15 +163,11 @@ Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
 \etb@tempcnta=\count291
 ) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
 Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
 Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
 Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.cf
-g
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.cfg
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
 Package graphics Info: Driver file: pdftex.def on input line 106.
@@ -199,8 +178,7 @@ Package graphics Info: Driver file: pdftex.def on input line 106.
 \AM@pagewidth=\dimen164
 \AM@pageheight=\dimen165
 \AM@fboxrule=\dimen166
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdfpages\pppdftex.def
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdfpages\pppdftex.def
 File: pppdftex.def 2026/03/30 v0.6h Pdfpages driver for pdfTeX (AM)
 )
 \pdfpages@includegraphics@status=\count292
@@ -211,8 +189,7 @@ File: pppdftex.def 2026/03/30 v0.6h Pdfpages driver for pdfTeX (AM)
 \AM@lof@heading=\toks25
 \c@AM@survey=\count294
 \AM@templatesizebox=\box55
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/ragged2e\ragged2e.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/ragged2e\ragged2e.sty
 Package: ragged2e 2023/06/22 v3.6 ragged2e Package
 \CenteringLeftskip=\skip69
 \RaggedLeftLeftskip=\skip70
@@ -228,58 +205,38 @@ Package: ragged2e 2023/06/22 v3.6 ragged2e Package
 \RaggedLeftParindent=\skip80
 \RaggedRightParindent=\skip81
 \JustifyingParindent=\skip82
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf.st
-y
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf.sty
 Package: epstopdf 2020-01-24 v2.11 Conversion with epstopdf on the fly (HO)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.st
-y
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.sty
 Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
 ) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/grfext\grfext.sty
 Package: grfext 2019/12/03 v1.3 Manage graphics extensions (HO)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefinek
-eys.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefinekeys.sty
 Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
-))
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
 Package: ltxcmds 2023-12-04 v1.26 LaTeX kernel commands for general use (HO)
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
 Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
-))
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds.
-sty
-Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
-)
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO)
 Package pdftexcmds Info: \pdf@primitive is available.
 Package pdftexcmds Info: \pdf@ifprimitive is available.
 Package pdftexcmds Info: \pdfdraftmode found.
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-ba
-se.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
-Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
-85.
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
 Package grfext Info: Graphics extension search list:
-(grfext)             [.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPE
-G,.JBIG2,.JB2,.eps]
+(grfext)             [.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps]
 (grfext)             \AppendGraphicsExtensions on input line 504.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.cf
-g
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.cfg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/subfig\subfig.sty
 Package: subfig 2005/06/28 ver: 1.3 subfig package
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
 Package: caption 2023/08/05 v3.6o Customizing captions (AR)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
 Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
 \caption@tempdima=\dimen167
 \captionmargin=\dimen168
@@ -307,18 +264,14 @@ Package caption Info: Standard document class detected.
 \c@lotdepth=\count303
 \sf@top=\skip86
 \sf@bottom=\skip87
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
 Package: subcaption 2023/07/28 v1.6b Sub-captions (AR)
 LaTeX Info: Redefining \subref on input line 189.
 Package subcaption Info: The counter `subfigure' was already defined by
-(subcaption)             \newsubfloat (offered by the subfig package) on input 
-line 238.
+(subcaption)             \newsubfloat (offered by the subfig package) on input line 238.
 Package subcaption Info: The counter `subtable' was already defined by
-(subcaption)             \newsubfloat (offered by the subfig package) on input 
-line 238.
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
+(subcaption)             \newsubfloat (offered by the subfig package) on input line 238.
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
 Package: array 2025/09/25 v2.6n Tabular extension package (FMi)
 \col@sep=\dimen176
 \ar@mcellbox=\box56
@@ -327,25 +280,21 @@ Package: array 2025/09/25 v2.6n Tabular extension package (FMi)
 \extratabsurround=\skip88
 \backup@length=\skip89
 \ar@cellbox=\box57
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
 Package: amsmath 2025/07/09 v2.17z AMS math features
 \@mathmargin=\skip90
 
 For additional information on amsmath, use the `?' option.
 (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
 Package: amstext 2024/11/17 v2.01 AMS text
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
 \@emptytoks=\toks27
 \ex@=\dimen178
-))
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 \pmbraise@=\dimen179
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
 Package: amsopn 2022/04/08 v2.04 operator names
 )
 \inf@bad=\count304
@@ -395,80 +344,422 @@ LaTeX Info: Redefining \Relbar on input line 970.
 \mathdisplay@stack=\toks31
 LaTeX Info: Redefining \[ on input line 2950.
 LaTeX Info: Redefining \] on input line 2951.
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
 Package: amssymb 2013/01/14 v3.01 AMS font symbols
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty
 Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 \symAMSa=\mathgroup6
 \symAMSb=\mathgroup7
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
-))
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
 \c@float@type=\count316
 \float@exts=\toks32
 \float@box=\box60
 \@float@everytoks=\toks33
 \@floatcapt=\box61
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcolorbox.sty
+Package: tcolorbox 2025/11/28 version 6.9.0 text color boxes
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz.sty (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfrcs.sty (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil-common.tex
+\pgfutil@everybye=\toks34
+\pgfutil@tempdima=\dimen187
+\pgfutil@tempdimb=\dimen188
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil-latex.def
+\pgfutil@abb=\box62
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs.code.tex (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revision.tex)
+Package: pgfrcs 2025-08-29 v3.1.11a (3.1.11a)
+))
+Package: pgf 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgfcore.sty (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/systemlayer\pgfsys.sty (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsys.code.tex
+Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys.code.tex
+\pgfkeys@pathtoks=\toks35
+\pgfkeys@temptoks=\toks36
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeyslibraryfiltered.code.tex
+\pgfkeys@tmptoks=\toks37
+))
+\pgf@x=\dimen189
+\pgf@y=\dimen190
+\pgf@xa=\dimen191
+\pgf@ya=\dimen192
+\pgf@xb=\dimen193
+\pgf@yb=\dimen194
+\pgf@xc=\dimen195
+\pgf@yc=\dimen196
+\pgf@xd=\dimen197
+\pgf@yd=\dimen198
+\w@pgf@writea=\write3
+\r@pgf@reada=\read2
+\c@pgf@counta=\count317
+\c@pgf@countb=\count318
+\c@pgf@countc=\count319
+\c@pgf@countd=\count320
+\t@pgf@toka=\toks38
+\t@pgf@tokb=\toks39
+\t@pgf@tokc=\toks40
+\pgf@sys@id@count=\count321
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.cfg
+File: pgf.cfg 2025-08-29 v3.1.11a (3.1.11a)
 )
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
+Driver file for pgf: pgfsys-pdftex.def
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsys-pdftex.def
+File: pgfsys-pdftex.def 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsys-common-pdf.def
+File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
+))) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsyssoftpath.code.tex
+File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfsyssoftpath@smallbuffer@items=\count322
+\pgfsyssoftpath@bigbuffer@items=\count323
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsysprotocol.code.tex
+File: pgfsysprotocol.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcore.code.tex
+Package: pgfcore 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.code.tex (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathutil.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathparser.code.tex
+\pgfmath@dimen=\dimen199
+\pgfmath@count=\count324
+\pgfmath@box=\box63
+\pgfmath@toks=\toks41
+\pgfmath@stack@operand=\toks42
+\pgfmath@stack@operation=\toks43
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.basic.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.trigonometric.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.random.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.comparison.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.base.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.round.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.misc.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunctions.integerarithmetics.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathcalc.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloat.code.tex
+\c@pgfmathroundto@lastzeros=\count325
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code.tex) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepoints.code.tex
+File: pgfcorepoints.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@picminx=\dimen256
+\pgf@picmaxx=\dimen257
+\pgf@picminy=\dimen258
+\pgf@picmaxy=\dimen259
+\pgf@pathminx=\dimen260
+\pgf@pathmaxx=\dimen261
+\pgf@pathminy=\dimen262
+\pgf@pathmaxy=\dimen263
+\pgf@xx=\dimen264
+\pgf@xy=\dimen265
+\pgf@yx=\dimen266
+\pgf@yy=\dimen267
+\pgf@zx=\dimen268
+\pgf@zy=\dimen269
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepathconstruct.code.tex
+File: pgfcorepathconstruct.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@path@lastx=\dimen270
+\pgf@path@lasty=\dimen271
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepathusage.code.tex
+File: pgfcorepathusage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@shorten@end@additional=\dimen272
+\pgf@shorten@start@additional=\dimen273
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorescopes.code.tex
+File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfpic=\box64
+\pgf@hbox=\box65
+\pgf@layerbox@main=\box66
+\pgf@picture@serial@count=\count326
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcoregraphicstate.code.tex
+File: pgfcoregraphicstate.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgflinewidth=\dimen274
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcoretransformations.code.tex
+File: pgfcoretransformations.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@pt@x=\dimen275
+\pgf@pt@y=\dimen276
+\pgf@pt@temp=\dimen277
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorequick.code.tex
+File: pgfcorequick.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcoreobjects.code.tex
+File: pgfcoreobjects.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepathprocessing.code.tex
+File: pgfcorepathprocessing.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorearrows.code.tex
+File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfarrowsep=\dimen278
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcoreshade.code.tex
+File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@max=\dimen279
+\pgf@sys@shading@range@num=\count327
+\pgf@shadingcount=\count328
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcoreimage.code.tex
+File: pgfcoreimage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcoreexternal.code.tex
+File: pgfcoreexternal.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfexternal@startupbox=\box67
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorelayers.code.tex
+File: pgfcorelayers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcoretransparency.code.tex
+File: pgfcoretransparency.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorepatterns.code.tex
+File: pgfcorepatterns.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcorerdf.code.tex
+File: pgfcorerdf.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmoduleshapes.code.tex
+File: pgfmoduleshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfnodeparttextbox=\box68
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmoduleplot.code.tex
+File: pgfmoduleplot.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfcomp-version-0-65.sty
+Package: pgfcomp-version-0-65 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@nodesepstart=\dimen280
+\pgf@nodesepend=\dimen281
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfcomp-version-1-18.sty
+Package: pgfcomp-version-1-18 2025-08-29 v3.1.11a (3.1.11a)
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgffor.sty (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfkeys.sty (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys.code.tex)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pgf/math\pgfmath.sty (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.code.tex)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgffor.code.tex
+Package: pgffor 2025-08-29 v3.1.11a (3.1.11a)
+\pgffor@iter=\dimen282
+\pgffor@skip=\dimen283
+\pgffor@stack=\toks44
+\pgffor@toks=\toks45
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz\tikz.code.tex
+Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibraryplothandlers.code.tex
+File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@plot@mark@count=\count329
+\pgfplotmarksize=\dimen284
+)
+\tikz@lastx=\dimen285
+\tikz@lasty=\dimen286
+\tikz@lastxsaved=\dimen287
+\tikz@lastysaved=\dimen288
+\tikz@lastmovetox=\dimen289
+\tikz@lastmovetoy=\dimen290
+\tikzleveldistance=\dimen291
+\tikzsiblingdistance=\dimen292
+\tikz@figbox=\box69
+\tikz@figbox@bg=\box70
+\tikz@tempbox=\box71
+\tikz@tempbox@bg=\box72
+\tikztreelevel=\count330
+\tikznumberofchildren=\count331
+\tikznumberofcurrentchild=\count332
+\tikz@fig@count=\count333
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodulematrix.code.tex
+File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfmatrixcurrentrow=\count334
+\pgfmatrixcurrentcolumn=\count335
+\pgf@matrix@numberofcolumns=\count336
+)
+\tikz@expandcount=\count337
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibrarytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tools\verbatim.sty
+Package: verbatim 2024-01-22 v1.5x LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks46
+\verbatim@line=\toks47
+\verbatim@in@stream=\read3
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/environ\environ.sty
+Package: environ 2014/05/04 v0.3 A new way to define environments
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/trimspaces\trimspaces.sty
+Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
+))
+\tcb@titlebox=\box73
+\tcb@upperbox=\box74
+\tcb@lowerbox=\box75
+\tcb@phantombox=\box76
+\c@tcbbreakpart=\count338
+\c@tcblayer=\count339
+\c@tcolorbox@number=\count340
+\l__tcobox_tmpa_box=\box77
+\l__tcobox_tmpa_dim=\dimen293
+\tcb@temp=\box78
+\tcb@temp=\box79
+\tcb@temp=\box80
+\tcb@temp=\box81
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbraster.code.tex
+Library (tcolorbox): 'tcbraster.code.tex' version '6.9.0'
+\c@tcbrastercolumn=\count341
+\c@tcbrasterrow=\count342
+\c@tcbrasternum=\count343
+\c@tcbraster=\count344
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbskins.code.tex
+Library (tcolorbox): 'tcbskins.code.tex' version '6.9.0'
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tikzfill\tikzfill.image.sty
+Package: tikzfill.image 2026/04/23 v1.2.0 Image filling library for TikZ
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tikzfill\tikzlibraryfill.image.code.tex
+File: tikzlibraryfill.image.code.tex 2026/04/23 v1.2.0 Image filling library
+\l__tikzfill_tmpa_dim=\dimen294
+\l__tikzfill_tmpb_dim=\dimen295
+\l__tikzfill_img_box=\box82
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbskinsjigsaw.code.tex
+Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '6.9.0'
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbbreakable.code.tex
+Library (tcolorbox): 'tcbbreakable.code.tex' version '6.9.0'
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdfcol\pdfcol.sty
+Package: pdfcol 2022-09-21 v1.7 Handle new color stacks for pdfTeX (HO)
+)
+Package pdfcol Info: New color stack `tcb@breakable' = 1 on input line 23.
+\tcb@testbox=\box83
+\tcb@totalupperbox=\box84
+\tcb@totallowerbox=\box85
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbhooks.code.tex
+Library (tcolorbox): 'tcbhooks.code.tex' version '6.9.0'
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbtheorems.code.tex
+Library (tcolorbox): 'tcbtheorems.code.tex' version '6.9.0'
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbfitting.code.tex
+Library (tcolorbox): 'tcbfitting.code.tex' version '6.9.0'
+\tcbfitdim=\dimen296
+\tcb@lowerfitdim=\dimen297
+\tcb@upperfitdim=\dimen298
+\tcb@cur@hbadness=\count345
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcblistingsutf8.code.tex
+Library (tcolorbox): 'tcblistingsutf8.code.tex' version '6.9.0'
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcblistings.code.tex
+Library (tcolorbox): 'tcblistings.code.tex' version '6.9.0'
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listings\listings.sty
+\lst@mode=\count346
+\lst@gtempboxa=\box86
+\lst@token=\toks48
+\lst@length=\count347
+\lst@currlwidth=\dimen299
+\lst@column=\count348
+\lst@pos=\count349
+\lst@lostspace=\dimen300
+\lst@width=\dimen301
+\lst@newlines=\count350
+\lst@lineno=\count351
+\lst@maxwidth=\dimen302
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstpatch.sty
+File: lstpatch.sty 2025/11/14 1.11b (Carsten Heinz)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstmisc.sty
+File: lstmisc.sty 2025/11/14 1.11b (Carsten Heinz)
+\c@lstnumber=\count352
+\lst@skipnumbers=\count353
+\lst@framebox=\box87
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listings\listings.cfg
+File: listings.cfg 2025/11/14 1.11b listings configuration
+))
+Package: listings 2025/11/14 1.11b (Carsten Heinz)
+
+==> First Aid for listings.sty no longer applied!
+    Expected:
+        2024/09/23 1.10c (Carsten Heinz)
+    but found:
+        2025/11/14 1.11b (Carsten Heinz)
+    so I'm assuming it got fixed.
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcblistingscore.code.tex
+Library (tcolorbox): 'tcblistingscore.code.tex' version '6.9.0'
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbprocessing.code.tex
+Library (tcolorbox): 'tcbprocessing.code.tex' version '6.9.0'
+)
+\c@tcblisting=\count354
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listingsutf8\listingsutf8.sty
+Package: listingsutf8 2019-12-10 v1.5 Allow UTF-8 in listings input (HO)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.sty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.sty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+)))) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbexternal.code.tex
+Library (tcolorbox): 'tcbexternal.code.tex' version '6.9.0'
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbmagazine.code.tex
+Library (tcolorbox): 'tcbmagazine.code.tex' version '6.9.0'
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbvignette.code.tex
+Library (tcolorbox): 'tcbvignette.code.tex' version '6.9.0'
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryfadings.code.tex
+File: tikzlibraryfadings.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibraryfadings.code.tex
+File: pgflibraryfadings.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcbposter.code.tex
+Library (tcolorbox): 'tcbposter.code.tex' version '6.9.0'
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
 \Urlmuskip=\muskip18
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/morefloats\morefloats.st
-y
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/morefloats\morefloats.sty
 Package: morefloats 2025/01/28 v1.1a Raise limit of unprocessed floats (HMM)
 Package morefloats Info: Maximum number of possible floats asked for: 36
 (morefloats)             (i.e. 18 more floats).
 (morefloats)             LaTeX might run out of memory before this
 (morefloats)             (in which case it will notify you).
-) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tools\indentfirst.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryshapes.code.tex
+File: tikzlibraryshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryshapes.geometric.code.tex
+File: tikzlibraryshapes.geometric.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes\pgflibraryshapes.geometric.code.tex
+File: pgflibraryshapes.geometric.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryshapes.misc.code.tex
+File: tikzlibraryshapes.misc.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes\pgflibraryshapes.misc.code.tex
+File: pgflibraryshapes.misc.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryshapes.symbols.code.tex
+File: tikzlibraryshapes.symbols.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes\pgflibraryshapes.symbols.code.tex
+File: pgflibraryshapes.symbols.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryshapes.arrows.code.tex
+File: tikzlibraryshapes.arrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes\pgflibraryshapes.arrows.code.tex
+File: pgflibraryshapes.arrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryshapes.callouts.code.tex (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes\pgflibraryshapes.callouts.code.tex)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryshapes.multipart.code.tex
+File: tikzlibraryshapes.multipart.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes\pgflibraryshapes.multipart.code.tex
+File: pgflibraryshapes.multipart.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfnodepartlowerbox=\box88
+\pgfnodeparttwobox=\box89
+\pgfnodepartthreebox=\box90
+\pgfnodepartfourbox=\box91
+\pgfnodeparttwentybox=\box92
+\pgfnodepartnineteenbox=\box93
+\pgfnodeparteighteenbox=\box94
+\pgfnodepartseventeenbox=\box95
+\pgfnodepartsixteenbox=\box96
+\pgfnodepartfifteenbox=\box97
+\pgfnodepartfourteenbox=\box98
+\pgfnodepartthirteenbox=\box99
+\pgfnodeparttwelvebox=\box100
+\pgfnodepartelevenbox=\box101
+\pgfnodeparttenbox=\box102
+\pgfnodepartninebox=\box103
+\pgfnodeparteightbox=\box104
+\pgfnodepartsevenbox=\box105
+\pgfnodepartsixbox=\box106
+\pgfnodepartfivebox=\box107
+))) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibraryarrows.code.tex
+File: tikzlibraryarrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibraryarrows.code.tex
+File: pgflibraryarrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\arrowsize=\dimen303
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tikz/libraries\tikzlibrarypositioning.code.tex
+File: tikzlibrarypositioning.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape.sty
+Package: pdflscape 2022-10-27 v0.13 Display of landscape pages in PDF
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape-nometadata.sty
+Package: pdflscape-nometadata 2022-10-28 v0.13 Display of landscape pages in PDF (HO)
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\lscape.sty
+Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
+)
+Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tools\indentfirst.sty
 Package: indentfirst 2023/07/02 v1.03 Indent first paragraph (DPC)
 ) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/setspace\setspace.sty
 Package: setspace 2022/12/04 v6.7b set line spacing
 ) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.sty
 Package: csquotes 2026-05-19 v5.2p context-sensitive quotations (JAW)
-\csq@reset=\count317
-\csq@gtype=\count318
-\csq@glevel=\count319
-\csq@qlevel=\count320
-\csq@maxlvl=\count321
-\csq@tshold=\count322
-\csq@ltx@everypar=\toks34
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.def
+\csq@reset=\count355
+\csq@gtype=\count356
+\csq@glevel=\count357
+\csq@qlevel=\count358
+\csq@maxlvl=\count359
+\csq@tshold=\count360
+\csq@ltx@everypar=\toks49
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.def
 File: csquotes.def 2026-05-19 v5.2p csquotes generic definitions (JAW)
 )
 Package csquotes Info: Trying to load configuration file 'csquotes.cfg'...
 Package csquotes Info: ... configuration file loaded successfully.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.cfg
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.cfg
 File: csquotes.cfg 
-))
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/colortbl\colortbl.sty
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/colortbl\colortbl.sty
 Package: colortbl 2026/05/01 v1.0l Color table columns (DPC)
-\everycr=\toks35
+\everycr=\toks50
 \minrowclearance=\skip93
-\rownum=\count323
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/titlesec\titlesec.sty
+\rownum=\count361
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/titlesec\titlesec.sty
 Package: titlesec 2025/01/04 v2.17 Sectioning titles
-\ttl@box=\box62
+\ttl@box=\box108
 \beforetitleunit=\skip94
 \aftertitleunit=\skip95
-\ttl@plus=\dimen187
-\ttl@minus=\dimen188
-\ttl@toksa=\toks36
-\titlewidth=\dimen189
-\titlewidthlast=\dimen190
-\titlewidthfirst=\dimen191
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/sectsty\sectsty.sty
-Package: sectsty 2002/02/25 v2.0.2 Commands to change all sectional heading sty
-les
+\ttl@plus=\dimen304
+\ttl@minus=\dimen305
+\ttl@toksa=\toks51
+\titlewidth=\dimen306
+\titlewidthlast=\dimen307
+\titlewidthfirst=\dimen308
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/sectsty\sectsty.sty
+Package: sectsty 2002/02/25 v2.0.2 Commands to change all sectional heading styles
 
 
 LaTeX Warning: Command \underbar  has changed.
@@ -478,8 +769,7 @@ LaTeX Warning: Command \underbar  has changed.
 LaTeX Warning: Command \underline  has changed.
                Check if current package is valid.
 
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tocbibind\tocbibind.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/tocbibind\tocbibind.sty
 Package: tocbibind 2026/06/01 v1.5l extra ToC listings
 Package tocbibind Info: The document has section divisions on input line 50.
 
@@ -526,71 +816,26 @@ Package tocloft Info: The document has section divisions on input line 51.
 \cftbeforesubtabskip=\skip130
 \cftsubtabindent=\skip131
 \cftsubtabnumwidth=\skip132
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/appendix\appendix.sty
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/appendix\appendix.sty
 Package: appendix 2020/02/08 v1.2c extra appendix facilities
-\c@@pps=\count324
-\c@@ppsavesec=\count325
-\c@@ppsaveapp=\count326
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listings\listings.sty
-\lst@mode=\count327
-\lst@gtempboxa=\box63
-\lst@token=\toks37
-\lst@length=\count328
-\lst@currlwidth=\dimen192
-\lst@column=\count329
-\lst@pos=\count330
-\lst@lostspace=\dimen193
-\lst@width=\dimen194
-\lst@newlines=\count331
-\lst@lineno=\count332
-\lst@maxwidth=\dimen195
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstpatch.sty
-File: lstpatch.sty 2025/11/14 1.11b (Carsten Heinz)
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstmisc.sty
-File: lstmisc.sty 2025/11/14 1.11b (Carsten Heinz)
-\c@lstnumber=\count333
-\lst@skipnumbers=\count334
-\lst@framebox=\box64
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/listings\listings.cfg
-File: listings.cfg 2025/11/14 1.11b listings configuration
-))
-Package: listings 2025/11/14 1.11b (Carsten Heinz)
-
-==> First Aid for listings.sty no longer applied!
-    Expected:
-        2024/09/23 1.10c (Carsten Heinz)
-    but found:
-        2025/11/14 1.11b (Carsten Heinz)
-    so I'm assuming it got fixed.
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/babel\babel.sty
-Package: babel 2025/12/11 v25.17 The multilingual framework for LuaLaTeX, pdfLa
-TeX and XeLaTeX
-\babel@savecnt=\count335
-LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input li
-ne 2068.
-LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input li
-ne 2070.
-LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input lin
-e 2072.
-LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input lin
-e 2073.
-LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) 
-on input line 2074.
-LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) 
-on input line 2076.
-LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) 
-on input line 2101.
-\U@D=\dimen196
+\c@@pps=\count362
+\c@@ppsavesec=\count363
+\c@@ppsaveapp=\count364
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/babel\babel.sty
+Package: babel 2025/12/11 v25.17 The multilingual framework for LuaLaTeX, pdfLaTeX and XeLaTeX
+\babel@savecnt=\count365
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input line 2068.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input line 2070.
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input line 2072.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input line 2073.
+LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) on input line 2074.
+LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) on input line 2076.
+LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) on input line 2101.
+\U@D=\dimen309
 \l@unhyphenated=\language79
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/babel\txtbabel.def)
-\bbl@readstream=\read2
-\bbl@dirlevel=\count336
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/babel\txtbabel.def)
+\bbl@readstream=\read4
+\bbl@dirlevel=\count366
 Package babel Info: Configuration files are deprecated, as
 (babel)             they can break document portability.
 (babel)             Reported on input line 4196.
@@ -599,16 +844,11 @@ Package babel Info: Configuration files are deprecated, as
 * Local config file bblopts.cfg used
 *
 (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/arabi\bblopts.cfg
-File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of
- babel
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\babel-
-english.tex)
+File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of babel
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\babel-english.tex)
 Package babel Info: Importing font and identification data for english
 (babel)             from babel-en.ini. Reported on input line 4320.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\english.ld
-f
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\english.ldf
 Language: english 2017/06/06 v3.3r English support from the babel system
 Package babel Info: Hyphen rules for 'canadian' set to \l@english
 (babel)             (\language0). Reported on input line 102.
@@ -616,8 +856,7 @@ Package babel Info: Hyphen rules for 'australian' set to \l@ukenglish
 (babel)             (\language73). Reported on input line 105.
 Package babel Info: Hyphen rules for 'newzealand' set to \l@ukenglish
 (babel)             (\language73). Reported on input line 108.
-))
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/chngcntr\chngcntr.sty
+)) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/chngcntr\chngcntr.sty
 Package: chngcntr 2018/04/09 v1.1a change counter resetting
 Package chngcntr Info: \counterwithout already defined.
 (chngcntr)             Quitting chngcntr on input line 21.
@@ -626,33 +865,29 @@ Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... found 'babel' package.
 Package csquotes Info: Adjusting default style.
 Package csquotes Info: Redefining alias 'default' -> 'english'.
-LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 2
-40.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ptm.fd
+LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 245.
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
-)
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdft
-ex.def
+) (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdftex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count337
+\l__color_backend_stack_int=\count367
 ) (Template Report PSM.aux)
 \openout1 = `"Template Report PSM.aux"'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 240.
-LaTeX Font Info:    ... okay on input line 240.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 240.
-LaTeX Font Info:    ... okay on input line 240.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 240.
-LaTeX Font Info:    ... okay on input line 240.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 240.
-LaTeX Font Info:    ... okay on input line 240.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 240.
-LaTeX Font Info:    ... okay on input line 240.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 240.
-LaTeX Font Info:    ... okay on input line 240.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 240.
-LaTeX Font Info:    ... okay on input line 240.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 245.
+LaTeX Font Info:    ... okay on input line 245.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 245.
+LaTeX Font Info:    ... okay on input line 245.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 245.
+LaTeX Font Info:    ... okay on input line 245.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 245.
+LaTeX Font Info:    ... okay on input line 245.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 245.
+LaTeX Font Info:    ... okay on input line 245.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 245.
+LaTeX Font Info:    ... okay on input line 245.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 245.
+LaTeX Font Info:    ... okay on input line 245.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -688,55 +923,40 @@ LaTeX Font Info:    ... okay on input line 240.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mki
-i
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count338
-\scratchdimen=\dimen197
-\scratchbox=\box65
-\nofMPsegments=\count339
-\nofMParguments=\count340
-\everyMPshowfont=\toks38
-\MPscratchCnt=\count341
-\MPscratchDim=\dimen198
-\MPnumerator=\count342
-\makeMPintoPDFobject=\count343
-\everyMPtoPDFconversion=\toks39
+\scratchcounter=\count368
+\scratchdimen=\dimen310
+\scratchbox=\box109
+\nofMPsegments=\count369
+\nofMParguments=\count370
+\everyMPshowfont=\toks52
+\MPscratchCnt=\count371
+\MPscratchDim=\dimen311
+\MPnumerator=\count372
+\makeMPintoPDFobject=\count373
+\everyMPtoPDFconversion=\toks53
 )
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape.sty
-Package: pdflscape 2022-10-27 v0.13 Display of landscape pages in PDF
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape-nome
-tadata.sty
-Package: pdflscape-nometadata 2022-10-28 v0.13 Display of landscape pages in PD
-F (HO)
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/graphics\lscape.sty
-Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
-)
-Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
-))
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: subfig package v1.3 is loaded.
 Package caption Info: float package is loaded.
 Package caption Info: listings package is loaded.
 Package caption Info: End \AtBeginDocument code.
-\c@lstlisting=\count344
+\c@lstlisting=\count374
 *geometry* verbose mode - [ newgeometry ] result:
 * driver: pdftex
 * paper: a4paper
 * layout: <same size as paper>
 * layoutoffset:(h,v)=(0.0pt,0.0pt)
 * modes: 
-* h-part:(L,W,R)=(71.13188pt, 455.24411pt, 71.13188pt)
+* h-part:(L,W,R)=(99.58464pt, 426.79135pt, 71.13188pt)
 * v-part:(T,H,B)=(156.49014pt, 588.97206pt, 99.58464pt)
 * \paperwidth=597.50787pt
 * \paperheight=845.04684pt
-* \textwidth=455.24411pt
+* \textwidth=426.79135pt
 * \textheight=588.97206pt
-* \oddsidemargin=-1.1381pt
-* \evensidemargin=-1.1381pt
+* \oddsidemargin=27.31465pt
+* \evensidemargin=27.31465pt
 * \topmargin=47.22015pt
 * \headheight=12.0pt
 * \headsep=25.0pt
@@ -755,44 +975,34 @@ Package caption Info: End \AtBeginDocument code.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
+ [1
 
-[1
 
-
-{C:/Users/user/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/user/
-AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [1
+{C:/Users/user/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [1
 
 ]
-LaTeX Font Info:    Trying to load font information for OT1+ztmcm on input line
- 296.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ztmcm.fd
+LaTeX Font Info:    Trying to load font information for OT1+ztmcm on input line 301.
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ztmcm.fd
 File: ot1ztmcm.fd 2000/01/03 Fontinst v1.801 font definitions for OT1/ztmcm.
 )
-LaTeX Font Info:    Trying to load font information for OML+ztmcm on input line
- 296.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omlztmcm.fd
+LaTeX Font Info:    Trying to load font information for OML+ztmcm on input line 301.
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omlztmcm.fd
 File: omlztmcm.fd 2000/01/03 Fontinst v1.801 font definitions for OML/ztmcm.
 )
-LaTeX Font Info:    Trying to load font information for OMS+ztmcm on input line
- 296.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omsztmcm.fd
+LaTeX Font Info:    Trying to load font information for OMS+ztmcm on input line 301.
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omsztmcm.fd
 File: omsztmcm.fd 2000/01/03 Fontinst v1.801 font definitions for OMS/ztmcm.
 )
-LaTeX Font Info:    Trying to load font information for OMX+ztmcm on input line
- 296.
-
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omxztmcm.fd
+LaTeX Font Info:    Trying to load font information for OMX+ztmcm on input line 301.
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omxztmcm.fd
 File: omxztmcm.fd 2000/01/03 Fontinst v1.801 font definitions for OMX/ztmcm.
 )
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 296.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 301.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 296.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 301.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 296.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 301.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -810,17 +1020,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [3]
-Underfull \hbox (badness 4024) in paragraph at lines 344--345
-[]\OT1/ptm/m/n/12 I also ex-tend my sin-cere ap-pre-ci-a-tion to the Fac-ulty o
-f In-for-ma-tion and
- []
-
-
-Underfull \hbox (badness 2653) in paragraph at lines 344--345
-\OT1/ptm/m/n/12 Com-mu-ni-ca-tion Tech-nol-ogy (FICT) at Uni-ver-siti Teknikal 
-Malaysia Melaka for
- []
-
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -829,39 +1028,33 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [4]
-Underfull \hbox (badness 2080) in paragraph at lines 366--367
-\OT1/ptm/m/n/12 ap-proach, pre-sent-ing sig-nif-i-cant ac-ces-si-bil-ity bar-ri
--ers for neu-ro-di-ver-gent learn-ers,
+Underfull \hbox (badness 2080) in paragraph at lines 363--364
+\OT1/ptm/m/n/12 ap-proach, pre-sent-ing sig-nif-i-cant ac-ces-si-bil-ity bar-ri-ers for neu-ro-di-ver-gent learn-ers,
  []
 
 
-Underfull \hbox (badness 4454) in paragraph at lines 366--367
-\OT1/ptm/m/n/12 ACESS im-ple-ments core fea-tures in-clud-ing a rule-based adap
--tive en-gine that
+Underfull \hbox (badness 4454) in paragraph at lines 363--364
+\OT1/ptm/m/n/12 ACESS im-ple-ments core fea-tures in-clud-ing a rule-based adap-tive en-gine that
  []
 
 
-Underfull \hbox (badness 4713) in paragraph at lines 366--367
-\OT1/ptm/m/n/12 au-to-mat-i-cally rec-om-mends re-me-dial con-tent based on as-
-sess-ment per-for-mance,
+Underfull \hbox (badness 4713) in paragraph at lines 363--364
+\OT1/ptm/m/n/12 au-to-mat-i-cally rec-om-mends re-me-dial con-tent based on as-sess-ment per-for-mance,
  []
 
 
-Underfull \hbox (badness 1460) in paragraph at lines 366--367
-\OT1/ptm/m/n/12 in real time via CSS cus-tom prop-er-ties, a strict Fo-cus Mode
- for learn-ers with
+Underfull \hbox (badness 1460) in paragraph at lines 363--364
+\OT1/ptm/m/n/12 in real time via CSS cus-tom prop-er-ties, a strict Fo-cus Mode for learn-ers with
  []
 
 
-Underfull \hbox (badness 1242) in paragraph at lines 366--367
-\OT1/ptm/m/n/12 test-ing demon-strated mea-sur-able im-prove-ments in task com-
-ple-tion rates and user
+Underfull \hbox (badness 1163) in paragraph at lines 363--364
+\OT1/ptm/m/n/12 mon-i-tor en-gage-ment and iden-tify at-risk stu-dents. Eval-u-a-tion through func-tional
  []
 
 
-Underfull \hbox (badness 1237) in paragraph at lines 366--367
-\OT1/ptm/m/n/12 adap-tive sys-tem can sig-nif-i-cantly re-duce cog-ni-tive fric
--tion and pro-mote eq-ui-table
+Underfull \hbox (badness 1308) in paragraph at lines 363--364
+\OT1/ptm/m/n/12 com-pared to con-ven-tional plat-forms. The find-ings in-di-cate that a purpose-built,
  []
 
 
@@ -872,33 +1065,28 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [5]
-Underfull \hbox (badness 2393) in paragraph at lines 383--384
-[]\OT1/ptm/m/n/12 Platform e-pembelajaran tra-di-sional ke-banyakan-nya di-reka
- den-gan pen-dekatan
+Underfull \hbox (badness 2393) in paragraph at lines 380--381
+[]\OT1/ptm/m/n/12 Platform e-pembelajaran tra-di-sional ke-banyakan-nya di-reka den-gan pen-dekatan
  []
 
 
-Underfull \hbox (badness 2326) in paragraph at lines 383--384
-\OT1/ptm/m/n/12 Deficit Hy-per-ac-tiv-ity Dis-or-der (ADHD), dan Autism Spec-tr
-um Dis-or-der (ASD).
+Underfull \hbox (badness 2326) in paragraph at lines 380--381
+\OT1/ptm/m/n/12 Deficit Hy-per-ac-tiv-ity Dis-or-der (ADHD), dan Autism Spec-trum Dis-or-der (ASD).
  []
 
 
-Underfull \hbox (badness 1571) in paragraph at lines 383--384
-\OT1/ptm/m/n/12 melak-sanakan ciri teras ter-ma-suk en-jin adap-tif be-rasaskan
- per-at-u-ran yang se-cara
+Underfull \hbox (badness 1571) in paragraph at lines 380--381
+\OT1/ptm/m/n/12 melak-sanakan ciri teras ter-ma-suk en-jin adap-tif be-rasaskan per-at-u-ran yang se-cara
  []
 
 
-Underfull \hbox (badness 1147) in paragraph at lines 383--384
-\OT1/ptm/m/n/12 ke-bole-hca-pa-ian boleh kon-fig-urasi yang men-gubah ti-pograf
-i, jarak, dan keu-ta-maan
+Underfull \hbox (badness 1147) in paragraph at lines 380--381
+\OT1/ptm/m/n/12 ke-bole-hca-pa-ian boleh kon-fig-urasi yang men-gubah ti-pografi, jarak, dan keu-ta-maan
  []
 
 
-Underfull \hbox (badness 2529) in paragraph at lines 383--384
-\OT1/ptm/m/n/12 kom-pre-hen-sif un-tuk pen-didik me-man-tau penglibatan dan men
--ge-nal pasti pela-jar
+Underfull \hbox (badness 2529) in paragraph at lines 380--381
+\OT1/ptm/m/n/12 kom-pre-hen-sif un-tuk pen-didik me-man-tau penglibatan dan men-ge-nal pasti pela-jar
  []
 
 
@@ -925,8 +1113,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [8])
-\tf@toc=\write3
-\openout3 = `"Template Report PSM.toc"'.
+\tf@toc=\write4
+\openout4 = `"Template Report PSM.toc"'.
 
 
 
@@ -936,9 +1124,17 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[9] (Template Report PSM.lot)
-\tf@lot=\write4
-\openout4 = `"Template Report PSM.lot"'.
+[9] (Template Report PSM.lot
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[10])
+\tf@lot=\write5
+\openout5 = `"Template Report PSM.lot"'.
 
 
 
@@ -948,9 +1144,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[10] (Template Report PSM.lof)
-\tf@lof=\write5
-\openout5 = `"Template Report PSM.lof"'.
+[11] (Template Report PSM.lof)
+\tf@lof=\write6
+\openout6 = `"Template Report PSM.lof"'.
 
 
 
@@ -960,8 +1156,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[11]
-Overfull \hbox (7.5472pt too wide) in paragraph at lines 426--439
+[12]
+Overfull \hbox (7.5472pt too wide) in paragraph at lines 424--453
 [] 
  []
 
@@ -972,37 +1168,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[12]
-Underfull \hbox (badness 6032) in paragraph at lines 464--465
-\OT1/ptm/m/n/12 neu-ro-di-ver-gent in-di-vid-u-als, specif-i-cally those with D
-yslexia, At-ten-tion Deficit
- []
-
-
-Underfull \hbox (badness 1147) in paragraph at lines 464--465
-\OT1/ptm/m/n/12 Hy-per-ac-tiv-ity Dis-or-der (ADHD), and Autism Spec-trum Dis-o
-r-der (ASD). Whether
+[13]
+Underfull \hbox (badness 2326) in paragraph at lines 478--479
+\OT1/ptm/m/n/12 Deficit Hy-per-ac-tiv-ity Dis-or-der (ADHD), and Autism Spec-trum Dis-or-der (ASD).
  []
 
 [1
 
 ]
-Underfull \hbox (badness 2005) in paragraph at lines 472--473
-\OT1/ptm/m/n/12 in-ad-e-quacy of cur-rent ed-u-ca-tional plat-forms to dy-nam-i
--cally sup-port the spe-cific
+Underfull \hbox (badness 1668) in paragraph at lines 500--501
+[]\OT1/ptm/m/n/12 To an-a-lyze the ac-ces-si-bil-ity re-quire-ments, learn-ing chal-lenges, and con-tent
  []
 
-
-Underfull \hbox (badness 3965) in paragraph at lines 474--475
-[]\OT1/ptm/m/n/12 Existing plat-forms of-ten rely on static con-tent de-liv-ery
-. They re-quire
- []
-
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 4
-88.
-(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
-File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-)
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1011,15 +1188,26 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [2]
-Underfull \hbox (badness 1137) in paragraph at lines 500--501
-[]\OT1/ptm/b/n/12 Educators: \OT1/ptm/m/n/12 The course cre-ators and ad-min-is
--tra-tors who re-quire struc-tured,
+Underfull \hbox (badness 1087) in paragraph at lines 501--502
+[]\OT1/ptm/m/n/12 To de-velop a fully func-tional ac-ces-si-ble web-based e-learning plat-form that
  []
 
 
-Underfull \hbox (badness 2608) in paragraph at lines 507--508
-[]\OT1/ptm/b/n/12 Authentication and Pro-file Mod-ule: \OT1/ptm/m/n/12 Man-ages
- se-cure reg-is-tra-tion, lo-gin,
+Underfull \hbox (badness 1314) in paragraph at lines 501--502
+\OT1/ptm/m/n/12 sup-port, ad-justable ac-ces-si-bil-ity dis-play set-tings, struc-tured les-son and quiz
+ []
+
+
+Underfull \hbox (badness 1540) in paragraph at lines 501--502
+\OT1/ptm/m/n/12 man-age-ment, and role-based user man-age-ment for learn-ers, ed-u-ca-tors, and
+ []
+
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 512.
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
+File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
+)
+Underfull \hbox (badness 1137) in paragraph at lines 513--514
+[]\OT1/ptm/b/n/12 Educators: \OT1/ptm/m/n/12 The course cre-ators and ad-min-is-tra-tors who re-quire struc-tured,
  []
 
 
@@ -1030,56 +1218,23 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [3]
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 5
-08.
- (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
-File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
-)
-Underfull \hbox (badness 1389) in paragraph at lines 508--509
-\OT1/ptm/m/n/12 font, spac-ing, theme, tint, read-ing spot-light, fo-cus mode, 
-re-duced mo-tion,
+Underfull \hbox (badness 2608) in paragraph at lines 520--521
+[]\OT1/ptm/b/n/12 Authentication and Pro-file Mod-ule: \OT1/ptm/m/n/12 Man-ages se-cure reg-is-tra-tion, lo-gin,
  []
 
 
-Underfull \hbox (badness 1194) in paragraph at lines 508--509
-\OT1/ptm/m/n/12 glob-ally via CSS data at-tributes on the root el-e-ment, re-qu
-ir-ing no man-ual
+Underfull \hbox (badness 1533) in paragraph at lines 520--521
+\OT1/ptm/m/n/12 role-based ac-cess con-trol for learn-ers, ed-u-ca-tors, and ad-min-is-tra-tors, email
  []
 
 
-Underfull \hbox (badness 1199) in paragraph at lines 509--510
-\OT1/ptm/m/n/12 as-sets with time-coded ques-tions, de-sign-ing in-ter-ac-tive 
-ac-tiv-i-ties (flash-cards,
+Underfull \hbox (badness 4752) in paragraph at lines 523--524
+\OT1/ptm/m/n/12 dy-namic UI al-ter-ations based on ac-ces-si-bil-ity pro-files, and per-son-al-ized
  []
 
 
-Underfull \hbox (badness 1077) in paragraph at lines 509--510
-\OT1/ptm/m/n/12 drag-and-drop, fill-in-the-blanks, mem-ory games, time-lines, H
-5P), man-ag-ing
- []
-
-
-Underfull \hbox (badness 4752) in paragraph at lines 510--511
-\OT1/ptm/m/n/12 dy-namic UI al-ter-ations based on ac-ces-si-bil-ity pro-files,
- and per-son-al-ized
- []
-
-
-Underfull \hbox (badness 2334) in paragraph at lines 511--512
-\OT1/ptm/m/n/12 eval-u-a-tion that trig-gers re-me-dial rec-om-men-da-tions whe
-n scores fall be-low
- []
-
-
-Underfull \hbox (badness 3417) in paragraph at lines 512--513
-\OT1/ptm/m/n/12 com-ple-tion rates, scores, en-roll-ment trends) and pro-vides 
-ed-u-ca-tors with
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 514--515
-[]\OT1/ptm/b/n/12 Interactive Con-tent Mod-ule: \OT1/ptm/m/n/12 Sup-ports six a
-c-tiv-ity types (flash-cards,
+Underfull \hbox (badness 2334) in paragraph at lines 524--525
+\OT1/ptm/m/n/12 eval-u-a-tion that trig-gers re-me-dial rec-om-men-da-tions when scores fall be-low
  []
 
 
@@ -1090,21 +1245,23 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [4]
-Underfull \hbox (badness 10000) in paragraph at lines 515--516
-[]\OT1/ptm/b/n/12 Communication and No-ti-fi-ca-tion Mod-ule: \OT1/ptm/m/n/12 M
-an-ages threaded les-son
+Underfull \hbox (badness 10000) in paragraph at lines 528--529
+[]\OT1/ptm/b/n/12 Communication and No-ti-fi-ca-tion Mod-ule: \OT1/ptm/m/n/12 Man-ages threaded les-son
  []
 
 
-Underfull \hbox (badness 1424) in paragraph at lines 522--523
-\OT1/ptm/m/n/12 along-side deep an-a-lyt-i-cal in-sights into stu-dent en-gage-
-ment. Ul-ti-mately, ACESS
+Underfull \hbox (badness 1424) in paragraph at lines 535--536
+\OT1/ptm/m/n/12 along-side deep an-a-lyt-i-cal in-sights into stu-dent en-gage-ment. Ul-ti-mately, ACESS
  []
 
 
-Underfull \hbox (badness 1590) in paragraph at lines 529--530
-[]\OT1/ptm/b/n/12 Adaptive Web Ap-pli-ca-tion: \OT1/ptm/m/n/12 A fully func-tio
-nal, production-ready learn-ing
+Underfull \hbox (badness 1590) in paragraph at lines 542--543
+[]\OT1/ptm/b/n/12 Adaptive Web Ap-pli-ca-tion: \OT1/ptm/m/n/12 A fully func-tional, production-ready learn-ing
+ []
+
+
+Underfull \hbox (badness 2111) in paragraph at lines 542--543
+\OT1/ptm/m/n/12 man-age-ment sys-tem ac-ces-si-ble via stan-dard web browsers and ca-pa-ble of
  []
 
 
@@ -1115,15 +1272,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [5]
-Underfull \hbox (badness 1448) in paragraph at lines 531--532
-\OT1/ptm/m/n/12 in-clud-ing ty-pog-ra-phy con-trol, theme switch-ing, fo-cus mo
-de, text-to-speech,
- []
-
-
-Underfull \hbox (badness 4686) in paragraph at lines 542--543
-\OT1/ptm/m/n/12 re-view, ex-am-in-ing ex-ist-ing the-o-ret-i-cal frame-works, a
-n-a-lyz-ing cur-rent Learn-ing
+Underfull \hbox (badness 4686) in paragraph at lines 555--556
+\OT1/ptm/m/n/12 re-view, ex-am-in-ing ex-ist-ing the-o-ret-i-cal frame-works, an-a-lyz-ing cur-rent Learn-ing
  []
 
 
@@ -1142,29 +1292,44 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [7]
-Underfull \hbox (badness 1478) in paragraph at lines 557--558
-\OT1/ptm/m/n/12 Can-vas, Black-board, and Google Class-room against the spe-cif
-ic re-quire-ments of
+Underfull \hbox (badness 10000) in paragraph at lines 570--571
+\OT1/ptm/m/n/12 plat-forms like Moo-dle [[]], Can-vas [[]],
  []
 
 
-Underfull \hbox (badness 1803) in paragraph at lines 566--567
-\OT1/ptm/m/n/12 ACESS im-ple-ments this by of-fer-ing gam-i-fied achieve-ments 
-and struc-tured,
+Underfull \hbox (badness 10000) in paragraph at lines 574--575
+\OT1/ptm/m/n/12 and the Web Con-tent Ac-ces-si-bil-ity Guide-lines (WCAG) 2.2
  []
 
 
-Underfull \hbox (badness 2401) in paragraph at lines 566--567
-\OT1/ptm/m/n/12 step-by-step pro-gres-sive dis-clo-sure of course ma-te-rial to
- pre-vent cog-ni-tive
+Underfull \hbox (badness 10000) in paragraph at lines 577--579
+[]\OT1/ptm/m/n/12 Universal De-sign for Learn-ing is a frame-work de-vel-oped by CAST
  []
 
 [8]
-Underfull \hbox (badness 10000) in paragraph at lines 576--577
-\OT1/ptm/m/n/12 in-ter-ac-tion can be dis-abled. The ACESS sys-tem im-ple-ments
- a
+Underfull \hbox (badness 1168) in paragraph at lines 579--580
+\OT1/ptm/m/n/12 ADHD, mo-ti-va-tion can be severely ham-pered by un-struc-tured en-vi-ron-ments
  []
 
+
+Underfull \hbox (badness 1281) in paragraph at lines 579--580
+\OT1/ptm/m/n/12 struc-tured, step-by-step pro-gres-sive dis-clo-sure of course ma-te-rial to pre-vent
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 585--587
+[]\OT1/ptm/m/n/12 While UDL pro-vides the ped-a-gog-i-cal frame-work, WCAG 2.2
+ []
+
+
+Underfull \hbox (badness 3690) in paragraph at lines 585--587
+\OT1/ptm/m/n/12 [[]] pro-vides the strict, mea-sur-able tech-ni-cal
+ []
+
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 587.
+(C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+)
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1173,9 +1338,23 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [9]
-Underfull \hbox (badness 2762) in paragraph at lines 588--590
-\OT1/ptm/m/n/12 spelling and de-cod-ing abil-i-ties. Re-search in-di-cates that
- spe-cific ty-po-graph-i-cal
+Underfull \hbox (badness 1817) in paragraph at lines 597--599
+\OT1/ptm/m/n/12 ex-haus-tion caused by the eye con-stantly dart-ing across a busy screen to parse
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 597--599
+\OT1/ptm/m/n/12 dis-or-ga-nized in-for-ma-tion [[]]. \OT1/ptm/b/n/12 ACESS In-ter-ven-tion: \OT1/ptm/m/n/12 The
+ []
+
+
+Underfull \hbox (badness 1478) in paragraph at lines 601--603
+\OT1/ptm/m/n/12 spe-cific ty-po-graph-i-cal ad-just-ments can sig-nif-i-cantly im-prove read-ing ve-loc-ity and
+ []
+
+
+Underfull \hbox (badness 2591) in paragraph at lines 601--603
+\OT1/ptm/m/n/12 com-pre-hen-sion [[]]. \OT1/ptm/b/n/12 ACESS In-ter-ven-tion: \OT1/ptm/m/n/12 The plat-form
  []
 
 
@@ -1186,15 +1365,23 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [10]
-Underfull \hbox (badness 1509) in paragraph at lines 597--598
-[]\OT1/ptm/m/n/12 To jus-tify the de-vel-op-ment of ACESS, an ex-ten-sive eval-
-u-a-tion of ex-ist-ing
+Underfull \hbox (badness 6575) in paragraph at lines 605--607
+\OT1/ptm/m/n/12 strict struc-tural con-sis-tency. Ed-u-ca-tors uti-liz-ing the Tip-tap rich-text ed-i-tor
  []
 
 
-Underfull \hbox (badness 1924) in paragraph at lines 600--602
-\OT1/ptm/m/n/12 ac-ces-si-bil-ity. \OT1/ptm/b/n/12 Lim-i-ta-tions: \OT1/ptm/m/n
-/12 Moo-dle's na-tive in-ter-face is no-to-ri-ously dense and
+Underfull \hbox (badness 1509) in paragraph at lines 610--611
+[]\OT1/ptm/m/n/12 To jus-tify the de-vel-op-ment of ACESS, an ex-ten-sive eval-u-a-tion of ex-ist-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 610--611
+\OT1/ptm/m/n/12 [[]], Can-vas LMS [[]], Black-board Learn
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 613--615
+[]\OT1/ptm/m/n/12 Moodle is an open-source pow-er-house, widely adopted glob-ally
  []
 
 
@@ -1205,30 +1392,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [11]
-Underfull \hbox (badness 1616) in paragraph at lines 608--610
-[]\OT1/ptm/m/n/12 Blackboard is an enterprise-grade so-lu-tion fo-cused heav-il
-y on syn-chronous
+Underfull \hbox (badness 1616) in paragraph at lines 621--623
+[]\OT1/ptm/m/n/12 Blackboard is an enterprise-grade so-lu-tion fo-cused heav-ily on syn-chronous
  []
 
 
-Underfull \hbox (badness 3679) in paragraph at lines 608--610
-\OT1/ptm/m/n/12 ALLY checks doc-u-ments for screen-reader com-pat-i-bil-ity) ra
-ther than proac-tive
- []
-
-
-Overfull \hbox (8.79636pt too wide) in paragraph at lines 627--627
- []|\OT1/ptm/b/n/12 Blackboard| 
- []
-
-
-Overfull \hbox (3.2285pt too wide) in paragraph at lines 627--627
- \OT1/ptm/b/n/12 Class-room| 
- []
-
-
-Overfull \hbox (8.42169pt too wide) in paragraph at lines 631--631
- \OT1/ptm/b/n/12 (Rule-based)| 
+Underfull \hbox (badness 5022) in paragraph at lines 621--623
+\OT1/ptm/m/n/12 learn-ing in-te-gra-tions and com-pre-hen-sive grad-ing rubrics [[]].
  []
 
 
@@ -1239,9 +1409,51 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [12]
-Underfull \hbox (badness 1286) in paragraph at lines 646--647
-\OT1/ptm/m/n/12 fron-tend with Su-pabase backend-as-a-service, which al-lows th
-e ac-ces-si-bil-ity
+Underfull \hbox (badness 1152) in paragraph at lines 625--627
+\OT1/ptm/b/n/12 Lim-i-ta-tions: \OT1/ptm/m/n/12 While its min-i-mal-ist de-sign re-duces ini-tial vi-sual clut-ter, it is too
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 625--627
+\OT1/ptm/m/n/12 such as rule-based learn-ing paths, gran-u-lar progress teleme-try (track-ing
+ []
+
+
+Underfull \hbox (badness 1448) in paragraph at lines 625--627
+\OT1/ptm/m/n/12 time-spent-per-lesson), or in-te-grated cog-ni-tive pro-files. It func-tions more as an
+ []
+
+
+Overfull \hbox (8.79636pt too wide) in paragraph at lines 640--640
+ []|\OT1/ptm/b/n/12 Blackboard| 
+ []
+
+
+Overfull \hbox (3.2285pt too wide) in paragraph at lines 640--640
+ \OT1/ptm/b/n/12 Class-room| 
+ []
+
+
+Overfull \hbox (8.42169pt too wide) in paragraph at lines 644--644
+ \OT1/ptm/b/n/12 (Rule-based)| 
+ []
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 659--660
+\OT1/ptm/m/n/12 fron-tend [[]] with Su-pabase backend-as-a-service
+ []
+
+
+Underfull \hbox (badness 1253) in paragraph at lines 659--660
+\OT1/ptm/m/n/12 vari-ables on the client with-out full page reloads, pre-serv-ing the fluid user
+ []
+
+
+Underfull \hbox (badness 4254) in paragraph at lines 660--661
+\OT1/ptm/m/n/12 was se-lected be-cause it gen-er-ates min-i-mal pro-duc-tion CSS and en-ables
  []
 
 
@@ -1252,15 +1464,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [13]
-Underfull \hbox (badness 2269) in paragraph at lines 648--649
-\OT1/ptm/m/n/12 data con-sis-tency across en-roll-ments, progress track-ing, an
-d quiz at-tempts,
- []
-
-
-Underfull \hbox (badness 3108) in paragraph at lines 648--649
-\OT1/ptm/m/n/12 par-tic-u-larly given the com-plex re-la-tional model re-quired
- by the adap-tive
+Underfull \hbox (badness 7631) in paragraph at lines 662--663
+\OT1/ptm/m/n/12 was cho-sen for its sim-plic-ity [[]], na-tive Re-act
  []
 
 
@@ -1271,9 +1476,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [14]
-Underfull \hbox (badness 2762) in paragraph at lines 675--676
-[]\OT1/ptm/b/n/12 Node.js: \OT1/ptm/m/n/12 JavaScript run-time en-vi-ron-ment r
-e-quired to ex-e-cute the Next.js
+Underfull \hbox (badness 1603) in paragraph at lines 667--668
+[]\OT1/ptm/m/n/12 The ACESS plat-form was de-vel-oped us-ing the \OT1/ptm/b/n/12 Ag-ile Scrum \OT1/ptm/m/n/12 method-ol-ogy
  []
 
 
@@ -1284,17 +1488,25 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [15]
-Underfull \hbox (badness 1917) in paragraph at lines 677--678
-[]\OT1/ptm/b/n/12 Supabase CLI: \OT1/ptm/m/n/12 Command-line tool for lo-cal da
-tabase mi-gra-tions, schema
+Underfull \hbox (badness 2762) in paragraph at lines 688--689
+[]\OT1/ptm/b/n/12 Node.js: \OT1/ptm/m/n/12 JavaScript run-time en-vi-ron-ment re-quired to ex-e-cute the Next.js
  []
 
-<placeholder_software_tools.jpg, id=93, 301.125pt x 225.84375pt>
-File: placeholder_software_tools.jpg Graphic file (type jpg)
-<use placeholder_software_tools.jpg>
-Package pdftex.def Info: placeholder_software_tools.jpg  used on input line 691
-.
-(pdftex.def)             Requested size: 341.43437pt x 256.09988pt.
+
+Underfull \hbox (badness 1917) in paragraph at lines 690--691
+[]\OT1/ptm/b/n/12 Supabase CLI: \OT1/ptm/m/n/12 Command-line tool for lo-cal database mi-gra-tions, schema
+ []
+
+
+Underfull \hbox (badness 1400) in paragraph at lines 693--694
+[]\OT1/ptm/b/n/12 TypeScript [[]]: \OT1/ptm/m/n/12 Stat-i-cally typed su-per-set of JavaScript used
+ []
+
+
+Underfull \hbox (badness 1158) in paragraph at lines 694--695
+[]\OT1/ptm/b/n/12 Tailwind CSS v4 [[]]: \OT1/ptm/m/n/12 Utility-first CSS frame-work with
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1303,9 +1515,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [16]
-Underfull \hbox (badness 1796) in paragraph at lines 704--705
-\OT1/ptm/m/n/12 func-tions and static host-ing) and Su-pabase (man-aged Post-gr
-eSQL and file
+Underfull \hbox (badness 2556) in paragraph at lines 696--697
+\OT1/ptm/m/n/12 smooth tran-si-tions while re-spect-ing the user's reduced-motion ac-ces-si-bil-ity
+ []
+
+
+Underfull \hbox (badness 2689) in paragraph at lines 697--698
+[]\OT1/ptm/b/n/12 Tiptap [[]]: \OT1/ptm/m/n/12 Head-less rich-text ed-i-tor built on Pros-eMir-ror,
  []
 
 
@@ -1315,34 +1531,38 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[17 <./placeholder_software_tools.jpg>]
-Underfull \hbox (badness 1199) in paragraph at lines 711--712
-[]\OT1/ptm/b/n/12 GitHub Ac-count: \OT1/ptm/m/n/12 Repos-i-tory host-ing for so
-urce code ver-sion con-trol and
+[17]
+Underfull \hbox (badness 1796) in paragraph at lines 710--711
+\OT1/ptm/m/n/12 func-tions and static host-ing) and Su-pabase (man-aged Post-greSQL and file
  []
 
 
-Underfull \hbox (badness 5288) in paragraph at lines 738--738
+Underfull \hbox (badness 1199) in paragraph at lines 717--718
+[]\OT1/ptm/b/n/12 GitHub Ac-count: \OT1/ptm/m/n/12 Repos-i-tory host-ing for source code ver-sion con-trol and
+ []
+
+
+Underfull \hbox (badness 5288) in paragraph at lines 744--744
 []|\OT1/ptm/m/n/12 Row-Level Se-cu-rity poli-cies, stor-age
  []
 
 
-Underfull \hbox (badness 5985) in paragraph at lines 738--738
+Underfull \hbox (badness 5985) in paragraph at lines 744--744
 \OT1/ptm/m/n/12 bucket con-fig-u-ra-tion, data dic-tio-nary
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 738--738
+Underfull \hbox (badness 10000) in paragraph at lines 744--744
 []|\OT1/ptm/m/n/12 Course en-roll-ment, les-son viewer,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 738--738
+Underfull \hbox (badness 10000) in paragraph at lines 744--744
 \OT1/ptm/m/n/12 progress track-ing, Fo-cus Mode
  []
 
 
-Underfull \hbox (badness 4291) in paragraph at lines 738--738
+Underfull \hbox (badness 4291) in paragraph at lines 744--744
 []|\OT1/ptm/m/n/12 Recommendation en-gine, ac-ces-si-bil-ity
  []
 
@@ -1354,15 +1574,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [18]
-<placeholder_gantt_chart.jpg, id=104, 602.25pt x 301.125pt>
-File: placeholder_gantt_chart.jpg Graphic file (type jpg)
-<use placeholder_gantt_chart.jpg>
-Package pdftex.def Info: placeholder_gantt_chart.jpg  used on input line 746.
-(pdftex.def)             Requested size: 426.79135pt x 213.40508pt.
+Underfull \hbox (badness 1776) in paragraph at lines 770--771
+\OT1/ptm/m/n/12 plu-g-ins, static con-tent de-liv-ery mod-els, and dense nav-i-ga-tion hi-er-ar-chies in-duce
+ []
 
-Underfull \hbox (badness 1776) in paragraph at lines 753--754
-\OT1/ptm/m/n/12 plu-g-ins, static con-tent de-liv-ery mod-els, and dense nav-i-
-ga-tion hi-er-ar-chies in-duce
+
+Underfull \hbox (badness 5133) in paragraph at lines 770--771
+\OT1/ptm/m/n/12 rule-based server logic to pro-vide an eq-ui-table, highly per-son-al-ized learn-ing
  []
 
 
@@ -1372,7 +1590,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[19 <./placeholder_gantt_chart.jpg>]
+[19]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1381,33 +1599,38 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [20]
-Underfull \hbox (badness 1107) in paragraph at lines 767--768
-\OT1/ptm/m/n/12 prob-lem anal-y-sis of ex-ist-ing ed-u-ca-tional plat-forms, fo
-l-lowed by a com-pre-hen-sive
+Underfull \hbox (badness 1107) in paragraph at lines 784--785
+\OT1/ptm/m/n/12 prob-lem anal-y-sis of ex-ist-ing ed-u-ca-tional plat-forms, fol-lowed by a com-pre-hen-sive
  []
 
 
-Underfull \hbox (badness 1867) in paragraph at lines 771--772
-\OT1/ptm/m/n/12 Class-room, this sec-tion an-a-lyzes the con-crete op-er-a-tion
-al prob-lems that di-rectly
+Underfull \hbox (badness 1867) in paragraph at lines 788--789
+\OT1/ptm/m/n/12 Class-room, this sec-tion an-a-lyzes the con-crete op-er-a-tional prob-lems that di-rectly
  []
 
 
-Underfull \hbox (badness 1270) in paragraph at lines 775--776
-\OT1/ptm/m/n/12 pro-file, forc-ing neu-ro-di-ver-gent users to seek third-party
- ac-com-mo-da-tions such as
+Underfull \hbox (badness 1270) in paragraph at lines 792--793
+\OT1/ptm/m/n/12 pro-file, forc-ing neu-ro-di-ver-gent users to seek third-party ac-com-mo-da-tions such as
  []
 
 [21]
-<2.jpg, id=114, 622.325pt x 401.5pt>
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 781.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
+Underfull \hbox (badness 1584) in paragraph at lines 830--831
+[]\OT1/ptm/b/n/12 Rigid Ty-pog-ra-phy and Lay-out: \OT1/ptm/m/n/12 Stan-dard LMS plat-forms use fixed CSS
+ []
 
-Underfull \hbox (badness 1584) in paragraph at lines 791--792
-[]\OT1/ptm/b/n/12 Rigid Ty-pog-ra-phy and Lay-out: \OT1/ptm/m/n/12 Stan-dard LM
-S plat-forms use fixed CSS
+
+Underfull \hbox (badness 3690) in paragraph at lines 830--831
+\OT1/ptm/m/n/12 re-quire spe-cific ty-po-graphic con-di-tions, in-clud-ing in-creased let-ter spac-ing
+ []
+
+
+Underfull \hbox (badness 2644) in paragraph at lines 831--832
+\OT1/ptm/m/n/12 mes-sages si-mul-ta-ne-ously. For learn-ers with ADHD [[]], this
+ []
+
+
+Underfull \hbox (badness 1199) in paragraph at lines 831--832
+\OT1/ptm/m/n/12 multi-stimulus en-vi-ron-ment trig-gers rapid at-ten-tion frag-men-ta-tion, mak-ing it
  []
 
 
@@ -1417,28 +1640,19 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[22 <./2.jpg>]
-Underfull \hbox (badness 3838) in paragraph at lines 792--793
-\OT1/ptm/m/n/12 mes-sages si-mul-ta-ne-ously. For learn-ers with ADHD, this mul
-ti-stimulus
+[22]
+Underfull \hbox (badness 1286) in paragraph at lines 832--833
+\OT1/ptm/m/n/12 ac-tion. When a learner fails a pre-req-ui-site con-cept, the sys-tem does not
  []
 
 
-Underfull \hbox (badness 1286) in paragraph at lines 793--794
-\OT1/ptm/m/n/12 ac-tion. When a learner fails a pre-req-ui-site con-cept, the s
-ys-tem does not
+Underfull \hbox (badness 1152) in paragraph at lines 832--833
+\OT1/ptm/m/n/12 au-to-mat-i-cally un-lock re-me-dial con-tent or rec-om-mend re-vi-sion. This lin-ear
  []
 
 
-Underfull \hbox (badness 1152) in paragraph at lines 793--794
-\OT1/ptm/m/n/12 au-to-mat-i-cally un-lock re-me-dial con-tent or rec-om-mend re
--vi-sion. This lin-ear
- []
-
-
-Underfull \hbox (badness 1325) in paragraph at lines 793--794
-\OT1/ptm/m/n/12 pro-gres-sion model as-sumes uni-form learner readi-ness, which
- is par-tic-u-larly
+Underfull \hbox (badness 1325) in paragraph at lines 832--833
+\OT1/ptm/m/n/12 pro-gres-sion model as-sumes uni-form learner readi-ness, which is par-tic-u-larly
  []
 
 
@@ -1449,15 +1663,15 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [23]
-Underfull \hbox (badness 1708) in paragraph at lines 806--807
-[]\OT1/ptm/b/n/12 Assessment Data: \OT1/ptm/m/n/12 Quiz con-fig-u-ra-tions (tim
-e lim-its, pass thresh-olds, max
+Underfull \hbox (badness 1708) in paragraph at lines 845--846
+[]\OT1/ptm/b/n/12 Assessment Data: \OT1/ptm/m/n/12 Quiz con-fig-u-ra-tions (time lim-its, pass thresh-olds, max
  []
 
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 822.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
+<Diagram/Figure 3.2 Use Case Diagram for ACESS Platform.png, id=161, 476.78125pt x 413.545pt>
+File: Diagram/Figure 3.2 Use Case Diagram for ACESS Platform.png Graphic file (type png)
+<use Diagram/Figure 3.2 Use Case Diagram for ACESS Platform.png>
+Package pdftex.def Info: Diagram/Figure 3.2 Use Case Diagram for ACESS Platform.png  used on input line 861.
+(pdftex.def)             Requested size: 341.43437pt x 296.16199pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1473,8 +1687,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[25]
-Overfull \hbox (8.06808pt too wide) in paragraph at lines 874--874
+[25 <./Diagram/Figure 3.2 Use Case Diagram for ACESS Platform.png>]
+Overfull \hbox (8.06808pt too wide) in paragraph at lines 913--913
 \OT1/pcr/m/n/12 difficulty _ 
  []
 
@@ -1486,7 +1700,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [26]
-Overfull \hbox (12.48341pt too wide) in paragraph at lines 896--896
+Overfull \hbox (12.48341pt too wide) in paragraph at lines 935--935
 \OT1/ptm/m/n/12 (Ap-prove/Reject)|  
  []
 
@@ -1498,15 +1712,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [27]
-Underfull \hbox (badness 1028) in paragraph at lines 909--910
-[]\OT1/ptm/b/n/12 Concurrent Users: \OT1/ptm/m/n/12 The Post-greSQL database, u
-ti-liz-ing con-nec-tion pool-ing
- []
-
-
-Underfull \hbox (badness 1009) in paragraph at lines 915--916
-[]\OT1/ptm/b/n/12 Authorization (RBAC): \OT1/ptm/m/n/12 The Next.js `proxy.ts` 
-mid-dle-ware must defini-tively
+Underfull \hbox (badness 1028) in paragraph at lines 948--949
+[]\OT1/ptm/b/n/12 Concurrent Users: \OT1/ptm/m/n/12 The Post-greSQL database, uti-liz-ing con-nec-tion pool-ing
  []
 
 
@@ -1517,15 +1724,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [28]
-Underfull \hbox (badness 1199) in paragraph at lines 930--931
-[]\OT1/ptm/b/n/12 Consistent Nav-i-ga-tion: \OT1/ptm/m/n/12 The pri-mary nav-i-
-ga-tional ar-chi-tec-ture must re-main
+Underfull \hbox (badness 1867) in paragraph at lines 963--964
+\OT1/ptm/m/n/12 at-tribute must pro-gram-mat-i-cally dis-able all CSS and JavaScript an-i-ma-tions
  []
 
 
-Underfull \hbox (badness 1019) in paragraph at lines 930--931
-\OT1/ptm/m/n/12 struc-turally iden-ti-cal across all mod-ules to en-sure pre-di
-ctabil-ity for Autis-tic
+Underfull \hbox (badness 1199) in paragraph at lines 969--970
+[]\OT1/ptm/b/n/12 Consistent Nav-i-ga-tion: \OT1/ptm/m/n/12 The pri-mary nav-i-ga-tional ar-chi-tec-ture must re-main
+ []
+
+
+Underfull \hbox (badness 1019) in paragraph at lines 969--970
+\OT1/ptm/m/n/12 struc-turally iden-ti-cal across all mod-ules to en-sure pre-dictabil-ity for Autis-tic
  []
 
 
@@ -1536,33 +1746,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [29]
-Underfull \hbox (badness 5924) in paragraph at lines 937--938
-\OT1/ptm/m/n/12 au-to-mated, daily Point-in-Time Re-cov-ery (PITR) back-ups of 
-the en-tire
+Underfull \hbox (badness 5924) in paragraph at lines 976--977
+\OT1/ptm/m/n/12 au-to-mated, daily Point-in-Time Re-cov-ery (PITR) back-ups of the en-tire
  []
 
 
-Underfull \hbox (badness 1546) in paragraph at lines 942--943
-[]\OT1/ptm/b/n/12 Modular Ar-chi-tec-ture: \OT1/ptm/m/n/12 The code-base must a
-d-here to strict sep-a-ra-tion of
+Underfull \hbox (badness 1546) in paragraph at lines 981--982
+[]\OT1/ptm/b/n/12 Modular Ar-chi-tec-ture: \OT1/ptm/m/n/12 The code-base must ad-here to strict sep-a-ra-tion of
  []
 
 
-Underfull \hbox (badness 1270) in paragraph at lines 942--943
-\OT1/ptm/m/n/12 con-cerns, de-cou-pling the data-fetching logic (Server Com-po-
-nents) from the
- []
-
-
-Underfull \hbox (badness 1308) in paragraph at lines 951--952
-\OT1/ptm/m/n/12 re-duce ini-tial JavaScript pay-load, crit-i-cal for rapid page
- loads that pre-vent
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 951--952
-\OT1/ptm/m/n/12 cog-ni-tive drop-off for ADHD learn-ers. The App Router pro-vid
-es
+Underfull \hbox (badness 1270) in paragraph at lines 981--982
+\OT1/ptm/m/n/12 con-cerns, de-cou-pling the data-fetching logic (Server Com-po-nents) from the
  []
 
 
@@ -1573,11 +1768,25 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [30]
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 967.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
+Underfull \hbox (badness 1389) in paragraph at lines 992--993
+[]\OT1/ptm/b/n/12 Tailwind CSS v4 [[]]: \OT1/ptm/m/n/12 Just-in-Time com-pi-la-tion en-ables
+ []
 
+
+Underfull \hbox (badness 1796) in paragraph at lines 992--993
+\OT1/ptm/m/n/12 switch-ing with-out JavaScript re-evaluation, which is es-sen-tial for real-time
+ []
+
+
+Underfull \hbox (badness 4279) in paragraph at lines 994--995
+[]\OT1/ptm/b/n/12 Vercel [[]]: \OT1/ptm/m/n/12 Server-less edge de-ploy-ment pro-vides global
+ []
+
+<Diagram/Figure 3.3 Context Diagram.png, id=186, 733.74126pt x 423.5825pt>
+File: Diagram/Figure 3.3 Context Diagram.png Graphic file (type png)
+<use Diagram/Figure 3.3 Context Diagram.png>
+Package pdftex.def Info: Diagram/Figure 3.3 Context Diagram.png  used on input line 1006.
+(pdftex.def)             Requested size: 341.43437pt x 197.11247pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1586,10 +1795,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [31]
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 978.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
+<Diagram/Figure 3.4 System Architecture Diagram.png, id=190, 3256.165pt x 3233.07875pt>
+File: Diagram/Figure 3.4 System Architecture Diagram.png Graphic file (type png)
+<use Diagram/Figure 3.4 System Architecture Diagram.png>
+Package pdftex.def Info: Diagram/Figure 3.4 System Architecture Diagram.png  used on input line 1017.
+(pdftex.def)             Requested size: 341.43437pt x 338.9653pt.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1598,16 +1808,14 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[32]
-Underfull \hbox (badness 1168) in paragraph at lines 986--987
-\OT1/ptm/m/n/12 Ac-cess Con-trol (RBAC), in-stantly redi-rect-ing unau-tho-rize
-d at-tempts (e.g., a
+[32 <./Diagram/Figure 3.3 Context Diagram.png>]
+Underfull \hbox (badness 1253) in paragraph at lines 1024--1025
+\OT1/ptm/m/n/12 fetch-ing se-curely on the server, dras-ti-cally re-duc-ing the JavaScript pay-load
  []
 
 
-Underfull \hbox (badness 4266) in paragraph at lines 987--988
-[]\OT1/ptm/b/n/12 Backend & Database Ar-chi-tec-ture (Su-pabase): \OT1/ptm/m/n/
-12 Su-pabase acts as the
+Underfull \hbox (badness 1478) in paragraph at lines 1025--1026
+\OT1/ptm/m/n/12 JWT cook-ies and ex-tract the user's role. The mid-dle-ware en-forces strict
  []
 
 
@@ -1617,17 +1825,21 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[33]
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 995.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
-
-Underfull \hbox (badness 1742) in paragraph at lines 1000--1001
-\OT1/ptm/m/n/12 Su-pabase back-end op-er-ates on ded-i-cated cloud in-fras-truc
--ture, ex-pos-ing a se-cure
+[33 <./Diagram/Figure 3.4 System Architecture Diagram.png>]
+Underfull \hbox (badness 2478) in paragraph at lines 1026--1027
+[]\OT1/ptm/b/n/12 Backend and Database Ar-chi-tec-ture (Su-pabase): \OT1/ptm/m/n/12 Su-pabase acts as the
  []
 
+
+Underfull \hbox (badness 2573) in paragraph at lines 1026--1027
+\OT1/ptm/m/n/12 com-pre-hen-sive Backend-as-a-Service. It pro-vides a man-aged Post-greSQL
+ []
+
+<Diagram/Figure 3.5 Deployment Diagram.png, id=199, 2723.17375pt x 3290.2925pt>
+File: Diagram/Figure 3.5 Deployment Diagram.png Graphic file (type png)
+<use Diagram/Figure 3.5 Deployment Diagram.png>
+Package pdftex.def Info: Diagram/Figure 3.5 Deployment Diagram.png  used on input line 1034.
+(pdftex.def)             Requested size: 341.43437pt x 412.5407pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1636,39 +1848,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [34]
-Underfull \hbox (badness 10000) in paragraph at lines 1010--1011
-[]\OT1/ptm/b/n/12 Accessibility Mod-ule: \OT1/ptm/m/n/12 A glob-ally avail-able
- Re-act Con-text Provider
- []
-
-
-Underfull \hbox (badness 1292) in paragraph at lines 1010--1011
-\OT1/pcr/m/n/12 user[]accessibility[]settings \OT1/ptm/m/n/12 ta-ble and dy-nam
--i-cally ma-nip-u-lates the
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1010--1011
-\OT1/ptm/m/n/12 DOM root at-tributes (e.g., \OT1/pcr/m/n/12 data-theme="dyslexi
-a"\OT1/ptm/m/n/12 ,
- []
-
-
-Underfull \hbox (badness 2626) in paragraph at lines 1011--1012
-\OT1/ptm/m/n/12 in-clud-ing stan-dard multiple-choice quizzes and em-bed-ded vi
-deo ques-tions,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1012--1013
-[]\OT1/ptm/b/n/12 Analytics Mod-ule: \OT1/ptm/m/n/12 Ag-gre-gates data from \OT
-1/pcr/m/n/12 lesson[]progress \OT1/ptm/m/n/12 and
- []
-
-
-Underfull \hbox (badness 4621) in paragraph at lines 1017--1018
-\OT1/ptm/m/n/12 fol-lowed by a com-pre-hen-sive re-quire-ments anal-y-sis cov-e
-r-ing data, func-tional,
+Underfull \hbox (badness 1742) in paragraph at lines 1039--1040
+\OT1/ptm/m/n/12 Su-pabase back-end op-er-ates on ded-i-cated cloud in-fras-truc-ture, ex-pos-ing a se-cure
  []
 
 
@@ -1678,7 +1859,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[35]
+[35 <./Diagram/Figure 3.5 Deployment Diagram.png>]
+Underfull \hbox (badness 2626) in paragraph at lines 1050--1051
+\OT1/ptm/m/n/12 in-clud-ing stan-dard multiple-choice quizzes and em-bed-ded video ques-tions,
+ []
+
+
+Underfull \hbox (badness 4621) in paragraph at lines 1056--1057
+\OT1/ptm/m/n/12 fol-lowed by a com-pre-hen-sive re-quire-ments anal-y-sis cov-er-ing data, func-tional,
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1687,54 +1877,29 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [36]
-Underfull \hbox (badness 1297) in paragraph at lines 1031--1032
-\OT1/ptm/m/n/12 be-hav-ioral and in-ter-ac-tion di-a-grams, user in-ter-face de
--sign spec-i-fi-ca-tions, and the
- []
-
-
-Underfull \hbox (badness 3884) in paragraph at lines 1031--1032
-\OT1/ptm/m/n/12 con-cep-tual database model. De-tailed De-sign cov-ers the soft
--ware com-po-nent
- []
-
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 1043.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
-[37]
-Underfull \hbox (badness 10000) in paragraph at lines 1048--1049
-\OT1/ptm/m/n/12 struc-tured. Upon au-then-ti-ca-tion, the sys-tem eval-u-ates t
-he
- []
-
-
-Underfull \hbox (badness 2253) in paragraph at lines 1048--1049
-\OT1/pcr/m/n/12 user[]accessibility[]settings\OT1/ptm/m/n/12 . If in-com-plete,
- the user is routed to an
- []
-
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 1054.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
 (fancyhdr)                \setlength{\headheight}{14.49998pt}.
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[37]
+Underfull \hbox (badness 1297) in paragraph at lines 1070--1071
+\OT1/ptm/m/n/12 be-hav-ioral and in-ter-ac-tion di-a-grams, user in-ter-face de-sign spec-i-fi-ca-tions, and the
+ []
+
+
+Underfull \hbox (badness 3884) in paragraph at lines 1070--1071
+\OT1/ptm/m/n/12 con-cep-tual database model. De-tailed De-sign cov-ers the soft-ware com-po-nent
+ []
 
 [38]
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 1065.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
-
-Underfull \hbox (badness 3199) in paragraph at lines 1070--1071
- \OT1/ptm/b/n/12 Ad-min-is-tra-tor Ac-tiv-ity Di-a-gram[] \OT1/ptm/m/n/12 The A
-d-min-is-tra-tor work-flow (Fig-ure 4.3[]) is
- []
+<Diagram/Figure 4.1 Student Activity Diagram.png, id=217, 2418.03375pt x 8222.72pt>
+File: Diagram/Figure 4.1 Student Activity Diagram.png Graphic file (type png)
+<use Diagram/Figure 4.1 Student Activity Diagram.png>
+Package pdftex.def Info: Diagram/Figure 4.1 Student Activity Diagram.png  used on input line 1083.
+(pdftex.def)             Requested size: 234.73654pt x 798.23024pt.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1743,11 +1908,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[39]
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 1080.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
+[39
+
+]
+Overfull \vbox (119.94714pt too high) has occurred while \output is active []
+
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1756,21 +1921,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[40]
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 1097.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
-
-Underfull \hbox (badness 3240) in paragraph at lines 1102--1103
-\OT1/pcr/m/n/12 lesson[]progress \OT1/ptm/m/n/12 record. As the user dwells on 
-the page, a client-side
+[40 <./Diagram/Figure 4.1 Student Activity Diagram.png>]
+Underfull \hbox (badness 1635) in paragraph at lines 1088--1089
+\OT1/ptm/m/n/12 the core loop in-volves brows-ing the cat-a-log, ini-tial-iz-ing an \OT1/pcr/m/n/12 enrollment\OT1/ptm/m/n/12 , and
  []
 
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 1108.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
+
+Underfull \hbox (badness 1158) in paragraph at lines 1088--1089
+\OT1/ptm/m/n/12 path, query-ing the \OT1/pcr/m/n/12 recommendations \OT1/ptm/m/n/12 ta-ble and forc-ing the stu-dent to re-view
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1779,10 +1939,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [41]
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 1125.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
+<Diagram/Figure 4.2 Educator Activity Diagram.png, id=229, 319.94531pt x 679.78969pt>
+File: Diagram/Figure 4.2 Educator Activity Diagram.png Graphic file (type png)
+<use Diagram/Figure 4.2 Educator Activity Diagram.png>
+Package pdftex.def Info: Diagram/Figure 4.2 Educator Activity Diagram.png  used on input line 1095.
+(pdftex.def)             Requested size: 320.0935pt x 680.10957pt.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1791,23 +1952,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[42]
-Underfull \hbox (badness 1038) in paragraph at lines 1130--1131
- \OT1/ptm/b/n/12 Se-quence: Course Cre-ation & Me-dia Up-load[] \OT1/ptm/m/n/12
- Fig-ure 4.7[] shows the Ed-u-ca-tor
- []
+[42
 
+]
+Overfull \vbox (1.82648pt too high) has occurred while \output is active []
 
-Underfull \hbox (badness 2119) in paragraph at lines 1130--1131
-\OT1/ptm/m/n/12 the \OT1/pcr/m/n/12 course-assets \OT1/ptm/m/n/12 bucket, by-pa
-ss-ing the Next.js server to pre-vent mem-ory
- []
-
-
-Underfull \hbox (badness 1014) in paragraph at lines 1142--1143
-\OT1/ptm/m/n/12 col-lapsi-ble side-bar with links to Dash-board, Courses, Progr
-ess, Cer-tifi-cates,
- []
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1816,12 +1965,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[43]
-Underfull \hbox (badness 10000) in paragraph at lines 1144--1145
-\OT1/ptm/m/n/12 Dash-board, Users, Courses, Cer-tifi-cates, An-a-lyt-ics, Re-po
-rts, In-struc-tor
- []
-
+[43 <./Diagram/Figure 4.2 Educator Activity Diagram.png>]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1830,27 +1974,72 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [44]
-Underfull \hbox (badness 1292) in paragraph at lines 1156--1157
-[]\OT1/ptm/b/n/12 Accessibility Set-tings (Learner): \OT1/ptm/m/n/12 A modal in
--ter-face with tog-gle switches,
+<Diagram/Figure 4.3 Administrator Activity Diagram.png, id=240, 1299.35437pt x 588.69937pt>
+File: Diagram/Figure 4.3 Administrator Activity Diagram.png Graphic file (type png)
+<use Diagram/Figure 4.3 Administrator Activity Diagram.png>
+Package pdftex.def Info: Diagram/Figure 4.3 Administrator Activity Diagram.png  used on input line 1107.
+(pdftex.def)             Requested size: 320.0935pt x 145.0186pt.
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[45
+
+ <./Diagram/Figure 4.3 Administrator Activity Diagram.png>]
+<Diagram/Figure 4.4 Course Enrollment Sequence Diagram.png, id=245, 598.48593pt x 395.22656pt>
+File: Diagram/Figure 4.4 Course Enrollment Sequence Diagram.png Graphic file (type png)
+<use Diagram/Figure 4.4 Course Enrollment Sequence Diagram.png>
+Package pdftex.def Info: Diagram/Figure 4.4 Course Enrollment Sequence Diagram.png  used on input line 1123.
+(pdftex.def)             Requested size: 320.0935pt x 211.38683pt.
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[46
+
+ <./Diagram/Figure 4.4 Course Enrollment Sequence Diagram.png>]
+<Diagram/Figure 4.5 Lesson Learning Sequence Diagram.png, id=250, 531.48563pt x 464.4853pt>
+File: Diagram/Figure 4.5 Lesson Learning Sequence Diagram.png Graphic file (type png)
+<use Diagram/Figure 4.5 Lesson Learning Sequence Diagram.png>
+Package pdftex.def Info: Diagram/Figure 4.5 Lesson Learning Sequence Diagram.png  used on input line 1141.
+(pdftex.def)             Requested size: 320.0935pt x 279.74936pt.
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[47
+
+ <./Diagram/Figure 4.5 Lesson Learning Sequence Diagram.png>]
+<Diagram/Figure 4.6 Quiz Attempt Sequence Diagram.png, id=256, 542.025pt x 414.04688pt>
+File: Diagram/Figure 4.6 Quiz Attempt Sequence Diagram.png Graphic file (type png)
+<use Diagram/Figure 4.6 Quiz Attempt Sequence Diagram.png>
+Package pdftex.def Info: Diagram/Figure 4.6 Quiz Attempt Sequence Diagram.png  used on input line 1153.
+(pdftex.def)             Requested size: 320.0935pt x 244.5256pt.
+
+Underfull \hbox (badness 3058) in paragraph at lines 1158--1165
+\OT1/ptm/m/n/12 in-serted into \OT1/pcr/m/n/12 quiz[]attempts\OT1/ptm/m/n/12 . 4. The server eval-u-ates the score against
  []
 
 
-Underfull \hbox (badness 2894) in paragraph at lines 1156--1157
-\OT1/ptm/m/n/12 drop-down se-lects, and slider con-trols for font size, line sp
-ac-ing, theme
+Underfull \hbox (badness 10000) in paragraph at lines 1158--1165
+\OT1/pcr/m/n/12 quizzes.pass[]threshold[]pct\OT1/ptm/m/n/12 . 5. If failed, the back-end queries
  []
 
 
-Underfull \hbox (badness 2460) in paragraph at lines 1166--1167
-\OT1/ptm/m/n/12 land-scape PDF cer-tifi-cate con-tain-ing the learner's full na
-me, course ti-tle,
- []
-
-
-Underfull \hbox (badness 1648) in paragraph at lines 1166--1167
-\OT1/ptm/m/n/12 The PDF is gen-er-ated server-side via \OT1/pcr/m/n/12 generate
-PDFCertificate() \OT1/ptm/m/n/12 in
+Underfull \hbox (badness 1360) in paragraph at lines 1158--1165
+\OT1/pcr/m/n/12 lessons.prerequisite[]lesson[]id\OT1/ptm/m/n/12 . 6. An \OT1/pcr/m/n/12 INSERT \OT1/ptm/m/n/12 is ex-e-cuted on the
  []
 
 
@@ -1860,21 +2049,14 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[45]
-Underfull \hbox (badness 1735) in paragraph at lines 1169--1170
-\OT1/ptm/m/n/12 show-ing en-rolled course count, com-pleted lessons, cer-tifi-c
-ates earned, and
- []
+[48
 
-File: 2.jpg Graphic file (type jpg)
-<use 2.jpg>
-Package pdftex.def Info: 2.jpg  used on input line 1178.
-(pdftex.def)             Requested size: 341.43437pt x 220.28043pt.
-
-Underfull \hbox (badness 2119) in paragraph at lines 1187--1188
-[]\OT1/ptm/m/n/12 The fol-low-ing ta-bles con-sti-tute the ex-act phys-i-cal sc
-hema of the ACESS
- []
+ <./Diagram/Figure 4.6 Quiz Attempt Sequence Diagram.png>]
+<Diagram/Figure 4.7 Course Creation Sequence Diagram.png, id=261, 538.26094pt x 614.295pt>
+File: Diagram/Figure 4.7 Course Creation Sequence Diagram.png Graphic file (type png)
+<use Diagram/Figure 4.7 Course Creation Sequence Diagram.png>
+Package pdftex.def Info: Diagram/Figure 4.7 Course Creation Sequence Diagram.png  used on input line 1171.
+(pdftex.def)             Requested size: 320.0935pt x 365.30853pt.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1883,95 +2065,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[46]
-Underfull \hbox (badness 10000) in paragraph at lines 1200--1200
-[]|\OT1/ptm/m/n/12 Cryptographic iden-ti-fier linked to
+[49
+
+ <./Diagram/Figure 4.7 Course Creation Sequence Diagram.png>]
+Underfull \hbox (badness 1014) in paragraph at lines 1188--1189
+\OT1/ptm/m/n/12 col-lapsi-ble side-bar with links to Dash-board, Courses, Progress, Cer-tifi-cates,
  []
 
 
-Overfull \hbox (5.80157pt too wide) in paragraph at lines 1197--1208
- [] 
- []
-
-
-Overfull \hbox (26.86221pt too wide) in paragraph at lines 1214--1223
- [] 
- []
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 14.49998pt, for example:
-(fancyhdr)                \setlength{\headheight}{14.49998pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
-
-[47]
-Underfull \hbox (badness 10000) in paragraph at lines 1234--1234
-[]|\OT1/ptm/m/n/12 Drives CSS vars (`light`,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1235--1235
-[]|\OT1/ptm/m/n/12 Auto-mounts speech syn-the-sis
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1237--1237
-[]|\OT1/ptm/m/n/12 Activates strict Fo-cus Mode
- []
-
-
-Overfull \hbox (30.02335pt too wide) in paragraph at lines 1229--1240
- [] 
- []
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 14.49998pt, for example:
-(fancyhdr)                \setlength{\headheight}{14.49998pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
-
-[48]
-Overfull \hbox (33.05397pt too wide) in paragraph at lines 1264--1272
- [] 
- []
-
-
-Underfull \hbox (badness 2253) in paragraph at lines 1284--1284
-[]|\OT1/ptm/m/n/12 Sanitized rich-text pay-load from
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1286--1286
-[]|\OT1/ptm/m/n/12 WebVTT stan-dard for Deaf
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1287--1287
-[]|\OT1/ptm/b/n/12 Crucial: \OT1/ptm/m/n/12 Drives the adap-tive
- []
-
-
-Overfull \hbox (14.65117pt too wide) in paragraph at lines 1278--1290
- [] 
- []
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 14.49998pt, for example:
-(fancyhdr)                \setlength{\headheight}{14.49998pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
-
-[49]
-Underfull \hbox (badness 5652) in paragraph at lines 1316--1316
-[]|\OT1/ptm/m/n/12 Links progress to spe-cific course
- []
-
-
-Overfull \hbox (35.54898pt too wide) in paragraph at lines 1312--1321
- [] 
+Underfull \hbox (badness 10000) in paragraph at lines 1190--1191
+\OT1/ptm/m/n/12 Dash-board, Users, Courses, Cer-tifi-cates, An-a-lyt-ics, Re-ports, In-struc-tor
  []
 
 
@@ -1982,18 +2085,23 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [50]
-Underfull \hbox (badness 10000) in paragraph at lines 1332--1332
-[]|\OT1/ptm/m/n/12 0 im-plies un-timed (cru-cial for
+Underfull \hbox (badness 1292) in paragraph at lines 1202--1203
+[]\OT1/ptm/b/n/12 Accessibility Set-tings (Learner): \OT1/ptm/m/n/12 A modal in-ter-face with tog-gle switches,
  []
 
 
-Overfull \hbox (18.58167pt too wide) in paragraph at lines 1327--1335
- [] 
+Underfull \hbox (badness 2894) in paragraph at lines 1202--1203
+\OT1/ptm/m/n/12 drop-down se-lects, and slider con-trols for font size, line spac-ing, theme
  []
 
 
-Overfull \hbox (22.39809pt too wide) in paragraph at lines 1341--1350
- [] 
+Underfull \hbox (badness 2460) in paragraph at lines 1212--1213
+\OT1/ptm/m/n/12 land-scape PDF cer-tifi-cate con-tain-ing the learner's full name, course ti-tle,
+ []
+
+
+Underfull \hbox (badness 1648) in paragraph at lines 1212--1213
+\OT1/ptm/m/n/12 The PDF is gen-er-ated server-side via \OT1/pcr/m/n/12 generatePDFCertificate() \OT1/ptm/m/n/12 in
  []
 
 
@@ -2004,18 +2112,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [51]
-Overfull \hbox (6.56937pt too wide) in paragraph at lines 1370--1379
- [] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1395--1395
-[]|\OT1/ptm/m/n/12 Explanation gen-er-ated for the
- []
-
-
-Overfull \hbox (42.64665pt too wide) in paragraph at lines 1389--1398
- [] 
+Underfull \hbox (badness 1735) in paragraph at lines 1215--1216
+\OT1/ptm/m/n/12 show-ing en-rolled course count, com-pleted lessons, cer-tifi-cates earned, and
  []
 
 
@@ -2026,13 +2124,69 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [52]
-Underfull \hbox (badness 2932) in paragraph at lines 1408--1408
-[]|\OT1/ptm/m/n/12 UNIQUE con-straint (1 cert per
+<Diagram/Figure 4.8 Placeholder for Database ERD.png, id=275, 4425.53375pt x 3109.6175pt>
+File: Diagram/Figure 4.8 Placeholder for Database ERD.png Graphic file (type png)
+<use Diagram/Figure 4.8 Placeholder for Database ERD.png>
+Package pdftex.def Info: Diagram/Figure 4.8 Placeholder for Database ERD.png  used on input line 1225.
+(pdftex.def)             Requested size: 426.79135pt x 299.87692pt.
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[53
+
+ <./Diagram/Figure 4.8 Placeholder for Database ERD.png>]
+Underfull \hbox (badness 2119) in paragraph at lines 1235--1236
+[]\OT1/ptm/m/n/12 The fol-low-ing ta-bles con-sti-tute the ex-act phys-i-cal schema of the ACESS
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1409--1409
-[]|\OT1/ptm/m/n/12 Used for pub-lic ver-i-fi-ca-tion
+Underfull \hbox (badness 1838) in paragraph at lines 1263--1263
+[]|\OT1/ptm/m/n/12 User email ad-dress, used for
+ []
+
+
+Underfull \hbox (badness 4647) in paragraph at lines 1263--1263
+[]|\OT1/ptm/m/n/12 Soft-ban flag; in-ac-tive users
+ []
+
+
+Underfull \hbox (badness 3657) in paragraph at lines 1263--1263
+[]|\OT1/ptm/m/n/12 Timestamp of last suc-cess-ful
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1263--1263
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Underfull \hbox (badness 1484) in paragraph at lines 1263--1263
+[]|\OT1/ptm/m/n/12 Soft-delete times-tamp; null if
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1263--1263
+[]|\OT1/ptm/m/n/12 User's dis-play name shown
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1297--1297
+[]|\OT1/ptm/m/n/12 Short bi-o-graph-i-cal text for
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1297--1297
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1297--1297
+[]|\OT1/ptm/m/n/12 Disability clas-si-fi-ca-tion for
  []
 
 
@@ -2042,90 +2196,36 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[53]
-Underfull \hbox (badness 10000) in paragraph at lines 1438--1439
-\OT1/ptm/m/n/12 via \OT1/pcr/m/n/12 @supabase/ssr\OT1/ptm/m/n/12 , ex-poses \OT
-1/pcr/m/n/12 user \OT1/ptm/m/n/12 ob-ject, \OT1/pcr/m/n/12 session\OT1/ptm/m/n/
-12 , \OT1/pcr/m/n/12 signIn()\OT1/ptm/m/n/12 ,
+[54
+
+]
+Underfull \hbox (badness 10000) in paragraph at lines 1328--1328
+[]|\OT1/ptm/m/n/12 DEFAULT
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1439--1440
-[]\OT1/ptm/b/n/12 AccessibilityProvider: \OT1/ptm/m/n/12 Loads \OT1/pcr/m/n/12 
-user[]accessibility[]settings \OT1/ptm/m/n/12 from
+Underfull \hbox (badness 10000) in paragraph at lines 1328--1328
+[]|\OT1/ptm/m/n/12 DEFAULT
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1439--1440
-\OT1/ptm/m/n/12 ap-plies CSS \OT1/pcr/m/n/12 data-* \OT1/ptm/m/n/12 at-tributes
- to the \OT1/pcr/m/n/12 <html> \OT1/ptm/m/n/12 el-e-ment (e.g.,
+Underfull \hbox (badness 10000) in paragraph at lines 1328--1328
+[]|\OT1/ptm/m/n/12 Switches to Atkin-son
  []
 
 
-Underfull \hbox (badness 6995) in paragraph at lines 1439--1440
-\OT1/pcr/m/n/12 data-theme="dyslexia"\OT1/ptm/m/n/12 , \OT1/pcr/m/n/12 data-red
-uced-motion="true"\OT1/ptm/m/n/12 ) which
+Underfull \hbox (badness 10000) in paragraph at lines 1328--1328
+[]|\OT1/ptm/m/n/12 Timestamp of the last
  []
 
 
-Underfull \hbox (badness 4543) in paragraph at lines 1440--1441
-\OT1/ptm/m/n/12 set-tings, pro-vides a \OT1/pcr/m/n/12 t() \OT1/ptm/m/n/12 func
--tion that maps keys to lo-cale strings in
+Underfull \hbox (badness 10000) in paragraph at lines 1351--1351
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1446--1447
-[]\OT1/ptm/b/n/12 LearnerDashboard: \OT1/ptm/m/n/12 Server com-po-nent that fet
-ches en-rolled courses,
- []
-
-
-Underfull \hbox (badness 4316) in paragraph at lines 1446--1447
-\OT1/ptm/m/n/12 rec-om-men-da-tions, re-cent progress, and achieve-ment sum-mar
-y. Ren-ders
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1446--1447
-\OT1/pcr/m/n/12 WelcomeSection\OT1/ptm/m/n/12 , \OT1/pcr/m/n/12 MyCoursesSectio
-n\OT1/ptm/m/n/12 , \OT1/pcr/m/n/12 ProgressOverview\OT1/ptm/m/n/12 , and
- []
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 14.49998pt, for example:
-(fancyhdr)                \setlength{\headheight}{14.49998pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
-
-[54]
-Underfull \hbox (badness 10000) in paragraph at lines 1447--1448
-\OT1/ptm/m/n/12 header. Tracks time spent via \OT1/pcr/m/n/12 setInterval \OT1/
-ptm/m/n/12 dis-patch-ing \OT1/pcr/m/n/12 PATCH
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1448--1449
-\OT1/ptm/m/n/12 from \OT1/pcr/m/n/12 quizzes.time[]limit[]seconds\OT1/ptm/m/n/1
-2 ), se-lected an-swers map, and
- []
-
-
-Underfull \hbox (badness 1314) in paragraph at lines 1448--1449
-\OT1/ptm/m/n/12 to \OT1/pcr/m/n/12 POST /api/quiz/[id]/attempt \OT1/ptm/m/n/12 
-and dis-plays \OT1/pcr/m/n/12 QuizResultModal
- []
-
-
-Underfull \hbox (badness 4266) in paragraph at lines 1449--1450
-[]\OT1/ptm/b/n/12 AccessibilitySettingsModal: \OT1/ptm/m/n/12 Client com-po-nen
-t with tog-gle switches and
- []
-
-
-Underfull \hbox (badness 4819) in paragraph at lines 1456--1457
-\OT1/ptm/m/n/12 the ed-i-tor with ex-ten-sions: StarterKit, Un-der-line, Link, 
-Im-age, Ta-ble,
+Underfull \hbox (badness 10000) in paragraph at lines 1351--1351
+[]|\OT1/ptm/m/n/12 Record sta-tus (e.g., ac-tive,
  []
 
 
@@ -2136,15 +2236,43 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [55]
-Underfull \hbox (badness 10000) in paragraph at lines 1466--1467
-\OT1/ptm/m/n/12 Ren-ders Recharts \OT1/pcr/m/n/12 <BarChart>\OT1/ptm/m/n/12 , \
-OT1/pcr/m/n/12 <LineChart>\OT1/ptm/m/n/12 , and \OT1/pcr/m/n/12 <PieChart>
+Underfull \hbox (badness 10000) in paragraph at lines 1374--1374
+[]|\OT1/ptm/m/n/12 Free-text de-scrip-tion or
  []
 
 
-Underfull \hbox (badness 1424) in paragraph at lines 1473--1474
-\OT1/ptm/m/n/12 with Zod, up-dates the \OT1/pcr/m/n/12 lessons \OT1/ptm/m/n/12 
-ta-ble, and cre-ates a ver-sion snap-shot in
+Underfull \hbox (badness 10000) in paragraph at lines 1399--1399
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1399--1399
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1430--1430
+[]|\OT1/ptm/m/n/12 User's dis-play name shown
+ []
+
+
+Underfull \hbox (badness 1838) in paragraph at lines 1430--1430
+[]|\OT1/ptm/m/n/12 User email ad-dress, used for
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1430--1430
+[]|\OT1/ptm/m/n/12 Record sta-tus (e.g., ac-tive,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1430--1430
+[]|\OT1/ptm/m/n/12 Timestamp of the re-view
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1430--1430
+[]|\OT1/ptm/m/n/12 Timestamp of the last
  []
 
 
@@ -2155,38 +2283,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [56]
-Underfull \hbox (badness 10000) in paragraph at lines 1475--1476
-[]\OT1/ptm/b/n/12 Recommendation En-gine (\OT1/pcr/b/n/12 recommendation-engine
-.ts\OT1/ptm/b/n/12 ): \OT1/ptm/m/n/12 Con-tains
+Underfull \hbox (badness 1838) in paragraph at lines 1454--1454
+[]|\OT1/ptm/m/n/12 User email ad-dress, used for
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1476--1477
-[]\OT1/ptm/b/n/12 Achievement En-gine (\OT1/pcr/b/n/12 achievement-engine.ts\OT
-1/ptm/b/n/12 ): \OT1/ptm/m/n/12 Con-tains
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1476--1477
-\OT1/ptm/m/n/12 com-ple-tions. Checks learner's cur-rent progress against
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1476--1477
-\OT1/pcr/m/n/12 course[]achievements \OT1/ptm/m/n/12 cri-te-ria and grants new 
-badges via
- []
-
-
-Underfull \hbox (badness 1454) in paragraph at lines 1484--1485
-[]\OT1/ptm/b/n/12 learner-api.ts: \OT1/ptm/m/n/12 46 ex-ported func-tions cov-e
-r-ing pro-file man-age-ment, course
- []
-
-
-Underfull \hbox (badness 1701) in paragraph at lines 1485--1486
-\OT1/ptm/m/n/12 ver-sion-ing, quiz builder op-er-a-tions, as-set up-load, stu-d
-ent progress queries,
+Underfull \hbox (badness 4647) in paragraph at lines 1478--1478
+[]|\OT1/ptm/m/n/12 Soft-ban flag; in-ac-tive users
  []
 
 
@@ -2197,9 +2300,28 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [57]
-Overfull \hbox (62.80844pt too wide) in paragraph at lines 1528--1528
-[]    \OT1/pcr/m/n/12 user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE C
-ASCADE,[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1536--1536
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1536--1536
+[]|\OT1/ptm/m/n/12 Free-text de-scrip-tion or
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1536--1536
+[]|\OT1/ptm/m/n/12 Record sta-tus (e.g., ac-tive,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1536--1536
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Underfull \hbox (badness 1484) in paragraph at lines 1536--1536
+[]|\OT1/ptm/m/n/12 Soft-delete times-tamp; null if
  []
 
 
@@ -2210,39 +2332,48 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [58]
-Overfull \hbox (41.20845pt too wide) in paragraph at lines 1542--1542
-[]    \OT1/pcr/m/n/12 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASC
-ADE,[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Overfull \hbox (70.00844pt too wide) in paragraph at lines 1542--1542
-[]    \OT1/pcr/m/n/12 course_id UUID NOT NULL REFERENCES courses(id) ON DELETE 
-CASCADE,[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 Record sta-tus (e.g., ac-tive,
  []
 
 
-Overfull \hbox (12.40846pt too wide) in paragraph at lines 1542--1542
-[]        \OT1/pcr/m/n/12 CHECK (status IN ('active', 'completed', 'dropped')),
-[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 Timestamp of the last
  []
 
 
-Overfull \hbox (19.60846pt too wide) in paragraph at lines 1557--1557
-[]\OT1/pcr/m/n/12 CREATE INDEX idx_enrollments_course ON enrollments(course_id)
-;[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 Accessibility im-prove-ment
  []
 
 
-Overfull \hbox (134.80841pt too wide) in paragraph at lines 1557--1557
-[]\OT1/pcr/m/n/12 CREATE INDEX idx_lesson_progress_enrollment ON lesson_progres
-s(enrollment_id);[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Overfull \hbox (106.00842pt too wide) in paragraph at lines 1557--1557
-[]\OT1/pcr/m/n/12 CREATE INDEX idx_quiz_attempts_enrollment ON quiz_attempts(en
-rollment_id);[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 DEFAULT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 DEFAULT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 DEFAULT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1595
+[]|\OT1/ptm/m/n/12 DEFAULT
  []
 
 
@@ -2253,15 +2384,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [59]
-Overfull \hbox (19.60846pt too wide) in paragraph at lines 1557--1557
-[]\OT1/pcr/m/n/12 CREATE INDEX idx_notifications_user ON notifications(user_id)
-;[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1620--1620
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Overfull \hbox (5.20847pt too wide) in paragraph at lines 1580--1580
-[]    \OT1/pcr/m/n/12 SELECT user_id FROM enrollments WHERE id = enrollment_id[
-] 
+Underfull \hbox (badness 1436) in paragraph at lines 1620--1620
+[]|\OT1/ptm/m/n/12 Maximum num-ber of al-lowed
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1620--1620
+[]|\OT1/ptm/m/n/12 Timestamp of the last
  []
 
 
@@ -2272,39 +2406,33 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [60]
-Overfull \hbox (48.40845pt too wide) in paragraph at lines 1610--1610
-[]                         \OT1/pcr/m/n/12 FROM quizzes WHERE id = NEW.quiz_id)
- THEN[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1644--1644
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Overfull \hbox (91.60843pt too wide) in paragraph at lines 1610--1610
-[]        \OT1/pcr/m/n/12 INSERT INTO notifications (user_id, type, title, body
-, metadata)[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1644--1644
+[]|\OT1/ptm/m/n/12 Question for-mat
  []
 
 
-Overfull \hbox (134.80841pt too wide) in paragraph at lines 1610--1610
-[]                \OT1/pcr/m/n/12 SELECT course_id FROM enrollments WHERE id = 
-NEW.enrollment_id[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1667--1667
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Overfull \hbox (5.20847pt too wide) in paragraph at lines 1610--1610
-[]            \OT1/pcr/m/n/12 'A learner scored below the passing threshold.',[
-] 
+Underfull \hbox (badness 7116) in paragraph at lines 1667--1667
+[]|\OT1/ptm/m/n/12 Whether this is the cor-rect
  []
 
 
-Overfull \hbox (120.40842pt too wide) in paragraph at lines 1610--1610
-[]            \OT1/pcr/m/n/12 jsonb_build_object('attempt_id', NEW.id, 'score',
- NEW.score_pct)[] 
+Underfull \hbox (badness 10000) in paragraph at lines 1690--1690
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Underfull \hbox (badness 1314) in paragraph at lines 1624--1625
-\OT1/ptm/m/n/12 em-bed-ded video ques-tions. This is achieved by cre-at-ing a c
-us-tom Re-act hook
+Underfull \hbox (badness 10000) in paragraph at lines 1690--1690
+[]|\OT1/ptm/m/n/12 Free-text de-scrip-tion or
  []
 
 
@@ -2315,45 +2443,28 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [61]
-Underfull \hbox (badness 10000) in paragraph at lines 1627--1628
-\OT1/ptm/m/n/12 ACESS uti-lizes na-tive Post-greSQL Trig-gers. For ex-am-ple, t
-he
+Underfull \hbox (badness 10000) in paragraph at lines 1715--1715
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Underfull \hbox (badness 3977) in paragraph at lines 1627--1628
-\OT1/ptm/m/n/12 an \OT1/pcr/m/n/12 INSERT \OT1/ptm/m/n/12 where \OT1/pcr/m/n/12
- score[]pct < pass[]threshold\OT1/ptm/m/n/12 , the trig-ger ex-e-cutes a
+Underfull \hbox (badness 10000) in paragraph at lines 1715--1715
+[]|\OT1/ptm/m/n/12 Free-text de-scrip-tion or
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1630--1631
- \OT1/ptm/b/n/12 Ses-sion Time-out and Se-cu-rity[] \OT1/ptm/m/n/12 A \OT1/pcr/
-m/n/12 SessionTimeout \OT1/ptm/m/n/12 com-po-nent wraps
+Underfull \hbox (badness 10000) in paragraph at lines 1741--1741
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
  []
 
 
-Underfull \hbox (badness 2903) in paragraph at lines 1630--1631
-\OT1/ptm/m/n/12 count-down. If no re-sponse is re-ceived, the user is forcibly 
-signed out via
+Underfull \hbox (badness 10000) in paragraph at lines 1741--1741
+[]|\OT1/ptm/m/n/12 Free-text de-scrip-tion or
  []
 
 
-Underfull \hbox (badness 1418) in paragraph at lines 1634--1635
-[]\OT1/ptm/m/n/12 This chap-ter trans-lated the project's re-quire-ments into c
-on-crete en-gi-neer-ing
- []
-
-
-Underfull \hbox (badness 1275) in paragraph at lines 1634--1635
-\OT1/ptm/m/n/12 in-ter-ac-tion se-quence di-a-grams map-ping crit-i-cal sys-tem
- work-flows, fol-lowed by a
- []
-
-
-Underfull \hbox (badness 1701) in paragraph at lines 1634--1635
-\OT1/ptm/m/n/12 the phys-i-cal database im-ple-men-ta-tion with DDL state-ments
-, in-dexes, Row-Level
+Underfull \hbox (badness 10000) in paragraph at lines 1741--1741
+[]|\OT1/ptm/m/n/12 Timestamp of the last
  []
 
 
@@ -2364,6 +2475,40 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [62]
+Underfull \hbox (badness 10000) in paragraph at lines 1762--1762
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1783--1783
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1810--1810
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1810--1810
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1810--1810
+[]|\OT1/ptm/m/n/12 Sequential counter for quiz
+ []
+
+
+Underfull \hbox (badness 6220) in paragraph at lines 1810--1810
+[]|\OT1/ptm/m/n/12 Quiz score as a per-cent-age
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1810--1810
+[]|\OT1/ptm/m/n/12 Timestamp of re-sponse
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -2371,7 +2516,36 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[63] (Template Report PSM.bbl)
+[63]
+Underfull \hbox (badness 10000) in paragraph at lines 1832--1832
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1832--1832
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1832--1832
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing the
+ []
+
+
+Underfull \hbox (badness 7116) in paragraph at lines 1832--1832
+[]|\OT1/ptm/m/n/12 Whether this is the cor-rect
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1862--1862
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1862--1862
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -2379,33 +2553,704 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[64] (Template Report PSM.aux)
+[64]
+Underfull \hbox (badness 10000) in paragraph at lines 1887--1887
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1887--1887
+[]|\OT1/ptm/m/n/12 Free-text de-scrip-tion or
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1912--1912
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1912--1912
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[65]
+Underfull \hbox (badness 10000) in paragraph at lines 1935--1935
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1935--1935
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1962--1962
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1962--1962
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[66]
+Underfull \hbox (badness 10000) in paragraph at lines 1988--1988
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2010--2010
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2010--2010
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2010--2010
+[]|\OT1/ptm/m/n/12 Timestamp when the
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[67]
+Underfull \hbox (badness 10000) in paragraph at lines 2036--2036
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2036--2036
+[]|\OT1/ptm/m/n/12 Rich-text HTML or JSON
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2036--2036
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2065--2065
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2065--2065
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2065--2065
+[]|\OT1/ptm/m/n/12 Rich-text HTML or JSON
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2065--2065
+[]|\OT1/ptm/m/n/12 DEFAULT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2065--2065
+[]|\OT1/ptm/m/n/12 Record sta-tus (e.g., ac-tive,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2065--2065
+[]|\OT1/ptm/m/n/12 Timestamp of re-sponse
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2065--2065
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[68]
+Underfull \hbox (badness 10000) in paragraph at lines 2088--2088
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2088--2088
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2116--2116
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2116--2116
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2116--2116
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[69]
+Underfull \hbox (badness 10000) in paragraph at lines 2143--2143
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2143--2143
+[]|\OT1/ptm/m/n/12 Free-text de-scrip-tion or
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2143--2143
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2170--2170
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2170--2170
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[70]
+Underfull \hbox (badness 10000) in paragraph at lines 2195--2195
+[]|\OT1/ptm/m/n/12 JSONB field for ex-ten-si-ble
+ []
+
+
+Underfull \hbox (badness 1838) in paragraph at lines 2220--2220
+[]|\OT1/ptm/m/n/12 User email ad-dress, used for
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2220--2220
+[]|\OT1/ptm/m/n/12 Record sta-tus (e.g., ac-tive,
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[71]
+Underfull \hbox (badness 10000) in paragraph at lines 2258--2258
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2258--2258
+[]|\OT1/ptm/m/n/12 Record sta-tus (e.g., ac-tive,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2258--2258
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2258--2258
+[]|\OT1/ptm/m/n/12 DEFAULT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2258--2258
+[]|\OT1/ptm/m/n/12 JSONB field for ex-ten-si-ble
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2283--2283
+[]|\OT1/ptm/m/n/12 Free-text de-scrip-tion or
+ []
+
+
+Underfull \hbox (badness 4647) in paragraph at lines 2283--2283
+[]|\OT1/ptm/m/n/12 Soft-ban flag; in-ac-tive users
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2283--2283
+[]|\OT1/ptm/m/n/12 Timestamp of the last
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[72]
+Underfull \hbox (badness 10000) in paragraph at lines 2305--2305
+[]|\OT1/ptm/m/n/12 Foreign key ref-er-enc-ing
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2318--2319
+\OT1/ptm/m/n/12 via \OT1/pcr/m/n/12 @supabase/ssr\OT1/ptm/m/n/12 , ex-poses \OT1/pcr/m/n/12 user \OT1/ptm/m/n/12 ob-ject, \OT1/pcr/m/n/12 session\OT1/ptm/m/n/12 , \OT1/pcr/m/n/12 signIn()\OT1/ptm/m/n/12 ,
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[73]
+Underfull \hbox (badness 10000) in paragraph at lines 2319--2320
+[]\OT1/ptm/b/n/12 AccessibilityProvider: \OT1/ptm/m/n/12 Loads \OT1/pcr/m/n/12 user[]accessibility[]settings \OT1/ptm/m/n/12 from
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2319--2320
+\OT1/ptm/m/n/12 ap-plies CSS \OT1/pcr/m/n/12 data-* \OT1/ptm/m/n/12 at-tributes to the \OT1/pcr/m/n/12 <html> \OT1/ptm/m/n/12 el-e-ment (e.g.,
+ []
+
+
+Underfull \hbox (badness 6995) in paragraph at lines 2319--2320
+\OT1/pcr/m/n/12 data-theme="dyslexia"\OT1/ptm/m/n/12 , \OT1/pcr/m/n/12 data-reduced-motion="true"\OT1/ptm/m/n/12 ) which
+ []
+
+
+Underfull \hbox (badness 4341) in paragraph at lines 2319--2320
+\OT1/ptm/m/n/12 Tail-wind CSS v4 [[]] in-ter-cepts to re-theme the en-tire
+ []
+
+
+Underfull \hbox (badness 4543) in paragraph at lines 2320--2321
+\OT1/ptm/m/n/12 set-tings, pro-vides a \OT1/pcr/m/n/12 t() \OT1/ptm/m/n/12 func-tion that maps keys to lo-cale strings in
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2326--2327
+[]\OT1/ptm/b/n/12 LearnerDashboard: \OT1/ptm/m/n/12 Server com-po-nent that fetches en-rolled courses,
+ []
+
+
+Underfull \hbox (badness 4316) in paragraph at lines 2326--2327
+\OT1/ptm/m/n/12 rec-om-men-da-tions, re-cent progress, and achieve-ment sum-mary. Ren-ders
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2326--2327
+\OT1/pcr/m/n/12 WelcomeSection\OT1/ptm/m/n/12 , \OT1/pcr/m/n/12 MyCoursesSection\OT1/ptm/m/n/12 , \OT1/pcr/m/n/12 ProgressOverview\OT1/ptm/m/n/12 , and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2327--2328
+\OT1/ptm/m/n/12 header. Tracks time spent via \OT1/pcr/m/n/12 setInterval \OT1/ptm/m/n/12 dis-patch-ing \OT1/pcr/m/n/12 PATCH
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2328--2329
+\OT1/ptm/m/n/12 from \OT1/pcr/m/n/12 quizzes.time[]limit[]seconds\OT1/ptm/m/n/12 ), se-lected an-swers map, and
+ []
+
+
+Underfull \hbox (badness 1314) in paragraph at lines 2328--2329
+\OT1/ptm/m/n/12 to \OT1/pcr/m/n/12 POST /api/quiz/[id]/attempt \OT1/ptm/m/n/12 and dis-plays \OT1/pcr/m/n/12 QuizResultModal
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[74]
+Underfull \hbox (badness 4266) in paragraph at lines 2329--2330
+[]\OT1/ptm/b/n/12 AccessibilitySettingsModal: \OT1/ptm/m/n/12 Client com-po-nent with tog-gle switches and
+ []
+
+
+Underfull \hbox (badness 8019) in paragraph at lines 2336--2337
+[]\OT1/ptm/b/n/12 LessonEditor: \OT1/ptm/m/n/12 Client com-po-nent wrap-ping the Tip-tap ed-i-tor in-stance
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2336--2337
+\OT1/ptm/m/n/12 and Place-holder. Strips dis-al-lowed tags on save. Calls \OT1/pcr/m/n/12 PUT
+ []
+
+
+Underfull \hbox (badness 3209) in paragraph at lines 2344--2345
+\OT1/ptm/m/n/12 fil-ter-ing, and pag-i-nat-ing the users list. Sup-ports role re-as-sign-ment via
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[75]
+Underfull \hbox (badness 1424) in paragraph at lines 2353--2354
+\OT1/ptm/m/n/12 with Zod, up-dates the \OT1/pcr/m/n/12 lessons \OT1/ptm/m/n/12 ta-ble, and cre-ates a ver-sion snap-shot in
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2355--2356
+[]\OT1/ptm/b/n/12 Recommendation En-gine (\OT1/pcr/b/n/12 recommendation-engine.ts\OT1/ptm/b/n/12 ): \OT1/ptm/m/n/12 Con-tains
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2356--2357
+[]\OT1/ptm/b/n/12 Achievement En-gine (\OT1/pcr/b/n/12 achievement-engine.ts\OT1/ptm/b/n/12 ): \OT1/ptm/m/n/12 Con-tains
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2356--2357
+\OT1/ptm/m/n/12 com-ple-tions. Checks learner's cur-rent progress against
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2356--2357
+\OT1/pcr/m/n/12 course[]achievements \OT1/ptm/m/n/12 cri-te-ria and grants new badges via
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[76]
+Underfull \hbox (badness 7796) in paragraph at lines 2357--2358
+\OT1/ptm/m/n/12 con-fig-u-ra-tion (Dyslexia, ADHD, Autism, Dyscal-cu-lia) with age-adapted
+ []
+
+
+Underfull \hbox (badness 1454) in paragraph at lines 2364--2365
+[]\OT1/ptm/b/n/12 learner-api.ts: \OT1/ptm/m/n/12 48 ex-ported func-tions cov-er-ing pro-file man-age-ment, course
+ []
+
+
+Underfull \hbox (badness 1701) in paragraph at lines 2365--2366
+\OT1/ptm/m/n/12 ver-sion-ing, quiz builder op-er-a-tions, as-set up-load, stu-dent progress queries,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2373--2374
+[]\OT1/ptm/m/n/12 The ACESS database is im-ple-mented on Su-pabase Post-greSQL 15
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[77]
+Underfull \hbox (badness 10000) in paragraph at lines 2382--2393
+[]\OT1/pcr/m/n/10 CREATE TABLE public.users ( id UUID PRIMARY KEY DEFAULT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2382--2393
+\OT1/pcr/m/n/10 gen[]random[]uuid(), email VARCHAR(255) UNIQUE NOT NULL, full[]name TEXT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2382--2393
+\OT1/pcr/m/n/10 NOT NULL, role VARCHAR(20) NOT NULL DEFAULT 'learner' CHECK (role IN
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2382--2393
+\OT1/pcr/m/n/10 ('learner', 'educator', 'admin')), is[]active BOOLEAN DEFAULT true,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2382--2393
+\OT1/pcr/m/n/10 email[]verified[]at TIMESTAMPTZ, created[]at TIMESTAMPTZ DEFAULT NOW(),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2398--2408
+[]\OT1/pcr/m/n/10 CREATE TABLE public.enrollments ( id UUID PRIMARY KEY DEFAULT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2398--2408
+\OT1/pcr/m/n/10 gen[]random[]uuid(), user[]id UUID NOT NULL REFERENCES users(id) ON
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2398--2408
+\OT1/pcr/m/n/10 DELETE CASCADE, course[]id UUID NOT NULL REFERENCES courses(id) ON
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2398--2408
+\OT1/pcr/m/n/10 DELETE CASCADE, status VARCHAR(20) DEFAULT 'active' CHECK (status IN
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2398--2408
+\OT1/pcr/m/n/10 ('active', 'completed', 'dropped')), enrolled[]at TIMESTAMPTZ DEFAULT
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2416--2424
+[]\OT1/pcr/m/n/10 CREATE INDEX idx[]enrollments[]user ON enrollments(user[]id); CREATE
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2416--2424
+\OT1/pcr/m/n/10 INDEX idx[]enrollments[]course ON enrollments(course[]id); CREATE INDEX
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2416--2424
+\OT1/pcr/m/n/10 idx[]lesson[]progress[]enrollment ON lesson[]progress(enrollment[]id);
+ []
+
+
+Overfull \hbox (16.05392pt too wide) in paragraph at lines 2416--2424
+\OT1/pcr/m/n/10 CREATE INDEX idx[]quiz[]attempts[]enrollment ON quiz[]attempts(enrollment[]id);
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2416--2424
+\OT1/pcr/m/n/10 CREATE INDEX idx[]lessons[]course ON lessons(course[]id); CREATE
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2416--2424
+\OT1/pcr/m/n/10 INDEX idx[]notifications[]user ON notifications(user[]id); CREATE
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2416--2424
+\OT1/pcr/m/n/10 INDEX idx[]courses[]created[]by ON courses(created[]by); CREATE INDEX
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2432--2438
+[]\OT1/pcr/m/n/10 -- Learners can only read their own lesson progress CREATE POLICY
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2432--2438
+\OT1/pcr/m/n/10 lesson[]progress[]learner[]select ON lesson[]progress FOR SELECT USING
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2432--2438
+\OT1/pcr/m/n/10 (auth.uid() IN ( SELECT user[]id FROM enrollments WHERE id =
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2439--2443
+[]\OT1/pcr/m/n/10 -- Educators can CRUD their own courses CREATE POLICY
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2439--2443
+\OT1/pcr/m/n/10 courses[]educator[]insert ON courses FOR INSERT WITH CHECK (auth.uid() =
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2444--2448
+[]\OT1/pcr/m/n/10 -- Admins can read all rows CREATE POLICY users[]admin[]select ON users
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[78]
+LaTeX Font Info:    Trying to load font information for TS1+pcr on input line 2457.
+ (C:\Users\user\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1pcr.fd
+File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
+)
+Underfull \hbox (badness 10000) in paragraph at lines 2456--2475
+[]\OT1/pcr/m/n/10 CREATE FUNCTION notify[]on[]quiz[]attempt() RETURNS TRIGGER AS \TS1/pcr/m/n/10 $$ \OT1/pcr/m/n/10 BEGIN
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2456--2475
+\OT1/pcr/m/n/10 IF NEW.score[]pct < (SELECT pass[]threshold[]pct FROM quizzes WHERE id
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2456--2475
+\OT1/pcr/m/n/10 = NEW.quiz[]id) THEN INSERT INTO notifications (user[]id, type, title,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2456--2475
+\OT1/pcr/m/n/10 body, metadata) VALUES ( (SELECT created[]by FROM courses WHERE id =
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2456--2475
+\OT1/pcr/m/n/10 ( SELECT course[]id FROM enrollments WHERE id = NEW.enrollment[]id )),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2456--2475
+\OT1/pcr/m/n/10 'quiz[]failed', 'Student Failed Quiz', 'A learner scored below the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2456--2475
+\OT1/pcr/m/n/10 passing threshold.', jsonb[]build[]object('attempt[]id', NEW.id, 'score',
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2476--2479
+[]\OT1/pcr/m/n/10 CREATE TRIGGER notify[]on[]quiz[]attempt[]trigger AFTER INSERT ON
+ []
+
+
+Underfull \hbox (badness 1314) in paragraph at lines 2483--2484
+\OT1/ptm/m/n/12 em-bed-ded video ques-tions. This is achieved by cre-at-ing a cus-tom Re-act hook
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2486--2487
+\OT1/ptm/m/n/12 ACESS uti-lizes na-tive Post-greSQL Trig-gers. For ex-am-ple, the
+ []
+
+
+Underfull \hbox (badness 3977) in paragraph at lines 2486--2487
+\OT1/ptm/m/n/12 an \OT1/pcr/m/n/12 INSERT \OT1/ptm/m/n/12 where \OT1/pcr/m/n/12 score[]pct < pass[]threshold\OT1/ptm/m/n/12 , the trig-ger ex-e-cutes a
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[79]
+Underfull \hbox (badness 10000) in paragraph at lines 2489--2490
+ \OT1/ptm/b/n/12 Ses-sion Time-out and Se-cu-rity[] \OT1/ptm/m/n/12 A \OT1/pcr/m/n/12 SessionTimeout \OT1/ptm/m/n/12 com-po-nent wraps
+ []
+
+
+Underfull \hbox (badness 2903) in paragraph at lines 2489--2490
+\OT1/ptm/m/n/12 count-down. If no re-sponse is re-ceived, the user is forcibly signed out via
+ []
+
+
+Underfull \hbox (badness 1418) in paragraph at lines 2493--2494
+[]\OT1/ptm/m/n/12 This chap-ter trans-lated the project's re-quire-ments into con-crete en-gi-neer-ing
+ []
+
+
+Underfull \hbox (badness 1275) in paragraph at lines 2493--2494
+\OT1/ptm/m/n/12 in-ter-ac-tion se-quence di-a-grams map-ping crit-i-cal sys-tem work-flows, fol-lowed by a
+ []
+
+
+Underfull \hbox (badness 1701) in paragraph at lines 2493--2494
+\OT1/ptm/m/n/12 the phys-i-cal database im-ple-men-ta-tion with DDL state-ments, in-dexes, Row-Level
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[80] (Template Report PSM.bbl
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[81]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[82])
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[83] (Template Report PSM.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
  ) 
 Here is how much of TeX's memory you used:
- 12349 strings out of 467871
- 205913 string characters out of 5418860
- 660382 words of memory out of 5000000
- 40995 multiletter control sequences out of 15000+600000
- 644597 words of font info for 78 fonts, out of 8000000 for 9000
+ 30353 strings out of 467871
+ 658294 string characters out of 5418860
+ 1155234 words of memory out of 5000000
+ 58652 multiletter control sequences out of 15000+600000
+ 645912 words of font info for 82 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 72i,13n,90p,2135b,557s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrb8a.p
-fb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.
-pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.p
-fb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pf
-b><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pf
-b>
-Output written on "Template Report PSM.pdf" (77 pages, 275392 bytes).
+ 102i,13n,108p,2188b,865s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrb8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on "Template Report PSM.pdf" (97 pages, 1681265 bytes).
 PDF statistics:
- 279 PDF objects out of 1000 (max. 8388607)
+ 404 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 16 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 217 words of extra memory for PDF output out of 10000 (max. 10000000)
 

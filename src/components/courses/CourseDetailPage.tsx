@@ -7,7 +7,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { BookOpen, Check, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, Zap, ChevronRight, ListChecks, AlertTriangle, Award, User, Clock, Users } from 'lucide-react';
+import { BookOpen, Check, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, Zap, ChevronRight, ListChecks, AlertTriangle, Award, User, Clock, Users, Star, Medal, Footprints, GraduationCap, Flame } from 'lucide-react';
 import { ConfirmAction } from '../ui/ConfirmAction';
 import { fetchCourseDetail, enrollInCourse, unenrollFromCourse, toggleFavorite, checkIsFavorited, fetchSystemCourseProgress, checkCourseCertificateEligibility, claimCertificate, fetchCourseAccessibilityCategoriesForLearner } from '@/lib/learner-api';
 import type { CourseDetail, SystemCourseProgress } from '@/lib/learner-api';
@@ -21,6 +21,21 @@ interface CourseDetailPageProps {
   onStartLesson: (lessonId: string) => void;
   isPreview?: boolean;
 }
+
+const BADGE_ICONS = [
+  { id: 'Trophy', icon: Trophy },
+  { id: 'Award', icon: Award },
+  { id: 'Star', icon: Star },
+  { id: 'Medal', icon: Medal },
+  { id: 'Target', icon: Target },
+  { id: 'Shield', icon: Shield },
+  { id: 'Zap', icon: Zap },
+  { id: 'Footprints', icon: Footprints },
+  { id: 'BookOpen', icon: BookOpen },
+  { id: 'GraduationCap', icon: GraduationCap },
+  { id: 'Flame', icon: Flame },
+  { id: 'Heart', icon: Heart }
+];
 
 const difficultyColors: Record<string, string> = {
   beginner: 'bg-green-100 text-green-700 border-green-200',
@@ -509,7 +524,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                       <h3 className="text-lg font-bold text-gray-900">{lesson.title}</h3>
                       {!settings.simplified_ui && (
                         <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
-                          <Clock className="w-4 h-4" /> Estimated time: {lesson.estimated_duration ? `${lesson.estimated_duration} mins` : '15 mins'}
+                          <Clock className="w-4 h-4" /> Estimated time: {lesson.estimated_duration ? `${lesson.estimated_duration} mins` : 'N/A'}
                         </p>
                       )}
                     </div>
@@ -634,22 +649,21 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                     <Trophy className="w-5 h-5" /> Earnable Badges
                   </h3>
                   <div className="flex flex-wrap gap-4">
-                    {courseAchievements.map(ach => (
+                    {courseAchievements.map(ach => {
+                      const badge = BADGE_ICONS.find(b => b.id === ach.icon_url) || { icon: Award };
+                      const Icon = badge.icon;
+                      return (
                       <div key={ach.id} className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm border border-yellow-100 min-w-[200px]">
-                        {ach.icon_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={ach.icon_url} alt={ach.name} className="w-10 h-10 object-contain" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                            <Award className="w-5 h-5" />
-                          </div>
-                        )}
+                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                          <Icon className="w-5 h-5" />
+                        </div>
                         <div>
                           <p className="font-bold text-sm text-gray-900">{ach.name}</p>
                           <p className="text-xs text-gray-500">{ach.requirement_type} {ach.requirement_threshold}</p>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

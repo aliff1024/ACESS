@@ -13,7 +13,7 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout, Image, Link, Gamepad2, List, Download, MessageSquare, AlertTriangle } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
-import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint, fetchSystemCourseProgress } from '@/lib/learner-api';
+import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint, fetchSystemCourseProgress, fetchLessonProgressMeta, saveLessonProgressMeta } from '@/lib/learner-api';
 import type { LessonContent, QuizData, LearnerLessonCheckpoint } from '@/lib/learner-api';
 import { shouldAutoEnableEasyRead } from '@/lib/accessibility-utils';
 import { trackAdaptation } from '@/lib/adaptive-engine';
@@ -34,6 +34,7 @@ import { toast } from 'sonner';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { TaskChecklist } from '@/components/accessibility/TaskChecklist';
 import { VisualSchedule } from '@/components/accessibility/VisualSchedule';
+import { StepByStepGuidance, type GuidedStep } from '@/components/accessibility/StepByStepGuidance';
 
 // ─── Utils ────────────────────────────────────────────────────────────────
 
@@ -56,8 +57,8 @@ function computeReadTime(contentHtml: string, estimatedDuration?: number | null)
   return { label: `~${minutes} min read`, minutes };
 }
 
-function CelebrationAnimation({ reducedMotion = false }: { reducedMotion?: boolean }) {
-  if (reducedMotion) {
+function CelebrationAnimation({ animationLevel = 'normal' }: { animationLevel?: string }) {
+  if (animationLevel === 'none') {
     return (
       <div className="flex flex-col items-center gap-2 py-2">
         <Award className="w-12 h-12 text-yellow-500" />
@@ -258,14 +259,16 @@ export function LessonViewPage({
   const [submitting, setSubmitting] = useState(false);
   const [quizResetKey, setQuizResetKey] = useState(0);
 
-  // Completion Tracking
+  // Completion Tracking (persisted to database)
   const [tracker, setTracker] = useState({ video: false, activity: false, scroll: false, quiz: false });
   const [completedActivityIds, setCompletedActivityIds] = useState<Set<string>>(new Set());
+  const [guidedStepIndex, setGuidedStepIndex] = useState(0);
+  const [lastCompletedStepIndex, setLastCompletedStepIndex] = useState(-1);
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [hasDismissedCompletionPopup, setHasDismissedCompletionPopup] = useState(false);
   const [showChecklistPopup, setShowChecklistPopup] = useState(false);
 
-  const { settings, adaptiveOverrides } = useAccessibility();
+  const { settings, adaptiveOverrides, updateSettings } = useAccessibility();
   const adaptiveLessonModes = adaptiveOverrides.lesson_modes;
 
   // Focus mode local toggle (learner can override lesson setting)
@@ -325,6 +328,14 @@ export function LessonViewPage({
       supabase.from('enrollments').select('id').eq('user_id', user.id).eq('course_id', courseId).neq('status', 'dropped').maybeSingle().then(({ data: enrollment }) => {
         if (!enrollment) return;
         setEnrollmentId(enrollment.id);
+        // Load lesson progress meta from database
+        fetchLessonProgressMeta(lessonId, courseId).then(meta => {
+          if (meta) {
+            setTracker(meta);
+            if (typeof meta.guided_step_index === 'number') setGuidedStepIndex(meta.guided_step_index);
+            if (typeof meta.last_completed_step_index === 'number') setLastCompletedStepIndex(meta.last_completed_step_index);
+          }
+        }).catch(err => console.error('[lesson-progress] load error:', err));
         supabase.from('lesson_progress').select('is_viewed, summary_completed').eq('enrollment_id', enrollment.id).eq('lesson_id', lessonId).maybeSingle().then(({ data: lp }) => {
           if (lp?.is_viewed) setLessonCompleted(true);
           if (lp?.summary_completed) setSummarySubmitted(true);
@@ -388,6 +399,7 @@ export function LessonViewPage({
             }).catch(() => {});
         }).catch(() => {});
     }).catch(() => {});
+    
     Promise.all([
       supabase.from('lessons').select('id, title, sequence_order, chapter_id').eq('course_id', courseId).eq('status', 'published').or('visibility_status.eq.visible,visibility_status.is.null').order('sequence_order', { ascending: true }),
       supabase.from('course_chapters').select('id, title').eq('course_id', courseId).order('sequence_order', { ascending: true })
@@ -649,7 +661,7 @@ export function LessonViewPage({
   // Completion popup trigger
   useEffect(() => {
     if (!lesson || lessonCompleted) return;
-    const needsVideo = lesson.has_video && !!lesson.video_url;
+    const needsVideo = lesson?.has_video !== false && !!lesson.video_url;
     const needsActivities = interactiveContent.length > 0;
     const needsQuiz = lesson.has_quiz && quizData;
     
@@ -734,7 +746,7 @@ export function LessonViewPage({
   const hasQuiz = quizData !== null;
 
   const lessonPhases = lesson ? [
-    { id: 'content' as const, name: 'Content', fullName: 'Lesson Content', required: true, done: tracker.scroll },
+    { id: 'content' as const, name: 'Content', fullName: 'Lesson Content', required: true, done: tracker.scroll && (lesson?.has_video === false || !lesson?.video_url || tracker.video) },
     { id: 'activity' as const, name: 'Activities', fullName: 'Interactive Activities', required: interactiveContent.length > 0, done: tracker.activity },
     { id: 'quiz' as const, name: 'Quiz', fullName: 'Pass Quiz', required: lesson.has_quiz && !!quizData, done: tracker.quiz },
     { id: 'finish' as const, name: 'Finish', fullName: 'Finish Lesson', required: true, done: lessonCompleted },
@@ -744,10 +756,8 @@ export function LessonViewPage({
     const items: string[] = [];
     switch (phaseId) {
       case 'content':
-        if (!tracker.scroll) {
-          if (lesson?.video_url && lesson?.has_video !== false && !tracker.video) items.push('Watch Video');
-          if (contentHtml) items.push('Read Content');
-        }
+        if (lesson?.has_video !== false && !!lesson?.video_url && !tracker.video) items.push('Watch Video');
+        if (!tracker.scroll && contentHtml) items.push('Read Content');
         break;
       case 'activity':
         if (!tracker.activity && interactiveContent.some(a => !completedActivityIds.has(a.id))) items.push('Complete Activities');
@@ -882,6 +892,19 @@ export function LessonViewPage({
       setCompleting(false);
     }
   }, [isPreview, lessonId, courseId, lesson, router, completing]);
+
+  // Persist tracker + guided step index to database (debounced)
+  useEffect(() => {
+    if (!enrollmentId || !lessonId) return;
+    const timer = setTimeout(() => {
+      saveLessonProgressMeta(lessonId, courseId, {
+        ...tracker,
+        guided_step_index: guidedStepIndex,
+        last_completed_step_index: lastCompletedStepIndex,
+      }).catch(err => console.error('[lesson-progress] save error:', err));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [tracker, guidedStepIndex, lastCompletedStepIndex, lessonId, courseId, enrollmentId]);
 
   const handleQuizSubmit = async (score: number, answers: { questionId: string; selectedAnswer: string }[]) => {
     if (isPreview) {
@@ -1083,6 +1106,53 @@ export function LessonViewPage({
     ? `About ${lesson.estimated_duration} min — take a break anytime`
     : readTime.label;
 
+
+  // ── Guided Step Definitions ──
+  const guidedHasVideo = !!(lesson.video_url && lesson.has_video !== false);
+  const guidedHasContent = !!contentHtml;
+  const guidedHasActivity = interactiveContent.length > 0;
+  const guidedHasQuiz = !!(quizData && lesson.has_quiz !== false);
+
+  const guidedSteps: GuidedStep[] = [
+    ...(guidedHasVideo ? [{ id: 'video', title: 'Watch Video', completed: tracker.video }] : []),
+    ...(guidedHasContent ? [{ id: 'content', title: 'Read Lesson Content', completed: tracker.scroll }] : []),
+    ...(guidedHasActivity ? [{ id: 'activity', title: 'Complete Activity', completed: tracker.activity }] : []),
+    ...(guidedHasQuiz ? [{ id: 'quiz', title: 'Take Quiz', completed: tracker.quiz }] : []),
+  ];
+
+  // Clamp guided step index — never point past the first incomplete step
+  const firstIncomplete = guidedSteps.findIndex(s => !s.completed);
+  const clampedIndex = firstIncomplete === -1
+    ? Math.max(0, guidedSteps.length - 1)
+    : Math.min(guidedStepIndex, firstIncomplete);
+
+  // Sync clamped index on mount and when steps change
+  useEffect(() => {
+    let newIndex = clampedIndex;
+    // When re-entering guided mode, resume after last completed step
+    if (settings.step_by_step_enabled && lastCompletedStepIndex >= 0) {
+      newIndex = Math.min(lastCompletedStepIndex + 1, clampedIndex);
+    }
+    if (newIndex !== guidedStepIndex && guidedSteps.length > 0) {
+      setGuidedStepIndex(newIndex);
+    }
+  }, [guidedSteps.length, settings.step_by_step_enabled]);
+
+  const handleGuidedStepChange = (index: number) => {
+    setGuidedStepIndex(index);
+  };
+
+  const handleGuidedStepComplete = (stepId: string) => {
+    setLastCompletedStepIndex(guidedStepIndex);
+    if (stepId === 'content' && !tracker.scroll) {
+      setTracker(p => ({ ...p, scroll: true }));
+    }
+  };
+
+  const handleExitGuidedMode = () => {
+    updateSettings({ ...settings, step_by_step_enabled: false });
+    toast('Guided mode disabled. You can re-enable it from Accessibility Settings.');
+  };
 
   // ── Dynamic Executive Function Content ──
   const dynamicTasks = [
@@ -1314,7 +1384,19 @@ export function LessonViewPage({
       <div id="lesson-main-content" ref={contentTopRef} className={`learner-view ${contentContainerClass} mx-auto px-6 py-4`}>
           <div className={layout === 'two_column' && !effectiveFocusMode ? 'grid grid-cols-2 gap-6' : 'space-y-8'}>
             
-            <div className="block space-y-8">
+            <div className="block space-y-8" data-guided-container>
+      {/* ── Guided Mode Wizard ── */}
+      {settings.step_by_step_enabled && guidedSteps.length > 0 && (
+        <StepByStepGuidance
+          title={lesson.title || 'Lesson Steps'}
+          steps={guidedSteps}
+          currentIndex={guidedStepIndex}
+          onStepChange={handleGuidedStepChange}
+          onStepComplete={handleGuidedStepComplete}
+          onExitGuidedMode={handleExitGuidedMode}
+          embedded
+        />
+      )}
       {/* ── Phase Stepper ── */}
       {renderPhaseStepper(false)}
 
@@ -1375,7 +1457,7 @@ export function LessonViewPage({
             )}
 
             {/* ── Video (optional) ── */}
-            <div className={activePhase === 'content' ? 'block' : 'hidden'} id="lesson-video">
+            <div className={activePhase === 'content' ? 'block' : 'hidden'} id="lesson-video" data-guided-section="video">
               {lesson.video_url && lesson.has_video !== false && (!effectiveFocusMode || currentFocusId === 'video') && (
                 <CollapsibleCard
                   icon={<Video className="w-4 h-4 text-rose-600" />}
@@ -1535,7 +1617,7 @@ export function LessonViewPage({
             </div>
 
             {/* ── Lesson Content ── */}
-            <div className={activePhase === 'content' ? 'block' : 'hidden'} id="lesson-main-content">
+            <div className={activePhase === 'content' ? 'block' : 'hidden'} id="lesson-main-content" data-guided-section="content">
             {/* View mode toggle */}
             {(!effectiveFocusMode || currentFocusId === 'content') && contentHtml && (
               <div className="flex items-center justify-end gap-2 mb-3">
@@ -1774,7 +1856,7 @@ export function LessonViewPage({
             </div>
 
             {/* ── Native Interactive Activities (tabbed or focus) ── */}
-            <div id="lesson-activities" className={activePhase === 'activity' ? 'block' : 'hidden'}>
+            <div id="lesson-activities" className={activePhase === 'activity' ? 'block' : 'hidden'} data-guided-section="activity">
               {interactiveContent.length > 0 && (() => {
                 const sorted = [...interactiveContent].sort((a, b) => a.sequence_order - b.sequence_order);
               
@@ -1964,7 +2046,7 @@ export function LessonViewPage({
 
             {/* ── PDF Resources ── */}
             <Dialog open={isResourcesOpen} onOpenChange={setIsResourcesOpen}>
-                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0 sm:p-6 bg-gray-50">
+                <DialogContent style={{ maxWidth: '1152px', width: '95vw' }} className="max-h-[85vh] overflow-y-auto p-0 sm:p-6 bg-gray-50 rounded-xl">
                 <DialogTitle className="sr-only">Resources & Material</DialogTitle>
             {hasPdfAssets && (!effectiveFocusMode || currentFocusId === 'summary') && (
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
@@ -2021,7 +2103,7 @@ export function LessonViewPage({
             </Dialog>
 
             {/* ── Quiz ── */}
-            <div className={activePhase === 'quiz' ? 'block' : 'hidden'}>
+            <div className={activePhase === 'quiz' ? 'block' : 'hidden'} data-guided-section="quiz">
               {!lesson.has_quiz || !quizData ? (
                 <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm mb-8">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -2074,7 +2156,7 @@ export function LessonViewPage({
               />
             )}
             {/* ── Student Summary (optional) ── */}
-            <div className={activePhase === 'finish' ? 'block' : 'hidden'}>
+            <div className={activePhase === 'finish' ? 'block' : 'hidden'} data-guided-section="finish">
             {lesson.has_summary_activity && !lessonCompleted && (
               <div>
                 {guidedMode && (
@@ -2107,7 +2189,7 @@ export function LessonViewPage({
                   </div>
                 </div>
                 <Button onClick={() => {
-                  const needsVideo = lesson.has_video && !!lesson.video_url;
+                  const needsVideo = lesson?.has_video !== false && !!lesson.video_url;
                   const needsActivities = interactiveContent.length > 0;
                   const needsQuiz = lesson.has_quiz && quizData;
                   const isAllCompleted = (!needsVideo || tracker.video) && (!needsActivities || tracker.activity) && (!needsQuiz || tracker.quiz) && tracker.scroll;
@@ -2143,7 +2225,7 @@ export function LessonViewPage({
                     <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-yellow-300 rounded-full animate-ping" style={{ animationDelay: '0.8s' }} />
                   </motion.div>
                   <div className="flex flex-col items-center text-center relative z-10">
-                    <CelebrationAnimation reducedMotion={settings.reduced_motion} />
+                    <CelebrationAnimation animationLevel={settings.animation_level} />
                     <h2 className="text-2xl font-bold text-gray-900 mt-2">Lesson Complete!</h2>
                     <p className="text-sm text-green-700 mt-1">Great work! You can now proceed to the next lesson.</p>
                     {onNextLesson && lesson.sequence_order < lesson.total_lessons ? (
@@ -2236,7 +2318,7 @@ export function LessonViewPage({
             <Button
               onClick={() => {
                 if (!lessonCompleted) {
-                  const needsVideo = lesson.has_video && !!lesson.video_url;
+                  const needsVideo = lesson?.has_video !== false && !!lesson.video_url;
                   const needsActivities = interactiveContent.length > 0;
                   const needsQuiz = lesson.has_quiz && quizData;
                   const isAllCompleted = (!needsVideo || tracker.video) && (!needsActivities || tracker.activity) && (!needsQuiz || tracker.quiz) && tracker.scroll;
@@ -2356,7 +2438,7 @@ export function LessonViewPage({
       </AnimatePresence>
 
       <Dialog open={!!viewingAsset} onOpenChange={(open) => !open && setViewingAsset(null)}>
-        <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0 overflow-hidden flex flex-col bg-gray-50">
+        <DialogContent style={{ maxWidth: '1400px', width: '90vw', height: '90vh' }} className="p-0 overflow-hidden flex flex-col bg-gray-50 rounded-xl">
           <div className="flex items-center justify-between p-4 border-b bg-white">
             <DialogTitle className="text-lg font-semibold text-gray-900">
               {assets.find(a => a.id === viewingAsset)?.title || 'View Resource'}
@@ -2399,7 +2481,7 @@ export function LessonViewPage({
             You must complete all required actions before marking this lesson as complete.
           </DialogDescription>
           <div className="space-y-3 mb-6">
-            {(lesson?.has_video && !!lesson.video_url) ? (
+            {(lesson?.video_url && lesson?.has_video !== false) ? (
               <div className="flex items-center justify-between">
                 <span className="font-medium text-gray-700">Watch Video</span>
                 {tracker.video ? <CheckCircle className="w-5 h-5 text-green-500" /> : <span className="text-red-500 text-sm font-semibold">Not Done</span>}

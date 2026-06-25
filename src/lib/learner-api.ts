@@ -1747,9 +1747,9 @@ export interface AccessibilitySettingsData {
   line_spacing?: string | null
   tts_enabled?: boolean | null
   captions_enabled?: boolean | null
+  /** @deprecated No longer used — kept for backward compat with existing data */
   screen_reader_optimized?: boolean | null
   keyboard_navigation_enabled?: boolean | null
-  reduced_motion?: boolean | null
   simplified_ui?: boolean | null
   dyslexia_friendly_font?: boolean | null
   preferred_font?: string | null
@@ -1838,7 +1838,6 @@ export async function fetchFullProfile(): Promise<FullProfile> {
       captions_enabled: a.captions_enabled,
       screen_reader_optimized: a.screen_reader_optimized,
       keyboard_navigation_enabled: a.keyboard_navigation_enabled,
-      reduced_motion: a.reduced_motion,
       simplified_ui: a.simplified_ui,
       dyslexia_friendly_font: a.dyslexia_friendly_font,
       preferred_font: a.preferred_font,
@@ -2452,5 +2451,83 @@ export async function submitH5PResponse(
       raw_statement: rawStatement
     })
   if (error) throw error
+}
+
+// ─── Lesson Progress Meta (intermediate tracking) ──────────────────────
+
+export interface LessonProgressMeta {
+  video: boolean
+  scroll: boolean
+  activity: boolean
+  quiz: boolean
+  guided_step_index?: number
+  last_completed_step_index?: number
+}
+
+export async function fetchLessonProgressMeta(lessonId: string, courseId: string): Promise<LessonProgressMeta | null> {
+  const userId = await ensureUserId()
+
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .neq('status', 'dropped')
+    .maybeSingle()
+
+  if (!enrollment) return null
+
+  const { data } = await supabase
+    .from('lesson_progress')
+    .select('progress_meta')
+    .eq('enrollment_id', enrollment.id)
+    .eq('lesson_id', lessonId)
+    .maybeSingle()
+
+  if (!data?.progress_meta) return null
+  console.log('[lesson-progress] loaded progress_meta for lesson', lessonId, data.progress_meta)
+  return data.progress_meta as unknown as LessonProgressMeta
+}
+
+export async function saveLessonProgressMeta(
+  lessonId: string,
+  courseId: string,
+  meta: LessonProgressMeta
+): Promise<void> {
+  const userId = await ensureUserId()
+
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .neq('status', 'dropped')
+    .maybeSingle()
+
+  if (!enrollment) return
+
+  const { data: existing } = await supabase
+    .from('lesson_progress')
+    .select('id')
+    .eq('enrollment_id', enrollment.id)
+    .eq('lesson_id', lessonId)
+    .maybeSingle()
+
+  if (existing) {
+    await supabase
+      .from('lesson_progress')
+      .update({ progress_meta: meta as unknown as Record<string, unknown>, last_viewed_at: new Date().toISOString() })
+      .eq('id', existing.id)
+  } else {
+    await supabase.from('lesson_progress').insert({
+      enrollment_id: enrollment.id,
+      lesson_id: lessonId,
+      is_viewed: false,
+      view_count: 1,
+      progress_meta: meta as unknown as Record<string, unknown>,
+      first_viewed_at: new Date().toISOString(),
+      last_viewed_at: new Date().toISOString(),
+    })
+  }
 }
 

@@ -113,7 +113,7 @@ export default function AnalyticsDashboard() {
                     <Users className="w-6 h-6" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">{analytics?.totalActiveLearners?.toLocaleString() ?? 0}</p>
+                <p className="text-3xl font-bold text-gray-900 mb-1">{analytics?.totalActiveLearners?.toLocaleString() ?? '--'}</p>
                 <p className="text-sm text-gray-600">Total Active Learners</p>
               </div>
 
@@ -123,7 +123,7 @@ export default function AnalyticsDashboard() {
                     <TrendingUp className="w-6 h-6" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">{analytics?.avgCompletionRate ?? 0}%</p>
+                <p className="text-3xl font-bold text-gray-900 mb-1">{analytics?.avgCompletionRate != null ? `${analytics.avgCompletionRate}%` : '--'}</p>
                 <p className="text-sm text-gray-600">Avg. Completion Rate</p>
               </div>
 
@@ -133,7 +133,7 @@ export default function AnalyticsDashboard() {
                     <Award className="w-6 h-6" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">{analytics?.avgQuizScore ?? 0}%</p>
+                <p className="text-3xl font-bold text-gray-900 mb-1">{analytics?.avgQuizScore != null ? `${analytics.avgQuizScore}%` : '--'}</p>
                 <p className="text-sm text-gray-600">Avg. Quiz Score</p>
               </div>
 
@@ -143,7 +143,7 @@ export default function AnalyticsDashboard() {
                     <AlertTriangle className="w-6 h-6" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">{analytics?.atRiskLearners ?? 0}</p>
+                <p className="text-3xl font-bold text-gray-900 mb-1">{analytics?.atRiskLearners ?? '--'}</p>
                 <p className="text-sm text-gray-600">At-Risk Learners</p>
               </div>
             </div>
@@ -188,13 +188,6 @@ export default function AnalyticsDashboard() {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Accessibility Metrics</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Screen Reader Usage</p>
-                  <p className="text-2xl font-bold text-gray-900 mb-1">{analytics?.accessibilityMetrics?.screenReaderUsage ?? 0}%</p>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600" style={{ width: `${analytics?.accessibilityMetrics?.screenReaderUsage ?? 0}%` }} />
-                  </div>
-                </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-2">Keyboard Navigation</p>
                   <p className="text-2xl font-bold text-gray-900 mb-1">{analytics?.accessibilityMetrics?.keyboardNavigation ?? 0}%</p>

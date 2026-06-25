@@ -6,8 +6,7 @@ import { TextToSpeechEngine } from './TextToSpeechEngine';
 
 export function AccessibilityEnhancements() {
   const { settings, userAgeGroup } = useAccessibility();
-  const showSkip =
-    !!settings.screen_reader_optimized || !!settings.keyboard_navigation_enabled;
+  const showSkip = !!settings.keyboard_navigation_enabled;
 
   useEffect(() => {
     // Inject the age group to the document element for global CSS overrides

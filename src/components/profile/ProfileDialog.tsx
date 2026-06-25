@@ -68,9 +68,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const [lineSpacing, setLineSpacing] = useState('normal');
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [captionsEnabled, setCaptionsEnabled] = useState(false);
-  const [screenReaderOptimized, setScreenReaderOptimized] = useState(false);
   const [keyboardNavigationEnabled, setKeyboardNavigationEnabled] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
   const [simplifiedUi, setSimplifiedUi] = useState(false);
   const [dyslexiaFriendlyFont, setDyslexiaFriendlyFont] = useState(false);
   const [ttsRate, setTtsRate] = useState(1);
@@ -111,9 +109,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           setLineSpacing(a.line_spacing || 'normal');
           setTtsEnabled(a.tts_enabled ?? false);
           setCaptionsEnabled(a.captions_enabled ?? false);
-          setScreenReaderOptimized(a.screen_reader_optimized ?? false);
           setKeyboardNavigationEnabled(a.keyboard_navigation_enabled ?? false);
-          setReducedMotion(a.reduced_motion ?? false);
           setSimplifiedUi(a.simplified_ui ?? false);
           setDyslexiaFriendlyFont(a.dyslexia_friendly_font ?? false);
           setTtsRate(a.tts_rate ?? 1);
@@ -203,9 +199,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         tts_rate: ttsRate,
         tts_voice_uri: ttsVoiceUri || null,
         captions_enabled: captionsEnabled,
-        screen_reader_optimized: screenReaderOptimized,
         keyboard_navigation_enabled: keyboardNavigationEnabled,
-        reduced_motion: reducedMotion,
         simplified_ui: simplifiedUi,
         dyslexia_friendly_font: dyslexiaFriendlyFont,
         preferred_font: dyslexiaFriendlyFont ? 'dyslexia' : (profile?.accessibility?.preferred_font || 'default'),
@@ -384,13 +378,6 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                         <SelectItem value="x-large">Extra Large</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-4">
-                    <div>
-                      <Label className="font-medium text-sm">Reduced Motion</Label>
-                      <p className="text-xs text-gray-600">Minimize animations across the platform</p>
-                    </div>
-                    <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
                   </div>
                   <Button onClick={saveAccessibility} disabled={saving === 'accessibility'} className="bg-blue-600 hover:bg-blue-700 text-white mt-4">
                     {saving === 'accessibility' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}

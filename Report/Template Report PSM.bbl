@@ -1,22 +1,136 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{}
 
-\bibitem{franceschini_dyslexia}
-S.~Franceschini, S.~Gori, M.~Ruffino, S.~Viola, M.~Molteni, and A.~Facoetti.
+\bibitem[{Anthology Inc.}, 2023]{blackboard_learn}
+{Anthology Inc.} (2023).
+\newblock Blackboard learn.
+
+\bibitem[Atkinson, 2021]{atkinson2021atkinson}
+Atkinson, J.~B. (2021).
+\newblock Atkinson hyperlegible font.
+\newblock {\em {Braille Institute of America}}.
+
+\bibitem[Barkley, 1997]{barkley1997adhd}
+Barkley, R.~A. (1997).
+\newblock Implications of executive function deficits for treatment of adhd
+  children: Empirical and practical issues.
+\newblock {\em Journal of Clinical Child Psychology}, 26(2):129--140.
+
+\bibitem[Batanero et~al., 2014]{batanero2014accessibility}
+Batanero, C., Boticario, J.~G., et~al. (2014).
+\newblock Accessibility of learning management systems: A review.
+\newblock {\em Journal of Universal Computer Science}, 20(9):1253--1272.
+
+\bibitem[{Brainhub}, 2024]{tiptap_docs}
+{Brainhub} (2024).
+\newblock Tiptap: The headless rich text editor framework.
+
+\bibitem[{Figma}, 2023]{figma_software}
+{Figma} (2023).
+\newblock Figma: The collaborative interface design tool.
+
+\bibitem[{Framer}, 2024]{framer_motion_docs}
+{Framer} (2024).
+\newblock Framer motion: Production-ready motion library for react.
+
+\bibitem[Franceschini et~al., 2013]{franceschini_dyslexia}
+Franceschini, S., Gori, S., Ruffino, M., Viola, S., Molteni, M., and Facoetti,
+  A. (2013).
 \newblock Action video games make dyslexic children read better.
-\newblock {\em Current Biology}, 23(6):462--466, 2013.
+\newblock {\em Current Biology}, 23(6):462--466.
 
-\bibitem{udl_guidelines}
-A.~Meyer, D.~H. Rose, and D.~Gordon.
+\bibitem[{Google LLC}, 2023]{google_classroom}
+{Google LLC} (2023).
+\newblock Google classroom.
+
+\bibitem[{Instructure, Inc.}, 2023]{canvas_lms}
+{Instructure, Inc.} (2023).
+\newblock Canvas learning management system.
+
+\bibitem[Lawson, 2011]{lawson2011autism}
+Lawson, W. (2011).
+\newblock {\em The Passionate Mind: How People with Autism Learn}.
+\newblock Jessica Kingsley Publishers.
+
+\bibitem[{Meta Platforms, Inc.}, 2023]{react_docs}
+{Meta Platforms, Inc.} (2023).
+\newblock React: The library for web and native user interfaces.
+
+\bibitem[Meyer et~al., 2014]{udl_guidelines}
+Meyer, A., Rose, D.~H., and Gordon, D. (2014).
 \newblock {\em Universal Design for Learning: Theory and Practice}.
-\newblock CAST Professional Publishing, 2014.
+\newblock CAST Professional Publishing.
 
-\bibitem{moodle_architecture}
-J.~Smith and A.~Doe.
-\newblock An analysis of moodle architecture and its impact on cognitive load.
-\newblock {\em Journal of Educational Technology}, 45(2):112--125, 2022.
+\bibitem[{Microsoft}, 2023]{typescript_docs}
+{Microsoft} (2023).
+\newblock Typescript: Javascript with syntax for types.
 
-\bibitem{wcag22}
-{W3C Web Accessibility Initiative}.
-\newblock Web content accessibility guidelines (wcag) 2.2, 2023.
+\bibitem[{MoodleHQ}, 2023a]{moodle_architecture}
+{MoodleHQ} (2023a).
+\newblock Moodle architecture: Technical overview.
+
+\bibitem[{MoodleHQ}, 2023b]{moodle_software}
+{MoodleHQ} (2023b).
+\newblock Moodle: Open-source learning platform.
+
+\bibitem[Munoz et~al., 2003]{munoz2003saccadic}
+Munoz, D.~P., Armstrong, I.~T., Hampton, K.~A., and Moore, K.~D. (2003).
+\newblock Saccadic eye movements in attention deficit hyperactivity disorder.
+\newblock {\em Clinical Neurophysiology}, 114(9):1667--1674.
+
+\bibitem[Prensky, 2001]{prensky2001digital}
+Prensky, M. (2001).
+\newblock Digital natives, digital immigrants part 1.
+\newblock {\em On the Horizon}, 9(5):1--6.
+
+\bibitem[{Recharts Team}, 2024]{recharts_docs}
+{Recharts Team} (2024).
+\newblock Recharts: A composable charting library built on react components.
+
+\bibitem[Rello and Baeza-Yates, 2013]{rello2013effect}
+Rello, L. and Baeza-Yates, R. (2013).
+\newblock Good fonts for dyslexia.
+\newblock In {\em Proceedings of the 15th International ACM SIGACCESS
+  Conference on Computers and Accessibility}, pages 1--8.
+
+\bibitem[Schwaber, 1997]{schwaber1995scrum}
+Schwaber, K. (1997).
+\newblock Scrum development process.
+\newblock In {\em Business Object Design and Implementation: OOPSLA'95 Workshop
+  Proceedings}, pages 117--134. Springer.
+
+\bibitem[{Supabase}, 2023]{supabase_docs}
+{Supabase} (2023).
+\newblock Supabase documentation: The open source firebase alternative.
+
+\bibitem[{Supabase}, 2024]{supabase_rls}
+{Supabase} (2024).
+\newblock Supabase row level security documentation.
+
+\bibitem[Sweller, 1988]{sweller1988cognitive}
+Sweller, J. (1988).
+\newblock Cognitive load during problem solving: Effects on learning.
+\newblock {\em Cognitive science}, 12(2):257--285.
+
+\bibitem[{Tailwind Labs}, 2023]{tailwind_docs}
+{Tailwind Labs} (2023).
+\newblock Tailwind css documentation.
+
+\bibitem[{Vercel Inc.}, 2023a]{nextjs_ssr}
+{Vercel Inc.} (2023a).
+\newblock Next.js documentation: Server-side rendering (ssr).
+
+\bibitem[{Vercel Inc.}, 2023b]{vercel_docs}
+{Vercel Inc.} (2023b).
+\newblock Vercel documentation: The platform for frontend developers.
+
+\bibitem[{W3C Web Accessibility Initiative}, 2023]{wcag22}
+{W3C Web Accessibility Initiative} (2023).
+\newblock Web content accessibility guidelines (wcag) 2.2.
+
+\bibitem[Zelazo et~al., 2003]{zelazo2003executive}
+Zelazo, P.~D., Muller, U., Frye, D., and Marcovitch, S. (2003).
+\newblock The development of executive function in early childhood.
+\newblock {\em Monographs of the Society for Research in Child Development},
+  68(3):vii--137.
 
 \end{thebibliography}

@@ -197,7 +197,7 @@ export function LearnerDashboard() {
   if (currentView === 'lesson') {
     return (
       <LessonViewPage
-        lessonId={selectedLesson || 'l6'}
+        lessonId={selectedLesson || ''}
         courseId={selectedCourse || ''}
         onBack={handleBackToCourseDetail}
         onNextLesson={handleNextLesson}
@@ -320,8 +320,8 @@ export function LearnerDashboard() {
       <CertificateGenerationModal
         isOpen={showCertificateModal}
         courseId={selectedCourse || ''}
-        courseTitle="Course"
-        learnerName="Learner"
+        courseTitle=""
+        learnerName=""
         onClose={() => setShowCertificateModal(false)}
         onViewCertificate={(certId) => handleViewCertificate(certId)}
         onDownload={handleDownloadCertificate}

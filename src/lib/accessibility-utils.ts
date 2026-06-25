@@ -40,13 +40,12 @@ export const ANIMATION_LEVELS = [
 
 export const EASY_READ_PRESETS: Pick<
   AccessibilitySettingsData,
-  'preferred_font_size' | 'preferred_theme' | 'line_spacing' | 'preferred_font' | 'reduced_motion' | 'simplified_ui'
+  'preferred_font_size' | 'preferred_theme' | 'line_spacing' | 'preferred_font' | 'simplified_ui'
 > = {
   preferred_font_size: 'xlarge',
   preferred_theme: 'high_contrast',
   line_spacing: 'loose',
   preferred_font: 'dyslexia',
-  reduced_motion: true,
   simplified_ui: true,
 };
 

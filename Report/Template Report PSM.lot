@@ -1,6 +1,45 @@
 \babel@toc {english}{}\relax 
-\contentsline {table}{\numberline {2.1}{\ignorespaces LMS Feature Comparison Matrix}}{13}{}%
+\contentsline {table}{\numberline {2.1}{\ignorespaces LMS Feature Comparison Matrix}}{14}{}%
 \contentsline {table}{\numberline {2.2}{\ignorespaces Project Schedule and Milestones}}{19}{}%
 \contentsline {table}{\numberline {3.1}{\ignorespaces Functional Requirements: Student Module}}{26}{}%
 \contentsline {table}{\numberline {3.2}{\ignorespaces Functional Requirements: Educator Module}}{27}{}%
 \contentsline {table}{\numberline {3.3}{\ignorespaces Functional Requirements: Admin Module}}{27}{}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces Users Data Dictionary}}{54}{}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces User Profiles Data Dictionary}}{55}{}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces User Accessibility Preferences Data Dictionary}}{55}{}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Enrollments Data Dictionary}}{56}{}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Accessibility Templates Data Dictionary}}{56}{}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Adaptive Interactions Data Dictionary}}{56}{}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces Instructor Applications Data Dictionary}}{57}{}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces Password Reset Tokens Data Dictionary}}{57}{}%
+\contentsline {table}{\numberline {4.9}{\ignorespaces Referral Codes Data Dictionary}}{58}{}%
+\contentsline {table}{\numberline {4.10}{\ignorespaces Courses Data Dictionary}}{59}{}%
+\contentsline {table}{\numberline {4.11}{\ignorespaces Lessons Data Dictionary}}{60}{}%
+\contentsline {table}{\numberline {4.12}{\ignorespaces Quizzes Data Dictionary}}{61}{}%
+\contentsline {table}{\numberline {4.13}{\ignorespaces Quiz Questions Data Dictionary}}{61}{}%
+\contentsline {table}{\numberline {4.14}{\ignorespaces Quiz Options Data Dictionary}}{61}{}%
+\contentsline {table}{\numberline {4.15}{\ignorespaces Course Chapters Data Dictionary}}{62}{}%
+\contentsline {table}{\numberline {4.16}{\ignorespaces Course Milestones Data Dictionary}}{62}{}%
+\contentsline {table}{\numberline {4.17}{\ignorespaces Course Achievements Data Dictionary}}{63}{}%
+\contentsline {table}{\numberline {4.18}{\ignorespaces Course Accessibility Categories Data Dictionary}}{63}{}%
+\contentsline {table}{\numberline {4.19}{\ignorespaces Course Favorites Data Dictionary}}{63}{}%
+\contentsline {table}{\numberline {4.20}{\ignorespaces Quiz Attempts Data Dictionary}}{64}{}%
+\contentsline {table}{\numberline {4.21}{\ignorespaces Quiz Answers Data Dictionary}}{64}{}%
+\contentsline {table}{\numberline {4.22}{\ignorespaces Lesson Progress Data Dictionary}}{65}{}%
+\contentsline {table}{\numberline {4.23}{\ignorespaces Lesson Checkpoints Data Dictionary}}{65}{}%
+\contentsline {table}{\numberline {4.24}{\ignorespaces Learner Checkpoints Data Dictionary}}{66}{}%
+\contentsline {table}{\numberline {4.25}{\ignorespaces Learner Milestones Data Dictionary}}{66}{}%
+\contentsline {table}{\numberline {4.26}{\ignorespaces Video Questions Data Dictionary}}{67}{}%
+\contentsline {table}{\numberline {4.27}{\ignorespaces Recommendations Data Dictionary}}{67}{}%
+\contentsline {table}{\numberline {4.28}{\ignorespaces User Achievements Data Dictionary}}{68}{}%
+\contentsline {table}{\numberline {4.29}{\ignorespaces Lesson Comments Data Dictionary}}{68}{}%
+\contentsline {table}{\numberline {4.30}{\ignorespaces Lesson Summaries Data Dictionary}}{69}{}%
+\contentsline {table}{\numberline {4.31}{\ignorespaces Lesson Versions Data Dictionary}}{69}{}%
+\contentsline {table}{\numberline {4.32}{\ignorespaces Lesson Interactive Content Data Dictionary}}{70}{}%
+\contentsline {table}{\numberline {4.33}{\ignorespaces Lesson Templates Data Dictionary}}{70}{}%
+\contentsline {table}{\numberline {4.34}{\ignorespaces Media Assets Data Dictionary}}{71}{}%
+\contentsline {table}{\numberline {4.35}{\ignorespaces Notifications Data Dictionary}}{71}{}%
+\contentsline {table}{\numberline {4.36}{\ignorespaces Contact Messages Data Dictionary}}{72}{}%
+\contentsline {table}{\numberline {4.37}{\ignorespaces Certificates Data Dictionary}}{72}{}%
+\contentsline {table}{\numberline {4.38}{\ignorespaces Certificate Templates Data Dictionary}}{73}{}%
+\contentsline {table}{\numberline {4.39}{\ignorespaces Certificate Verifications Data Dictionary}}{73}{}%

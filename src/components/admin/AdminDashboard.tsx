@@ -5,6 +5,7 @@ import { Users, BookOpen, Award, Activity, TrendingUp, ArrowRight, Loader2, Scho
 import { fetchAdminDashboardStats, fetchRecentActivity, getInstructorApplicationStats, fetchAdminEngagementData, fetchSystemHealthMetrics } from '@/lib/admin-api';
 import type { AdminDashboardStats, RecentActivity, EngagementData, SystemHealthMetrics } from '@/lib/admin-api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from 'recharts';
+import { supabase } from '@/lib/supabase';
 
 interface AdminDashboardProps {
   onNavigate: (view: string) => void;
@@ -17,9 +18,15 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [systemHealth, setSystemHealth] = useState<SystemHealthMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adminName, setAdminName] = useState('Admin');
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.user_metadata?.full_name) {
+        setAdminName(data.user.user_metadata.full_name);
+      }
+    });
     const id = setInterval(() => { setNow(Date.now()); }, 60000);
     Promise.all([fetchAdminDashboardStats(), fetchRecentActivity(), getInstructorApplicationStats(), fetchAdminEngagementData(), fetchSystemHealthMetrics()])
       .then(([s, a, i, e, h]) => { setStats(s); setActivities(a); setInstructorStats(i); setEngagementData(e.reverse()); setSystemHealth(h); })
@@ -117,7 +124,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     <div className="p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, Admin</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {adminName}</h2>
           <p className="text-gray-600">Here&apos;s what&apos;s happening with your platform today</p>
         </div>
 
@@ -134,7 +141,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   {card.trend === 'up' && (
                     <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-bold shadow-sm">
                       <TrendingUp className="w-3 h-3" />
-                      +{(stats?.newUsersThisMonth || stats?.coursesPublishedThisMonth || 5)}%
+                      +{card.label === 'Total Courses' ? (stats?.coursesPublishedThisMonth ?? 0) : (stats?.newUsersThisMonth ?? 0)}%
                     </div>
                   )}
                 </div>
@@ -156,33 +163,36 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             </h3>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={engagementData.length > 0 ? engagementData : [
-                  { name: 'Mon', users: 0, views: 0 },
-                  { name: 'Tue', users: 0, views: 0 },
-                  { name: 'Wed', users: 0, views: 0 },
-                  { name: 'Thu', users: 0, views: 0 },
-                  { name: 'Fri', users: 0, views: 0 },
-                  { name: 'Sat', users: 0, views: 0 },
-                  { name: 'Sun', users: 0, views: 0 },
-                ]} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                  <defs>
-                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
-                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Legend verticalAlign="top" height={36} iconType="circle" />
-                  <Area type="monotone" dataKey="views" name="Lesson Views" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
-                  <Area type="monotone" dataKey="users" name="Registered Users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
-                </AreaChart>
+                {engagementData.length > 0 ? (
+                  <AreaChart data={engagementData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                    <defs>
+                      <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorQuizzes" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Legend verticalAlign="top" height={36} iconType="circle" />
+                    <Area type="monotone" dataKey="views" name="Lesson Views" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
+                    <Area type="monotone" dataKey="quizzes" name="Quiz Attempts" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#colorQuizzes)" />
+                    <Area type="monotone" dataKey="users" name="Active Users" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorUsers)" />
+                  </AreaChart>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    <p>No engagement data yet</p>
+                  </div>
+                )}
               </ResponsiveContainer>
             </div>
           </div>
@@ -209,10 +219,10 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-indigo-200">API Latency</span>
-                  <span className="font-bold text-emerald-400">{systemHealth?.latencyMs || 0}ms</span>
+                  <span className="font-bold text-emerald-400">{systemHealth?.latencyMs != null ? `${systemHealth.latencyMs}ms` : '--'}</span>
                 </div>
                 <div className="w-full bg-indigo-950/50 rounded-full h-2">
-                  <div className="bg-emerald-400 h-2 rounded-full" style={{ width: `${Math.min(100, Math.max(5, (systemHealth?.latencyMs || 0) / 2))}%` }}></div>
+                  <div className="bg-emerald-400 h-2 rounded-full" style={{ width: `${systemHealth?.latencyMs != null ? Math.min(100, Math.max(5, systemHealth.latencyMs / 2)) : 5}%` }}></div>
                 </div>
               </div>
             </div>

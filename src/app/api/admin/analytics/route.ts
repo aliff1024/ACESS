@@ -52,11 +52,6 @@ export async function GET() {
       if (atRiskLearners < 0) atRiskLearners = 0
     }
 
-    const { count: srUsers } = await supabase
-      .from('user_profiles')
-      .select('id', { count: 'exact', head: true })
-      .contains('accessibility_prefs', { screen_reader_optimized: true })
-
     const { count: kbUsers } = await supabase
       .from('user_profiles')
       .select('id', { count: 'exact', head: true })
@@ -67,7 +62,7 @@ export async function GET() {
       .select('id', { count: 'exact', head: true })
       .contains('accessibility_prefs', { preferred_theme: 'high_contrast' })
 
-    const totalUsersWithAccessibility = (srUsers ?? 0) + (kbUsers ?? 0) + (hcUsers ?? 0) || 1
+    const totalUsersWithAccessibility = (kbUsers ?? 0) + (hcUsers ?? 0) || 1
 
     const { count: totalCourses } = await supabase
       .from('courses')
@@ -93,7 +88,6 @@ export async function GET() {
       totalEducators: totalEducators ?? 0,
       totalInteractiveActivities: totalInteractiveActivities ?? 0,
       accessibilityMetrics: {
-        screenReaderUsage: Math.round(((srUsers ?? 0) / totalUsersWithAccessibility) * 100),
         keyboardNavigation: Math.round(((kbUsers ?? 0) / totalUsersWithAccessibility) * 100),
         highContrastMode: Math.round(((hcUsers ?? 0) / totalUsersWithAccessibility) * 100),
       },

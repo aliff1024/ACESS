@@ -348,20 +348,6 @@ html[data-line-spacing="loose"] body {
   line-height: 2.2;
 }
 
-/* ─── Accessibility: Reduced Motion ──────────────────────────────────── */
-html[data-reduced-motion="true"] *,
-html[data-reduced-motion="true"] *::before,
-html[data-reduced-motion="true"] *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
-}
-
-html[data-reduced-motion="true"] *:hover {
-  transform: none !important;
-}
-
 /* ─── Accessibility: Simplified UI (calm mode — hide decorative chrome, keep learning scaffolds) ─ */
 html[data-simplified-ui="true"] .simplifiable {
   display: none !important;
@@ -396,12 +382,6 @@ html[data-keyboard-nav="true"] button:focus-visible,
 html[data-keyboard-nav="true"] a:focus-visible,
 html[data-keyboard-nav="true"] [role="button"]:focus-visible {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
-}
-
-/* ─── Accessibility: Screen Reader Optimized ─────────────────────────── */
-html[data-screen-reader="true"] main,
-html[data-screen-reader="true"] #lesson-main-content {
-  scroll-margin-top: 1.5rem;
 }
 
 .skip-to-main {
@@ -563,18 +543,35 @@ html[data-animation-level="low"] *::after {
   transition-duration: 100ms !important;
 }
 
-/* ─── Accessibility Presets: Low Contrast ────────────────────────────── */
-html[data-low-contrast="true"] {
-  filter: contrast(0.85);
+/* ─── Accessibility Presets: Soft Backgrounds (softer UI surfaces, keeps text contrast) ── */
+html[data-soft-bg="true"] {
+  /* Softer backgrounds and borders — foreground text contrast is preserved */
+  --background: oklch(0.97 0.005 260);
+  --card: oklch(0.98 0.003 260);
+  --muted: oklch(0.95 0.005 260);
+  --muted-foreground: oklch(0.55 0.01 260);
+  --border: oklch(0.85 0.005 80);
+  --input: oklch(0.85 0.005 80);
+  --secondary: oklch(0.94 0.005 85);
+  --secondary-foreground: oklch(0.4 0.005 260);
+  --accent: oklch(0.94 0.005 85);
+  --sidebar: oklch(0.96 0.003 85);
+  --sidebar-border: oklch(0.85 0.005 80);
+  --sidebar-accent: oklch(0.94 0.005 85);
+  /* foreground, primary, primary-foreground, destructive, ring — UNCHANGED for WCAG AA */
 }
 
 /* ─── Accessibility Presets: Muted Colors ────────────────────────────── */
 html[data-muted-colors="true"] {
   filter: saturate(0.6);
 }
-/* When both are active, combine the filters */
+/* Deprecated: old low-contrast filter — kept for existing user data */
+html[data-low-contrast="true"] {
+  filter: contrast(0.85);
+}
+html[data-soft-bg="true"][data-muted-colors="true"],
 html[data-low-contrast="true"][data-muted-colors="true"] {
-  filter: contrast(0.85) saturate(0.6);
+  filter: saturate(0.6);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

@@ -56,8 +56,6 @@ export default function OnboardingPage() {
   const [readingSpotlight, setReadingSpotlight] = useState(false);
   const [distractionFreeMode, setDistractionFreeMode] = useState(false);
   const [chunkedContentMode, setChunkedContentMode] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
   // ─── Sensory Preferences ──────────────────────────────────────────
   const [preferredTheme, setPreferredTheme] = useState('light');
   const [animationLevel, setAnimationLevel] = useState('normal');
@@ -81,7 +79,6 @@ export default function OnboardingPage() {
           setReadingSpotlight(a.reading_spotlight ?? false);
           setDistractionFreeMode(a.distraction_free_mode ?? false);
           setChunkedContentMode(a.chunked_content_mode ?? false);
-          setReducedMotion(a.reduced_motion ?? false);
           setPreferredTheme(a.preferred_theme || 'light');
           setAnimationLevel(a.animation_level || 'normal');
           setMutedColors(a.muted_colors ?? false);
@@ -109,7 +106,6 @@ export default function OnboardingPage() {
       setReadingSpotlight(d.reading_spotlight);
       setDistractionFreeMode(d.distraction_free_mode);
       setChunkedContentMode(d.chunked_content_mode);
-      setReducedMotion(d.reduced_motion);
       setAnimationLevel(d.animation_level);
       setMutedColors(d.muted_colors);
       setTtsEnabled(d.tts_enabled);
@@ -126,7 +122,6 @@ export default function OnboardingPage() {
         setReadingSpotlight(s.reading_spotlight);
         setDistractionFreeMode(s.distraction_free_mode);
         setChunkedContentMode(s.chunked_content_mode);
-        setReducedMotion(s.reduced_motion);
         setAnimationLevel(s.animation_level);
         setMutedColors(s.muted_colors);
         setTtsEnabled(s.tts_enabled);
@@ -156,7 +151,6 @@ export default function OnboardingPage() {
         reading_spotlight: readingSpotlight,
         distraction_free_mode: distractionFreeMode,
         chunked_content_mode: chunkedContentMode,
-        reduced_motion: reducedMotion,
         animation_level: animationLevel,
         muted_colors: mutedColors,
         tts_enabled: ttsEnabled,
@@ -437,15 +431,6 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
-                <div className="border border-gray-200 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-semibold">Reduced Motion</Label>
-                      <p className="text-xs text-gray-500">Minimize all animations and transitions</p>
-                    </div>
-                    <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
-                  </div>
-                </div>
               </div>
 
               {/* Sensory */}
@@ -587,10 +572,9 @@ export default function OnboardingPage() {
                   {readingSpotlight && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Reading Spotlight</span>}
                   {distractionFreeMode && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Distraction-Free</span>}
                   {chunkedContentMode && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Chunked Content</span>}
-                  {reducedMotion && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">Reduced Motion</span>}
                   {mutedColors && <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Muted Colors</span>}
                   {ttsEnabled && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Text-to-Speech</span>}
-                  {!readingSpotlight && !distractionFreeMode && !chunkedContentMode && !reducedMotion && !mutedColors && !ttsEnabled && (
+                  {!readingSpotlight && !distractionFreeMode && !chunkedContentMode && !mutedColors && !ttsEnabled && (
                     <span className="text-xs text-gray-400">No additional features enabled</span>
                   )}
                 </div>

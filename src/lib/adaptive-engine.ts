@@ -23,7 +23,6 @@ export interface PresetSettings {
   chunked_content_mode: boolean
   layout_mode: 'scroll' | 'slide' | 'chunked'
   structure_mode: 'full' | 'minimal' | 'checklist'
-  reduced_motion: boolean
   animation_level: string
   tts_enabled: boolean
   high_contrast: boolean
@@ -79,7 +78,6 @@ export const DEFAULT_PRESET_SETTINGS: PresetSettings = {
   chunked_content_mode: false,
   layout_mode: 'slide',
   structure_mode: 'full',
-  reduced_motion: false,
   animation_level: 'normal',
   tts_enabled: false,
   high_contrast: false,
@@ -112,7 +110,6 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       chunked_content_mode: true,
       layout_mode: 'chunked',
       structure_mode: 'full',
-      reduced_motion: true,
       animation_level: 'low',
       tts_enabled: false,
       preferred_theme: 'light',
@@ -136,7 +133,6 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       chunked_content_mode: true,
       layout_mode: 'slide',
       structure_mode: 'minimal',
-      reduced_motion: true,
       animation_level: 'low',
       preferred_theme: 'light',
       task_checklist_enabled: true,
@@ -160,7 +156,6 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       structure_mode: 'checklist',
       distraction_free_mode: true,
       chunked_content_mode: true,
-      reduced_motion: true,
       animation_level: 'none',
       muted_colors: true,
       preferred_theme: 'light',
@@ -184,7 +179,6 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       background_tint: 'soft_green',
       reading_spotlight: true,
       chunked_content_mode: true,
-      reduced_motion: true,
       animation_level: 'low',
       low_contrast: true,
       preferred_theme: 'light',
@@ -237,7 +231,6 @@ const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
       simplified_ui: true,
       preferred_reading_level: 'basic',
       line_spacing: 'relaxed',
-      reduced_motion: true,
     },
     recommended_lesson_modes: {
       focus_mode: true,
@@ -252,7 +245,6 @@ const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
     rationale: 'Short learning segments, progress indicators, and interactive checkpoints help maintain focus and engagement for learners with ADHD.',
     recommended_ui: {
       simplified_ui: true,
-      reduced_motion: false,
     },
     recommended_lesson_modes: {
       chunked_content: true,
@@ -284,8 +276,6 @@ const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
     rationale: 'Predictable structure, visual schedules, and reduced sensory input help learners with Autism Spectrum Disorder feel comfortable and oriented.',
     recommended_ui: {
       simplified_ui: true,
-      reduced_motion: true,
-      screen_reader_optimized: false,
     },
     recommended_lesson_modes: {
       focus_mode: true,
@@ -297,9 +287,8 @@ const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
   },
   visual_impairment: {
     disability_type: 'visual_impairment',
-    rationale: 'Screen reader optimization, high-contrast themes, and text-to-speech support enable learners with visual impairments to access content effectively.',
+    rationale: 'High-contrast themes and text-to-speech support enable learners with visual impairments to access content effectively.',
     recommended_ui: {
-      screen_reader_optimized: true,
       preferred_font_size: 'xlarge',
       preferred_theme: 'high_contrast',
       tts_enabled: true,
@@ -351,9 +340,7 @@ const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
       line_spacing: 'loose',
       tts_enabled: true,
       captions_enabled: true,
-      screen_reader_optimized: true,
       keyboard_navigation_enabled: true,
-      reduced_motion: true,
       preferred_font_size: 'large',
       dyslexia_friendly_font: true,
     },
@@ -415,7 +402,6 @@ export function applyPreset(presetName: string, currentSettings?: Partial<Access
     reading_spotlight: s.reading_spotlight,
     distraction_free_mode: s.distraction_free_mode,
     chunked_content_mode: s.chunked_content_mode,
-    reduced_motion: s.reduced_motion,
     animation_level: s.animation_level,
     tts_enabled: s.tts_enabled,
     high_contrast: s.high_contrast,

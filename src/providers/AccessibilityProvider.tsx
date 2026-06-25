@@ -19,13 +19,11 @@ interface AccessibilityContextType {
 
 const defaultSettings: AccessibilitySettingsData = {
   preferred_font_size: 'medium',
-  preferred_theme: 'system',
+  preferred_theme: 'light',
   line_spacing: 'normal',
   tts_enabled: false,
   captions_enabled: false,
-  screen_reader_optimized: false,
   keyboard_navigation_enabled: false,
-  reduced_motion: false,
   simplified_ui: false,
   dyslexia_friendly_font: false,
   preferred_font: 'default',
@@ -69,9 +67,7 @@ function applySettingsToDOM(settings: AccessibilitySettingsData) {
   root.setAttribute('data-theme', theme);
   root.setAttribute('data-line-spacing', lineSpacing);
   root.setAttribute('data-font-type', fontType);
-  root.setAttribute('data-reduced-motion', String(!!settings.reduced_motion));
   root.setAttribute('data-simplified-ui', String(!!settings.simplified_ui));
-  root.setAttribute('data-screen-reader', String(!!settings.screen_reader_optimized));
   root.setAttribute('data-keyboard-nav', String(!!settings.keyboard_navigation_enabled));
 
   // ─── New preset data-* attributes ─────────────────────────────────
@@ -93,7 +89,8 @@ function applySettingsToDOM(settings: AccessibilitySettingsData) {
   root.setAttribute('data-layout-mode', settings.layout_mode || 'slide');
   root.setAttribute('data-structure-mode', settings.structure_mode || 'full');
   root.setAttribute('data-animation-level', animationLevel);
-  root.setAttribute('data-low-contrast', String(!!settings.low_contrast));
+  root.setAttribute('data-soft-bg', String(!!settings.low_contrast));
+  root.setAttribute('data-low-contrast', String(!!settings.low_contrast)); // deprecated fallback
   root.setAttribute('data-muted-colors', String(!!settings.muted_colors));
 
   // ─── CSS custom properties for continuous values ──────────────────
@@ -107,9 +104,6 @@ function applySettingsToDOM(settings: AccessibilitySettingsData) {
     root.classList.add('dark');
   } else if (theme === 'high_contrast' || theme === 'light' || theme === 'soft') {
     root.classList.remove('dark');
-  } else if (theme === 'system') {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    root.classList.toggle('dark', prefersDark);
   }
 }
 
@@ -207,16 +201,6 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
       })
       .finally(() => setLoading(false));
   }, [user, recomputeAdaptive]);
-
-  useEffect(() => {
-    if (settings.preferred_theme !== 'system') return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => {
-      document.documentElement.classList.toggle('dark', e.matches);
-    };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [settings.preferred_theme]);
 
   const updateSettings = useCallback(async (data: AccessibilitySettingsData) => {
     setSettings(data);

@@ -294,7 +294,6 @@ export interface AdminAnalytics {
   totalEducators: number
   totalInteractiveActivities: number
   accessibilityMetrics: {
-    screenReaderUsage: number
     keyboardNavigation: number
     highContrastMode: number
   }
@@ -313,6 +312,7 @@ export interface EngagementData {
   name: string
   users: number
   views: number
+  quizzes: number
 }
 
 export async function fetchAdminEngagementData(): Promise<EngagementData[]> {

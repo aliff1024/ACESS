@@ -15,7 +15,7 @@ export async function GET() {
     const now = new Date();
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
-    const last7Days: { date: Date; endOfDay: Date; name: string; users: number; views: number }[] = [];
+    const last7Days: { date: Date; endOfDay: Date; name: string; users: number; views: number; quizzes: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
@@ -29,7 +29,8 @@ export async function GET() {
         endOfDay,
         name: days[d.getDay()],
         users: 0,
-        views: 0
+        views: 0,
+        quizzes: 0
       });
     }
 
@@ -68,7 +69,7 @@ export async function GET() {
           const subDate = new Date(qa.submitted_at);
           if (subDate >= dayStart && subDate <= dayEnd) {
             activeEnrollments.add(qa.enrollment_id);
-            last7Days[i].views++;
+            last7Days[i].quizzes = (last7Days[i].quizzes || 0) + 1;
           }
         }
       }
@@ -79,7 +80,8 @@ export async function GET() {
     const result = last7Days.map(d => ({
       name: d.name,
       users: d.users,
-      views: d.views
+      views: d.views,
+      quizzes: d.quizzes
     }));
 
     return NextResponse.json({ engagementData: result });

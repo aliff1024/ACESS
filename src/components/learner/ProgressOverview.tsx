@@ -26,7 +26,7 @@ export function ProgressOverview() {
   const statCards = [
     {
       label: t('progress.coursesCompleted'),
-      value: stats?.courses_completed ?? 0,
+      value: stats?.courses_completed ?? '--',
       icon: CheckCircle2,
       color: 'from-green-400 to-emerald-600',
       bgColor: 'bg-green-50',
@@ -34,7 +34,7 @@ export function ProgressOverview() {
     },
     {
       label: t('stats.lessonsMastered'),
-      value: stats?.lessons_completed ?? 0,
+      value: stats?.lessons_completed ?? '--',
       icon: BookOpen,
       color: 'from-blue-400 to-indigo-600',
       bgColor: 'bg-blue-50',
@@ -42,7 +42,7 @@ export function ProgressOverview() {
     },
     {
       label: t('progress.avgScore'),
-      value: `${stats?.avg_score ?? 0}%`,
+      value: stats?.avg_score != null ? `${stats.avg_score}%` : '--',
       icon: Target,
       color: 'from-purple-400 to-fuchsia-600',
       bgColor: 'bg-purple-50',
@@ -50,7 +50,7 @@ export function ProgressOverview() {
     },
     {
       label: t('certificates.earned'),
-      value: stats?.certificates_count ?? 0,
+      value: stats?.certificates_count ?? '--',
       icon: Award,
       color: 'from-orange-400 to-rose-500',
       bgColor: 'bg-orange-50',

@@ -23,7 +23,7 @@ interface CourseListPageProps {
 }
 
 const difficultyLevels = ['Beginner', 'Intermediate', 'Advanced'];
-const categories = ['All', 'Programming', 'Business', 'Design', 'Marketing', 'Science', 'Math', 'Language'];
+const categories = ['All', 'Programming', 'Business', 'Design', 'Marketing', 'Science', 'Math', 'Language', 'Technology', 'Health', 'Art & Creativity', 'Reading & Literacy', 'Study Skills', 'Accessibility', 'Orientation', 'Mathematics'];
 
 // Helper to debounce
 function useDebounce<T>(value: T, delay: number): T {
@@ -513,7 +513,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                       <BookOpen className="w-3.5 h-3.5 text-blue-500" /> {lessonCount} Lessons
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-orange-500" /> {(course as any).total_duration || (lessonCount * 20)} min
+                      <Clock className="w-3.5 h-3.5 text-orange-500" />{(course as any).total_duration ? `${(course as any).total_duration} min` : 'N/A'}
                     </span>
                     {(course as any).guided_learning_enabled && (
                       <>

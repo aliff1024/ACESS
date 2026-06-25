@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { fetchCourses, fetchEducatorCertStats, fetchRecentActivity } from '@/lib/educator-api';
+import { formatDistanceToNow } from 'date-fns';
 import { fetchStudentsDeepProgress, DetailedStudentProgress } from '@/lib/educator-analytics-api';
 import type { CourseSummary, ActivityItem } from '@/lib/educator-api';
 
@@ -203,7 +204,7 @@ export function EducatorDashboardOverview({
                       <div>
                         <p className="font-semibold text-gray-900">{student.name}</p>
                         <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                          <Clock className="w-3 h-3" /> Last active: {student.lastActive ? 'several days ago' : 'Never'}
+                          <Clock className="w-3 h-3" /> Last active: {student.lastActive ? formatDistanceToNow(new Date(student.lastActive), { addSuffix: true }) : 'Never'}
                         </p>
                       </div>
                     </div>

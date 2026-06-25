@@ -126,11 +126,10 @@ export async function POST(request: Request) {
 
         case 'accessibility_usage': {
           const { data: profiles } = await supabase.from('user_profiles').select('accessibility_prefs')
-          let srUsers = 0, kbUsers = 0, hcUsers = 0, dUsers = 0, ttsUsers = 0
+          let kbUsers = 0, hcUsers = 0, dUsers = 0, ttsUsers = 0
           for (const p of profiles || []) {
             const prefs = p.accessibility_prefs as any
             if (!prefs) continue
-            if (prefs.screen_reader_optimized) srUsers++
             if (prefs.keyboard_navigation_enabled) kbUsers++
             if (prefs.preferred_theme === 'high_contrast' || prefs.high_contrast) hcUsers++
             if (prefs.dyslexia_friendly_font || prefs.preferred_font === 'dyslexia') dUsers++
@@ -142,7 +141,6 @@ export async function POST(request: Request) {
             description: 'Detailed breakdown of accessibility features utilized by learners',
             frequency: 'On-demand',
             data: [
-              { 'Accessibility Feature': 'Screen Reader Optimized', 'Total Users Enabled': srUsers },
               { 'Accessibility Feature': 'Keyboard Navigation', 'Total Users Enabled': kbUsers },
               { 'Accessibility Feature': 'High Contrast Mode', 'Total Users Enabled': hcUsers },
               { 'Accessibility Feature': 'Dyslexia Friendly Font', 'Total Users Enabled': dUsers },

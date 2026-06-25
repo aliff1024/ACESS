@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-06-23T10:00:00.000Z" version="24.0.0">
+  <diagram name="Context Diagram - Level 0 DFD">
+    <mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="850" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- CENTRAL PROCESS -->
+        <mxCell id="p0" value='&lt;font style="font-size: 24px;"&gt;&lt;b&gt;0&lt;/b&gt;&lt;/font&gt;&lt;hr size="1"&gt;&lt;b style="font-size: 14px;"&gt;ACESS&lt;/b&gt;&lt;br&gt;&lt;span style="font-size: 11px;"&gt;Adaptive Cognitive &amp;amp; Educational&lt;br&gt;Skill Support Platform&lt;/span&gt;' style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#000000;strokeWidth=2;arcSize=16;align=center;verticalAlign=top;paddingTop=8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="270" width="260" height="180" as="geometry"/>
+        </mxCell>
+
+        <!-- LEARNER -->
+        <mxCell id="learner" value="&lt;b&gt;Learner&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="60" y="150" width="150" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- EDUCATOR -->
+        <mxCell id="educator" value="&lt;b&gt;Educator&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="890" y="150" width="150" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ADMINISTRATOR -->
+        <mxCell id="admin" value="&lt;b&gt;Administrator&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="60" y="530" width="150" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- EMAIL PROVIDER -->
+        <mxCell id="email" value="&lt;b&gt;Email&lt;br&gt;Provider&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;dashed=1;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="890" y="460" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- TTS SERVICE -->
+        <mxCell id="tts" value="&lt;b&gt;TTS&lt;br&gt;Service&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;dashed=1;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="890" y="540" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== DATA FLOWS ==================== -->
+
+        <!-- LEARNER → PROCESS: Registration, Login, Preferences -->
+        <mxCell id="f1" value="Registration Data, Login Credentials,&lt;br&gt;Accessibility Preferences" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=bottom;" edge="1" source="learner" target="p0" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="170"/>
+              <mxPoint x="300" y="300"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- LEARNER → PROCESS: Enrollments, Activities -->
+        <mxCell id="f2" value="Enrollments, Lesson Events,&lt;br&gt;Quiz Answers, H5P Responses" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=bottom;" edge="1" source="learner" target="p0" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="200"/>
+              <mxPoint x="300" y="360"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- PROCESS → LEARNER: Courses, Content, Reports, Certificates -->
+        <mxCell id="f3" value="Course Catalog, Lesson Content,&lt;br&gt;Progress Reports, Certificates, Badges" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=top;" edge="1" source="p0" target="learner" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310" y="420"/>
+              <mxPoint x="310" y="220"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- EDUCATOR → PROCESS: Content, Quizzes, Media, Applications -->
+        <mxCell id="f4" value="Course Content, Lesson HTML,&lt;br&gt;Quiz Configs, Media Assets,&lt;br&gt;H5P Activities, Instructor Application" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=bottom;" edge="1" source="educator" target="p0" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="170"/>
+              <mxPoint x="800" y="300"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- EDUCATOR → PROCESS: Instructor Application -->
+        <mxCell id="f5" value="Analytics Requests,&lt;br&gt;Certificate Settings" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=bottom;" edge="1" source="educator" target="p0" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="200"/>
+              <mxPoint x="800" y="360"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- PROCESS → EDUCATOR: Notifications, Progress, Status -->
+        <mxCell id="f6" value="Enrollment Notifications,&lt;br&gt;Student Progress, Application Status" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=top;" edge="1" source="p0" target="educator" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="420"/>
+              <mxPoint x="790" y="220"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ADMIN → PROCESS: Management Actions -->
+        <mxCell id="f7" value="User Role Changes, Moderation,&lt;br&gt;System Config, Instructor Approvals" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=top;" edge="1" source="admin" target="p0" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="550"/>
+              <mxPoint x="300" y="430"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- PROCESS → ADMIN: Reports, Analytics -->
+        <mxCell id="f8" value="Platform Analytics, User Lists,&lt;br&gt;System Health, Reports (PDF/CSV)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=bottom;" edge="1" source="p0" target="admin" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310" y="380"/>
+              <mxPoint x="310" y="570"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- PROCESS → EMAIL: Notifications -->
+        <mxCell id="f9" value="Password Reset,&lt;br&gt;Verification Emails" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=top;dashed=1;" edge="1" source="p0" target="email" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="380"/>
+              <mxPoint x="790" y="485"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- PROCESS → TTS: Synthesis Request -->
+        <mxCell id="f10" value="Text-to-Speech&lt;br&gt;Synthesis Request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1;fontSize=10;align=center;verticalAlign=top;dashed=1;" edge="1" source="p0" target="tts" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="430"/>
+              <mxPoint x="790" y="565"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

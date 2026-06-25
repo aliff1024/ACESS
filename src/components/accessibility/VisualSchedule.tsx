@@ -15,11 +15,7 @@ export function VisualSchedule({ schedule }: { schedule?: ScheduleItem[] }) {
   const { t } = useTranslation();
   const { settings } = useAccessibility();
 
-  const items = schedule || [
-    { id: '1', title: 'Introduction to Accessibility', duration: '15 mins', type: 'now' },
-    { id: '2', title: 'WCAG Guidelines Overview', duration: '20 mins', type: 'next' },
-    { id: '3', title: 'Module 1 Quiz', duration: '10 mins', type: 'later' },
-  ];
+  const items = schedule || [];
 
   if (!settings.visual_schedule_enabled) return null;
 

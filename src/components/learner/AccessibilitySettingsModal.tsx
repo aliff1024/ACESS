@@ -48,7 +48,6 @@ export function AccessibilitySettingsModal({
   const [readingSpotlight, setReadingSpotlight] = useState<boolean>(() => !!settings.reading_spotlight);
   const [distractionFreeMode, setDistractionFreeMode] = useState<boolean>(() => !!settings.distraction_free_mode);
   const [chunkedContentMode, setChunkedContentMode] = useState<boolean>(() => !!settings.chunked_content_mode);
-  const [reducedMotion, setReducedMotion] = useState<boolean>(() => !!settings.reduced_motion);
   const [simplifiedUi, setSimplifiedUi] = useState<boolean>(() => !!settings.simplified_ui);
 
   // Sensory
@@ -57,7 +56,6 @@ export function AccessibilitySettingsModal({
   const [mutedColors, setMutedColors] = useState<boolean>(() => !!settings.muted_colors);
   const [lowContrast, setLowContrast] = useState<boolean>(() => !!settings.low_contrast);
   const [captionsEnabled, setCaptionsEnabled] = useState<boolean>(() => !!settings.captions_enabled);
-  const [screenReaderOptimized, setScreenReaderOptimized] = useState<boolean>(() => !!settings.screen_reader_optimized);
   const [keyboardNavigationEnabled, setKeyboardNavigationEnabled] = useState<boolean>(() => !!settings.keyboard_navigation_enabled);
 
   // Supports
@@ -92,14 +90,12 @@ export function AccessibilitySettingsModal({
     setChunkedContentMode(!!settings.chunked_content_mode);
     setLayoutMode(settings.layout_mode || 'slide');
     setStructureMode(settings.structure_mode || 'full');
-    setReducedMotion(!!settings.reduced_motion);
     setSimplifiedUi(!!settings.simplified_ui);
     setPreferredTheme(settings.preferred_theme || 'light');
     setAnimationLevel(settings.animation_level || 'normal');
     setMutedColors(!!settings.muted_colors);
     setLowContrast(!!settings.low_contrast);
     setCaptionsEnabled(!!settings.captions_enabled);
-    setScreenReaderOptimized(!!settings.screen_reader_optimized);
     setKeyboardNavigationEnabled(!!settings.keyboard_navigation_enabled);
     setTaskChecklistEnabled(!!settings.task_checklist_enabled);
     setVisualScheduleEnabled(!!settings.visual_schedule_enabled);
@@ -128,14 +124,12 @@ export function AccessibilitySettingsModal({
       chunked_content_mode: chunkedContentMode,
       layout_mode: layoutMode,
       structure_mode: structureMode,
-      reduced_motion: reducedMotion,
       simplified_ui: simplifiedUi,
       preferred_theme: preferredTheme,
       animation_level: animationLevel,
       muted_colors: mutedColors,
       low_contrast: lowContrast,
       captions_enabled: captionsEnabled,
-      screen_reader_optimized: screenReaderOptimized,
       keyboard_navigation_enabled: keyboardNavigationEnabled,
       task_checklist_enabled: taskChecklistEnabled,
       visual_schedule_enabled: visualScheduleEnabled,
@@ -149,8 +143,8 @@ export function AccessibilitySettingsModal({
     });
   }, [
     isOpen, activePreset, fontFamily, fontSizePx, lineSpacingMultiplier, wordSpacingPct, backgroundTint, ttsEnabled,
-    ttsRate, ttsVoiceUri, preferredLanguage, readingSpotlight, distractionFreeMode, chunkedContentMode, layoutMode, structureMode, reducedMotion, simplifiedUi,
-    preferredTheme, animationLevel, mutedColors, lowContrast, captionsEnabled, screenReaderOptimized, keyboardNavigationEnabled,
+    ttsRate, ttsVoiceUri, preferredLanguage, readingSpotlight, distractionFreeMode, chunkedContentMode, layoutMode, structureMode, simplifiedUi,
+    preferredTheme, animationLevel, mutedColors, lowContrast, captionsEnabled, keyboardNavigationEnabled,
     taskChecklistEnabled, visualScheduleEnabled, stepByStepEnabled, autoSaveEnabled, progressTimelineEnabled, previewSettings
   ]);
 
@@ -176,7 +170,6 @@ export function AccessibilitySettingsModal({
       setReadingSpotlight(s.reading_spotlight);
       setDistractionFreeMode(s.distraction_free_mode);
       setChunkedContentMode(s.chunked_content_mode);
-      setReducedMotion(s.reduced_motion);
       setSimplifiedUi(s.simplified_ui);
       setLayoutMode(s.layout_mode || 'slide');
       setStructureMode(s.structure_mode || 'full');
@@ -214,14 +207,12 @@ export function AccessibilitySettingsModal({
         chunked_content_mode: chunkedContentMode,
         layout_mode: layoutMode,
         structure_mode: structureMode,
-        reduced_motion: reducedMotion,
         simplified_ui: simplifiedUi,
         preferred_theme: preferredTheme,
         animation_level: animationLevel,
         muted_colors: mutedColors,
         low_contrast: lowContrast,
         captions_enabled: captionsEnabled,
-        screen_reader_optimized: screenReaderOptimized,
         keyboard_navigation_enabled: keyboardNavigationEnabled,
         task_checklist_enabled: taskChecklistEnabled,
         visual_schedule_enabled: visualScheduleEnabled,
@@ -461,13 +452,6 @@ export function AccessibilitySettingsModal({
               </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-semibold">Reduced Motion</Label>
-                  <p className="text-xs text-gray-500">Minimize all animations</p>
-                </div>
-                <Switch checked={reducedMotion} onCheckedChange={(v) => { setReducedMotion(v); setCustom(); }} />
-              </div>
-              <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
-                <div>
                   <Label className="text-sm font-semibold">Simplified UI</Label>
                   <p className="text-xs text-gray-500">Remove decorative elements, timers, and secondary navigation</p>
                 </div>
@@ -513,24 +497,12 @@ export function AccessibilitySettingsModal({
               </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-semibold">Low Contrast</Label>
-                  <p className="text-xs text-gray-500">Softer, reduced contrast</p>
+                  <Label className="text-sm font-semibold">Soft Backgrounds</Label>
+                  <p className="text-xs text-gray-500">Softer backgrounds and borders, keeps text readable</p>
                 </div>
                 <Switch checked={lowContrast} onCheckedChange={(v) => { setLowContrast(v); setCustom(); }} />
               </div>
 
-              <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 bg-cyan-100 rounded-lg flex items-center justify-center shrink-0">
-                    <Eye className="w-4 h-4 text-cyan-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <Label className="text-sm font-semibold">{t('accessibility.screenReader')}</Label>
-                    <p className="text-xs text-gray-500">{t('accessibility.screenReaderDesc')}</p>
-                  </div>
-                </div>
-                <Switch checked={screenReaderOptimized} onCheckedChange={(v) => { setScreenReaderOptimized(v); setCustom(); }} />
-              </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">

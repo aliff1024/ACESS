@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { BookOpen, Loader2, Video, FileText, Plus, Trash2, GripVertical, Layout, FileEdit, Play, Shield, ChevronDown, Clock, Layers, Upload, Image, Link, History, LayoutTemplate, StickyNote, Save, MousePointerClick, Settings, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { createLesson, updateLesson, fetchLessonById, getNextSequenceOrder, fetchLessonInteractiveContent, createInteractiveContent, updateInteractiveContent, deleteInteractiveContent, fetchVideoQuestions, createVideoQuestion, deleteVideoQuestion, fetchLessonAssets, createLessonAsset, deleteLessonAsset, uploadCourseFile, saveLessonVersion } from '@/lib/educator-api';
+import { createLesson, updateLesson, fetchLessonById, getNextSequenceOrder, fetchLessonInteractiveContent, createInteractiveContent, updateInteractiveContent, deleteInteractiveContent, fetchVideoQuestions, createVideoQuestion, deleteVideoQuestion, fetchLessonAssets, createLessonAsset, deleteLessonAsset, uploadCourseFile, saveLessonVersion, fetchLessonSummaries, StudentSummarySubmission } from '@/lib/educator-api';
 import DOMPurify from 'isomorphic-dompurify';
 import type { LessonAsset } from '@/lib/educator-api';
 import { LessonSummarySettings } from '@/components/educator/LessonSummarySettings';
@@ -121,7 +121,9 @@ export function LessonEditor({
   onManageQuiz,
 }: LessonEditorProps) {
   const [form, setForm] = useState<LessonFormData>(defaultFormData);
-  const [activeTab, setActiveTab] = useState<'basics' | 'content' | 'media' | 'activities' | 'quiz' | 'assets' | 'settings' | 'discussions'>('basics');
+  const [activeTab, setActiveTab] = useState<'basics' | 'content' | 'media' | 'activities' | 'quiz' | 'assets' | 'settings' | 'discussions' | 'submissions'>('basics');
+  const [studentSubmissions, setStudentSubmissions] = useState<StudentSummarySubmission[]>([]);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [discussionCount, setDiscussionCount] = useState(0);
   const [videoDuration, setVideoDuration] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
@@ -161,6 +163,16 @@ export function LessonEditor({
 
   // Keep currentLessonIdRef in sync with prop
   useEffect(() => { currentLessonIdRef.current = lessonId ?? null; }, [lessonId]);
+
+  useEffect(() => {
+    if (activeTab === 'submissions' && lessonId) {
+      setSubmissionsLoading(true);
+      fetchLessonSummaries(lessonId, courseId)
+        .then(setStudentSubmissions)
+        .catch(() => toast.error('Failed to load student summaries'))
+        .finally(() => setSubmissionsLoading(false));
+    }
+  }, [activeTab, lessonId, courseId]);
 
   useEffect(() => {
     if (!open || !courseId) return;
@@ -625,6 +637,7 @@ export function LessonEditor({
                 <button type="button" onClick={() => setActiveTab('quiz')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'quiz' ? 'bg-sky-50 text-sky-700' : 'text-gray-600 hover:bg-gray-50'}`}><FileEdit className="w-4 h-4" /> Quiz</button>
                 <button type="button" onClick={() => setActiveTab('assets')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'assets' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}><FileText className="w-4 h-4" /> Resources {lessonAssets.length > 0 && <span className="ml-auto text-xs bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5">{lessonAssets.length}</span>}</button>
                 <button type="button" onClick={() => setActiveTab('discussions')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'discussions' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}><MessageSquare className="w-4 h-4" /> Discussions {discussionCount > 0 && <span className="ml-auto text-xs bg-orange-100 text-orange-700 rounded-full px-2 py-0.5">{discussionCount}</span>}</button>
+                <button type="button" onClick={() => setActiveTab('submissions')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'submissions' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50'}`}><BookOpen className="w-4 h-4" /> Submissions</button>
                 <button type="button" onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-slate-100 text-slate-800' : 'text-gray-600 hover:bg-gray-50'}`}><Settings className="w-4 h-4" /> Settings</button>
               </div>
 
@@ -1075,6 +1088,65 @@ export function LessonEditor({
                         <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-6">
                           <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                           <p className="text-gray-500 font-medium">Save the lesson first to view discussions.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ======================= SUBMISSIONS TAB ======================= */}
+                {activeTab === 'submissions' && (
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl border border-gray-200">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                          <BookOpen className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">Student Summaries</h3>
+                          <p className="text-sm text-gray-500">Review summaries submitted by students for this lesson.</p>
+                        </div>
+                      </div>
+
+                      {!lessonId ? (
+                        <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-6">
+                          <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                          <p className="text-gray-500 font-medium">Save the lesson first to view submissions.</p>
+                        </div>
+                      ) : submissionsLoading ? (
+                        <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
+                      ) : studentSubmissions.length === 0 ? (
+                        <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-6">
+                          <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                          <p className="text-gray-500 font-medium">No summaries submitted yet.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {studentSubmissions.map(sub => (
+                            <div key={sub.id} className="p-5 border rounded-xl bg-white shadow-sm space-y-4 transition-all hover:shadow-md">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-base">
+                                    {sub.enrollments?.users?.full_name?.[0] || '?'}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-900">{sub.enrollments?.users?.full_name || 'Unknown Student'}</p>
+                                    <p className="text-xs text-gray-500">{sub.enrollments?.users?.email}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-500">{new Date(sub.created_at).toLocaleDateString()}</p>
+                                  <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs font-medium border border-emerald-100">
+                                    <BookOpen className="w-3 h-3" />
+                                    {sub.response_data.wordCount} words
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 whitespace-pre-wrap border border-gray-100 leading-relaxed">
+                                {sub.response_data.content}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>

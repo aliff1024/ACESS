@@ -140,7 +140,7 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
     if (view === 'achievements') router.push('/learner/achievements');
   };
 
-  const reduceMotion = settings.reduced_motion || settings.animation_level === 'none';
+  const reduceMotion = settings.animation_level === 'none';
 
   return (
     <MotionConfig reducedMotion={reduceMotion ? "always" : "user"}>

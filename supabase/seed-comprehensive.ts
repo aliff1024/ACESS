@@ -1044,6 +1044,9 @@ async function main() {
   // Step 13: Supplementary data (media, admin courses, interactive content, quizzes)
   await createSupplementaryData(userIds, courseData, quizData);
 
+  // Step 14: Enrichment data (achievements, milestones, progress_meta, video questions, etc.)
+  await createEnrichmentData(userIds, courseData, quizData);
+
   console.log('\n✨ Demo data generation complete!');
   printSummary();
 }
@@ -1060,7 +1063,7 @@ async function wipeAll() {
     'quiz_options', 'quiz_questions', 'quizzes', 'lesson_versions', 'lessons',
     'course_chapters', 'course_favorites', 'enrollments', 'course_accessibility_categories',
     'courses', 'media_assets', 'referral_codes', 'instructor_applications', 'contact_messages',
-    'user_accessibility_preferences', 'user_profiles', 'users',
+    'user_accessibility_preferences', 'learner_milestones', 'course_milestones', 'user_profiles', 'users',
   ];
 
   for (const table of tables) {
@@ -2109,6 +2112,242 @@ async function createSupplementaryData(users: Map<string, any>, courseData: any[
   console.log('  ✅ Additional quizzes created');
 }
 
+// ─── Enrichment Data ──────────────────────────────────────────────────
+async function createEnrichmentData(users: Map<string, any>, courseData: any[], quizData: Map<string, any>) {
+  console.log('\n🎯 Adding enrichment data (achievements, milestones, checkpoints)...');
+
+  // ── 1. Award user_achievements based on actual progress ──
+  const { data: achievements } = await supabase.from('course_achievements').select('*');
+  if (achievements && achievements.length > 0) {
+    for (const ach of achievements) {
+      const ce = courseData.find((c: any) => c?.course?.id === ach.course_id);
+      if (!ce) continue;
+
+      const { data: enrollments } = await supabase
+        .from('enrollments')
+        .select('id, user_id')
+        .eq('course_id', ach.course_id)
+        .in('status', ['completed', 'active']);
+      if (!enrollments) continue;
+
+      for (const enr of enrollments) {
+        let qualifies = false;
+
+        if (ach.requirement_type === 'progress' || ach.requirement_type === 'lesson') {
+          const { count: completed } = await supabase
+            .from('lesson_progress')
+            .select('id', { count: 'exact', head: true })
+            .eq('enrollment_id', enr.id)
+            .eq('is_completed', true);
+
+          const lessonCount = ce.lessons?.length || 1;
+          const pct = ((completed ?? 0) / lessonCount) * 100;
+          qualifies = ach.requirement_type === 'lesson'
+            ? completed >= ach.requirement_threshold
+            : pct >= ach.requirement_threshold;
+        } else if (ach.requirement_type === 'quiz') {
+          const { data: attempts } = await supabase
+            .from('quiz_attempts')
+            .select('score_pct')
+            .eq('enrollment_id', enr.id)
+            .gte('score_pct', ach.requirement_threshold)
+            .limit(1);
+          qualifies = (attempts && attempts.length > 0) ?? false;
+        }
+
+        if (qualifies) {
+          await supabase.from('user_achievements').upsert({
+            user_id: enr.user_id,
+            achievement_id: ach.id,
+            course_id: ach.course_id,
+            earned_at: randomDate(daysAgo(90), daysAgo(1)).toISOString(),
+          }, { onConflict: 'user_id,achievement_id' });
+        }
+      }
+    }
+    console.log('  ✅ User achievements awarded');
+  }
+
+  // ── 2. Mark learner_checkpoints for completed lessons ──
+  const { data: allCheckpoints } = await supabase.from('lesson_checkpoints').select('id, lesson_id');
+  if (allCheckpoints && allCheckpoints.length > 0) {
+    for (const cp of allCheckpoints) {
+      const { data: progresses } = await supabase
+        .from('lesson_progress')
+        .select('enrollment_id')
+        .eq('lesson_id', cp.lesson_id)
+        .eq('is_completed', true);
+      if (!progresses) continue;
+      for (const p of progresses) {
+        await supabase.from('learner_checkpoints').upsert({
+          enrollment_id: p.enrollment_id,
+          checkpoint_id: cp.id,
+          completed: true,
+          completed_at: randomDate(daysAgo(90), daysAgo(1)).toISOString(),
+        }, { onConflict: 'enrollment_id,checkpoint_id' });
+      }
+    }
+    console.log('  ✅ Learner checkpoints completed');
+  }
+
+  // ── 3. Populate progress_meta on lesson_progress ──
+  const { data: allProgress } = await supabase
+    .from('lesson_progress')
+    .select('id, is_completed')
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  if (allProgress && allProgress.length > 0) {
+    const batchSize = 50;
+    for (let i = 0; i < allProgress.length; i += batchSize) {
+      const batch = allProgress.slice(i, i + batchSize);
+      const updates = batch.map((lp: any) => ({
+        id: lp.id,
+        progress_meta: {
+          video: lp.is_completed ? 100 : randInt(0, 95),
+          scroll: lp.is_completed ? 100 : randInt(10, 99),
+          activity: lp.is_completed,
+          quiz: lp.is_completed ? randInt(0, 1) === 1 : false,
+        },
+      }));
+      for (const u of updates) {
+        await supabase.from('lesson_progress').update({ progress_meta: u.progress_meta }).eq('id', u.id);
+      }
+    }
+    console.log(`  ✅ progress_meta populated for ${allProgress.length} records`);
+  }
+
+  // ── 4. Course milestones + learner milestones ──
+  const milestoneDefs: { courseIdx: number; title: string; desc: string; pct: number; icon: string }[] = [
+    { courseIdx: 0, title: 'First Numbers', desc: 'Complete 50% of Learning Numbers', pct: 50, icon: '123' },
+    { courseIdx: 0, title: 'Number Master', desc: 'Complete 100% of Learning Numbers', pct: 100, icon: 'star' },
+    { courseIdx: 2, title: 'Animal Explorer', desc: 'Complete 50% of Animal Adventures', pct: 50, icon: 'paw' },
+    { courseIdx: 2, title: 'Animal Expert', desc: 'Complete 100% of Animal Adventures', pct: 100, icon: 'trophy' },
+    { courseIdx: 4, title: 'Health Starter', desc: 'Complete 50% of Healthy Habits', pct: 50, icon: 'heart' },
+    { courseIdx: 5, title: 'Reading Journey', desc: 'Complete 50% of Introduction to Reading', pct: 50, icon: 'book' },
+    { courseIdx: 7, title: 'Coding Basics', desc: 'Complete 50% of Introduction to Coding', pct: 50, icon: 'code' },
+    { courseIdx: 8, title: 'Digital Citizen', desc: 'Complete 50% of Digital Literacy', pct: 50, icon: 'shield' },
+  ];
+  for (const md of milestoneDefs) {
+    const ce = courseData[md.courseIdx];
+    if (!ce) continue;
+    const { data: milestone } = await supabase.from('course_milestones').insert({
+      course_id: ce.course.id, title: md.title, description: md.desc,
+      required_completion_pct: md.pct, icon: md.icon,
+      sequence_order: md.pct === 50 ? 0 : 1,
+    }).select().single();
+    if (!milestone) continue;
+
+    const { data: enrollments } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('course_id', ce.course.id);
+    if (!enrollments) continue;
+
+    for (const enr of enrollments) {
+      const { count: completed } = await supabase
+        .from('lesson_progress')
+        .select('id', { count: 'exact', head: true })
+        .eq('enrollment_id', enr.id)
+        .eq('is_completed', true);
+      const lessonCount = ce.lessons?.length || 1;
+      const pct = ((completed ?? 0) / lessonCount) * 100;
+      if (pct >= md.pct) {
+        await supabase.from('learner_milestones').upsert({
+          enrollment_id: enr.id, milestone_id: milestone.id,
+          achieved: true,
+          achieved_at: randomDate(daysAgo(90), daysAgo(1)).toISOString(),
+        }, { onConflict: 'enrollment_id,milestone_id' });
+      }
+    }
+  }
+  console.log('  ✅ Course milestones + learner milestones created');
+
+  // ── 5. Video questions for lessons with video URLs ──
+  let videoQCount = 0;
+  for (const ce of courseData) {
+    if (!ce.lessons) continue;
+    for (const lesson of ce.lessons) {
+      if (!lesson.video_url && !lesson.has_video) continue;
+      const { data: existing } = await supabase
+        .from('video_questions')
+        .select('id')
+        .eq('lesson_id', lesson.id)
+        .limit(1)
+        .maybeSingle();
+      if (existing) continue;
+
+      const vqCount = randInt(1, 3);
+      for (let vqi = 0; vqi < vqCount; vqi++) {
+        const ts = (vqi + 1) * randInt(15, 60);
+        const options = [
+          `Answer A for question ${vqi + 1}`,
+          `Answer B for question ${vqi + 1}`,
+          `Answer C for question ${vqi + 1}`,
+          `Answer D for question ${vqi + 1}`,
+        ];
+        await supabase.from('video_questions').insert({
+          lesson_id: lesson.id,
+          title: `Question ${vqi + 1}`,
+          timestamp_seconds: ts,
+          question_text: `What concept is demonstrated at ${ts} seconds in this video?`,
+          options: JSON.stringify(options),
+          correct_option_index: 0,
+          sequence_order: vqi + 1,
+        });
+        videoQCount++;
+      }
+    }
+  }
+  console.log(`  ✅ ${videoQCount} video questions created`);
+
+  // ── 6. Comment replies from educators ──
+  const educatorEmails = ['educator@acess.demo', 'new_ed@acess.demo', 'fatimah.ed@acess.demo'];
+  const { data: existingComments } = await supabase
+    .from('lesson_comments')
+    .select('id, lesson_id, user_id, content')
+    .is('parent_id', null)
+    .limit(6);
+  if (existingComments && existingComments.length > 0) {
+    const replyTexts = [
+      "Great question! Happy to help you learn more.",
+      "Wonderful observation! Keep up the great work.",
+      "That's a fantastic insight. Thanks for sharing!",
+      "I'm glad the accessibility features are helping. Let me know if you need anything else.",
+      "Excellent progress! You're doing really well in this course.",
+      "Thanks for the kind words! We're always improving the platform.",
+    ];
+    for (let ci = 0; ci < existingComments.length; ci++) {
+      const comment = existingComments[ci];
+      const eduEmail = educatorEmails[ci % educatorEmails.length];
+      const educator = users.get(eduEmail);
+      if (!educator) continue;
+      await supabase.from('lesson_comments').insert({
+        lesson_id: comment.lesson_id,
+        user_id: educator.id,
+        parent_id: comment.id,
+        content: replyTexts[ci],
+        created_at: randomDate(daysAgo(15), daysAgo(1)).toISOString(),
+      });
+    }
+    console.log('  ✅ Comment replies added');
+  }
+
+  // ── 7. Mark some notifications as read ──
+  const { data: allNotifs } = await supabase
+    .from('notifications')
+    .select('id, created_at')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (allNotifs && allNotifs.length > 0) {
+    const olderNotifs = allNotifs.filter(n =>
+      new Date(n.created_at) < daysAgo(7)
+    );
+    for (const n of olderNotifs.slice(0, Math.floor(olderNotifs.length * 0.6))) {
+      await supabase.from('notifications').update({ is_read: true }).eq('id', n.id);
+    }
+    console.log(`  ✅ ${Math.floor((olderNotifs.length || 0) * 0.6)} notifications marked as read`);
+  }
+}
+
 // ─── Summary ───────────────────────────────────────────────────────────
 async function printSummary() {
   console.log('\n📊 Data Summary:');
@@ -2119,6 +2358,7 @@ async function printSummary() {
     'notifications', 'recommendations', 'lesson_comments',
     'course_favorites', 'instructor_applications', 'contact_messages',
     'adaptive_interactions', 'lesson_interactive_content', 'media_assets',
+    'user_achievements', 'course_milestones', 'learner_milestones', 'video_questions',
   ];
   for (const table of tables) {
     const { count } = await supabase.from(table as any).select('*', { count: 'exact', head: true });

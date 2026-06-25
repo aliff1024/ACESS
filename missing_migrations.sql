@@ -861,3 +861,36 @@ CREATE POLICY "Learners can view their own h5p responses" ON public.h5p_response
   FOR SELECT
   USING (auth.uid() = user_id);
 
+-- =====================================================
+-- MIGRATION: 20260624_add_progress_meta_to_lesson_progress.sql
+-- Adds a JSONB column to store intermediate lesson progress
+-- (video watched, content scrolled, activities done, quiz taken)
+-- =====================================================
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'lesson_progress' AND column_name = 'progress_meta'
+  ) THEN
+    ALTER TABLE public.lesson_progress ADD COLUMN progress_meta JSONB NOT NULL DEFAULT '{}'::jsonb;
+  END IF;
+END $$;
+
+
+-- =====================================================
+-- MIGRATION: 20260624_deprecate_reduced_motion.sql
+-- reduced_motion boolean → animation_level = 'none'
+-- The reduced_motion field is removed from the codebase.
+-- Existing users who had it enabled get animation_level='none'
+-- =====================================================
+UPDATE public.user_profiles
+SET accessibility_prefs = jsonb_set(
+  COALESCE(accessibility_prefs, '{}'::jsonb),
+  '{animation_level}',
+  '"none"'
+)
+WHERE accessibility_prefs->>'reduced_motion' = 'true'
+  AND (accessibility_prefs->>'animation_level' IS NULL
+       OR accessibility_prefs->>'animation_level' = ''
+       OR accessibility_prefs->>'animation_level' = 'normal');
+
