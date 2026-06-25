@@ -10,7 +10,14 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createServerSupabase()
-    const origin = request.headers.get('origin') || 'https://acess-tau.vercel.app'
+    let origin = request.headers.get('origin')
+    if (!origin || origin.includes('localhost')) {
+      origin = process.env.NEXT_PUBLIC_APP_URL || 
+               process.env.NEXT_PUBLIC_SITE_URL || 
+               (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
+               (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) || 
+               'https://acess-tau.vercel.app'
+    }
     
     const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
       redirectTo: `${origin}/reset-password`,

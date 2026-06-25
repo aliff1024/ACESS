@@ -111,9 +111,18 @@ export async function POST(request: Request) {
     }
 
     try {
+      let baseUrl = request.headers.get('origin')
+      if (!baseUrl || baseUrl.includes('localhost')) {
+        baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                  process.env.NEXT_PUBLIC_SITE_URL || 
+                  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
+                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) || 
+                  'https://acess-tau.vercel.app'
+      }
+
       await sendInstructorApprovalEmail(app.email, app.full_name, {
         password: temporaryPassword,
-        loginUrl: `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || ''}/login`,
+        loginUrl: `${baseUrl}/login`,
       })
     } catch (emailError) {
       console.error('Failed to send approval email:', emailError)

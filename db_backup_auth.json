@@ -1,0 +1,262 @@
+[
+  {
+    "id": "b65aa2f4-1f80-44a3-8487-78a9640d3a9c",
+    "email": "m.aliff.affandi@gmail.com",
+    "role": "authenticated",
+    "created_at": "2026-06-23T12:38:25.518508Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "TEST",
+      "role": "educator"
+    }
+  },
+  {
+    "id": "a4cb0eb4-d85e-46cf-8e63-54eb09725905",
+    "email": "test@acess.edu",
+    "role": "authenticated",
+    "created_at": "2026-06-23T09:54:59.933594Z",
+    "last_sign_in_at": "2026-06-23T09:55:00.002763Z",
+    "user_metadata": {
+      "email": "test@acess.edu",
+      "email_verified": true,
+      "full_name": "Muhammad Aliff",
+      "phone_verified": false,
+      "role": "learner",
+      "sub": "a4cb0eb4-d85e-46cf-8e63-54eb09725905"
+    }
+  },
+  {
+    "id": "95c46bd8-5cd2-47db-87b0-4c0cf176b432",
+    "email": "applicant5@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:39.719604Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Eve Martinez",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "89ba86ca-cae9-448a-9cf4-de9a7dbe9919",
+    "email": "applicant4@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:39.343868Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "David Lee",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "0a4103a8-1fd9-478d-bafd-3a42edd45f78",
+    "email": "applicant3@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:38.900661Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Carol Davis",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "0cfe9815-571c-4c8f-a729-aa93429a7fbf",
+    "email": "applicant2@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:38.548814Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Bob Williams",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "3a2e5b13-4c6d-4639-9f67-903da3ad0428",
+    "email": "applicant1@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:38.087528Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Alice Johnson",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "fdd927fe-2104-4e23-b4cf-824ca999f0b7",
+    "email": "wei.active@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:37.882576Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Wei Chen Lim",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "0482a9be-b16c-4e19-b3c1-cb66338d6bc2",
+    "email": "aina.active@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:37.516895Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Aina Binti Ismail",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "27a348e8-951e-4301-ab67-35cfcf1ed2c3",
+    "email": "danial.active@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:37.053323Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Danial Bin Hassan",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "a690071a-6e91-4eb3-882b-9bce79a17587",
+    "email": "sophia_student@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:36.128162Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Sophia Student",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "1d48e12c-d7a4-48f9-a4ab-7c56f8cdfea6",
+    "email": "oliver_student@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:35.868567Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Oliver Student",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "038a0ceb-fa2c-4fee-986d-32473c478ca7",
+    "email": "emma_student@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:35.660673Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Emma Student",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "df82be46-86e5-44a9-bd50-0e4ed8d9ee90",
+    "email": "visual_jordan@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:35.383517Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Jordan Visual",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "d2a42b76-a1fe-4afc-bd7e-6771703d37c8",
+    "email": "dyslexia_sam@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:35.110478Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Sam Dyslexia",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "24bda128-fdb7-4964-a914-fbf78c92e976",
+    "email": "adhd_alex@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:34.715707Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Alex ADHD",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "11a02cf6-aa63-408f-9abd-5dfb5aa4d746",
+    "email": "at_risk@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:34.476479Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Noah AtRisk",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "eb63cc47-5907-4600-be5e-a099d393c57b",
+    "email": "high_performer@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:34.252192Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Mia Performer",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "0234a119-2c66-4e23-aefa-bfc148edd7aa",
+    "email": "learner@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:34.040267Z",
+    "last_sign_in_at": "2026-06-24T11:13:50.879307Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Leo Learner",
+      "role": "learner"
+    }
+  },
+  {
+    "id": "b28dfd20-804b-4cd4-9133-0f03b119cdaa",
+    "email": "fatimah.ed@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:33.826052Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Mrs. Fatimah Hassan",
+      "role": "educator"
+    }
+  },
+  {
+    "id": "df1a33d5-1e7a-407c-80b7-e6ac6ea5d77d",
+    "email": "new_ed@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:33.626581Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Prof. Mark Rivera",
+      "role": "educator"
+    }
+  },
+  {
+    "id": "2a9198be-514a-4d91-aa6a-c812c1947e8f",
+    "email": "educator@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:33.413966Z",
+    "last_sign_in_at": "2026-06-24T07:22:22.208211Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Dr. Sarah Chen",
+      "role": "educator"
+    }
+  },
+  {
+    "id": "aa193333-f3cc-4105-b98a-0c4e2d35eeaa",
+    "email": "admin@acess.demo",
+    "role": "authenticated",
+    "created_at": "2026-06-22T08:02:32.889895Z",
+    "last_sign_in_at": "2026-06-24T11:26:29.86604Z",
+    "user_metadata": {
+      "email_verified": true,
+      "full_name": "Aliff Admin",
+      "role": "admin"
+    }
+  }
+]
