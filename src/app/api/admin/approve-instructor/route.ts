@@ -123,6 +123,7 @@ export async function POST(request: Request) {
       await sendInstructorApprovalEmail(app.email, app.full_name, {
         password: temporaryPassword,
         loginUrl: `${baseUrl}/login`,
+        baseUrl,
       })
     } catch (emailError) {
       console.error('Failed to send approval email:', emailError)
