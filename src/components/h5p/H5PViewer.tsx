@@ -18,9 +18,10 @@ interface H5PViewerProps {
     h5p_mode: 'external' | 'self_hosted';
     library_name?: string | null;
   };
+  onComplete?: () => void;
 }
 
-export function H5PViewer({ content }: H5PViewerProps) {
+export function H5PViewer({ content, onComplete }: H5PViewerProps) {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -63,10 +64,12 @@ export function H5PViewer({ content }: H5PViewerProps) {
             toast.success(`Progress recorded! Score: ${score}/${maxScore}`, {
               description: `Activity: ${content.title}`,
             });
+            if (completed) onComplete?.();
           } else if (completed) {
             toast.success(`Activity completed!`, {
               description: `Activity: ${content.title}`,
             });
+            onComplete?.();
           }
         } catch (err) {
           console.error('Failed to submit xAPI statement to Supabase:', err);

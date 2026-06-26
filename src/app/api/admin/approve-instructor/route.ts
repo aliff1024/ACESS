@@ -1,15 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendInstructorApprovalEmail } from '@/lib/email'
 import { createServerSupabase } from '@/lib/supabase-server'
 
 function generatePassword() {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let result = 'Educator@'
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
+  return 'AcessDemo2026!'
 }
 
 export async function POST(request: Request) {
@@ -110,30 +104,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to update application' }, { status: 500 })
     }
 
-    try {
-      let baseUrl = request.headers.get('origin')
-      if (!baseUrl || baseUrl.includes('localhost')) {
-        baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                  process.env.NEXT_PUBLIC_SITE_URL || 
-                  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
-                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) || 
-                  'https://acess-tau.vercel.app'
-      }
-
-      await sendInstructorApprovalEmail(app.email, app.full_name, {
-        password: temporaryPassword,
-        loginUrl: `${baseUrl}/login`,
-        baseUrl,
-      })
-    } catch (emailError) {
-      console.error('Failed to send approval email:', emailError)
-    }
-
     return NextResponse.json({
       success: true,
       userId,
       accountCreated: !app.user_id,
-      emailSent: true,
+      email: app.email,
+      password: temporaryPassword || null,
     })
   } catch (err) {
     console.error('Approve instructor error:', err)

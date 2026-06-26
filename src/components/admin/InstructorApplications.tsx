@@ -79,7 +79,11 @@ export function InstructorApplications() {
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Approval failed')
-        toast.success('Application approved! Email sent to applicant.')
+        if (data.accountCreated && data.password) {
+          toast.success(`Approved! Login: ${data.email} / ${data.password}`, { duration: 10000 })
+        } else {
+          toast.success('Application approved! Existing account upgraded.')
+        }
       } else {
         await updateInstructorApplication(appId, { status, admin_notes: adminNotes })
         toast.success(`Application ${status} successfully`)
@@ -288,11 +292,11 @@ export function InstructorApplications() {
           <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Approval</DialogTitle>
-            <DialogDescription>This will activate the educator account and send an email.</DialogDescription>
+            <DialogDescription>This will activate the educator account with fixed credentials.</DialogDescription>
           </DialogHeader>
           <p className="text-sm text-gray-600">
             Are you sure you want to approve <strong>{selectedApp?.full_name}</strong> as an educator?
-            An approval email with login instructions will be sent to <strong>{selectedApp?.email}</strong>.
+            Login credentials will be shown after approval for you to share with them.
           </p>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>Cancel</Button>

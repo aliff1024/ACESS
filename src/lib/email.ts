@@ -82,7 +82,9 @@ export async function sendInstructorApprovalEmail(
 ) {
   const hasAccount = !options.password
   const logoUrl = `${options.baseUrl}/light_logo.png`
-  await transporter.sendMail({
+  console.log('[email] Sending instructor approval email to:', email)
+  console.log('[email] SMTP config:', { host: process.env.SMTP_HOST, port: process.env.SMTP_PORT, user: process.env.SMTP_USER, from: process.env.EMAIL_FROM })
+  const info = await transporter.sendMail({
     from: process.env.EMAIL_FROM || `"ACESS" <${process.env.SMTP_USER}>`,
     to: email,
     subject: 'Welcome to ACESS! Your Educator Application is Approved',
@@ -146,6 +148,7 @@ export async function sendInstructorApprovalEmail(
       </html>
     `,
   })
+  console.log('[email] Instructor approval email sent successfully. MessageId:', info.messageId)
 }
 
 export async function sendVerificationEmail(email: string, verifyLink: string) {
