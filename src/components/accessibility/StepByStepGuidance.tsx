@@ -60,14 +60,6 @@ export function StepByStepGuidance({
 
   return (
     <>
-      <style>{`
-        [data-guided-container] [data-guided-section] {
-          display: none;
-        }
-        [data-guided-container] [data-guided-section="${currentStepId}"] {
-          display: block;
-        }
-      `}</style>
       <div className="bg-white border-2 border-teal-100 rounded-xl p-5 shadow-sm mb-4" data-guided-wizard>
         <div className="flex items-center gap-2 mb-4">
           <div className="bg-teal-100 p-1.5 rounded-lg">
@@ -111,7 +103,7 @@ export function StepByStepGuidance({
                 onClick={onExitGuidedMode}
                 className="text-gray-400 hover:text-gray-600 text-xs"
               >
-                <LogOut className="w-3.5 h-3.5 mr-1" /> Exit Guided Mode
+                <LogOut className="w-3.5 h-3.5 mr-1" /> Exit Step-by-Step Mode
               </Button>
             )}
             {currentStepId === 'content' && !currentStep.completed && (

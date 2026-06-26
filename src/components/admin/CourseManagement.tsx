@@ -473,11 +473,7 @@ export default function CourseManagement() {
                           <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">
                             System
                           </span>
-                          {course.guided_learning_enabled && (
-                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                              Guided
-                            </span>
-                          )}
+
                         </div>
                         <p className="text-sm text-gray-500 truncate max-w-[200px] sm:max-w-xs mt-1">{course.description}</p>
                         {course.recommended_age_group && (

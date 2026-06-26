@@ -295,7 +295,7 @@ export function LearnerDashboard() {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
             <WelcomeSection />
-            <AdaptiveRecommendations onStartLesson={handleStartLesson} />
+            <AdaptiveRecommendations onStartLesson={handleStartLesson} onViewCourse={(courseId) => handleViewCourse(courseId)} />
             <MyCoursesSection onContinue={() => handleViewCourse('1')} />
             <ProgressOverview />
             <QuickActions onBrowseCourses={handleBrowseCourses} />

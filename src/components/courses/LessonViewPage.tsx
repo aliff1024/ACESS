@@ -13,7 +13,7 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout, Image, Link, Gamepad2, List, Download, MessageSquare, AlertTriangle } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
-import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint, fetchSystemCourseProgress, fetchLessonProgressMeta, saveLessonProgressMeta } from '@/lib/learner-api';
+import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint, fetchSystemCourseProgress, fetchLessonProgressMeta, saveLessonProgressMeta, fetchQuizAttemptHistory } from '@/lib/learner-api';
 import type { LessonContent, QuizData, LearnerLessonCheckpoint } from '@/lib/learner-api';
 import { shouldAutoEnableEasyRead } from '@/lib/accessibility-utils';
 import { trackAdaptation } from '@/lib/adaptive-engine';
@@ -268,11 +268,12 @@ export function LessonViewPage({
   const [hasDismissedCompletionPopup, setHasDismissedCompletionPopup] = useState(false);
   const [showChecklistPopup, setShowChecklistPopup] = useState(false);
 
-  const { settings, adaptiveOverrides, updateSettings } = useAccessibility();
+  const { settings, adaptiveOverrides, updateSettings, setDistractionFreeOverride, distractionFreeOverride } = useAccessibility();
   const adaptiveLessonModes = adaptiveOverrides.lesson_modes;
 
-  // Focus mode local toggle (learner can override lesson setting)
   const [focusMode, setFocusMode] = useState(false);
+  const [focusModeManuallyExited, setFocusModeManuallyExited] = useState(false);
+  const [chunkedModeManuallyExited, setChunkedModeManuallyExited] = useState(false);
   const [focusStep, setFocusStep] = useState(0);
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -280,6 +281,7 @@ export function LessonViewPage({
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [simulatedAttempts, setSimulatedAttempts] = useState(0);
 
 
   // View mode: slide (split by <hr>) or scroll (continuous)
@@ -309,6 +311,7 @@ export function LessonViewPage({
 
   // Lesson Helper Sidebar state
   const [showHelperSidebar, setShowHelperSidebar] = useState(false);
+  const [quizAttemptCount, setQuizAttemptCount] = useState(0);
   const [courseModules, setCourseModules] = useState<{ id: string | null; title: string; lessons: any[] }[]>([]);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
 
@@ -331,7 +334,7 @@ export function LessonViewPage({
         // Load lesson progress meta from database
         fetchLessonProgressMeta(lessonId, courseId).then(meta => {
           if (meta) {
-            setTracker(meta);
+            setTracker(p => ({ ...p, ...meta, quiz: p.quiz || meta.quiz }));
             if (typeof meta.guided_step_index === 'number') setGuidedStepIndex(meta.guided_step_index);
             if (typeof meta.last_completed_step_index === 'number') setLastCompletedStepIndex(meta.last_completed_step_index);
           }
@@ -350,8 +353,9 @@ export function LessonViewPage({
       fetchLessonInteractiveContent(lessonId).catch(() => []),
       fetchLessonVideoQuestions(lessonId).catch(() => []),
       fetchLessonH5PContent(lessonId).catch(() => []),
+      fetchQuizAttemptHistory(lessonId, courseId).catch(() => null)
     ])
-      .then(([lessonData, assetData, quizResult, interactiveData, vqData, h5pData]) => {
+      .then(([lessonData, assetData, quizResult, interactiveData, vqData, h5pData, quizHistory]) => {
         if (lessonData) {
           setLesson(lessonData);
           markLessonViewed(lessonId, courseId).catch(() => {});
@@ -363,6 +367,9 @@ export function LessonViewPage({
         if (quizResult) {
           setQuizData(quizResult);
           setQuizId(quizResult.id);
+        }
+        if (quizHistory && quizHistory.attempts.some(a => a.result === 'pass')) {
+          setTracker(p => ({ ...p, quiz: true }));
         }
       })
       .catch((err) => { console.error('Lesson load error:', err); })
@@ -722,6 +729,10 @@ export function LessonViewPage({
     }
   }, [lesson, currentChunk, settings.tts_enabled, speak]);
 
+  const activePreset = settings?.active_preset || 'none';
+  const educatorLayout = lesson?.lesson_layout || 'standard';
+  const isSlideMode = (activePreset === 'autism' || activePreset === 'adhd') ? false : (viewMode !== null ? viewMode === 'slide' : (settings.layout_mode === 'slide' || (!settings.layout_mode && educatorLayout === 'slideshow')));
+
   // Keyboard navigation for slideshow mode
   useEffect(() => {
     if (!lesson || !isSlideMode) return;
@@ -747,8 +758,8 @@ export function LessonViewPage({
 
   const lessonPhases = lesson ? [
     { id: 'content' as const, name: 'Content', fullName: 'Lesson Content', required: true, done: tracker.scroll && (lesson?.has_video === false || !lesson?.video_url || tracker.video) },
-    { id: 'activity' as const, name: 'Activities', fullName: 'Interactive Activities', required: interactiveContent.length > 0, done: tracker.activity },
-    { id: 'quiz' as const, name: 'Quiz', fullName: 'Pass Quiz', required: lesson.has_quiz && !!quizData, done: tracker.quiz },
+    { id: 'activity' as const, name: 'Activities', fullName: 'Interactive Activities', required: interactiveContent.length > 0 || h5pContent.length > 0, done: tracker.activity },
+    { id: 'quiz' as const, name: 'Quiz', fullName: 'Pass Quiz', required: lesson.has_quiz !== false && !!quizData && quizData.questions.length > 0, done: tracker.quiz },
     { id: 'finish' as const, name: 'Finish', fullName: 'Finish Lesson', required: true, done: lessonCompleted },
   ].filter(p => p.required) : [];
 
@@ -857,12 +868,7 @@ export function LessonViewPage({
           })}
         </div>
     );
-    if (isCompact) return content;
-    return (
-      <div className="mt-3 border-t border-gray-100 pt-4 flex flex-col items-center w-full">
-        {content}
-      </div>
-    );
+    return isCompact ? content : <div className="mt-3 border-t border-gray-100 pt-4 flex flex-col items-center w-full">{content}</div>;
   };
 
   const handleCompleteLesson = useCallback(async () => {
@@ -909,6 +915,7 @@ export function LessonViewPage({
   const handleQuizSubmit = async (score: number, answers: { questionId: string; selectedAnswer: string }[]) => {
     if (isPreview) {
       toast.info('Quiz submission simulated in Preview Mode');
+      setSimulatedAttempts(prev => prev + 1);
       setQuizScore(score);
       setQuizAnswers(answers);
       setShowQuizResult(true);
@@ -935,14 +942,84 @@ export function LessonViewPage({
           router.push('/learner/certificates?earned=true');
         }
       }
-    } catch {
+    } catch (err: any) {
+      console.error('Quiz submit error:', err);
       setQuizScore(score);
-      toast.error('Failed to save quiz attempt');
+      toast.error(`Failed to save quiz attempt: ${err?.message || err}`);
     } finally {
       setSubmitting(false);
       setShowQuizResult(true);
+      setQuizAttemptCount((prev) => prev + 1);
     }
   };
+
+  // ── Guided Step Definitions (moved up to satisfy Rules of Hooks) ──
+  const guidedHasVideo = !!(lesson?.video_url && lesson?.has_video !== false);
+  const guidedHasContent = !!(lesson?.content_html);
+  const guidedHasActivity = interactiveContent.length > 0 || h5pContent.length > 0;
+  const guidedHasQuiz = !!(quizData && quizData.questions.length > 0 && lesson?.has_quiz !== false);
+
+  const guidedSteps: GuidedStep[] = lesson ? [
+    ...(guidedHasVideo ? [{ id: 'video', title: 'Watch Video', completed: tracker.video }] : []),
+    ...(guidedHasContent ? [{ id: 'content', title: 'Read Lesson Content', completed: tracker.scroll }] : []),
+    ...(guidedHasActivity ? [{ id: 'activity', title: 'Complete Activity', completed: tracker.activity }] : []),
+    ...(guidedHasQuiz ? [{ id: 'quiz', title: 'Take Quiz', completed: tracker.quiz }] : []),
+  ] : [];
+
+  const firstIncomplete = guidedSteps.findIndex(s => !s.completed);
+  const clampedIndex = firstIncomplete === -1
+    ? Math.max(0, guidedSteps.length - 1)
+    : Math.min(guidedStepIndex, firstIncomplete);
+
+  useEffect(() => {
+    let newIndex = clampedIndex;
+    if (settings.step_by_step_enabled && lastCompletedStepIndex >= 0) {
+      newIndex = Math.min(lastCompletedStepIndex + 1, clampedIndex);
+    }
+    if (newIndex !== guidedStepIndex && guidedSteps.length > 0) {
+      setGuidedStepIndex(newIndex);
+    }
+  }, [guidedSteps.length, settings.step_by_step_enabled, clampedIndex, lastCompletedStepIndex, guidedStepIndex]);
+
+  // Sync guidedStepIndex with activePhase when activePhase changes externally
+  useEffect(() => {
+    if (!lesson) return;
+    const simplifiedMode = settings.simplified_ui ?? (activePreset === 'autism' || activePreset === 'adhd');
+    const effectiveFocusMode = (focusMode || activePreset === 'adhd') && !focusModeManuallyExited;
+    const effectiveChunkedEnabled = (settings.chunked_content_mode || lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content || activePreset === 'adhd' || activePreset === 'autism') && !chunkedModeManuallyExited;
+    const contentHtml = lesson.content_html || '';
+    const chunks = !contentHtml ? null : isSlideMode ? contentHtml.split(/<hr\s*\/?>/i).filter(p => p.trim()) : !effectiveChunkedEnabled ? null : contentHtml.split(/<h2\b[^>]*>/i).filter(p => p.trim());
+    const totalChunks = chunks?.length ?? 0;
+    const showChunkNav = totalChunks > 1;
+    const computedGuidedMode = !!settings.step_by_step_enabled && !isSlideMode && !effectiveFocusMode && showChunkNav && (effectiveChunkedEnabled || simplifiedMode || activePreset === 'autism');
+
+    if (computedGuidedMode && guidedSteps.length > 0) {
+      const currentStep = guidedSteps[guidedStepIndex];
+      if (!currentStep) return;
+      if (activePhase === 'activity' && currentStep.id !== 'activity') {
+        const idx = guidedSteps.findIndex(s => s.id === 'activity');
+        if (idx >= 0) setGuidedStepIndex(idx);
+      } else if (activePhase === 'quiz' && currentStep.id !== 'quiz') {
+        const idx = guidedSteps.findIndex(s => s.id === 'quiz');
+        if (idx >= 0) setGuidedStepIndex(idx);
+      } else if (activePhase === 'finish' && currentStep.id !== 'finish') {
+        const idx = guidedSteps.findIndex(s => s.id === 'finish');
+        if (idx >= 0) setGuidedStepIndex(idx);
+      } else if (activePhase === 'content' && currentStep.id !== 'video' && currentStep.id !== 'content') {
+         const idx = guidedSteps.findIndex(s => s.id === 'content');
+         if (idx >= 0) setGuidedStepIndex(idx);
+         else {
+           const vidIdx = guidedSteps.findIndex(s => s.id === 'video');
+           if (vidIdx >= 0) setGuidedStepIndex(vidIdx);
+         }
+      }
+    }
+  }, [
+    lesson, activePhase, guidedStepIndex, guidedSteps,
+    settings.simplified_ui, activePreset, focusMode, focusModeManuallyExited,
+    settings.chunked_content_mode, adaptiveLessonModes.chunked_content,
+    chunkedModeManuallyExited, isSlideMode
+  ]);
 
   if (loading) {
     return (
@@ -981,12 +1058,11 @@ export function LessonViewPage({
   const layout = lesson.lesson_layout || 'standard';
   const layoutContainer = layout === 'focus' ? 'max-w-4xl' : layout === 'two_column' || layout === 'wide' ? 'max-w-7xl' : 'max-w-6xl';
 
-  const activePreset = settings?.active_preset || 'none';
   const simplifiedMode = settings.simplified_ui ?? (activePreset === 'autism' || activePreset === 'adhd');
   
   // ADHD profile forcefully applies chunked learning and focus mode.
-  const effectiveFocusMode = focusMode || activePreset === 'adhd';
-  const effectiveChunkedEnabled = settings.chunked_content_mode || lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content || activePreset === 'adhd' || activePreset === 'autism';
+  const effectiveFocusMode = (focusMode || activePreset === 'adhd') && !focusModeManuallyExited;
+  const effectiveChunkedEnabled = (settings.chunked_content_mode || settings.layout_mode === 'chunked' || lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content || activePreset === 'adhd' || activePreset === 'autism') && !chunkedModeManuallyExited;
 
   // For Dyslexia, enforce max-w-2xl for better line lengths (typically 60-70 characters).
   // For ADHD, keep focus mode tight.
@@ -1006,9 +1082,6 @@ export function LessonViewPage({
   const contentFontSize = fontSizeMap[settings.preferred_font_size ?? 'medium'] || 'text-base prose-base';
 
   const contentHtml = lesson.content_html || '';
-  const educatorLayout = lesson.lesson_layout || 'standard';
-  // Autism profile does not use slideshows (too unexpected), prefers explicit chunks
-  const isSlideMode = activePreset === 'autism' ? false : (viewMode !== null ? viewMode === 'slide' : educatorLayout === 'slideshow');
 
   const chunks = !contentHtml
     ? null
@@ -1025,7 +1098,7 @@ export function LessonViewPage({
   const totalChunks = chunks?.length ?? 0;
   const showChunkNav = totalChunks > 1;
 
-  const guidedMode = !isSlideMode && !effectiveFocusMode && showChunkNav && (effectiveChunkedEnabled || simplifiedMode || adaptiveLessonModes.guided_mode || activePreset === 'autism');
+  const guidedMode = !!settings.step_by_step_enabled && !isSlideMode && !effectiveFocusMode && showChunkNav && (effectiveChunkedEnabled || simplifiedMode || activePreset === 'autism');
   const requireCheckpoint = !isSlideMode && (!!lesson.checkpoints_enabled || adaptiveLessonModes.checkpoints || activePreset === 'autism') && showChunkNav && !effectiveFocusMode;
   const currentDbCheckpoint = lessonCheckpoints.length > 0
     ? (lessonCheckpoints.find((cp) => cp.sequence_order === currentChunk) ?? lessonCheckpoints[currentChunk] ?? null)
@@ -1039,6 +1112,8 @@ export function LessonViewPage({
   const isLastChunk = currentChunk >= totalChunks - 1;
   const showEndOfLessonContent = !effectiveFocusMode && (!guidedMode || (isLastChunk && canAdvanceChunk));
   const highlightSimplifiedSummary = simplifiedMode || shouldAutoEnableEasyRead(settings.preferred_reading_level) || adaptiveLessonModes.simplified_summary;
+
+
 
   const focusSteps = [
     ...(lesson.video_url && lesson.has_video !== false ? [{ id: 'video' as const, label: 'Video' }] : []),
@@ -1080,7 +1155,6 @@ export function LessonViewPage({
       return next;
     });
     setAdaptiveHint(null);
-    trackAdaptation('guided_mode', { lessonId, courseId });
     if (currentDbCheckpoint && enrollmentId) {
       try {
         await completeLearnerCheckpoint(currentDbCheckpoint.id, enrollmentId);
@@ -1107,39 +1181,22 @@ export function LessonViewPage({
     : readTime.label;
 
 
-  // ── Guided Step Definitions ──
-  const guidedHasVideo = !!(lesson.video_url && lesson.has_video !== false);
-  const guidedHasContent = !!contentHtml;
-  const guidedHasActivity = interactiveContent.length > 0;
-  const guidedHasQuiz = !!(quizData && lesson.has_quiz !== false);
 
-  const guidedSteps: GuidedStep[] = [
-    ...(guidedHasVideo ? [{ id: 'video', title: 'Watch Video', completed: tracker.video }] : []),
-    ...(guidedHasContent ? [{ id: 'content', title: 'Read Lesson Content', completed: tracker.scroll }] : []),
-    ...(guidedHasActivity ? [{ id: 'activity', title: 'Complete Activity', completed: tracker.activity }] : []),
-    ...(guidedHasQuiz ? [{ id: 'quiz', title: 'Take Quiz', completed: tracker.quiz }] : []),
-  ];
-
-  // Clamp guided step index — never point past the first incomplete step
-  const firstIncomplete = guidedSteps.findIndex(s => !s.completed);
-  const clampedIndex = firstIncomplete === -1
-    ? Math.max(0, guidedSteps.length - 1)
-    : Math.min(guidedStepIndex, firstIncomplete);
-
-  // Sync clamped index on mount and when steps change
-  useEffect(() => {
-    let newIndex = clampedIndex;
-    // When re-entering guided mode, resume after last completed step
-    if (settings.step_by_step_enabled && lastCompletedStepIndex >= 0) {
-      newIndex = Math.min(lastCompletedStepIndex + 1, clampedIndex);
-    }
-    if (newIndex !== guidedStepIndex && guidedSteps.length > 0) {
-      setGuidedStepIndex(newIndex);
-    }
-  }, [guidedSteps.length, settings.step_by_step_enabled]);
 
   const handleGuidedStepChange = (index: number) => {
     setGuidedStepIndex(index);
+    const step = guidedSteps[index];
+    if (step) {
+      if (step.id === 'video' || step.id === 'content') {
+        if (activePhase !== 'content') setActivePhase('content');
+      } else if (step.id === 'activity') {
+        if (activePhase !== 'activity') setActivePhase('activity');
+      } else if (step.id === 'quiz') {
+        if (activePhase !== 'quiz') setActivePhase('quiz');
+      } else if (step.id === 'finish') {
+        if (activePhase !== 'finish') setActivePhase('finish');
+      }
+    }
   };
 
   const handleGuidedStepComplete = (stepId: string) => {
@@ -1225,6 +1282,9 @@ export function LessonViewPage({
                       <button
                         onClick={() => {
                           setFocusMode(true);
+                          setFocusModeManuallyExited(false);
+                          setChunkedModeManuallyExited(false);
+                          setDistractionFreeOverride(true);
                           setFocusStep(0);
                           trackAdaptation('focus_mode', { lessonId, courseId });
                         }}
@@ -1307,7 +1367,7 @@ export function LessonViewPage({
                         <MessageSquare className="w-4 h-4" /> <span className="hidden sm:inline">Discussion</span>
                       </Button>
                     )}
-                    {lesson.has_quiz && (
+                    {lessonPhases.some(p => p.id === 'quiz') && (
                       <Button variant="ghost" size="sm" onClick={() => setActivePhase('quiz')} className="flex items-center gap-1.5 text-purple-700 hover:bg-purple-50 font-medium">
                         <HelpCircle className="w-4 h-4" /> <span className="hidden sm:inline">Quiz</span>
                       </Button>
@@ -1354,7 +1414,12 @@ export function LessonViewPage({
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={() => setFocusMode(false)}
+                onClick={() => {
+                  setFocusMode(false);
+                  setFocusModeManuallyExited(true);
+                  setChunkedModeManuallyExited(true);
+                  setDistractionFreeOverride(false);
+                }}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
               >
                 <Minimize2 className="w-3.5 h-3.5" /> Exit
@@ -1457,8 +1522,8 @@ export function LessonViewPage({
             )}
 
             {/* ── Video (optional) ── */}
-            <div className={activePhase === 'content' ? 'block' : 'hidden'} id="lesson-video" data-guided-section="video">
-              {lesson.video_url && lesson.has_video !== false && (!effectiveFocusMode || currentFocusId === 'video') && (
+            <div className={activePhase === 'content' || effectiveFocusMode ? 'block' : 'hidden'} id="lesson-video" data-guided-section="video">
+              {lesson.video_url && lesson.has_video !== false && (!effectiveFocusMode || currentFocusId === 'video') && (!guidedMode || guidedSteps[guidedStepIndex]?.id === 'video') && (!showChunkNav || isSlideMode || currentChunk === 0) && (
                 <CollapsibleCard
                   icon={<Video className="w-4 h-4 text-rose-600" />}
                   title="Video"
@@ -1617,9 +1682,9 @@ export function LessonViewPage({
             </div>
 
             {/* ── Lesson Content ── */}
-            <div className={activePhase === 'content' ? 'block' : 'hidden'} id="lesson-main-content" data-guided-section="content">
-            {/* View mode toggle */}
-            {(!effectiveFocusMode || currentFocusId === 'content') && contentHtml && (
+            <div className={activePhase === 'content' || effectiveFocusMode ? 'block' : 'hidden'} id="lesson-main-content" data-guided-section="content">
+            {/* The Actual Content Rendering */}
+            {(!effectiveFocusMode || currentFocusId === 'content') && (!guidedMode || guidedSteps[guidedStepIndex]?.id === 'content') && contentHtml && (
               <div className="flex items-center justify-end gap-2 mb-3">
                 <button
                   onClick={() => {
@@ -1856,7 +1921,7 @@ export function LessonViewPage({
             </div>
 
             {/* ── Native Interactive Activities (tabbed or focus) ── */}
-            <div id="lesson-activities" className={activePhase === 'activity' ? 'block' : 'hidden'} data-guided-section="activity">
+            <div id="lesson-activities" className={activePhase === 'activity' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'activity') ? 'block' : 'hidden'} data-guided-section="activity">
               {interactiveContent.length > 0 && (() => {
                 const sorted = [...interactiveContent].sort((a, b) => a.sequence_order - b.sequence_order);
               
@@ -2103,7 +2168,7 @@ export function LessonViewPage({
             </Dialog>
 
             {/* ── Quiz ── */}
-            <div className={activePhase === 'quiz' ? 'block' : 'hidden'} data-guided-section="quiz">
+            <div className={activePhase === 'quiz' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'quiz') ? 'block' : 'hidden'} data-guided-section="quiz">
               {!lesson.has_quiz || !quizData ? (
                 <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm mb-8">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -2125,17 +2190,20 @@ export function LessonViewPage({
                       </div>
                     </div>
                     <QuizPage
-                      key={quizResetKey}
+                      key={`quiz-${lessonId}-${quizAttemptCount}`}
                       lessonId={lessonId}
                       courseId={courseId}
                       onBack={() => {}}
-                      onSubmit={handleQuizSubmit}
+                      onSubmit={(score, answers) => {
+                        handleQuizSubmit(score, answers);
+                      }}
                       adaptiveLearningEnabled={!!lesson.adaptive_learning_enabled}
                       simplifiedSummary={lesson.simplified_summary}
                       onSuggestReview={() => {
                         contentTopRef.current?.scrollIntoView({ behavior: 'smooth' });
                       }}
                       hideBackButton={true}
+                      simulatedAttempts={simulatedAttempts}
                     />
                   </div>
                 )
@@ -2156,7 +2224,9 @@ export function LessonViewPage({
               />
             )}
             {/* ── Student Summary (optional) ── */}
-            <div className={activePhase === 'finish' ? 'block' : 'hidden'} data-guided-section="finish">
+            <div className={activePhase === 'finish' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'finish') ? 'block' : 'hidden'} data-guided-section="finish">
+            {(!effectiveFocusMode || currentFocusId === 'summary') && (
+              <>
             {lesson.has_summary_activity && !lessonCompleted && (
               <div>
                 {guidedMode && (
@@ -2241,11 +2311,12 @@ export function LessonViewPage({
                 </Card>
               </motion.div>
             )}
-
+              </>
+            )}
             </div>
 
             {/* ── PHASE NAVIGATION ── */}
-            {(() => {
+            {!effectiveFocusMode && (() => {
               const currentPhaseIndex = lessonPhases.findIndex(p => p.id === activePhase);
               if (currentPhaseIndex === -1) return null;
               const prevPhase = currentPhaseIndex > 0 ? lessonPhases[currentPhaseIndex - 1] : null;
@@ -2269,6 +2340,7 @@ export function LessonViewPage({
                     <Button onClick={() => {
                       if (currentPending.length > 0) {
                         toast.warning(`Complete "${currentPending.join(', ')}" before proceeding`);
+                        return;
                       }
                       setActivePhase(nextPhase.id as any);
                       document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2338,7 +2410,9 @@ export function LessonViewPage({
               }}
               className="simplifiable bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
             >
-              {onNextLesson && lesson.sequence_order < lesson.total_lessons ? 'Next Lesson' : 'Back to Course'} <ChevronRight className="w-5 h-5 ml-2" />
+              {!lessonCompleted 
+                ? 'Complete Lesson' 
+                : (onNextLesson && lesson.sequence_order < lesson.total_lessons ? 'Next Lesson' : 'Back to Course')} <ChevronRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
         </div>
@@ -2347,7 +2421,13 @@ export function LessonViewPage({
       <QuizResultModal
         isOpen={showQuizResult}
         score={quizScore}
-        onClose={() => setShowQuizResult(false)}
+        onClose={() => {
+          setShowQuizResult(false);
+          if (tracker.quiz) {
+            setActivePhase('finish');
+            document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }}
         onReviewAnswers={() => {
           setShowQuizResult(false);
           setIsReviewingAnswers(true);
@@ -2527,6 +2607,39 @@ export function LessonViewPage({
         </DialogContent>
       </Dialog>
 
+
+      {/* ── Focus / Distraction-Free Toggle (Bottom Right) ── */}
+      {(settings.distraction_free_mode || activePreset === 'adhd') && (
+        <div className="fixed bottom-6 right-6 z-50">
+          {effectiveFocusMode || (settings.distraction_free_mode && distractionFreeOverride !== false && !focusModeManuallyExited) ? (
+            <Button
+              onClick={() => {
+                setFocusMode(false);
+                setFocusModeManuallyExited(true);
+                setChunkedModeManuallyExited(true);
+                setDistractionFreeOverride(false);
+              }}
+              className="shadow-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-full px-5 py-2.5 flex items-center gap-2 transition-all"
+            >
+              <Minimize2 className="w-4 h-4" />
+              <span className="text-sm font-medium">Exit Free Mode</span>
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                setFocusMode(true);
+                setFocusModeManuallyExited(false);
+                setChunkedModeManuallyExited(false);
+                setDistractionFreeOverride(true);
+              }}
+              className="shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-5 py-2.5 flex items-center gap-2 transition-all"
+            >
+              <Maximize2 className="w-4 h-4" />
+              <span className="text-sm font-medium">Enter Free Mode</span>
+            </Button>
+          )}
+        </div>
+      )}
 
     </div>
   );

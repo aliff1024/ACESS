@@ -15,6 +15,8 @@ interface AccessibilityContextType {
   revertSettings: () => void;
   applyPreset: (presetName: string) => Promise<void>;
   loading: boolean;
+  distractionFreeOverride: boolean | null;
+  setDistractionFreeOverride: (val: boolean | null) => void;
 }
 
 const defaultSettings: AccessibilitySettingsData = {
@@ -54,7 +56,7 @@ const defaultSettings: AccessibilitySettingsData = {
   progress_timeline_enabled: false,
 };
 
-function applySettingsToDOM(settings: AccessibilitySettingsData) {
+function applySettingsToDOM(settings: AccessibilitySettingsData, distractionFreeOverride: boolean | null = null) {
   const root = document.documentElement;
 
   // ─── Legacy data-* attributes (backward compatibility) ─────────────
@@ -84,7 +86,8 @@ function applySettingsToDOM(settings: AccessibilitySettingsData) {
   root.setAttribute('data-font-family', fontFamily);
   root.setAttribute('data-bg-tint', backgroundTint);
   root.setAttribute('data-reading-spotlight', String(!!settings.reading_spotlight));
-  root.setAttribute('data-distraction-free', String(!!settings.distraction_free_mode));
+  const isDistractionFree = distractionFreeOverride ?? settings.distraction_free_mode;
+  root.setAttribute('data-distraction-free', String(!!isDistractionFree));
   root.setAttribute('data-chunked', String(!!settings.chunked_content_mode));
   root.setAttribute('data-layout-mode', settings.layout_mode || 'slide');
   root.setAttribute('data-structure-mode', settings.structure_mode || 'full');
@@ -109,7 +112,7 @@ function applySettingsToDOM(settings: AccessibilitySettingsData) {
 
 const defaultOverrides: EffectiveAccessibilitySettings = {
   ui: defaultSettings,
-  lesson_modes: { focus_mode: false, chunked_content: false, guided_mode: false, checkpoints: false, simplified_summary: false },
+  lesson_modes: { focus_mode: false, chunked_content: false, checkpoints: false, simplified_summary: false, guided_mode: false },
   active_recommendation: null,
   active_disability: null,
 };
@@ -123,6 +126,8 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   revertSettings: () => {},
   applyPreset: async () => {},
   loading: true,
+  distractionFreeOverride: null,
+  setDistractionFreeOverride: () => {},
 });
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
@@ -143,13 +148,14 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AccessibilitySettingsData>(getInitialSettings);
   const [adaptiveOverrides, setAdaptiveOverrides] = useState<EffectiveAccessibilitySettings>({
     ui: defaultSettings,
-    lesson_modes: { focus_mode: false, chunked_content: false, guided_mode: false, checkpoints: false, simplified_summary: false },
+    lesson_modes: { focus_mode: false, chunked_content: false, checkpoints: false, simplified_summary: false, guided_mode: false },
     active_recommendation: null,
     active_disability: null,
   });
   const [persistedSettings, setPersistedSettings] = useState<AccessibilitySettingsData>(getInitialSettings);
   const [userAgeGroup, setUserAgeGroup] = useState<'6-12' | '13-17' | '18+'>('18+');
   const [loading, setLoading] = useState(true);
+  const [distractionFreeOverride, setDistractionFreeOverride] = useState<boolean | null>(null);
   const fetched = useRef(false);
 
   const recomputeAdaptive = useCallback((s: AccessibilitySettingsData) => {
@@ -157,8 +163,18 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     setAdaptiveOverrides(computed);
   }, []);
 
+  // Effect to apply the distraction free override to the DOM without requiring a full save
+  useEffect(() => {
+    applySettingsToDOM(settings, distractionFreeOverride);
+  }, [distractionFreeOverride, settings]);
+
   useEffect(() => {
     if (!user) {
+      applySettingsToDOM(defaultSettings);
+      setSettings(defaultSettings);
+      setPersistedSettings(defaultSettings);
+      localStorage.removeItem('acess_accessibility_settings');
+      fetched.current = false;
       const id = setTimeout(() => setLoading(false), 0);
       return () => clearTimeout(id);
     }
@@ -241,7 +257,11 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   }, [user, settings, recomputeAdaptive]);
 
   return (
-    <AccessibilityContext.Provider value={{ settings, adaptiveOverrides, userAgeGroup, updateSettings, previewSettings, revertSettings, applyPreset, loading }}>
+    <AccessibilityContext.Provider value={{ 
+      settings, adaptiveOverrides, userAgeGroup, 
+      updateSettings, previewSettings, revertSettings, applyPreset, loading,
+      distractionFreeOverride, setDistractionFreeOverride
+    }}>
       {children}
     </AccessibilityContext.Provider>
   );

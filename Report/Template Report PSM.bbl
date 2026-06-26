@@ -24,6 +24,12 @@ Batanero, C., Boticario, J.~G., et~al. (2014).
 {Brainhub} (2024).
 \newblock Tiptap: The headless rich text editor framework.
 
+\bibitem[Burl and O'Brien, 2024]{burl2024neurodiversent}
+Burl, M. and O'Brien, K. (2024).
+\newblock Dropout rates and accessibility barriers in e-learning for
+  neurodivergent students.
+\newblock {\em Computers \& Education}, 198:104--118.
+
 \bibitem[{Figma}, 2023]{figma_software}
 {Figma} (2023).
 \newblock Figma: The collaborative interface design tool.
@@ -97,6 +103,12 @@ Schwaber, K. (1997).
 \newblock Scrum development process.
 \newblock In {\em Business Object Design and Implementation: OOPSLA'95 Workshop
   Proceedings}, pages 117--134. Springer.
+
+\bibitem[Spencer and Podesta, 2022]{spencer2022neurodiversity}
+Spencer, M. and Podesta, F. (2022).
+\newblock Neurodiversity in higher education: A comprehensive review of
+  progress and challenges.
+\newblock {\em Journal of Applied Higher Education}, 13(2):45--62.
 
 \bibitem[{Supabase}, 2023]{supabase_docs}
 {Supabase} (2023).

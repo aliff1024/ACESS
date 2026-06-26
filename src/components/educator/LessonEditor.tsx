@@ -224,6 +224,17 @@ export function LessonEditor({
     if (!lessonId) {
       setForm(defaultFormData);
       setLessonAssets([]);
+      setInteractiveItems([]);
+      setVideoQuestions([]);
+      setContentBlocks([]);
+      setStudentSubmissions([]);
+      setDiscussionCount(0);
+      setVideoDuration(null);
+      setEditingInteractiveId(null);
+      setSelectedActivityTab(null);
+      setIsDirty(false);
+      dbItemIdsRef.current = new Set();
+      setActiveTab('basics');
       return;
     }
     setLoading(true);
@@ -404,30 +415,31 @@ export function LessonEditor({
         fields.summary_reflection_questions = form.summary_reflection_questions;
       }
 
-      let savedLessonId = lessonId;
-      if (isEditing && lessonId) {
-        await updateLesson(lessonId, fields);
-        toast.success('Lesson updated');
-      } else {
-        const seq = await getNextSequenceOrder(courseId);
-        const created = await createLesson(user.user.id, {
-          ...fields,
-          course_id: courseId,
-          sequence_order: seq,
-        } as LessonFields);
-        savedLessonId = created.id;
-        toast.success('Lesson added');
-      }
-      // Persist interactive items
-      if (savedLessonId) {
-        for (const item of interactiveItems) {
-          let hasContent = false;
-          const d = item.content_data as any;
-          if (item.content_type === 'flashcards' && d?.cards?.length > 0) hasContent = true;
-          else if (item.content_type === 'drag_drop' && d?.items?.length > 0) hasContent = true;
-          else if (item.content_type === 'fill_blanks' && d?.segments?.length > 0) hasContent = true;
-          else if (item.content_type === 'memory_game' && d?.cards?.length > 0) hasContent = true;
-          else if (item.content_type === 'timeline' && d?.events?.length > 0) hasContent = true;
+      let savedLessonId = currentLessonIdRef.current;
+        if (savedLessonId) {
+          await updateLesson(savedLessonId, fields);
+          toast.success('Lesson updated');
+        } else {
+          const seq = await getNextSequenceOrder(courseId);
+          const created = await createLesson(user.user.id, {
+            ...fields,
+            course_id: courseId,
+            sequence_order: seq,
+          } as LessonFields);
+          savedLessonId = created.id;
+          currentLessonIdRef.current = created.id;
+          toast.success('Lesson added');
+        }
+        // Persist interactive items
+        if (savedLessonId) {
+          for (const item of interactiveItems) {
+            let hasContent = false;
+            const d = item.content_data as any;
+            if (item.content_type === 'flashcards' && d?.cards?.length > 0) hasContent = true;
+            else if (item.content_type === 'drag_drop' && d?.items?.length > 0) hasContent = true;
+            else if (item.content_type === 'fill_blanks' && d?.segments?.length > 0) hasContent = true;
+            else if (item.content_type === 'memory_game' && d?.cards?.length > 0) hasContent = true;
+            else if (item.content_type === 'timeline' && d?.events?.length > 0) hasContent = true;
 
           const isDraft = (item as any).is_draft || !hasContent;
 
@@ -951,8 +963,16 @@ export function LessonEditor({
                               return;
                             }
                             if (onManageQuiz) {
-                              handleSave();
-                              onManageQuiz();
+                              if (!form.has_quiz) {
+                                update('has_quiz', true);
+                                // The handleSave will run with current state, so we trigger a toast 
+                                // to remind them that the quiz has been enabled.
+                                toast.success("Quiz has been enabled for this lesson");
+                              }
+                              setTimeout(() => {
+                                handleSave();
+                                onManageQuiz();
+                              }, 100);
                             } else {
                               toast.error('Quiz manager not available in this context');
                             }
@@ -1176,6 +1196,7 @@ export function LessonEditor({
               : null;
             return (
               <InteractiveActivityBuilder
+                key={editingItem?.id || 'new_activity'}
                 primaryFocus={coursePrimaryFocus}
                 config={{
                   id: editingItem?.id,
@@ -1217,6 +1238,7 @@ export function LessonEditor({
                     ]);
                     setEditingInteractiveId(newId);
                   }
+                  setIsDirty(true);
                 }}
               />
             );
@@ -1245,6 +1267,7 @@ export function LessonEditor({
                      else if (editingItem.content_type === 'timeline' && d?.events?.length > 0) hasContent = true;
 
                      setInteractiveItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, is_draft: !hasContent } : i));
+                     setIsDirty(true);
                      if (hasContent) {
                        toast.success('Activity ready');
                      } else {

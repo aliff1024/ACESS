@@ -217,13 +217,9 @@ export function EducatorCoursesPage() {
                 className="w-full sm:w-48 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 font-medium"
               >
                 <option value="all">All Disabilities</option>
-                <option value="visual">Visual Impairments</option>
-                <option value="hearing">Hearing Impairments</option>
-                <option value="cognitive">Cognitive/Learning</option>
-                <option value="motor">Motor/Physical</option>
-                <option value="speech">Speech/Language</option>
-                <option value="neurodivergent">Neurodivergent</option>
-                <option value="general">General Accessibility</option>
+                <option value="adhd">ADHD-Friendly</option>
+                <option value="autism">Autism-Friendly</option>
+                <option value="dyslexia">Dyslexia-Friendly</option>
               </select>
             </div>
             

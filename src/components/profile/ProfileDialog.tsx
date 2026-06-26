@@ -291,7 +291,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                 </TabsTrigger>
 
                 <TabsTrigger value="appearance" className="flex items-center gap-2">
-                  <Palette className="w-4 h-4" /> Appearance
+                  <Palette className="w-4 h-4" /> Accessibility & Appearance
                 </TabsTrigger>
               </TabsList>
 
@@ -355,6 +355,19 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               </TabsContent>
               <TabsContent value="appearance">
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dlg-disability">Disability / Learning Need</Label>
+                    <Select value={disabilityType} onValueChange={setDisabilityType}>
+                      <SelectTrigger id="dlg-disability"><SelectValue placeholder="Select a learning need profile" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Standard / None</SelectItem>
+                        <SelectItem value="dyslexia">Dyslexia / Reading Difficulty</SelectItem>
+                        <SelectItem value="adhd">ADHD / Focus Challenge</SelectItem>
+                        <SelectItem value="autism">Autism / Sensory Sensitivity</SelectItem>
+                        <SelectItem value="vision">Vision Impairment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="dlg-theme">Theme</Label>
                     <Select value={preferredTheme} onValueChange={setPreferredTheme}>

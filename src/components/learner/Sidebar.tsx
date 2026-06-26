@@ -88,26 +88,7 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
       ];
     }
 
-    // Dyscalculia Profile: Inject math support
-    if (activePreset === 'dyscalculia') {
-      return [
-        { id: 'dashboard', key: 'nav.dashboard', icon: LayoutDashboard },
-        {
-          id: 'courses',
-          key: 'nav.myCourses',
-          icon: BookOpen,
-          subItems: [
-            { id: 'courses', key: 'nav.allCourses', icon: BookOpen },
-            { id: 'courses_enrolled', key: 'nav.enrolled', icon: BookMarked },
-            { id: 'courses_favorites', key: 'nav.favourites', icon: Heart },
-          ],
-        },
-        { id: 'progress', key: 'nav.progress', icon: TrendingUp },
-        { id: 'certificates', key: 'nav.achievements', icon: Trophy },
-        { id: 'accessibility', key: 'nav.accessibility', icon: Settings },
-        { id: 'math_tools', key: 'Math Support', icon: Calculator, labelOverride: 'Math Support Tools' },
-      ];
-    }
+
 
     // Default / Dyslexia (Dyslexia relies more on styling, base structure is fine)
     return [

@@ -18,6 +18,7 @@ interface QuizPageProps {
   simplifiedSummary?: string | null;
   onSuggestReview?: () => void;
   hideBackButton?: boolean;
+  simulatedAttempts?: number;
 }
 
 function formatDate(dateStr: string) {
@@ -31,6 +32,7 @@ export function QuizPage({
   simplifiedSummary = null,
   onSuggestReview,
   hideBackButton = false,
+  simulatedAttempts = 0,
 }: QuizPageProps) {
   const { t } = useTranslation();
   const { settings } = useAccessibility();
@@ -102,7 +104,7 @@ export function QuizPage({
         }
         setQuizData(quiz);
         setAttemptHistory(history.attempts);
-        setUsedAttempts(history.usedAttempts);
+        setUsedAttempts(history.usedAttempts + simulatedAttempts);
         setMaxAttempts(history.maxAttempts);
         if (quiz.time_limit_seconds && quiz.time_limit_seconds > 0) {
           setTimeRemaining(quiz.time_limit_seconds);

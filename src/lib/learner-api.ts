@@ -54,6 +54,7 @@ export interface AvailableCourse {
   primary_disability_focus?: string | null
   total_duration?: number
   secondary_disability_focuses?: string[] | null
+  recommended_age_group?: string | null
 }
 
 export interface CourseDetail {
@@ -1218,14 +1219,22 @@ export async function fetchQuizAttemptHistory(lessonId: string, courseId: string
 
     const { data: attempts, error: attError } = await supabase
       .from('quiz_attempts')
-      .select('attempt_number, score_pct, result, created_at')
+      .select('attempt_number, score_pct, result, started_at')
       .eq('enrollment_id', enrollment.id)
       .eq('quiz_id', quiz.id)
       .order('attempt_number', { ascending: false })
-    if (attError) return { attempts: [], usedAttempts: 0, maxAttempts: quiz.max_attempts }
+    if (attError) {
+      console.error('fetchQuizAttemptHistory error:', attError);
+      return { attempts: [], usedAttempts: 0, maxAttempts: quiz.max_attempts }
+    }
 
     return {
-      attempts: attempts || [],
+      attempts: (attempts || []).map(a => ({
+        attempt_number: a.attempt_number,
+        score_pct: a.score_pct,
+        result: a.result,
+        created_at: a.started_at
+      })),
       usedAttempts: attempts?.length || 0,
       maxAttempts: quiz.max_attempts,
     }
@@ -1918,13 +1927,21 @@ export async function enrollInCourse(courseId: string): Promise<{ enrollmentId: 
 
   const { data: existing } = await supabase
     .from('enrollments')
-    .select('id')
+    .select('id, status')
     .eq('user_id', userId)
     .eq('course_id', courseId)
-    .neq('status', 'dropped')
     .maybeSingle()
 
-  if (existing) return { enrollmentId: existing.id }
+  if (existing) {
+    if (existing.status === 'dropped') {
+      const { error: updateError } = await supabase
+        .from('enrollments')
+        .update({ status: 'active' })
+        .eq('id', existing.id)
+      if (updateError) throw updateError
+    }
+    return { enrollmentId: existing.id }
+  }
 
   const { data, error } = await supabase
     .from('enrollments')

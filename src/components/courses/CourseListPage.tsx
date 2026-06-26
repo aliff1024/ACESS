@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Search, Filter, BookOpen, Loader2, Heart, Shield, Crown, Star, User, Clock, Users, ArrowLeft, PlayCircle, Sparkles, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { fetchAvailableCourses, fetchEnrolledCourses, toggleFavorite, fetchFavoriteCourseIds } from '@/lib/learner-api';
+import { fetchAvailableCourses, fetchEnrolledCourses, toggleFavorite, fetchFavoriteCourseIds, fetchFullProfile } from '@/lib/learner-api';
 import type { AvailableCourse, EnrolledCourse } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
@@ -64,18 +64,19 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
       setSelectedDifficulty('All');
       setEnrollmentStatus(filterParam === 'enrolled' ? 'Enrolled' : 'All');
       setCourseType('All');
-      setRequireGuided(false);
       setSelectedCategory('All');
       setShowFavoritesOnly(false);
       setDurationFilter('All');
       setSortBy('newest');
       setSelectedDisability('All');
+      setSelectedAgeGroup('All');
     }
   }, [filterParam]);
   const [courseType, setCourseType] = useState<string>('All');
-  const [requireGuided, setRequireGuided] = useState<boolean>(false);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedDisability, setSelectedDisability] = useState<string>('All');
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>('All');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [durationFilter, setDurationFilter] = useState<string>('All');
   const [sortBy, setSortBy] = useState<string>('newest');
@@ -87,7 +88,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, requireGuided, selectedCategory, showFavoritesOnly, durationFilter, sortBy, selectedDisability]);
+  }, [debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, selectedCategory, showFavoritesOnly, durationFilter, sortBy, selectedDisability, selectedAgeGroup]);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Favorites state
@@ -99,8 +100,9 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
       fetchAvailableCourses(),
       fetchEnrolledCourses(),
       fetchFavoriteCourseIds(),
+      fetchFullProfile().catch(() => null),
     ])
-      .then(([available, enrolled, ids]) => {
+      .then(([available, enrolled, ids, fullProfile]) => {
         const combined = [
           ...enrolled.map((e) => ({ ...e, isEnrolled: true as const })),
           ...available,
@@ -111,6 +113,23 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
         
         setAllCourses(uniqueCourses);
         setFavoriteIds(new Set(ids));
+
+        if (fullProfile) {
+          // Auto-filter by accessibility preset
+          if (fullProfile.accessibility?.active_preset && fullProfile.accessibility.active_preset !== 'none') {
+            setSelectedDisability(fullProfile.accessibility.active_preset);
+          }
+          
+          // Auto-filter by age
+          if (fullProfile.profile?.birth_date) {
+            const birthDate = new Date(fullProfile.profile.birth_date);
+            const ageDate = new Date(Date.now() - birthDate.getTime());
+            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            
+            if (age >= 6 && age <= 12) setSelectedAgeGroup('6-12');
+            else if (age >= 13 && age <= 17) setSelectedAgeGroup('13-17');
+          }
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -159,9 +178,6 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
         (courseType === 'Featured' && course.system_course) || 
         (courseType === 'Community' && !course.system_course);
 
-      // Accessibility Filter
-      const matchesGuided = !requireGuided || (course as any).guided_learning_enabled;
-      
       // Category Filter
       const courseCat = course.category || 'Uncategorized';
       const matchesCategory = selectedCategory === 'All' || courseCat.toLowerCase() === selectedCategory.toLowerCase();
@@ -179,11 +195,15 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
       // Disability Filter
       const pFocus = (course as any).primary_disability_focus;
       const sFocuses = (course as any).secondary_disability_focuses || [];
-      const matchesDisability = selectedDisability === 'All' || 
+      const matchesDisability = isEnrolled || selectedDisability === 'All' || 
         pFocus === selectedDisability || 
         sFocuses.includes(selectedDisability);
 
-      return matchesSearch && matchesDifficulty && matchesEnrollment && matchesType && matchesGuided && matchesCategory && matchesFavorites && matchesDuration && matchesDisability;
+      // Age Group Filter
+      const recAge = (course as any).recommended_age_group;
+      const matchesAge = isEnrolled || selectedAgeGroup === 'All' || !recAge || recAge === selectedAgeGroup;
+
+      return matchesSearch && matchesDifficulty && matchesEnrollment && matchesType && matchesCategory && matchesFavorites && matchesDuration && matchesDisability && matchesAge;
     });
 
     // Sorting
@@ -198,7 +218,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
     }
     
     return result;
-  }, [allCourses, debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, requireGuided, selectedCategory, showFavoritesOnly, durationFilter, sortBy, favoriteIds, selectedDisability]);
+  }, [allCourses, debouncedSearch, selectedDifficulty, enrollmentStatus, courseType, selectedCategory, showFavoritesOnly, durationFilter, sortBy, favoriteIds, selectedDisability, selectedAgeGroup]);
   
   const paginatedCourses = useMemo(() => {
     if (!isPaginated) return processedCourses;
@@ -230,7 +250,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
     setSelectedDifficulty('All');
     setEnrollmentStatus('All');
     setCourseType('All');
-    setRequireGuided(false);
+    setDurationFilter('All');
     setSelectedCategory('All');
     setShowFavoritesOnly(false);
     setDurationFilter('All');
@@ -322,7 +342,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
 
           {/* Collapsible Advanced Filters */}
           {showAdvancedFilters && (
-            <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-in slide-in-from-top-2 fade-in duration-200">
+            <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 animate-in slide-in-from-top-2 fade-in duration-200">
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</Label>
                 <select
@@ -388,22 +408,26 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                   <option value="adhd">ADHD-Friendly</option>
                   <option value="autism">Autism-Friendly</option>
                   <option value="dyslexia">Dyslexia-Friendly</option>
-                  <option value="visual">Visual Impairment</option>
-                  <option value="hearing">Hearing Impairment</option>
-                  <option value="cognitive">Cognitive Difficulty</option>
                 </select>
               </div>
 
-              <div className="lg:col-span-4 flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-600" />
-                  <div>
-                    <Label className="text-sm font-semibold text-indigo-900 cursor-pointer block" onClick={() => setRequireGuided(!requireGuided)}>Guided Learning Only</Label>
-                    <span className="text-xs text-indigo-700/70">Show courses that support guided checkpoints and accessibility modes</span>
-                  </div>
-                </div>
-                <Switch checked={requireGuided} onCheckedChange={setRequireGuided} />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Age Group</Label>
+                <select
+                  value={selectedAgeGroup}
+                  onChange={(e) => setSelectedAgeGroup(e.target.value)}
+                  className="w-full h-11 px-3 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="All">All Ages</option>
+                  <option value="6-12">6 - 12 Years</option>
+                  <option value="8-10">8 - 10 Years</option>
+                  <option value="11-13">11 - 13 Years</option>
+                  <option value="13-17">13 - 17 Years</option>
+                  <option value="14-17">14 - 17 Years</option>
+                </select>
               </div>
+
+
             </div>
           )}
         </div>
@@ -515,14 +539,6 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                     <span className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-orange-500" />{(course as any).total_duration ? `${(course as any).total_duration} min` : 'N/A'}
                     </span>
-                    {(course as any).guided_learning_enabled && (
-                      <>
-                        <div className="w-px h-3 bg-gray-300" />
-                        <span className="flex items-center gap-1.5 text-indigo-600">
-                          <Sparkles className="w-3.5 h-3.5" /> Guided
-                        </span>
-                      </>
-                    )}
                     {((course as any).primary_disability_focus || ((course as any).secondary_disability_focuses?.length > 0)) && (
                       <>
                         <div className="w-full h-px bg-gray-200 mt-1 mb-1" />

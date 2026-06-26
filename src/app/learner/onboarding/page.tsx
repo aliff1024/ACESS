@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,13 +16,13 @@ import { TintPicker } from '@/components/accessibility/TintPicker';
 import { SettingsPreview } from '@/components/accessibility/SettingsPreview';
 import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, applyPreset as buildPresetSettings } from '@/lib/adaptive-engine';
 import { FONT_FAMILIES, ANIMATION_LEVELS, fontSizePxToEnum, lineSpacingMultiplierToEnum } from '@/lib/accessibility-utils';
+import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { toast } from 'sonner';
 
 const PRESET_ICONS: Record<string, React.ReactNode> = {
   dyslexia: <BookOpen className="w-5 h-5" />,
   adhd: <Target className="w-5 h-5" />,
   autism: <Zap className="w-5 h-5" />,
-  dyscalculia: <Calculator className="w-5 h-5" />,
 };
 
 const STEP_LABELS = [
@@ -40,7 +40,7 @@ export default function OnboardingPage() {
   const [existingProfile, setExistingProfile] = useState(false);
 
   // ─── Profile ─────────────────────────────────────────────────────
-  const [age, setAge] = useState('');
+  const [dob, setDob] = useState('');
 
   // ─── Preset selection ──────────────────────────────────────────────
   const [activePreset, setActivePreset] = useState('none');
@@ -64,10 +64,54 @@ export default function OnboardingPage() {
   // ─── Assistive Technology ─────────────────────────────────────────
   const [ttsEnabled, setTtsEnabled] = useState(false);
 
+  const { previewSettings, revertSettings, updateSettings } = useAccessibility();
+  const isSavedRef = useRef(false);
+  const initialRevertSettings = useRef(revertSettings);
+
+  // ─── Real-time Preview ───────────────────────────────────────────
+  useEffect(() => {
+    if (loading) return; // don't override while loading initial profile
+    previewSettings({
+      active_preset: activePreset,
+      font_family: fontFamily,
+      font_size_px: fontSizePx,
+      line_spacing_multiplier: lineSpacingMultiplier,
+      word_spacing_pct: wordSpacingPct,
+      background_tint: backgroundTint,
+      reading_spotlight: readingSpotlight,
+      distraction_free_mode: distractionFreeMode,
+      chunked_content_mode: chunkedContentMode,
+      animation_level: animationLevel,
+      muted_colors: mutedColors,
+      tts_enabled: ttsEnabled,
+      preferred_theme: preferredTheme,
+      preferred_font_size: fontSizePxToEnum(fontSizePx),
+      line_spacing: lineSpacingMultiplierToEnum(lineSpacingMultiplier),
+      preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
+      dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
+    });
+  }, [
+    activePreset, fontFamily, fontSizePx, lineSpacingMultiplier, wordSpacingPct, 
+    backgroundTint, readingSpotlight, distractionFreeMode, chunkedContentMode, 
+    animationLevel, mutedColors, ttsEnabled, preferredTheme, previewSettings, loading
+  ]);
+
+  // Clean up preview if unmounted without saving
+  useEffect(() => {
+    return () => {
+      if (!isSavedRef.current) {
+        initialRevertSettings.current();
+      }
+    };
+  }, []);
+
   // ─── Load existing profile ────────────────────────────────────────
   useEffect(() => {
     fetchFullProfile()
       .then((profile) => {
+        if (profile.profile?.birth_date) {
+          setDob(profile.profile.birth_date);
+        }
         if (profile.accessibility) {
           const a = profile.accessibility;
           setActivePreset(a.active_preset || 'none');
@@ -134,10 +178,7 @@ export default function OnboardingPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const numAge = parseInt(age, 10);
-      const birthDateStr = !isNaN(numAge)
-        ? `${new Date().getFullYear() - numAge}-01-01`
-        : '2000-01-01';
+      const birthDateStr = dob || '2000-01-01';
       await saveUserProfile({ bio: `Accessibility preset: ${activePreset}`, birth_date: birthDateStr });
 
       const data: AccessibilitySettingsData = {
@@ -171,12 +212,25 @@ export default function OnboardingPage() {
       };
 
       await saveAccessibilitySettings(data);
-      toast.success('Your accessibility preferences have been saved!');
+      // Persist the settings properly
+      isSavedRef.current = true;
+      await updateSettings(data);
+      
+      toast.success(existingProfile ? 'Preferences Updated' : 'Profile Created!', {
+        description: 'Your learning environment is ready.',
+      });
       router.push('/learner');
     } catch {
       toast.error('Failed to save preferences. Please try again.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ─── Leave Handler ─────────────────────────────────────────────────
+  const handleLeave = () => {
+    if (window.confirm("Are you sure you want to leave? These settings can be accessed again in the Accessibility Settings on the left menu.")) {
+      router.push('/learner');
     }
   };
 
@@ -247,16 +301,15 @@ export default function OnboardingPage() {
                 </p>
               </div>
 
-              {/* Age Input */}
+              {/* DOB Input */}
               <div className="border border-gray-200 rounded-xl p-4">
-                <Label htmlFor="age" className="text-sm font-semibold mb-2 block">How old are you?</Label>
+                <Label htmlFor="dob" className="text-sm font-semibold mb-2 block">What is your Date of Birth?</Label>
                 <p className="text-xs text-gray-500 mb-3">We use this to tailor content to your age group.</p>
                 <Input
-                  id="age"
-                  type="number"
-                  placeholder="e.g., 15"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
+                  id="dob"
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
                   className="max-w-[200px]"
                 />
               </div>
@@ -286,8 +339,9 @@ export default function OnboardingPage() {
                 ))}
               </div>
 
-              <div className="flex justify-end pt-4">
-                <Button onClick={() => setStep(2)} disabled={!age} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <div className="flex justify-between items-center pt-4">
+                <Button variant="ghost" className="text-gray-500" onClick={handleLeave}>Skip for now</Button>
+                <Button onClick={() => setStep(2)} disabled={!dob} className="bg-blue-600 hover:bg-blue-700 text-white">
                   Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -378,13 +432,16 @@ export default function OnboardingPage() {
                 backgroundTint={backgroundTint}
               />
 
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(1)}>
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
-                </Button>
-                <Button onClick={() => setStep(3)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Next <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+              <div className="flex justify-between items-center pt-4">
+                <Button variant="ghost" className="text-gray-500" onClick={handleLeave}>Skip for now</Button>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" onClick={() => setStep(1)}>
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                  </Button>
+                  <Button onClick={() => setStep(3)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    Next <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -437,30 +494,7 @@ export default function OnboardingPage() {
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Sensory</h3>
 
-                {/* Theme selector */}
-                <div className="border border-gray-200 rounded-xl p-4">
-                  <Label className="text-sm font-semibold mb-3 block">Theme</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { value: 'light', label: 'Light', color: 'bg-white border-gray-300' },
-                      { value: 'soft', label: 'Soft', color: 'bg-amber-50 border-amber-200' },
-                      { value: 'dark', label: 'Dark', color: 'bg-gray-900 border-gray-700' },
-                      { value: 'high_contrast', label: 'High Contrast', color: 'bg-black border-yellow-400' },
-                    ].map((theme) => (
-                      <Button
-                        key={theme.value}
-                        variant={preferredTheme === theme.value ? 'default' : 'outline'}
-                        onClick={() => setPreferredTheme(theme.value)}
-                        className="h-auto py-2"
-                      >
-                        <div className="flex flex-col items-center gap-1.5">
-                          <div className={`w-7 h-7 ${theme.color} border-2 rounded shrink-0`}></div>
-                          <span className="text-xs">{theme.label}</span>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+
 
                 {/* Animation Level */}
                 <div className="border border-gray-200 rounded-xl p-4">
@@ -491,13 +525,16 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(2)}>
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
-                </Button>
-                <Button onClick={() => setStep(4)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Next <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+              <div className="flex justify-between items-center pt-4">
+                <Button variant="ghost" className="text-gray-500" onClick={handleLeave}>Skip for now</Button>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" onClick={() => setStep(2)}>
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                  </Button>
+                  <Button onClick={() => setStep(4)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    Next <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -551,10 +588,7 @@ export default function OnboardingPage() {
                   <p className="text-xs text-gray-500 mb-1">Background</p>
                   <p className="text-sm font-medium capitalize">{backgroundTint.replace('_', ' ')}</p>
                 </div>
-                <div className="border border-gray-200 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-1">Theme</p>
-                  <p className="text-sm font-medium capitalize">{preferredTheme.replace('_', ' ')}</p>
-                </div>
+
                 <div className="border border-gray-200 rounded-lg p-3">
                   <p className="text-xs text-gray-500 mb-1">Animation</p>
                   <p className="text-sm font-medium capitalize">{animationLevel}</p>
@@ -602,14 +636,17 @@ export default function OnboardingPage() {
                 </p>
               </div>
 
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(3)}>
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
-                </Button>
-                <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                  {saving ? 'Saving...' : existingProfile ? 'Update Preferences' : 'Save & Start Learning'}
-                </Button>
+              <div className="flex justify-between items-center pt-4">
+                <Button variant="ghost" className="text-gray-500" onClick={handleLeave}>Skip for now</Button>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" onClick={() => setStep(3)}>
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                  </Button>
+                  <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    {saving ? 'Saving...' : existingProfile ? 'Update Preferences' : 'Save & Start Learning'}
+                  </Button>
+                </div>
               </div>
             </div>
           )}

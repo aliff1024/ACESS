@@ -10,7 +10,6 @@ interface CourseCardPreviewProps {
   thumbnail: string;
   category: string;
   difficulty: string;
-  guidedLearning?: boolean;
 }
 
 export function CourseCardPreview({
@@ -19,7 +18,6 @@ export function CourseCardPreview({
   thumbnail,
   category,
   difficulty,
-  guidedLearning = true,
 }: CourseCardPreviewProps) {
   const plainDescription = stripHtml(description);
 
@@ -43,9 +41,6 @@ export function CourseCardPreview({
           <Badge className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs flex items-center gap-1 shadow-sm">
             <Star className="w-3 h-3" /> Featured
           </Badge>
-          {guidedLearning && (
-            <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">Guided</Badge>
-          )}
         </h3>
 
         <div className="flex items-center gap-2 mb-3 flex-wrap">

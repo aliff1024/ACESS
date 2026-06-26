@@ -59,6 +59,8 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes, arrows, positioning}
 \usepackage{pdflscape}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 %\usepackage[nottoc,notlot,notlof]{tocbibind} % making the bibliography appears in TOC
 
 %\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
@@ -214,8 +216,8 @@
 \centering
 \begin{titlepage}
 	\bf {
-	ACESS - ADAPTIVE COGNITIVE \& EDUCATIONAL \\ 
-	SKILL SUPPORT PLATFORM
+	ACESS - ADAPTIVE COGNITIVE AND EDUCATIONAL \\ 
+	SKILL SUPPORT
 	}
 	\rm
 	\vskip 3in
@@ -261,7 +263,7 @@
 
 \vfill \null
 \vspace{1cm}
-{ACESS - ADAPTIVE COGNITIVE \& EDUCATIONAL SKILL SUPPORT PLATFORM}
+{ACESS - ADAPTIVE COGNITIVE AND EDUCATIONAL SKILL SUPPORT}
 
 \vskip 1.6in
 {MUHAMMAD ALIFF BIN AFFANDI}
@@ -293,7 +295,7 @@ UNIVERSITI TEKNIKAL MALAYSIA MELAKA
 
 \vspace{1.5cm}
 I hereby declare that this project entitled \\
-ACESS - ADAPTIVE COGNITIVE \& EDUCATIONAL SKILL SUPPORT PLATFORM \\
+ACESS - ADAPTIVE COGNITIVE AND EDUCATIONAL SKILL SUPPORT \\
 is written by me and is my own effort and that no part has been plagiarized without citations.
 
 \vspace{1.5cm}
@@ -360,7 +362,7 @@ My heartfelt thanks go to my family and friends, who offered unwavering emotiona
 \vspace{1cm}
 
 \begin{spacing}{1.1}
-Traditional e-learning platforms are predominantly designed with a one-size-fits-all approach, presenting significant accessibility barriers for neurodivergent learners, particularly those with Dyslexia, Attention Deficit Hyperactivity Disorder (ADHD), and Autism Spectrum Disorder (ASD). These systems typically feature dense typography, complex navigational structures, and rigid content delivery that contribute to cognitive overload and high dropout rates. This project presents the development of the Adaptive Cognitive and Educational Skill Support (ACESS) platform, a web-based learning management system engineered to dynamically accommodate diverse cognitive profiles through natively integrated accessibility features. The system was developed using the Agile Scrum methodology over six iterative sprints, employing Next.js with the App Router for server-rendered React components, Supabase for backend-as-a-service with PostgreSQL Row-Level Security, and Tailwind CSS v4 for dynamic theme injection. ACESS implements core features including a rule-based adaptive engine that automatically recommends remedial content based on assessment performance, configurable accessibility profiles that alter typography, spacing, and motion preferences in real time via CSS custom properties, a strict Focus Mode for learners with attention-related challenges, and comprehensive analytics dashboards for educators to monitor engagement and identify at-risk students. Evaluation through functional walkthroughs and expert review demonstrated that the adaptive engine and accessibility settings effectively reduce cognitive friction and accommodate diverse learner needs compared to conventional platforms. The findings indicate that a purpose-built, architecturally adaptive system can significantly reduce cognitive friction and promote equitable educational outcomes for learners with diverse neurological needs.
+Traditional e-learning platforms are predominantly designed with a one-size-fits-all approach, presenting significant accessibility barriers for neurodivergent learners, particularly those with Dyslexia, Attention Deficit Hyperactivity Disorder (ADHD), and Autism Spectrum Disorder (ASD). These systems typically feature dense typography, complex navigational structures, and rigid content delivery that contribute to cognitive overload and high dropout rates. This project presents the development of the Adaptive Cognitive and Educational Skill Support (ACESS) platform, a web-based learning management system engineered to dynamically accommodate diverse cognitive profiles through natively integrated accessibility features. The system was developed using the Agile Scrum methodology over six iterative sprints, employing Next.js with the App Router for server-rendered React components, Supabase for backend-as-a-service with PostgreSQL Row-Level Security, and Tailwind CSS v4 for dynamic theme injection. ACESS implements core features including a rule-based adaptive engine that automatically recommends remedial content based on assessment performance, configurable accessibility profiles that alter typography, spacing, and motion preferences in real time via CSS custom properties, a strict Focus Mode for learners with attention-related challenges, and comprehensive analytics dashboards for educators to monitor engagement and identify at-risk students. The evaluation methodology comprised structured walkthroughs guided by task scenarios for each learner profile (Dyslexia, ADHD, ASD), complemented by an expert review conducted against WCAG 2.1 Level AA success criteria and established usability heuristics to systematically assess the platform's accessibility compliance. These evaluations demonstrated that the adaptive engine and accessibility settings effectively reduce cognitive friction and accommodate diverse learner needs compared to conventional platforms. The findings indicate that a purpose-built, architecturally adaptive system can significantly reduce cognitive friction and promote equitable educational outcomes for learners with diverse neurological needs.
 \end{spacing}
 
 \vfill \null
@@ -377,7 +379,7 @@ Traditional e-learning platforms are predominantly designed with a one-size-fits
 \vspace{1cm}
 
 \begin{spacing}{1.1}
-Platform e-pembelajaran tradisional kebanyakannya direka dengan pendekatan satu-saiz-untuk-semua, yang menimbulkan halangan kebolehcapaian yang signifikan bagi pelajar neurodivergen, terutamanya mereka yang mengalami Disleksia, Attention Deficit Hyperactivity Disorder (ADHD), dan Autism Spectrum Disorder (ASD). Sistem-sistem ini biasanya menampilkan tipografi yang padat, struktur navigasi yang kompleks, dan penyampaian kandungan yang tegar, yang menyumbang kepada beban kognitif dan kadar keciciran yang tinggi. Projek ini membentangkan pembangunan platform Adaptive Cognitive and Educational Skill Support (ACESS), sebuah sistem pengurusan pembelajaran berasaskan web yang direka untuk menampung profil kognitif yang pelbagai secara dinamik melalui ciri kebolehcapaian yang diintegrasikan secara natif. Sistem ini dibangunkan menggunakan metodologi Agile Scrum melalui enam lelaran sprint, menggunakan Next.js dengan App Router untuk komponen React yang dipaparkan di pelayan, Supabase sebagai backend-as-a-service dengan keselamatan peringkat baris PostgreSQL, dan Tailwind CSS v4 untuk suntikan tema dinamik. ACESS melaksanakan ciri teras termasuk enjin adaptif berasaskan peraturan yang secara automatik mengesyorkan kandungan pemulihan berdasarkan prestasi penilaian, profil kebolehcapaian boleh konfigurasi yang mengubah tipografi, jarak, dan keutamaan gerakan secara masa nyata melalui pemboleh ubah CSS, mod Fokus yang ketat untuk pelajar yang mempunyai cabaran berkaitan perhatian, serta papan pemuka analitik komprehensif untuk pendidik memantau penglibatan dan mengenal pasti pelajar berisiko. Penilaian melalui ujian penerimaan pengguna menunjukkan peningkatan yang boleh diukur dalam kadar penyelesaian tugas dan skor kepuasan pengguna dalam kalangan peserta neurodivergen berbanding interaksi asas dengan platform konvensional. Dapatan kajian menunjukkan bahawa sistem yang dibina secara adaptif dari segi seni bina dapat mengurangkan geseran kognitif dengan ketara dan menggalakkan hasil pendidikan yang saksama untuk pelajar dengan keperluan neurologi yang pelbagai.
+Platform e-pembelajaran tradisional kebanyakannya direka dengan pendekatan satu-saiz-untuk-semua, yang menimbulkan halangan kebolehcapaian yang signifikan bagi pelajar neurodivergen, terutamanya mereka yang mengalami Disleksia, Attention Deficit Hyperactivity Disorder (ADHD), dan Autism Spectrum Disorder (ASD). Sistem-sistem ini biasanya menampilkan tipografi yang padat, struktur navigasi yang kompleks, dan penyampaian kandungan yang tegar, yang menyumbang kepada beban kognitif dan kadar keciciran yang tinggi. Projek ini membentangkan pembangunan platform Adaptive Cognitive and Educational Skill Support (ACESS), sebuah sistem pengurusan pembelajaran berasaskan web yang direka untuk menampung profil kognitif yang pelbagai secara dinamik melalui ciri kebolehcapaian yang diintegrasikan secara natif. Sistem ini dibangunkan menggunakan metodologi Agile Scrum melalui enam lelaran sprint, menggunakan Next.js dengan App Router untuk komponen React yang dipaparkan di pelayan, Supabase sebagai backend-as-a-service dengan keselamatan peringkat baris PostgreSQL, dan Tailwind CSS v4 untuk suntikan tema dinamik. ACESS melaksanakan ciri teras termasuk enjin adaptif berasaskan peraturan yang secara automatik mengesyorkan kandungan pemulihan berdasarkan prestasi penilaian, profil kebolehcapaian boleh konfigurasi yang mengubah tipografi, jarak, dan keutamaan gerakan secara masa nyata melalui pemboleh ubah CSS, mod Fokus yang ketat untuk pelajar yang mempunyai cabaran berkaitan perhatian, serta papan pemuka analitik komprehensif untuk pendidik memantau penglibatan dan mengenal pasti pelajar berisiko. Penilaian melalui huraian berstruktur berdasarkan senario tugas untuk setiap profil pembelajaran (Disleksia, ADHD, ASD), dilengkapi dengan semakan pakar yang dijalankan berdasarkan kriteria kejayaan WCAG 2.1 Peringkat AA dan heuristik kebolehgunaan yang ditetapkan untuk menilai pematuhan kebolehcapaian platform secara sistematik, menunjukkan bahawa enjin adaptif dan tetapan kebolehcapaian berkesan mengurangkan geseran kognitif dan memenuhi keperluan pelajar yang pelbagai berbanding platform konvensional. Dapatan kajian menunjukkan bahawa sistem yang dibina secara adaptif dari segi seni bina dapat mengurangkan geseran kognitif dengan ketara dan menggalakkan hasil pendidikan yang saksama untuk pelajar dengan keperluan neurologi yang pelbagai.
 \end{spacing}
 
 \vfill \null
@@ -423,7 +425,7 @@ Platform e-pembelajaran tradisional kebanyakannya direka dengan pendekatan satu-
 
 \noindent
 \begin{tabular}{>{\raggedright\arraybackslash}p{2.5cm} >{\centering\arraybackslash}m{0.5cm} >{\raggedright\arraybackslash}p{11.0cm}}
-ACESS & - & Adaptive Cognitive \& Educational Skill Support \\
+ACESS & - & Adaptive Cognitive and Educational Skill Support \\
 ADHD & - & Attention Deficit Hyperactivity Disorder \\
 API & - & Application Programming Interface \\
 ASD & - & Autism Spectrum Disorder \\
@@ -479,7 +481,7 @@ In the current educational landscape, instruction is delivered through a blend o
 
 Existing Learning Management Systems (LMS) are typically designed with a ``one-size-fits-all'' approach. They present dense textual information, complex navigation structures, and rigid assessment formats. These standard interfaces can erect significant barriers for neurodivergent learners. For instance, learners with Dyslexia may struggle with standard typography and line spacing \cite{franceschini_dyslexia}, while those with ADHD might find cluttered interfaces and unstructured learning paths overwhelming \cite{barkley1997adhd}. 
 
-Therefore, there is a critical need for a natively adaptive learning platform that can seamlessly support both face-to-face and remote learning environments. The Adaptive Cognitive Education Support System (ACESS) is proposed to bridge this gap. ACESS is engineered to provide an inclusive digital learning environment that dynamically alters its interface and content delivery based on the specific cognitive requirements of the user. By integrating features such as dynamic typography adjustment, focus-driven layouts, and rule-based adaptive learning paths, ACESS aims to ensure that educational materials are accessible and equitable for all learners, regardless of the instructional setting.
+Therefore, there is a critical need for a natively adaptive learning platform that can seamlessly support both face-to-face and remote learning environments. The Adaptive Cognitive and Educational Skill Support (ACESS) platform is proposed to bridge this gap. ACESS is engineered to provide an inclusive digital learning environment that dynamically alters its interface and content delivery based on the specific cognitive requirements of the user. By integrating features such as dynamic typography adjustment, focus-driven layouts, and rule-based adaptive learning paths, ACESS aims to ensure that educational materials are accessible and equitable for all learners, regardless of the instructional setting.
 
 \subsection{Problem Statement}
 
@@ -487,7 +489,7 @@ Despite the availability of various educational technologies, significant cognit
 
 Specifically, the problems identified are:
 \begin{enumerate}
-    \item Most existing e-learning platforms are not designed for learners with disabilities. They use formats that overwhelm cognitive and sensory processing, leading to high dropout rates.
+    \item Most existing e-learning platforms are not designed for learners with disabilities. They use formats that overwhelm cognitive and sensory processing, leading to high dropout rates. Research indicates that learners with disabilities face significantly higher attrition rates in online education; for instance, only 46\% of neurodivergent students completed online courses compared to 74\% of their neurotypical peers \cite{spencer2022neurodiversity}, while up to 35\% of students with ADHD drop out of e-learning programs within the first semester due to poor accessibility design \cite{burl2024neurodiversent}.
     \item Learners with disabilities lack platforms that adapt to their individual learning pace and present content in accessible, easy-to-process formats.
     \item Employers and support organisations have no reliable way to verify the skills gained by learners with disabilities due to the absence of proper progress tracking and accessible certification.
     \item Educators and mentors do not have a centralised platform to monitor learner progress, identify those who need extra support, and manage accessible learning materials effectively.
@@ -497,7 +499,7 @@ Specifically, the problems identified are:
 
 This project aims to achieve the following objectives:
 \begin{enumerate}
-    \item To analyze the accessibility requirements, learning challenges, and content delivery needs of learners with dyslexia, ADHD, and mild cognitive impairment through literature review and comparative study of existing e-learning platforms and assistive technology standards.
+    \item To analyze the accessibility requirements, learning challenges, and content delivery needs of learners with dyslexia, ADHD, and Autism Spectrum Disorder (ASD) through literature review and comparative study of existing e-learning platforms and assistive technology standards.
     \item To develop a fully functional accessible web-based e-learning platform that incorporates rule-based adaptive content delivery, built-in Text-to-Speech (TTS) support, adjustable accessibility display settings, structured lesson and quiz management, and role-based user management for learners, educators, and administrators.
     \item To implement a certificate generation module and an educator analytics dashboard that provide verifiable skill completion records and enable data-driven monitoring of individual learner progress.
     \item To evaluate the functional correctness, usability, and accessibility of the developed platform through structured walkthroughs and expert review.
@@ -595,15 +597,15 @@ Understanding the specific cognitive challenges faced by the target demographic 
 
 \subsubsection{Attention Deficit Hyperactivity Disorder (ADHD)}
 ADHD is characterized by executive dysfunction \cite{zelazo2003executive}, impacting working memory, task initiation, and sustained attention \cite{barkley1997adhd}. In digital environments, learners with ADHD are highly susceptible to "saccadic fatigue," the exhaustion caused by the eye constantly darting across a busy screen to parse disorganized information \cite{munoz2003saccadic}.
-\textbf{ACESS Intervention:} The implementation of a strict "Focus Mode." This mode conditionally hides the primary navigation sidebar, the global footer, and all extraneous dashboard widgets when a learner enters a lesson. The content is restricted to a narrow, center-aligned column (maximum 65 characters per line), minimizing required eye movement and drastically reducing peripheral distraction.
+\textbf{ACESS Intervention:} The implementation of a strict "Focus Mode." This mode conditionally hides the primary navigation sidebar, the global footer, and all extraneous dashboard widgets when a learner enters a lesson. The content is restricted to a narrow, center-aligned column (maximum 65 characters per line), minimizing required eye movement and drastically reducing peripheral distraction. The technical implementation of Focus Mode, including the activity diagram and database schema, is detailed in Chapter 4 (see Figures~\ref{fig:act_educator} and Tables~\ref{tab:data_dict_22},~\ref{tab:data_dict_23}).
 
 \subsubsection{Dyslexia}
 Dyslexia involves difficulties with accurate or fluent word recognition and poor spelling and decoding abilities \cite{rello2013effect}. Research indicates that specific typographical adjustments can significantly improve reading velocity and comprehension \cite{franceschini_dyslexia}.
-\textbf{ACESS Intervention:} The platform abandons reliance on browser-level zoom. Instead, it utilizes React Context to allow the user to select a "Dyslexia Profile." This injects CSS variables that alter the global font family to specialized typefaces designed to prevent letter mirroring (e.g., confusing 'b' and 'd'), increases the base line-height to 1.75, and manipulates letter-spacing (tracking) to prevent visual crowding \cite{batanero2014accessibility}.
+\textbf{ACESS Intervention:} The platform abandons reliance on browser-level zoom. Instead, it utilizes React Context to allow the user to select a "Dyslexia Profile." This injects CSS variables that alter the global font family to specialized typefaces designed to prevent letter mirroring (e.g., confusing 'b' and 'd'), increases the base line-height to 1.75, and manipulates letter-spacing (tracking) to prevent visual crowding \cite{batanero2014accessibility}. The Dyslexia Profile implementation, including dynamic CSS injection and preference storage, is detailed in Chapter 4 (see Figures~\ref{fig:act_student} and Tables~\ref{tab:data_dict_3},~\ref{tab:data_dict_2}).
 
 \subsubsection{Autism Spectrum Disorder (ASD)}
 Learners on the Autism Spectrum often thrive in highly structured, predictable environments and can experience severe distress when confronted with unexpected auditory or visual stimuli \cite{lawson2011autism}.
-\textbf{ACESS Intervention:} The platform enforces strict structural consistency. Educators utilizing the Tiptap rich-text editor \cite{tiptap_docs} are prevented from creating chaotic, ad-hoc layouts. Furthermore, the system defaults to suppressing autoplaying media and allows the user to globally toggle a "Reduced Motion" state, ensuring the interface remains a calm, predictable schedule of events.
+\textbf{ACESS Intervention:} The platform enforces strict structural consistency. Educators utilizing the Tiptap rich-text editor \cite{tiptap_docs} are prevented from creating chaotic, ad-hoc layouts. Furthermore, the system defaults to suppressing autoplaying media and allows the user to globally toggle a "Reduced Motion" state, ensuring the interface remains a calm, predictable schedule of events. The Reduced Motion and structural consistency features are implemented via the accessibility preference layer described in Chapter 4 (see Figures~\ref{fig:act_admin} and Tables~\ref{tab:data_dict_3}).
 
 \subsection{Comparative Analysis of Existing LMS Platforms}
 
@@ -650,6 +652,8 @@ Table \ref{tab:lms_comparison} provides a structured summary comparing the featu
 \end{tabular}
 \end{center}
 \end{table}
+
+Each entry in Table~\ref{tab:lms_comparison} is derived from the platform-specific analyses presented in Section~2.4.1, with qualitative assessments (``Partial'', ``No'') supported by the cited documentation and literature. For example, Moodle's ``Partial'' WCAG compliance reflects its reliance on bolt-on accessibility plugins rather than native enforcement \cite{moodle_software}, while Canvas's lack of native TTS is documented in its accessibility guides \cite{canvas_lms}.
 
 \subsubsection{Alternative Approaches and Justification}
 
@@ -1217,18 +1221,26 @@ The system produces the following outputs:
 
 \subsubsection{Database Design \& Entity Relationship}
 
-The data architecture is completely normalized. Data isolation is guaranteed via Row-Level Security (RLS) policies \cite{supabase_rls}.
+The data architecture is completely normalized. Data isolation is guaranteed via Row-Level Security (RLS) policies \cite{supabase_rls}. The ERD is organised into three logical domains for clarity:
+
+\begin{enumerate}
+    \item \textbf{Identity \& Configuration Domain:} Centred on the \texttt{users} table, encompassing \texttt{user\_profiles}, \texttt{user\_accessibility\_preferences}, \texttt{enrollments}, \texttt{accessibility\_templates}, \texttt{adaptive\_interactions}, \texttt{instructor\_applications}, \texttt{password\_reset\_tokens}, and \texttt{referral\_codes}. This domain manages authentication, role assignment, and per-user accessibility state.
+    
+    \item \textbf{Curriculum \& Telemetry Domain:} Encompassing \texttt{courses}, \texttt{lessons}, \texttt{quizzes}, \texttt{quiz\_questions}, \texttt{quiz\_options}, \texttt{course\_chapters}, \texttt{course\_milestones}, \texttt{course\_achievements}, \texttt{quiz\_attempts}, \texttt{quiz\_answers}, \texttt{lesson\_progress}, \texttt{lesson\_checkpoints}, \texttt{learner\_milestones}, \texttt{video\_questions}, \texttt{recommendations}, and \texttt{user\_achievements}. This domain tracks all learning content structure and learner engagement telemetry.
+    
+    \item \textbf{Content \& Media Domain:} Encompassing \texttt{lesson\_comments}, \texttt{lesson\_summaries}, \texttt{lesson\_versions}, \texttt{lesson\_interactive\_content}, \texttt{lesson\_templates}, \texttt{media\_assets}, \texttt{notifications}, \texttt{contact\_messages}, \texttt{certificates}, \texttt{certificate\_templates}, and \texttt{certificate\_verifications}. This domain manages content artefacts, communication, and certification.
+\end{enumerate}
 
 \begin{landscape}
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Diagram/Figure 4.8 Placeholder for Database ERD.png}
-\caption{Database Entity Relationship Diagram}
+\caption{Database Entity Relationship Diagram (Full resolution version provided in Appendix)}
 \label{fig:erd}
 \end{figure}
 \end{landscape}
 
-Figure \ref{fig:erd} maps the complex relational lattice underpinning the system. The `users` table acts as the central hub, cascading outward to authorization profiles and created content.
+Figure~\ref{fig:erd} maps the complex relational lattice underpinning the system. The \texttt{users} table acts as the central hub, cascading outward to authorization profiles and created content. Due to the density of 39 interrelated tables, readers are referred to the high-resolution version in the Appendix for detailed field-level inspection.
 
 \subsection{Comprehensive Data Dictionary}
 
@@ -1252,7 +1264,7 @@ id & uuid & NOT NULL & Unique identifier (UUID v4). \\ \hline
 email & character varying & NOT NULL & User email address, used for login and notifications. \\ \hline
 role & character varying & NOT NULL & User role: learner, educator, or admin. \\ \hline
 is\_active & boolean DEFAULT true & NOT NULL & Soft-ban flag; inactive users cannot log in. \\ \hline
-email\_verified\_at & timestamp without time zone & - & Data attribute. \\ \hline
+email\_verified\_at & timestamp without time zone & - & Timestamp when user confirmed email via verification link; NULL if unverified. \\ \hline
 last\_login\_at & timestamp without time zone & - & Timestamp of last successful login. \\ \hline
 created\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
@@ -1280,19 +1292,19 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 user\_id & uuid & NOT NULL & Foreign key referencing users.id. \\ \hline
 username & text & - & Public-facing username handle. \\ \hline
 avatar\_url & text & - & URL to the user's profile image. \\ \hline
-phone\_number & text & - & Data attribute. \\ \hline
-birth\_date & date & - & Data attribute. \\ \hline
+phone\_number & text & - & Contact phone number for account recovery and notifications. \\ \hline
+birth\_date & date & - & User's date of birth for age verification and age-group analytics. \\ \hline
 bio & text & - & Short biographical text for educator profiles. \\ \hline
-country & text & - & Data attribute. \\ \hline
+country & text & - & ISO 3166-1 country code for regional content localisation. \\ \hline
 preferred\_language & text & DEFAULT 'en'::text & UI language code (en, ms). \\ \hline
 created\_at & timestamp with time zone & DEFAULT now() & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone & DEFAULT now() & Timestamp of the last modification. \\ \hline
-learning\_goals & text & - & Data attribute. \\ \hline
-onboarded\_at & timestamp without time zone & - & Data attribute. \\ \hline
+learning\_goals & text & - & Free-text description of learner's self-identified educational objectives. \\ \hline
+onboarded\_at & timestamp without time zone & - & Timestamp when user completed the onboarding profile setup wizard. \\ \hline
 disability\_type & character varying & - & Disability classification for adaptive engine. \\ \hline
-accessibility\_prefs & jsonb & DEFAULT '{}'::jsonb & Data attribute. \\ \hline
-notification\_prefs & jsonb & DEFAULT '{}'::jsonb & Data attribute. \\ \hline
-age\_group & text & - & Data attribute. \\ \hline
+accessibility\_prefs & jsonb & DEFAULT '{}'::jsonb & JSON object storing active accessibility settings (font size, colour scheme, TTS rate, dyslexia font toggle). \\ \hline
+notification\_prefs & jsonb & DEFAULT '{}'::jsonb & JSON object storing notification delivery preferences (email, in-app, frequency). \\ \hline
+age\_group & text & - & Categorical age range (e.g. '13-17', '18-24') for cohort analytics. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -1312,18 +1324,18 @@ age\_group & text & - & Data attribute. \\ \hline
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 user\_id & uuid & NOT NULL & Foreign key referencing users.id. \\ \hline
-preferred\_text\_size & text & DEFAULT 'medium'::text & Data attribute. \\ \hline
-preferred\_reading\_mode & text & DEFAULT 'standard'::text & Data attribute. \\ \hline
-reduced\_stimulation\_mode & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-text\_to\_speech\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-simplified\_navigation\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
+preferred\_text\_size & text & DEFAULT 'medium'::text & Selected font size preference ('small', 'medium', 'large', 'x-large') applied via CSS custom properties. \\ \hline
+preferred\_reading\_mode & text & DEFAULT 'standard'::text & Current reading mode layout ('standard', 'focus', 'simplified') controlling sidebar and widget visibility. \\ \hline
+reduced\_stimulation\_mode & boolean DEFAULT false & NOT NULL & Boolean toggle to suppress animations, auto-playing media, and high-contrast visual elements. \\ \hline
+text\_to\_speech\_enabled & boolean DEFAULT false & NOT NULL & Boolean flag activating the browser-native SpeechSynthesis API for lesson content read-aloud. \\ \hline
+simplified\_navigation\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle replacing complex menus with minimal, linear navigation links. \\ \hline
 dyslexia\_friendly\_font & boolean DEFAULT false & NOT NULL & Switches to Atkinson Hyperlegible typeface. \\ \hline
-focus\_mode\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
+focus\_mode\_enabled & boolean DEFAULT false & NOT NULL & Boolean flag triggering Focus Mode which hides non-essential UI elements during lessons. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
-tts\_rate & real & DEFAULT 1.0 & Data attribute. \\ \hline
-tts\_voice\_uri & text & - & Data attribute. \\ \hline
-custom\_notes & text & - & Data attribute. \\ \hline
+tts\_rate & real & DEFAULT 1.0 & Speech synthesis playback speed multiplier (0.5 to 2.0) for text-to-speech output. \\ \hline
+tts\_voice\_uri & text & - & URI identifier of the selected TTS voice from the browser's SpeechSynthesisVoice list. \\ \hline
+custom\_notes & text & - & Free-text field for learner's personal annotations or study notes. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -1367,8 +1379,8 @@ status & character varying DEFAULT 'active'::character varying & NOT NULL & Reco
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 name & text & NOT NULL & Display name of the record. \\ \hline
 description & text & - & Free-text description or summary. \\ \hline
-target\_disability & text & NOT NULL & Data attribute. \\ \hline
-content\_structure & jsonb & NOT NULL & Data attribute. \\ \hline
+target\_disability & text & NOT NULL & Disability category the template targets (e.g. 'dyslexia', 'adhd', 'asd'). \\ \hline
+content\_structure & jsonb & NOT NULL & JSON definition of template layout rules and component arrangement. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
 }%
@@ -1391,8 +1403,8 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 user\_id & uuid & NOT NULL & Foreign key referencing users.id. \\ \hline
 lesson\_id & uuid & - & Foreign key referencing lessons.id. \\ \hline
 course\_id & uuid & - & Foreign key referencing courses.id. \\ \hline
-adaptation\_used & text & NOT NULL & Data attribute. \\ \hline
-session\_id & text & - & Data attribute. \\ \hline
+adaptation\_used & text & NOT NULL & Identifier of the adaptive preset applied (e.g. 'dyslexia\_standard', 'adhd\_focus'). \\ \hline
+session\_id & text & - & Unique identifier linking interactions within a single browsing session. \\ \hline
 duration\_seconds & integer & - & Duration in seconds. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
@@ -1416,13 +1428,13 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 user\_id & uuid & - & Foreign key referencing users.id. \\ \hline
 full\_name & text & NOT NULL & User's display name shown across the platform. \\ \hline
 email & text & NOT NULL & User email address, used for login and notifications. \\ \hline
-experience & text & - & Data attribute. \\ \hline
-reason & text & - & Data attribute. \\ \hline
-portfolio\_links & text & - & Data attribute. \\ \hline
+experience & text & - & Free-text description of applicant's teaching or subject-matter experience. \\ \hline
+reason & text & - & Applicant's motivation statement for wanting to become an educator on the platform. \\ \hline
+portfolio\_links & text & - & Comma-separated URLs to the applicant's teaching portfolio or work samples. \\ \hline
 referral\_code & text & - & Unique referral token string. \\ \hline
 status & text DEFAULT 'pending'::text & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
-admin\_notes & text & - & Data attribute. \\ \hline
-reviewed\_by & uuid & - & Data attribute. \\ \hline
+admin\_notes & text & - & Internal reviewer notes regarding the application decision. \\ \hline
+reviewed\_by & uuid & - & UUID of the administrator who reviewed the application. \\ \hline
 reviewed\_at & timestamp with time zone & - & Timestamp of the review decision. \\ \hline
 created\_at & timestamp with time zone & DEFAULT now() & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone & DEFAULT now() & Timestamp of the last modification. \\ \hline
@@ -1446,9 +1458,9 @@ updated\_at & timestamp with time zone & DEFAULT now() & Timestamp of the last m
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 user\_id & uuid & NOT NULL & Foreign key referencing users.id. \\ \hline
 email & text & NOT NULL & User email address, used for login and notifications. \\ \hline
-token & text & NOT NULL & Data attribute. \\ \hline
+token & text & NOT NULL & Cryptographically generated unique token sent to user's email for password reset. \\ \hline
 expires\_at & timestamp with time zone & NOT NULL & Token expiration timestamp. \\ \hline
-used & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
+used & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether this token has been consumed; prevents reuse. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
 }%
@@ -1468,10 +1480,10 @@ created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when
 \hline
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
-code & text & NOT NULL & Data attribute. \\ \hline
+code & text & NOT NULL & Unique alphanumeric code assigned to a user for referral tracking. \\ \hline
 user\_id & uuid & - & Foreign key referencing users.id. \\ \hline
 usage\_count & integer & DEFAULT 0 & Number of times used. \\ \hline
-max\_uses & integer & DEFAULT 50 & Data attribute. \\ \hline
+max\_uses & integer & DEFAULT 50 & Maximum number of times this referral code can be redeemed. \\ \hline
 is\_active & boolean & DEFAULT true & Soft-ban flag; inactive users cannot log in. \\ \hline
 created\_at & timestamp with time zone & DEFAULT now() & Timestamp when the record was created. \\ \hline
 \end{tabular}
@@ -1499,39 +1511,39 @@ title & character varying & NOT NULL & Display title of the record. \\ \hline
 slug & character varying & NOT NULL & URL-safe identifier string. \\ \hline
 description & text & - & Free-text description or summary. \\ \hline
 status & character varying DEFAULT 'draft'::character varying & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
-difficulty\_level & character varying & - & Data attribute. \\ \hline
+difficulty\_level & character varying & - & Course difficulty classification ('beginner', 'intermediate', 'advanced') for learner filtering. \\ \hline
 thumbnail\_url & character varying & - & URL to the thumbnail image. \\ \hline
 published\_at & timestamp without time zone & - & Timestamp when published. \\ \hline
 created\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
 deleted\_at & timestamp without time zone & - & Soft-delete timestamp; null if not deleted. \\ \hline
 category & text & - & Content category classification. \\ \hline
-course\_type & text DEFAULT 'educator'::text & NOT NULL & Data attribute. \\ \hline
-system\_course & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-built\_in\_course & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-created\_by\_role & text DEFAULT 'educator'::text & NOT NULL & Data attribute. \\ \hline
-guided\_learning\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-official\_course\_order & integer & - & Data attribute. \\ \hline
-managed\_by\_admin & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-recommended\_age\_group & text & - & Data attribute. \\ \hline
-learning\_streaks\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-milestone\_tracking\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-accessibility\_mode\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-course\_layout\_type & text DEFAULT 'standard'::text & NOT NULL & Data attribute. \\ \hline
-chapter\_organization\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-certificate\_enabled & boolean & DEFAULT false & Data attribute. \\ \hline
-certificate\_settings & jsonb & DEFAULT '{}'::jsonb & Data attribute. \\ \hline
-certification\_locked & boolean & DEFAULT false & Data attribute. \\ \hline
-supports\_tts & boolean & DEFAULT false & Data attribute. \\ \hline
-supports\_transcripts & boolean & DEFAULT false & Data attribute. \\ \hline
-supports\_focus\_mode & boolean & DEFAULT false & Data attribute. \\ \hline
-supports\_chunked\_learning & boolean & DEFAULT false & Data attribute. \\ \hline
+course\_type & text DEFAULT 'educator'::text & NOT NULL & Origin of course creation ('educator' or 'system') determining edit permissions. \\ \hline
+system\_course & boolean DEFAULT false & NOT NULL & Boolean flag indicating the course was created by administrators, not educators. \\ \hline
+built\_in\_course & boolean DEFAULT false & NOT NULL & Boolean flag marking pre-seeded platform courses that cannot be deleted. \\ \hline
+created\_by\_role & text DEFAULT 'educator'::text & NOT NULL & Role of the user who created the course ('educator' or 'admin') for permission checks. \\ \hline
+guided\_learning\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle enabling step-by-step guided lesson progression. \\ \hline
+official\_course\_order & integer & - & Integer display priority for system-created courses in the catalog. \\ \hline
+managed\_by\_admin & boolean DEFAULT false & NOT NULL & Boolean flag indicating administrative oversight of educator-created course. \\ \hline
+recommended\_age\_group & text & - & Suggested learner age range for age-appropriate content filtering. \\ \hline
+learning\_streaks\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle activating daily learning streak tracking and rewards. \\ \hline
+milestone\_tracking\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle enabling course milestone progress indicators. \\ \hline
+accessibility\_mode\_enabled & boolean DEFAULT false & NOT NULL & Boolean flag activating accessibility-first rendering for all course content. \\ \hline
+course\_layout\_type & text DEFAULT 'standard'::text & NOT NULL & Visual layout template ('standard', 'simplified') for course pages. \\ \hline
+chapter\_organization\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle enabling hierarchical chapter-based lesson grouping. \\ \hline
+certificate\_enabled & boolean & DEFAULT false & Boolean toggle allowing certificate generation upon course completion. \\ \hline
+certificate\_settings & jsonb & DEFAULT '{}'::jsonb & JSON object storing certificate configuration (template, signature, expiry). \\ \hline
+certification\_locked & boolean & DEFAULT false & Boolean flag preventing certificate issuance until all criteria are met. \\ \hline
+supports\_tts & boolean & DEFAULT false & Boolean flag indicating whether course lessons support text-to-speech playback. \\ \hline
+supports\_transcripts & boolean & DEFAULT false & Boolean flag indicating whether video lessons include text transcripts. \\ \hline
+supports\_focus\_mode & boolean & DEFAULT false & Boolean flag indicating whether Focus Mode is available for this course. \\ \hline
+supports\_chunked\_learning & boolean & DEFAULT false & Boolean flag enabling content to be broken into smaller learning chunks. \\ \hline
 tags & text[] & DEFAULT '{}'::text[] & JSONB array of tag strings. \\ \hline
-accessibility\_categories & text[] & DEFAULT '{}'::text[] & Data attribute. \\ \hline
-primary\_disability\_focus & text & - & Data attribute. \\ \hline
-secondary\_disability\_focuses & text[] & DEFAULT '{}'::text[] & Data attribute. \\ \hline
-target\_reading\_age & integer & DEFAULT 13 & Data attribute. \\ \hline
-educator\_custom\_guide & text & - & Data attribute. \\ \hline
+accessibility\_categories & text[] & DEFAULT '{}'::text[] & Array of disability categories this course is designed to support. \\ \hline
+primary\_disability\_focus & text & - & Main disability category the course content is optimised for. \\ \hline
+secondary\_disability\_focuses & text[] & DEFAULT '{}'::text[] & Array of additional disability categories the course partially supports. \\ \hline
+target\_reading\_age & integer & DEFAULT 13 & Minimum reading level the course content is written at for age-appropriate filtering. \\ \hline
+educator\_custom\_guide & text & - & Free-text educator instructions for how to use or navigate this course. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -1552,45 +1564,45 @@ educator\_custom\_guide & text & - & Data attribute. \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 course\_id & uuid & NOT NULL & Foreign key referencing courses.id. \\ \hline
 title & character varying & NOT NULL & Display title of the record. \\ \hline
-content\_html & text & - & Data attribute. \\ \hline
-video\_url & character varying & - & Data attribute. \\ \hline
-transcript & text & - & Data attribute. \\ \hline
-sequence\_order & integer & NOT NULL & Data attribute. \\ \hline
+content\_html & text & - & Rich-text HTML body of the lesson rendered via Tiptap editor. \\ \hline
+video\_url & character varying & - & URL of the embedded video asset for this lesson. \\ \hline
+transcript & text & - & Full text transcript of the lesson content for accessibility compliance. \\ \hline
+sequence\_order & integer & NOT NULL & Integer determining the display order of this lesson within its course. \\ \hline
 status & character varying DEFAULT 'draft'::character varying & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
 created\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
-estimated\_duration & integer & - & Data attribute. \\ \hline
-prerequisite\_lesson\_id & uuid & - & Data attribute. \\ \hline
-simplified\_summary & text & - & Data attribute. \\ \hline
+estimated\_duration & integer & - & Approximate lesson completion time in minutes for progress estimation. \\ \hline
+prerequisite\_lesson\_id & uuid & - & UUID of the lesson that must be completed before this one unlocks. \\ \hline
+simplified\_summary & text & - & Plain-text summary of lesson content for simplified reading mode. \\ \hline
 accessibility\_notes & text & - & Accessibility improvement notes. \\ \hline
-focus\_mode\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-chunked\_content\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-lesson\_type & text DEFAULT 'standard'::text & NOT NULL & Data attribute. \\ \hline
+focus\_mode\_enabled & boolean DEFAULT false & NOT NULL & Boolean flag allowing Focus Mode override for this specific lesson. \\ \hline
+chunked\_content\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle enabling lesson content to be split into digestible segments. \\ \hline
+lesson\_type & text DEFAULT 'standard'::text & NOT NULL & Lesson classification ('standard', 'video', 'interactive') determining content rendering. \\ \hline
 chapter\_id & uuid & - & Foreign key referencing course\_chapters.id. \\ \hline
-chapter\_title & text & - & Data attribute. \\ \hline
-learning\_objectives & text & - & Data attribute. \\ \hline
-is\_template & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-template\_id & uuid & - & Data attribute. \\ \hline
-scheduled\_release\_at & timestamp with time zone & - & Data attribute. \\ \hline
-visibility\_status & text DEFAULT 'visible'::text & NOT NULL & Data attribute. \\ \hline
-checkpoints\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-adaptive\_learning\_enabled & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-has\_video & boolean & DEFAULT true & Data attribute. \\ \hline
-has\_pdf & boolean & DEFAULT true & Data attribute. \\ \hline
-has\_quiz & boolean & DEFAULT true & Data attribute. \\ \hline
-has\_transcript & boolean & DEFAULT true & Data attribute. \\ \hline
-has\_summary\_activity & boolean & DEFAULT false & Data attribute. \\ \hline
-summary\_source & text & DEFAULT 'entire\_lesson'::text & Data attribute. \\ \hline
-summary\_word\_target & integer & DEFAULT 100 & Data attribute. \\ \hline
-summary\_key\_points & jsonb & DEFAULT '[]'::jsonb & Data attribute. \\ \hline
-summary\_reflection\_questions & jsonb & DEFAULT '[]'::jsonb & Data attribute. \\ \hline
-summary\_ai\_feedback\_enabled & boolean & DEFAULT false & Data attribute. \\ \hline
-lesson\_layout & text & DEFAULT 'standard'::text & Data attribute. \\ \hline
-interactive\_activity\_type & text & - & Data attribute. \\ \hline
-accessibility\_overrides & jsonb & DEFAULT '{}'::jsonb & Data attribute. \\ \hline
+chapter\_title & text & - & Title of the chapter this lesson belongs to for hierarchical organisation. \\ \hline
+learning\_objectives & text & - & Semicolon-separated list of learning outcomes displayed before lesson content. \\ \hline
+is\_template & boolean DEFAULT false & NOT NULL & Boolean flag marking this lesson as a reusable template for creating new lessons. \\ \hline
+template\_id & uuid & - & UUID of the source template lesson this was cloned from. \\ \hline
+scheduled\_release\_at & timestamp with time zone & - & Timestamp for scheduled content release (drip publishing). \\ \hline
+visibility\_status & text DEFAULT 'visible'::text & NOT NULL & Content visibility state ('visible', 'hidden', 'draft') controlling catalog display. \\ \hline
+checkpoints\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle requiring milestone checkmarks before lesson progression. \\ \hline
+adaptive\_learning\_enabled & boolean DEFAULT false & NOT NULL & Boolean flag activating adaptive content delivery for this lesson. \\ \hline
+has\_video & boolean & DEFAULT true & Boolean flag indicating whether this lesson contains an embedded video. \\ \hline
+has\_pdf & boolean & DEFAULT true & Boolean flag indicating whether this lesson has a downloadable PDF resource. \\ \hline
+has\_quiz & boolean & DEFAULT true & Boolean flag indicating whether this lesson has an associated quiz. \\ \hline
+has\_transcript & boolean & DEFAULT true & Boolean flag indicating whether this lesson includes a text transcript. \\ \hline
+has\_summary\_activity & boolean & DEFAULT false & Boolean flag enabling the learner summary submission activity. \\ \hline
+summary\_source & text & DEFAULT 'entire\_lesson'::text & Content scope for summary generation ('entire\_lesson', 'current\_section'). \\ \hline
+summary\_word\_target & integer & DEFAULT 100 & Target word count for learner summary submissions. \\ \hline
+summary\_key\_points & jsonb & DEFAULT '[]'::jsonb & JSON array of expected key points for summary evaluation. \\ \hline
+summary\_reflection\_questions & jsonb & DEFAULT '[]'::jsonb & JSON array of reflection prompts shown after summary submission. \\ \hline
+summary\_ai\_feedback\_enabled & boolean & DEFAULT false & Boolean toggle enabling AI-generated feedback on summaries. \\ \hline
+lesson\_layout & text & DEFAULT 'standard'::text & Visual template ('standard', 'focus', 'minimal') for lesson page rendering. \\ \hline
+interactive\_activity\_type & text & - & H5P activity type ('flashcards', 'drag-drop', 'memory') for this lesson. \\ \hline
+accessibility\_overrides & jsonb & DEFAULT '{}'::jsonb & JSON object storing per-lesson accessibility setting overrides. \\ \hline
 accessibility\_score & integer & DEFAULT 100 & Accessibility compliance score. \\ \hline
-allow\_discussions & boolean & DEFAULT false & Data attribute. \\ \hline
-allow\_download & boolean & DEFAULT false & Data attribute. \\ \hline
+allow\_discussions & boolean & DEFAULT false & Boolean toggle enabling threaded comments on this lesson. \\ \hline
+allow\_download & boolean & DEFAULT false & Boolean toggle enabling resource file downloads for this lesson. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -1611,7 +1623,7 @@ allow\_download & boolean & DEFAULT false & Data attribute. \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 lesson\_id & uuid & NOT NULL & Foreign key referencing lessons.id. \\ \hline
 title & character varying & NOT NULL & Display title of the record. \\ \hline
-time\_limit\_seconds & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
+time\_limit\_seconds & integer DEFAULT 0 & NOT NULL & Maximum allowed quiz completion time in seconds; 0 = unlimited. \\ \hline
 max\_attempts & integer DEFAULT 0 & NOT NULL & Maximum number of allowed attempts. \\ \hline
 pass\_threshold\_pct & integer DEFAULT 60 & NOT NULL & Minimum percentage required to pass. \\ \hline
 created\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
@@ -1637,9 +1649,9 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 quiz\_id & uuid & NOT NULL & Foreign key referencing quizzes.id. \\ \hline
 question\_text & text & NOT NULL & Display text of the question. \\ \hline
 question\_type & character varying & NOT NULL & Question format (multiple-choice, etc.). \\ \hline
-sequence\_order & integer & NOT NULL & Data attribute. \\ \hline
+sequence\_order & integer & NOT NULL & Integer determining the display order of this question within the quiz. \\ \hline
 created\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
-image\_url & text & - & Data attribute. \\ \hline
+image\_url & text & - & URL of an optional image asset displayed alongside the question text. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -1661,8 +1673,8 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 question\_id & uuid & NOT NULL & Foreign key referencing quiz\_questions.id. \\ \hline
 option\_text & text & NOT NULL & Display text of the quiz option. \\ \hline
 is\_correct & boolean DEFAULT false & NOT NULL & Whether this is the correct answer. \\ \hline
-sequence\_order & integer & NOT NULL & Data attribute. \\ \hline
-image\_url & text & - & Data attribute. \\ \hline
+sequence\_order & integer & NOT NULL & Integer determining the display order of this answer option. \\ \hline
+image\_url & text & - & URL of an optional image asset displayed as this answer option. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -1684,7 +1696,7 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 course\_id & uuid & NOT NULL & Foreign key referencing courses.id. \\ \hline
 title & text & NOT NULL & Display title of the record. \\ \hline
 description & text & - & Free-text description or summary. \\ \hline
-sequence\_order & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this chapter within the course. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
 }%
@@ -1707,9 +1719,9 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 course\_id & uuid & NOT NULL & Foreign key referencing courses.id. \\ \hline
 title & text & NOT NULL & Display title of the record. \\ \hline
 description & text & - & Free-text description or summary. \\ \hline
-required\_completion\_pct & integer DEFAULT 100 & NOT NULL & Data attribute. \\ \hline
-icon & text & - & Data attribute. \\ \hline
-sequence\_order & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
+required\_completion\_pct & integer DEFAULT 100 & NOT NULL & Minimum percentage of lessons that must be completed to achieve this milestone. \\ \hline
+icon & text & - & Emoji or icon identifier displayed alongside the milestone label. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this milestone in the progress tracker. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
 }%
@@ -1732,9 +1744,9 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 course\_id & uuid & NOT NULL & Foreign key referencing courses.id. \\ \hline
 name & character varying & NOT NULL & Display name of the record. \\ \hline
 description & text & NOT NULL & Free-text description or summary. \\ \hline
-icon\_url & character varying & - & Data attribute. \\ \hline
-requirement\_type & character varying & NOT NULL & Data attribute. \\ \hline
-requirement\_threshold & integer DEFAULT 1 & NOT NULL & Data attribute. \\ \hline
+icon\_url & character varying & - & URL of the achievement badge image displayed in the learner's profile. \\ \hline
+requirement\_type & character varying & NOT NULL & Achievement criterion type (e.g. 'quiz\_score', 'course\_complete', 'streak'). \\ \hline
+requirement\_threshold & integer DEFAULT 1 & NOT NULL & Numeric threshold value that must be met to unlock this achievement. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
 \end{tabular}
@@ -1756,7 +1768,7 @@ updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of t
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 course\_id & uuid & NOT NULL & Foreign key referencing courses.id. \\ \hline
-accessibility\_category & text & NOT NULL & Data attribute. \\ \hline
+accessibility\_category & text & NOT NULL & Disability category label (e.g. 'dyslexia', 'adhd', 'asd') linked to this course. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
 }%
@@ -1803,8 +1815,8 @@ enrollment\_id & uuid & NOT NULL & Foreign key referencing enrollments.id. \\ \h
 quiz\_id & uuid & NOT NULL & Foreign key referencing quizzes.id. \\ \hline
 attempt\_number & integer & NOT NULL & Sequential counter for quiz attempts. \\ \hline
 score\_pct & integer & - & Quiz score as a percentage (0-100). \\ \hline
-result & character varying DEFAULT 'in\_progress'::character varying & NOT NULL & Data attribute. \\ \hline
-started\_at & timestamp without time zone DEFAULT now() & NOT NULL & Data attribute. \\ \hline
+result & character varying DEFAULT 'in\_progress'::character varying & NOT NULL & Outcome of the quiz attempt ('in\_progress', 'passed', 'failed'). \\ \hline
+started\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp when the quiz attempt was initiated. \\ \hline
 submitted\_at & timestamp without time zone & - & Timestamp of response submission. \\ \hline
 \end{tabular}
 }%
@@ -1848,16 +1860,16 @@ is\_correct & boolean & - & Whether this is the correct answer. \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 enrollment\_id & uuid & NOT NULL & Foreign key referencing enrollments.id. \\ \hline
 lesson\_id & uuid & NOT NULL & Foreign key referencing lessons.id. \\ \hline
-is\_viewed & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-view\_count & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
-first\_viewed\_at & timestamp without time zone & - & Data attribute. \\ \hline
-last\_viewed\_at & timestamp without time zone & - & Data attribute. \\ \hline
-checkpoint\_completed & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-time\_spent\_learning & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
-assisted\_learning\_mode & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-summary\_completed & boolean & DEFAULT false & Data attribute. \\ \hline
-is\_completed & boolean & DEFAULT false & Data attribute. \\ \hline
-progress\_meta & jsonb DEFAULT '{}'::jsonb & NOT NULL & Data attribute. \\ \hline
+is\_viewed & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether the learner has opened this lesson. \\ \hline
+view\_count & integer DEFAULT 0 & NOT NULL & Total number of times the learner has viewed this lesson. \\ \hline
+first\_viewed\_at & timestamp without time zone & - & Timestamp of the learner's first access to this lesson. \\ \hline
+last\_viewed\_at & timestamp without time zone & - & Timestamp of the learner's most recent access to this lesson. \\ \hline
+checkpoint\_completed & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether the learner has passed all required checkpoints. \\ \hline
+time\_spent\_learning & integer DEFAULT 0 & NOT NULL & Cumulative time in seconds the learner has spent on this lesson. \\ \hline
+assisted\_learning\_mode & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether adaptive assistance was active during this session. \\ \hline
+summary\_completed & boolean & DEFAULT false & Boolean flag indicating whether the learner submitted a lesson summary. \\ \hline
+is\_completed & boolean & DEFAULT false & Boolean flag indicating whether the learner has fully completed this lesson. \\ \hline
+progress\_meta & jsonb DEFAULT '{}'::jsonb & NOT NULL & JSONB object storing supplementary progress metrics and adaptive engine data. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -1879,9 +1891,9 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 lesson\_id & uuid & NOT NULL & Foreign key referencing lessons.id. \\ \hline
 title & text & NOT NULL & Display title of the record. \\ \hline
 description & text & - & Free-text description or summary. \\ \hline
-checkpoint\_type & text DEFAULT 'reflection'::text & NOT NULL & Data attribute. \\ \hline
-sequence\_order & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
-required & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
+checkpoint\_type & text DEFAULT 'reflection'::text & NOT NULL & Checkpoint category ('reflection', 'quiz', 'activity') determining interaction format. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this checkpoint within the lesson. \\ \hline
+required & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether this checkpoint must be passed to proceed. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
 }%
@@ -1902,8 +1914,8 @@ created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 enrollment\_id & uuid & NOT NULL & Foreign key referencing enrollments.id. \\ \hline
-checkpoint\_id & uuid & - & Data attribute. \\ \hline
-completed & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
+checkpoint\_id & uuid & - & Foreign key referencing lesson\_checkpoints.id. \\ \hline
+completed & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether the learner has completed this checkpoint. \\ \hline
 completed\_at & timestamp with time zone & - & Timestamp when the record was completed. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 response\_data & jsonb & - & JSONB payload of the learner's response. \\ \hline
@@ -1928,8 +1940,8 @@ lesson\_id & uuid & - & Foreign key referencing lessons.id. \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 enrollment\_id & uuid & NOT NULL & Foreign key referencing enrollments.id. \\ \hline
 milestone\_id & uuid & NOT NULL & Foreign key referencing course\_milestones.id. \\ \hline
-achieved & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
-achieved\_at & timestamp with time zone & - & Data attribute. \\ \hline
+achieved & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether the learner has met this milestone. \\ \hline
+achieved\_at & timestamp with time zone & - & Timestamp when the milestone was reached. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
 }%
@@ -1951,11 +1963,11 @@ created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 lesson\_id & uuid & NOT NULL & Foreign key referencing lessons.id. \\ \hline
 title & text & NOT NULL & Display title of the record. \\ \hline
-timestamp\_seconds & numeric & NOT NULL & Data attribute. \\ \hline
+timestamp\_seconds & numeric & NOT NULL & Video playback position in seconds where the question is displayed. \\ \hline
 question\_text & text & NOT NULL & Display text of the question. \\ \hline
 options & jsonb DEFAULT '[]'::jsonb & NOT NULL & JSONB array of answer options. \\ \hline
-correct\_option\_index & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
-sequence\_order & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
+correct\_option\_index & integer DEFAULT 0 & NOT NULL & Zero-based index of the correct answer in the options array. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this question within the video. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
 \end{tabular}
@@ -1979,10 +1991,10 @@ updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of t
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 enrollment\_id & uuid & NOT NULL & Foreign key referencing enrollments.id. \\ \hline
-recommended\_lesson\_id & uuid & NOT NULL & Data attribute. \\ \hline
-difficulty\_tier & character varying & NOT NULL & Data attribute. \\ \hline
-trigger\_reason & text & - & Data attribute. \\ \hline
-is\_acknowledged & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
+recommended\_lesson\_id & uuid & NOT NULL & UUID of the lesson recommended to the learner by the adaptive engine. \\ \hline
+difficulty\_tier & character varying & NOT NULL & Difficulty classification of the recommended lesson relative to learner performance. \\ \hline
+trigger\_reason & text & - & Explanation of why the adaptive engine generated this recommendation. \\ \hline
+is\_acknowledged & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether the learner has viewed this recommendation. \\ \hline
 created\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 \end{tabular}
 }%
@@ -2029,7 +2041,7 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 lesson\_id & uuid & NOT NULL & Foreign key referencing lessons.id. \\ \hline
 user\_id & uuid & NOT NULL & Foreign key referencing users.id. \\ \hline
 content & text & NOT NULL & Rich-text HTML or JSON content body. \\ \hline
-parent\_id & uuid & - & Data attribute. \\ \hline
+parent\_id & uuid & - & UUID of the parent comment for threaded reply nesting; NULL for top-level comments. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
 \end{tabular}
@@ -2056,8 +2068,8 @@ enrollment\_id & uuid & NOT NULL & Foreign key referencing enrollments.id. \\ \h
 content & text & NOT NULL & Rich-text HTML or JSON content body. \\ \hline
 word\_count & integer & DEFAULT 0 & Word count of the content. \\ \hline
 status & text & DEFAULT 'draft'::text & Record status (e.g., active, completed, dropped). \\ \hline
-ai\_feedback & text & - & Data attribute. \\ \hline
-educator\_feedback & text & - & Data attribute. \\ \hline
+ai\_feedback & text & - & Automated feedback text generated by the AI summary evaluator. \\ \hline
+educator\_feedback & text & - & Manual feedback text provided by the educator on the submitted summary. \\ \hline
 submitted\_at & timestamp with time zone & - & Timestamp of response submission. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
@@ -2080,8 +2092,8 @@ updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of t
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 lesson\_id & uuid & NOT NULL & Foreign key referencing lessons.id. \\ \hline
-content\_html & text & NOT NULL & Data attribute. \\ \hline
-version\_name & text & NOT NULL & Data attribute. \\ \hline
+content\_html & text & NOT NULL & Snapshot of the lesson HTML content at the time this version was saved. \\ \hline
+version\_name & text & NOT NULL & Human-readable label identifying this version (e.g. 'v1', 'draft-2024-03'). \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 created\_by & uuid & NOT NULL & Foreign key referencing the creating user. \\ \hline
 \end{tabular}
@@ -2105,13 +2117,13 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 lesson\_id & uuid & NOT NULL & Foreign key referencing lessons.id. \\ \hline
 content\_type & text & NOT NULL & MIME type of the content. \\ \hline
 title & text & NOT NULL & Display title of the record. \\ \hline
-content\_data & jsonb DEFAULT '{}'::jsonb & NOT NULL & Data attribute. \\ \hline
-accessibility\_settings & jsonb & DEFAULT '{}'::jsonb & Data attribute. \\ \hline
-sequence\_order & integer DEFAULT 0 & NOT NULL & Data attribute. \\ \hline
+content\_data & jsonb DEFAULT '{}'::jsonb & NOT NULL & JSONB payload containing the H5P interactive activity configuration and state. \\ \hline
+accessibility\_settings & jsonb & DEFAULT '{}'::jsonb & JSON object storing accessibility overrides specific to this interactive activity. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this activity within the lesson. \\ \hline
 created\_by & uuid & - & Foreign key referencing the creating user. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
-is\_draft & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
+is\_draft & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether this interactive content is unpublished. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -2133,10 +2145,10 @@ id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). 
 created\_by & uuid & NOT NULL & Foreign key referencing the creating user. \\ \hline
 title & text & NOT NULL & Display title of the record. \\ \hline
 description & text & - & Free-text description or summary. \\ \hline
-lesson\_type & text DEFAULT 'standard'::text & NOT NULL & Data attribute. \\ \hline
-content\_html & text & - & Data attribute. \\ \hline
-estimated\_duration & integer & - & Data attribute. \\ \hline
-is\_public & boolean DEFAULT false & NOT NULL & Data attribute. \\ \hline
+lesson\_type & text DEFAULT 'standard'::text & NOT NULL & Template classification ('standard', 'video', 'interactive') for the template. \\ \hline
+content\_html & text & - & Default HTML content body pre-filled in the template for educator customisation. \\ \hline
+estimated\_duration & integer & - & Default approximate completion time in minutes suggested by the template. \\ \hline
+is\_public & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether this template is available to all educators. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
 \end{tabular}
@@ -2159,10 +2171,10 @@ updated\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp of t
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 user\_id & uuid & NOT NULL & Foreign key referencing users.id. \\ \hline
 course\_id & uuid & - & Foreign key referencing courses.id. \\ \hline
-file\_name & character varying & NOT NULL & Data attribute. \\ \hline
+file\_name & character varying & NOT NULL & Original uploaded file name including extension (e.g. 'lecture\_slides.pdf'). \\ \hline
 file\_type & character varying & NOT NULL & MIME type of the file. \\ \hline
 url & character varying & NOT NULL & External resource URL. \\ \hline
-size\_bytes & bigint & - & Data attribute. \\ \hline
+size\_bytes & bigint & - & File size in bytes for storage quota enforcement. \\ \hline
 created\_at & timestamp with time zone DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
 lesson\_id & uuid & - & Foreign key referencing lessons.id. \\ \hline
 title & character varying & - & Display title of the record. \\ \hline
@@ -2213,7 +2225,7 @@ name & text & NOT NULL & Display name of the record. \\ \hline
 email & text & NOT NULL & User email address, used for login and notifications. \\ \hline
 category & text & NOT NULL & Content category classification. \\ \hline
 subject & text & NOT NULL & Message subject line. \\ \hline
-message & text & NOT NULL & Data attribute. \\ \hline
+message & text & NOT NULL & Full body text of the contact form submission. \\ \hline
 status & text DEFAULT 'unread'::text & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
 created\_at & timestamp with time zone & DEFAULT now() & Timestamp when the record was created. \\ \hline
 \end{tabular}
@@ -2235,24 +2247,24 @@ created\_at & timestamp with time zone & DEFAULT now() & Timestamp when the reco
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 enrollment\_id & uuid & NOT NULL & Foreign key referencing enrollments.id. \\ \hline
-reference\_code & character varying & NOT NULL & Data attribute. \\ \hline
-pdf\_url & character varying & - & Data attribute. \\ \hline
+reference\_code & character varying & NOT NULL & Unique alphanumeric identifier for external certificate verification. \\ \hline
+pdf\_url & character varying & - & URL to the generated PDF certificate file stored in cloud storage. \\ \hline
 status & character varying DEFAULT 'issued'::character varying & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
 issued\_at & timestamp without time zone DEFAULT now() & NOT NULL & Timestamp when the certificate was issued. \\ \hline
-revoked\_at & timestamp without time zone & - & Data attribute. \\ \hline
-revoke\_reason & text & - & Data attribute. \\ \hline
+revoked\_at & timestamp without time zone & - & Timestamp when the certificate was revoked; NULL if still valid. \\ \hline
+revoke\_reason & text & - & Free-text explanation for why the certificate was revoked. \\ \hline
 course\_id & uuid & - & Foreign key referencing courses.id. \\ \hline
 user\_id & uuid & - & Foreign key referencing users.id. \\ \hline
-learner\_name & text & - & Data attribute. \\ \hline
-course\_title & text & - & Data attribute. \\ \hline
-educator\_name & text & - & Data attribute. \\ \hline
-institution\_name & text & DEFAULT 'ACESS Platform'::text & Data attribute. \\ \hline
-completion\_date & timestamp with time zone & - & Data attribute. \\ \hline
-verification\_url & text & - & Data attribute. \\ \hline
-skills\_earned & text[] & DEFAULT '{}'::text[] & Data attribute. \\ \hline
-course\_duration\_hours & numeric & DEFAULT 0 & Data attribute. \\ \hline
-signed\_token & text & - & Data attribute. \\ \hline
-template\_id & text & DEFAULT 'default'::text & Data attribute. \\ \hline
+learner\_name & text & - & Full name of the learner as displayed on the certificate. \\ \hline
+course\_title & text & - & Title of the completed course as displayed on the certificate. \\ \hline
+educator\_name & text & - & Name of the course educator as displayed on the certificate. \\ \hline
+institution\_name & text & DEFAULT 'ACESS Platform'::text & Name of the issuing institution displayed on the certificate. \\ \hline
+completion\_date & timestamp with time zone & - & Timestamp when the learner completed all course requirements. \\ \hline
+verification\_url & text & - & Public URL for third-party verification of certificate authenticity. \\ \hline
+skills\_earned & text[] & DEFAULT '{}'::text[] & Array of skill labels or competencies acquired through course completion. \\ \hline
+course\_duration\_hours & numeric & DEFAULT 0 & Total duration of the course in hours as displayed on the certificate. \\ \hline
+signed\_token & text & - & Cryptographic signature token for tamper-proof certificate verification. \\ \hline
+template\_id & text & DEFAULT 'default'::text & Identifier of the certificate template used for this certificate. \\ \hline
 metadata & jsonb & DEFAULT '{}'::jsonb & JSONB field for extensible metadata. \\ \hline
 \end{tabular}
 }%
@@ -2274,9 +2286,9 @@ metadata & jsonb & DEFAULT '{}'::jsonb & JSONB field for extensible metadata. \\
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 name & text & NOT NULL & Display name of the record. \\ \hline
 description & text & - & Free-text description or summary. \\ \hline
-layout\_config & jsonb & DEFAULT '{}'::jsonb & Data attribute. \\ \hline
+layout\_config & jsonb & DEFAULT '{}'::jsonb & JSON object defining the visual layout, positioning, and styling of certificate elements. \\ \hline
 is\_active & boolean & DEFAULT true & Soft-ban flag; inactive users cannot log in. \\ \hline
-is\_default & boolean & DEFAULT false & Data attribute. \\ \hline
+is\_default & boolean & DEFAULT false & Boolean flag indicating this is the default certificate template used for new issuances. \\ \hline
 created\_at & timestamp with time zone & DEFAULT now() & Timestamp when the record was created. \\ \hline
 updated\_at & timestamp with time zone & DEFAULT now() & Timestamp of the last modification. \\ \hline
 \end{tabular}
@@ -2298,9 +2310,9 @@ updated\_at & timestamp with time zone & DEFAULT now() & Timestamp of the last m
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 id & uuid DEFAULT gen\_random\_uuid() & NOT NULL & Unique identifier (UUID v4). \\ \hline
 certificate\_id & uuid & - & Foreign key referencing certificates.id. \\ \hline
-ip\_address & text & - & Data attribute. \\ \hline
-user\_agent & text & - & Data attribute. \\ \hline
-verified\_at & timestamp with time zone & DEFAULT now() & Data attribute. \\ \hline
+ip\_address & text & - & IP address of the client that performed the certificate verification. \\ \hline
+user\_agent & text & - & Browser user-agent string of the client that performed the verification. \\ \hline
+verified\_at & timestamp with time zone & DEFAULT now() & Timestamp when the certificate verification was performed. \\ \hline
 \end{tabular}
 }%
 \end{center}
@@ -2356,6 +2368,43 @@ The ACESS platform follows a component-based architecture using React Server Com
     \item \textbf{Achievement Engine (\texttt{achievement-engine.ts}):} Contains \texttt{evaluateAchievements()} function called after quiz attempts and lesson completions. Checks learner's current progress against \texttt{course\_achievements} criteria and grants new badges via \texttt{user\_achievements} insertion.
     \item \textbf{Adaptive Engine (\texttt{adaptive-engine.ts}):} Applies preset-based accessibility configuration (Dyslexia, ADHD, Autism, Dyscalculia) with age-adapted sub-variants. Each preset defines a combination of settings for font family, spacing, theme, tint, reading spotlight, focus mode, chunked content, TTS, and simplified UI, applied via CSS data attributes.
 \end{itemize}
+
+\paragraph{Recommendation Engine Pseudocode}
+
+Algorithm~\ref{alg:recommendation} presents the pseudocode for the \texttt{generateRecommendations()} function, illustrating the rule-based branching logic used to generate personalized lesson recommendations.
+
+\begin{algorithm}[H]
+\caption{generateRecommendations()}
+\label{alg:recommendation}
+\begin{algorithmic}[1]
+\Require $learner\_id$, $course\_id$, $quiz\_score$
+\Ensure Ordered list of recommended lesson IDs with reasons
+\State $enrolled \gets$ \textsc{checkEnrollment}($learner\_id$, $course\_id$)
+\State $recent\_quiz \gets$ \textsc{getRecentQuizAttempt}($learner\_id$, $course\_id$)
+\State $viewed \gets$ \textsc{getViewedLessons}($learner\_id$, $course\_id$)
+\State $all\_lessons \gets$ \textsc{getCourseLessons}($course\_id$)
+\State $recommendations \gets \emptyset$
+
+\If{$recent\_quiz.score < passing\_threshold$}
+    \State $failing\_lesson \gets recent\_quiz.lesson\_id$
+    \State \textsc{append}($recommendations$, \{revision, $failing\_lesson$\})
+\EndIf
+
+\ForAll{$lesson$ in $all\_lessons \setminus viewed$}
+    \State \textsc{append}($recommendations$, \{standard, $lesson$\})
+    \If{$|recommendations| \geq 3$}
+        \State \textbf{break}
+    \EndIf
+\EndFor
+
+\If{course\_completion\_pct $\geq 80\%$}
+    \State $next\_course \gets$ \textsc{getTagMatchedCourse}($course\_id$)
+    \State \textsc{append}($recommendations$, \{cross-course, $next\_course$\})
+\EndIf
+
+\State \Return $recommendations$
+\end{algorithmic}
+\end{algorithm}
 
 \paragraph{Data Access Layer}
 
@@ -2487,6 +2536,23 @@ To maintain a decoupled architecture and prevent the Next.js API routes from bec
 
 \paragraph{Session Timeout and Security}
 A \texttt{SessionTimeout} component wraps authenticated routes. It tracks user activity via \texttt{mousemove} and \texttt{keydown} event listeners. After 15 minutes of inactivity, a warning modal appears with a 30-second countdown. If no response is received, the user is forcibly signed out via \texttt{supabase.auth.signOut()} and redirected to the login page.
+
+\subsection{Limitations of Design}
+\label{sec:design-limitations}
+
+The current ACESS design has several acknowledged limitations that define the boundary of this implementation:
+
+\begin{itemize}
+    \item \textbf{Content scope:} The system currently supports only text-based lessons with embedded video. Audio-only content, interactive simulations, and downloadable PDF resources are not yet supported.
+    
+    \item \textbf{Adaptive engine:} The rule-based recommendation engine operates on quiz performance only. It does not incorporate learner behaviour analytics such as time-on-task or scroll patterns, nor does it utilize real-time physiological signals.
+    
+    \item \textbf{Expert review only:} Accessibility evaluation was conducted through structured walkthroughs and expert review against WCAG 2.1 Level AA criteria. Full user testing with neurodivergent participants was beyond the scope of this project phase and is recommended for future work.
+    
+    \item \textbf{Single-language support:} The platform interface and content are English-only. Multilingual and right-to-left language support has not been implemented.
+    
+    \item \textbf{Offline capability:} All features require an active internet connection. No offline content caching or progressive web app (PWA) functionality has been implemented.
+\end{itemize}
 
 \subsection{Summary}
 

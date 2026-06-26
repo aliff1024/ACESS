@@ -61,7 +61,6 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
   const { settings } = useAccessibility();
 
   const isSystem = course?.system_course === true;
-  const isGuided = isSystem && course?.guided_learning_enabled;
 
   useEffect(() => {
     Promise.all([
@@ -246,7 +245,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
     </div>
   );
 
-  if (isGuided) {
+  if (isSystem) {
     return (
       <div className="min-h-screen bg-gray-50 pb-24">
         {PreviewBanner}
@@ -274,9 +273,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <Badge className="bg-purple-100 text-purple-700 border-purple-200">Official Learning Path</Badge>
                   <Badge className="bg-blue-100 text-blue-700 border-blue-200">System Course</Badge>
-                  {course.guided_learning_enabled && (
-                    <Badge className="bg-amber-100 text-amber-700 border-amber-200">Guided Course</Badge>
-                  )}
+
                   <Badge className={`${difficultyColors[diffKey] || difficultyColors.beginner} border`}>
                     {course.difficulty_level || 'Beginner'}
                   </Badge>
@@ -769,7 +766,6 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
 
           <div className="space-y-3">
             {course.lessons.map((lesson) => {
-              if ((settings.layout_mode === 'slide' || settings.chunked_content_mode) && lesson.status === 'locked') return null;
               return (
               <Card
                 key={lesson.id}
@@ -780,8 +776,17 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                     ? 'border-green-200 bg-green-50'
                     : 'border-gray-200 bg-white'
                 }`}
+                onClick={() => {
+                  if (lesson.status !== 'locked') {
+                    onStartLesson(lesson.id);
+                  }
+                }}
               >
-                <div className="flex items-center gap-4">
+                <div 
+                  className={`flex items-start gap-4 transition-colors ${
+                    lesson.status === 'locked' ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                >
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
                       lesson.status === 'completed'

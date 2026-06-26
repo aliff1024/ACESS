@@ -11,6 +11,7 @@ import { applyPreset } from '@/lib/adaptive-engine';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePathname } from 'next/navigation';
 
 export function LearnerOnboarding() {
   const { t } = useTranslation();
@@ -20,12 +21,33 @@ export function LearnerOnboarding() {
   const [saving, setSaving] = useState(false);
 
   // Form State
-  const [age, setAge] = useState('');
+  const [dob, setDob] = useState('');
   const [preset, setPreset] = useState('none');
+  const pathname = usePathname();
 
-  const { settings, updateSettings } = useAccessibility();
+  const { settings, updateSettings, previewSettings, revertSettings } = useAccessibility();
+  const originalSettingsRef = useRef(settings);
+  const isSavedRef = useRef(false);
+  const initialRevertSettings = useRef(revertSettings);
 
   const retryRef = useRef(0);
+
+  useEffect(() => {
+    if (preset !== 'none') {
+      const newSettings = applyPreset(preset, originalSettingsRef.current);
+      previewSettings(newSettings);
+    } else {
+      revertSettings();
+    }
+  }, [preset, previewSettings, revertSettings]);
+
+  useEffect(() => {
+    return () => {
+      if (!isSavedRef.current) {
+        initialRevertSettings.current();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +55,7 @@ export function LearnerOnboarding() {
       try {
         const fullProfile = await fetchFullProfile();
         if (cancelled) return;
-        if (!fullProfile.profile?.birth_date) {
+        if (!fullProfile.profile?.birth_date && pathname !== '/learner/onboarding') {
           setTimeout(() => { if (!cancelled) setOpen(true); }, 1000);
         }
       } catch (error) {
@@ -54,25 +76,18 @@ export function LearnerOnboarding() {
   const handleFinish = async () => {
     setSaving(true);
     try {
-      // 1. Calculate mock birth_date from age
-      const numAge = parseInt(age, 10);
-      let birthDateStr = null;
-      if (!isNaN(numAge)) {
-        const currentYear = new Date().getFullYear();
-        birthDateStr = `${currentYear - numAge}-01-01`;
-      } else {
-         // fallback
-         birthDateStr = '2000-01-01';
-      }
+      // 1. Calculate mock birth_date from age -> use dob
+      let birthDateStr = dob || '2000-01-01';
 
       // 2. Save profile
       await saveUserProfile({ birth_date: birthDateStr });
 
       // 3. Apply preset and save
-      const newSettings = applyPreset(preset, settings);
+      const newSettings = applyPreset(preset, originalSettingsRef.current);
       await saveAccessibilitySettings(newSettings);
       
       // Update local context to reflect immediately
+      isSavedRef.current = true;
       updateSettings(newSettings);
 
       setOpen(false);
@@ -80,6 +95,13 @@ export function LearnerOnboarding() {
       console.error('Failed to save onboarding preferences', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSkip = () => {
+    if (window.confirm("Are you sure you want to skip? These settings can be accessed again in the Accessibility Settings on the left menu.")) {
+      revertSettings();
+      setOpen(false);
     }
   };
 
@@ -110,13 +132,12 @@ export function LearnerOnboarding() {
 
                 <div className="space-y-4">
                   <div className="space-y-2 text-left">
-                    <Label htmlFor="age" className="text-white">{t('onboarding.age')}</Label>
+                    <Label htmlFor="dob" className="text-white">Date of Birth</Label>
                     <Input 
-                      id="age"
-                      type="number" 
-                      placeholder={t('onboarding.agePlaceholder')} 
-                      value={age}
-                      onChange={(e) => setAge(e.target.value)}
+                      id="dob"
+                      type="date" 
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
                       className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
                     />
                   </div>
@@ -164,13 +185,16 @@ export function LearnerOnboarding() {
           </div>
           
           <div className="flex items-center gap-2">
+            <Button variant="ghost" className="text-gray-500 hover:text-gray-700" onClick={handleSkip} disabled={saving}>
+              Skip
+            </Button>
             {step === 2 && (
               <Button variant="ghost" className="text-gray-500 hover:text-gray-700" onClick={() => setStep(1)} disabled={saving}>
                 {t('common.back')}
               </Button>
             )}
             {step === 1 ? (
-              <Button onClick={() => setStep(2)} disabled={!age} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[100px]">
+              <Button onClick={() => setStep(2)} disabled={!dob} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[100px]">
                 {t('common.next')}
               </Button>
             ) : (

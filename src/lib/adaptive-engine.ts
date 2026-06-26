@@ -59,7 +59,6 @@ export interface AdaptiveRecommendation {
   recommended_lesson_modes: {
     focus_mode?: boolean
     chunked_content?: boolean
-    guided_mode?: boolean
     checkpoints?: boolean
     simplified_summary?: boolean
   }
@@ -166,29 +165,6 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
     },
     additional_features: ['Visual Schedule', 'Step-by-Step Guidance', 'Progress Timeline', 'Distraction-Free'],
   },
-  dyscalculia: {
-    id: 'dyscalculia',
-    label: 'Dyscalculia Preset',
-    goal: 'Support number comprehension and math learning',
-    settings: {
-      ...DEFAULT_PRESET_SETTINGS,
-      font_family: 'arial',
-      font_size_px: 18,
-      line_spacing_multiplier: 1.6,
-      word_spacing_pct: 15,
-      background_tint: 'soft_green',
-      reading_spotlight: true,
-      chunked_content_mode: true,
-      animation_level: 'low',
-      low_contrast: true,
-      preferred_theme: 'light',
-      tts_enabled: true,
-      step_by_step_enabled: true,
-      auto_save_enabled: true,
-      progress_timeline_enabled: true,
-    },
-    additional_features: ['Chunked Content', 'Step-by-Step Guidance', 'Progress Timeline', 'Text-to-Speech'],
-  },
 }
 
 // ─── Legacy Disability Presets (backward compatibility) ──────────────────
@@ -196,9 +172,9 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
 const DEFAULT_LESSON_MODES = {
   focus_mode: false,
   chunked_content: false,
-  guided_mode: false,
   checkpoints: false,
   simplified_summary: false,
+  guided_mode: false,
 }
 
 /** Maps active_preset to lesson modes */
@@ -212,34 +188,13 @@ const PRESET_LESSON_MODES: Record<string, Partial<typeof DEFAULT_LESSON_MODES>> 
   },
   autism: {
     chunked_content: true,
-    guided_mode: true,
     focus_mode: true,
     checkpoints: true,
     simplified_summary: true,
   },
-  dyscalculia: {
-    chunked_content: true,
-    guided_mode: true,
-  },
 }
 
 const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
-  cognitive_impairment: {
-    disability_type: 'cognitive_impairment',
-    rationale: 'Simplified language, step-by-step flow, and reduced distractions help learners with cognitive impairments process information more effectively.',
-    recommended_ui: {
-      simplified_ui: true,
-      preferred_reading_level: 'basic',
-      line_spacing: 'relaxed',
-    },
-    recommended_lesson_modes: {
-      focus_mode: true,
-      chunked_content: true,
-      guided_mode: true,
-      checkpoints: true,
-      simplified_summary: true,
-    },
-  },
   adhd: {
     disability_type: 'adhd',
     rationale: 'Short learning segments, progress indicators, and interactive checkpoints help maintain focus and engagement for learners with ADHD.',
@@ -250,7 +205,6 @@ const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
       chunked_content: true,
       checkpoints: true,
       focus_mode: false,
-      guided_mode: false,
       simplified_summary: false,
     },
   },
@@ -266,7 +220,6 @@ const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
     recommended_lesson_modes: {
       focus_mode: false,
       chunked_content: false,
-      guided_mode: false,
       checkpoints: false,
       simplified_summary: false,
     },
@@ -280,75 +233,7 @@ const DISABILITY_PRESETS: Record<string, AdaptiveRecommendation> = {
     recommended_lesson_modes: {
       focus_mode: true,
       chunked_content: true,
-      guided_mode: true,
       checkpoints: false,
-      simplified_summary: true,
-    },
-  },
-  visual_impairment: {
-    disability_type: 'visual_impairment',
-    rationale: 'High-contrast themes and text-to-speech support enable learners with visual impairments to access content effectively.',
-    recommended_ui: {
-      preferred_font_size: 'xlarge',
-      preferred_theme: 'high_contrast',
-      tts_enabled: true,
-      keyboard_navigation_enabled: true,
-    },
-    recommended_lesson_modes: {
-      focus_mode: false,
-      chunked_content: false,
-      guided_mode: false,
-      checkpoints: false,
-      simplified_summary: false,
-    },
-  },
-  hearing_impairment: {
-    disability_type: 'hearing_impairment',
-    rationale: 'Closed captions and text transcripts ensure learners with hearing impairments can fully access video and audio content.',
-    recommended_ui: {
-      captions_enabled: true,
-    },
-    recommended_lesson_modes: {
-      focus_mode: false,
-      chunked_content: false,
-      guided_mode: false,
-      checkpoints: false,
-      simplified_summary: false,
-    },
-  },
-  motor_impairment: {
-    disability_type: 'motor_impairment',
-    rationale: 'Keyboard navigation, larger fonts, and reduced fine-motor requirements help learners with motor impairments navigate and interact with content.',
-    recommended_ui: {
-      keyboard_navigation_enabled: true,
-      preferred_font_size: 'large',
-    },
-    recommended_lesson_modes: {
-      focus_mode: false,
-      chunked_content: false,
-      guided_mode: false,
-      checkpoints: false,
-      simplified_summary: false,
-    },
-  },
-  multiple_disabilities: {
-    disability_type: 'multiple_disabilities',
-    rationale: 'Comprehensive accessibility support combines multiple adaptations to address a range of needs simultaneously.',
-    recommended_ui: {
-      simplified_ui: true,
-      preferred_theme: 'high_contrast',
-      line_spacing: 'loose',
-      tts_enabled: true,
-      captions_enabled: true,
-      keyboard_navigation_enabled: true,
-      preferred_font_size: 'large',
-      dyslexia_friendly_font: true,
-    },
-    recommended_lesson_modes: {
-      focus_mode: true,
-      chunked_content: true,
-      guided_mode: true,
-      checkpoints: true,
       simplified_summary: true,
     },
   },

@@ -14,6 +14,7 @@ import { dedupeSpeechVoices, TTS_SPEED_OPTIONS, FONT_FAMILIES, ANIMATION_LEVELS 
 import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, getAllPresets } from '@/lib/adaptive-engine';
 import { SliderSetting } from '@/components/accessibility/SliderSetting';
 import { TintPicker } from '@/components/accessibility/TintPicker';
+import { fetchFullProfile, saveUserProfile } from '@/lib/learner-api';
 
 interface AccessibilitySettingsModalProps {
   isOpen: boolean;
@@ -28,6 +29,17 @@ export function AccessibilitySettingsModal({
   const { t, setLocale } = useTranslation();
 
   const [activePreset, setActivePreset] = useState<string>(() => settings.active_preset || 'none');
+  const [birthDate, setBirthDate] = useState<string>('');
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchFullProfile().then(profile => {
+        if (profile.profile?.birth_date) {
+          setBirthDate(profile.profile.birth_date);
+        }
+      }).catch(() => {});
+    }
+  }, [isOpen]);
   
   // Reading
   const [fontFamily, setFontFamily] = useState<string>(() => settings.font_family || 'arial');
@@ -190,40 +202,43 @@ export function AccessibilitySettingsModal({
     setSaving(true);
     try {
       setLocale(preferredLanguage as 'en' | 'ms');
-      await updateSettings({
-        ...settings,
-        active_preset: activePreset,
-        font_family: fontFamily,
-        font_size_px: fontSizePx,
-        line_spacing_multiplier: lineSpacingMultiplier,
-        word_spacing_pct: wordSpacingPct,
-        background_tint: backgroundTint,
-        tts_enabled: ttsEnabled,
-        tts_rate: ttsRate,
-        tts_voice_uri: ttsVoiceUri || null,
-        preferred_language: preferredLanguage,
-        reading_spotlight: readingSpotlight,
-        distraction_free_mode: distractionFreeMode,
-        chunked_content_mode: chunkedContentMode,
-        layout_mode: layoutMode,
-        structure_mode: structureMode,
-        simplified_ui: simplifiedUi,
-        preferred_theme: preferredTheme,
-        animation_level: animationLevel,
-        muted_colors: mutedColors,
-        low_contrast: lowContrast,
-        captions_enabled: captionsEnabled,
-        keyboard_navigation_enabled: keyboardNavigationEnabled,
-        task_checklist_enabled: taskChecklistEnabled,
-        visual_schedule_enabled: visualScheduleEnabled,
-        step_by_step_enabled: stepByStepEnabled,
-        auto_save_enabled: autoSaveEnabled,
-        progress_timeline_enabled: progressTimelineEnabled,
-        // Update legacy mappings
-        preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
-        dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
-        high_contrast: preferredTheme === 'high_contrast',
-      });
+      await Promise.all([
+        updateSettings({
+          ...settings,
+          active_preset: activePreset,
+          font_family: fontFamily,
+          font_size_px: fontSizePx,
+          line_spacing_multiplier: lineSpacingMultiplier,
+          word_spacing_pct: wordSpacingPct,
+          background_tint: backgroundTint,
+          tts_enabled: ttsEnabled,
+          tts_rate: ttsRate,
+          tts_voice_uri: ttsVoiceUri || null,
+          preferred_language: preferredLanguage,
+          reading_spotlight: readingSpotlight,
+          distraction_free_mode: distractionFreeMode,
+          chunked_content_mode: chunkedContentMode,
+          layout_mode: layoutMode,
+          structure_mode: structureMode,
+          simplified_ui: simplifiedUi,
+          preferred_theme: preferredTheme,
+          animation_level: animationLevel,
+          muted_colors: mutedColors,
+          low_contrast: lowContrast,
+          captions_enabled: captionsEnabled,
+          keyboard_navigation_enabled: keyboardNavigationEnabled,
+          task_checklist_enabled: taskChecklistEnabled,
+          visual_schedule_enabled: visualScheduleEnabled,
+          step_by_step_enabled: stepByStepEnabled,
+          auto_save_enabled: autoSaveEnabled,
+          progress_timeline_enabled: progressTimelineEnabled,
+          // Update legacy mappings
+          preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
+          dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
+          high_contrast: preferredTheme === 'high_contrast',
+        }),
+        birthDate ? saveUserProfile({ birth_date: birthDate }) : Promise.resolve(),
+      ]);
       onClose();
     } finally {
       setSaving(false);
@@ -284,6 +299,9 @@ export function AccessibilitySettingsModal({
               </TabsTrigger>
               <TabsTrigger value="supports" className="data-[state=active]:bg-gray-100 data-[state=active]:shadow-none rounded-md px-3 py-1.5 flex items-center gap-2">
                 <ListChecks className="w-4 h-4" /> Supports
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="data-[state=active]:bg-gray-100 data-[state=active]:shadow-none rounded-md px-3 py-1.5 flex items-center gap-2">
+                <FileText className="w-4 h-4" /> Profile
               </TabsTrigger>
             </TabsList>
           </div>
@@ -423,10 +441,9 @@ export function AccessibilitySettingsModal({
             <TabsContent value="focus" className="space-y-4 m-0">
               <div className="border border-gray-200 rounded-xl p-4">
                 <Label className="text-sm font-semibold mb-3 block">Layout Mode</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button variant={layoutMode === 'scroll' ? 'default' : 'outline'} onClick={() => { setLayoutMode('scroll'); setCustom(); }} className="h-auto py-2"><span className="text-xs">Scroll View</span></Button>
-                  <Button variant={layoutMode === 'slide' ? 'default' : 'outline'} onClick={() => { setLayoutMode('slide'); setCustom(); }} className="h-auto py-2"><span className="text-xs">Slide View</span></Button>
-                  <Button variant={layoutMode === 'chunked' ? 'default' : 'outline'} onClick={() => { setLayoutMode('chunked'); setCustom(); }} className="h-auto py-2"><span className="text-xs">Chunked View</span></Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant={layoutMode === 'scroll' ? 'default' : 'outline'} onClick={() => { setLayoutMode('scroll'); setChunkedContentMode(false); setCustom(); }} className="h-auto py-2"><span className="text-xs">Scroll View</span></Button>
+                  <Button variant={layoutMode === 'slide' ? 'default' : 'outline'} onClick={() => { setLayoutMode('slide'); setChunkedContentMode(false); setCustom(); }} className="h-auto py-2"><span className="text-xs">Slide View</span></Button>
                 </div>
               </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
@@ -448,7 +465,7 @@ export function AccessibilitySettingsModal({
                   <Label className="text-sm font-semibold">Chunked Content</Label>
                   <p className="text-xs text-gray-500">Show one section at a time</p>
                 </div>
-                <Switch checked={chunkedContentMode} onCheckedChange={(v) => { setChunkedContentMode(v); setCustom(); }} />
+                <Switch checked={chunkedContentMode} onCheckedChange={(v) => { setChunkedContentMode(v); if(v) setLayoutMode('chunked'); else if(layoutMode === 'chunked') setLayoutMode('scroll'); setCustom(); }} />
               </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
@@ -461,23 +478,7 @@ export function AccessibilitySettingsModal({
 
             {/* Sensory Tab */}
             <TabsContent value="sensory" className="space-y-4 m-0">
-              <div className="border border-gray-200 rounded-xl p-4">
-                <Label className="text-sm font-semibold mb-3 block">Theme</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  <Button variant={preferredTheme === 'light' ? 'default' : 'outline'} onClick={() => { setPreferredTheme('light'); setCustom(); }} className="h-auto py-2">
-                    <div className="flex flex-col items-center gap-1.5"><div className="w-7 h-7 bg-white border-2 border-gray-300 rounded shrink-0"></div><span className="text-xs">Light</span></div>
-                  </Button>
-                  <Button variant={preferredTheme === 'soft' ? 'default' : 'outline'} onClick={() => { setPreferredTheme('soft'); setCustom(); }} className="h-auto py-2">
-                    <div className="flex flex-col items-center gap-1.5"><div className="w-7 h-7 bg-amber-50 border-2 border-amber-200 rounded shrink-0"></div><span className="text-xs">Soft</span></div>
-                  </Button>
-                  <Button variant={preferredTheme === 'dark' ? 'default' : 'outline'} onClick={() => { setPreferredTheme('dark'); setCustom(); }} className="h-auto py-2">
-                    <div className="flex flex-col items-center gap-1.5"><div className="w-7 h-7 bg-gray-900 border-2 border-gray-700 rounded shrink-0"></div><span className="text-xs">Dark</span></div>
-                  </Button>
-                  <Button variant={preferredTheme === 'high_contrast' ? 'default' : 'outline'} onClick={() => { setPreferredTheme('high_contrast'); setCustom(); }} className="h-auto py-2">
-                    <div className="flex flex-col items-center gap-1.5"><div className="w-7 h-7 bg-black border-2 border-yellow-400 rounded shrink-0"></div><span className="text-xs">High Contrast</span></div>
-                  </Button>
-                </div>
-              </div>
+
               <div className="border border-gray-200 rounded-xl p-4">
                 <Label className="text-sm font-semibold mb-3 block">Animation Level</Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -503,30 +504,7 @@ export function AccessibilitySettingsModal({
                 <Switch checked={lowContrast} onCheckedChange={(v) => { setLowContrast(v); setCustom(); }} />
               </div>
 
-              <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
-                    <Type className="w-4 h-4 text-violet-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <Label className="text-sm font-semibold">{t('accessibility.keyboardNav')}</Label>
-                    <p className="text-xs text-gray-500">{t('accessibility.keyboardNavDesc')}</p>
-                  </div>
-                </div>
-                <Switch checked={keyboardNavigationEnabled} onCheckedChange={(v) => { setKeyboardNavigationEnabled(v); setCustom(); }} />
-              </div>
-              <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4 text-indigo-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <Label className="text-sm font-semibold">{t('accessibility.captions')}</Label>
-                    <p className="text-xs text-gray-500">{t('accessibility.captionsDesc')}</p>
-                  </div>
-                </div>
-                <Switch checked={captionsEnabled} onCheckedChange={(v) => { setCaptionsEnabled(v); setCustom(); }} />
-              </div>
+
             </TabsContent>
 
             {/* Supports Tab */}
@@ -573,6 +551,28 @@ export function AccessibilitySettingsModal({
                   <p className="text-xs text-gray-500">Show your learning journey</p>
                 </div>
                 <Switch checked={progressTimelineEnabled} onCheckedChange={(v) => { setProgressTimelineEnabled(v); setCustom(); }} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="profile" className="p-6 space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">Learner Profile</h3>
+                  <p className="text-sm text-gray-500">Your profile information helps us tailor your learning experience.</p>
+                </div>
+                
+                <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between bg-white">
+                  <div>
+                    <Label className="text-sm font-semibold">Date of Birth</Label>
+                    <p className="text-xs text-gray-500">Used to recommend age-appropriate courses</p>
+                  </div>
+                  <input
+                    type="date"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    className="w-40 h-10 px-3 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
             </TabsContent>
           </div>

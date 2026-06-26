@@ -47,7 +47,7 @@ export default function AdminCourseSettingsTab({ courseId, initialCourse, onUpda
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
             >
               <option value="standard">Standard</option>
-              <option value="guided">Guided</option>
+
               <option value="simplified">Simplified</option>
               <option value="focused">Focused</option>
             </select>
@@ -68,19 +68,7 @@ export default function AdminCourseSettingsTab({ courseId, initialCourse, onUpda
             </button>
           </div>
 
-          {/* Guided Learning */}
-          <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <div>
-              <h3 className="font-semibold text-gray-900">Guided Learning Mode</h3>
-              <p className="text-sm text-gray-600 mt-1">Enhanced progress tracking, milestones, and beginner-friendly navigation</p>
-            </div>
-            <button
-              onClick={() => toggleToggle('guided_learning_enabled')}
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${course.guided_learning_enabled ? 'bg-purple-600' : 'bg-gray-300'}`}
-            >
-              <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${course.guided_learning_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
-          </div>
+
         </div>
 
         <div className="space-y-6">

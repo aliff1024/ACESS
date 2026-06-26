@@ -12,7 +12,7 @@ import { EasyReadIndicator } from '@/components/accessibility/EasyReadIndicator'
 import { Toaster } from '../ui/sonner';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { Button } from '../ui/button';
-import { Minimize2 } from 'lucide-react';
+import { Minimize2, Maximize2 } from 'lucide-react';
 import { MotionConfig } from 'framer-motion';
 import { LearnerOnboarding } from './LearnerOnboarding';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
@@ -46,8 +46,8 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
     return 'dashboard';
   })();
 
-  const { settings, updateSettings } = useAccessibility();
-  const isDistractionFree = settings.distraction_free_mode;
+  const { settings, updateSettings, distractionFreeOverride, setDistractionFreeOverride } = useAccessibility();
+  const isDistractionFree = distractionFreeOverride ?? settings.distraction_free_mode;
 
   return (
     <>
@@ -71,15 +71,18 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
         {!isDistractionFree && <TopBar onMenuClick={() => setIsMobileMenuOpen(true)} />}
         <main id="main-content" className="flex-1 overflow-y-auto relative" tabIndex={-1}>
           {children}
-          {isDistractionFree && (
+          {settings.distraction_free_mode && (
             <div className="fixed bottom-6 right-6 z-50">
               <Button 
                 variant="outline" 
                 className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50 shadow-lg rounded-full px-4 py-2 flex items-center gap-2"
-                onClick={() => updateSettings({ ...settings, distraction_free_mode: false, active_preset: 'custom' })}
+                onClick={() => setDistractionFreeOverride(isDistractionFree ? false : true)}
               >
-                <Minimize2 className="w-4 h-4" />
-                Exit Distraction Free Mode
+                {isDistractionFree ? (
+                  <><Minimize2 className="w-4 h-4" /> Exit Distraction Free Mode</>
+                ) : (
+                  <><Maximize2 className="w-4 h-4" /> Enter Distraction Free Mode</>
+                )}
               </Button>
             </div>
           )}

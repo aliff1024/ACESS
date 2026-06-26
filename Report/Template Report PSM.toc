@@ -18,7 +18,7 @@
 \addvspace {0mm}
 \contentsline {subsection}{\numberline {\normalsize 1.2}Problem Statement}{2}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.3}Objectives}{2}{}%
+\contentsline {subsection}{\numberline {\normalsize 1.3}Objectives}{3}{}%
 \addvspace {0mm}
 \contentsline {subsection}{\numberline {\normalsize 1.4}Scope}{3}{}%
 \addvspace {0mm}
@@ -28,9 +28,9 @@
 \addvspace {0mm}
 \contentsline {subsection}{\numberline {\normalsize 1.5}Significance of Project}{5}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.6}Expected Output}{5}{}%
+\contentsline {subsection}{\numberline {\normalsize 1.6}Expected Output}{6}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.7}Conclusion}{6}{}%
+\contentsline {subsection}{\numberline {\normalsize 1.7}Conclusion}{7}{}%
 \addvspace {-10mm}
 \contentsline {section}{\numberline {CHAPTER 2:}LITERATURE REVIEW AND PROJECT METHODOLOGY}{8}{}%
 \addvspace {0mm}
@@ -50,19 +50,19 @@
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {2.3.3}Autism Spectrum Disorder (ASD)}{11}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.4}Comparative Analysis of Existing LMS Platforms}{11}{}%
+\contentsline {subsection}{\numberline {\normalsize 2.4}Comparative Analysis of Existing LMS Platforms}{12}{}%
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {2.4.1}Moodle}{12}{}%
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {2.4.2}Canvas LMS}{12}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.4.3}Blackboard Learn}{12}{}%
+\contentsline {subsubsection}{\numberline {2.4.3}Blackboard Learn}{13}{}%
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {2.4.4}Google Classroom}{13}{}%
 \addvspace {0mm}
 \contentsline {subsection}{\numberline {\normalsize 2.5}Comparison Matrix}{13}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.5.1}Alternative Approaches and Justification}{13}{}%
+\contentsline {subsubsection}{\numberline {2.5.1}Alternative Approaches and Justification}{14}{}%
 \addvspace {0mm}
 \contentsline {subsection}{\numberline {\normalsize 2.6}Project Methodology}{15}{}%
 \addvspace {0mm}
@@ -70,11 +70,11 @@
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {2.7.1}Software Requirements}{16}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.7.2}Hardware Requirements}{17}{}%
+\contentsline {subsubsection}{\numberline {2.7.2}Hardware Requirements}{18}{}%
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {2.7.3}Other Requirements}{18}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.8}Project Schedule and Milestones}{18}{}%
+\contentsline {subsection}{\numberline {\normalsize 2.8}Project Schedule and Milestones}{19}{}%
 \addvspace {0mm}
 \contentsline {subsection}{\numberline {\normalsize 2.9}Summary}{20}{}%
 \addvspace {-10mm}
@@ -144,39 +144,42 @@
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {4.2.4}Database Design \& Entity Relationship}{52}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.3}Comprehensive Data Dictionary}{54}{}%
+\contentsline {subsection}{\numberline {\normalsize 4.3}Comprehensive Data Dictionary}{55}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.1}Core Identity and Configuration}{54}{}%
+\contentsline {subsubsection}{\numberline {4.3.1}Core Identity and Configuration}{55}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.2}Curriculum Structure}{58}{}%
+\contentsline {subsubsection}{\numberline {4.3.2}Curriculum Structure}{60}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.3}Telemetry and Assessment}{64}{}%
+\contentsline {subsubsection}{\numberline {4.3.3}Telemetry and Assessment}{67}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.4}Learner Progress and Checkpoints}{67}{}%
+\contentsline {subsubsection}{\numberline {4.3.4}Learner Progress and Checkpoints}{70}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.5}Content and Media}{68}{}%
+\contentsline {subsubsection}{\numberline {4.3.5}Content and Media}{71}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.4}Detailed Design}{73}{}%
+\contentsline {subsection}{\numberline {\normalsize 4.4}Detailed Design}{77}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.4.1}Software Design}{73}{}%
-\contentsline {paragraph}{Provider Components (Global State)}{73}{}%
-\contentsline {paragraph}{Learner Components}{74}{}%
-\contentsline {paragraph}{Educator Components}{75}{}%
-\contentsline {paragraph}{Administrator Components}{75}{}%
-\contentsline {paragraph}{Core API Routes and Server Logic}{76}{}%
-\contentsline {paragraph}{Data Access Layer}{77}{}%
+\contentsline {subsubsection}{\numberline {4.4.1}Software Design}{77}{}%
+\contentsline {paragraph}{Provider Components (Global State)}{78}{}%
+\contentsline {paragraph}{Learner Components}{78}{}%
+\contentsline {paragraph}{Educator Components}{79}{}%
+\contentsline {paragraph}{Administrator Components}{80}{}%
+\contentsline {paragraph}{Core API Routes and Server Logic}{80}{}%
+\contentsline {paragraph}{Recommendation Engine Pseudocode}{81}{}%
+\contentsline {paragraph}{Data Access Layer}{82}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.4.2}Physical Database Design}{77}{}%
-\contentsline {paragraph}{Table Definitions (DDL)}{78}{}%
-\contentsline {paragraph}{Indexes}{78}{}%
-\contentsline {paragraph}{Row-Level Security Policies}{78}{}%
-\contentsline {paragraph}{Database Triggers}{79}{}%
+\contentsline {subsubsection}{\numberline {4.4.2}Physical Database Design}{83}{}%
+\contentsline {paragraph}{Table Definitions (DDL)}{83}{}%
+\contentsline {paragraph}{Indexes}{83}{}%
+\contentsline {paragraph}{Row-Level Security Policies}{84}{}%
+\contentsline {paragraph}{Database Triggers}{84}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.4.3}Systemic Implementation Details}{79}{}%
-\contentsline {paragraph}{Interactive Video Questions}{79}{}%
-\contentsline {paragraph}{Database Trigger Architecture (Notifications)}{80}{}%
-\contentsline {paragraph}{Session Timeout and Security}{80}{}%
+\contentsline {subsubsection}{\numberline {4.4.3}Systemic Implementation Details}{84}{}%
+\contentsline {paragraph}{Interactive Video Questions}{84}{}%
+\contentsline {paragraph}{Database Trigger Architecture (Notifications)}{85}{}%
+\contentsline {paragraph}{Session Timeout and Security}{85}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.5}Summary}{80}{}%
+\contentsline {subsection}{\numberline {\normalsize 4.5}Limitations of Design}{85}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {\normalsize 4.6}Summary}{86}{}%
 \addvspace {-10mm}
-\contentsline {section}{References}{81}{}%
+\contentsline {section}{References}{87}{}%
