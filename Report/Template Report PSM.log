@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.21)  26 JUN 2026 10:03
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.21)  19 AUG 2026 21:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -4798,10 +4798,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
  ) 
 Here is how much of TeX's memory you used:
  30975 strings out of 467871
@@ -4819,7 +4815,7 @@ courier/ucrb8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw
 w/times/utmb8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw
 /times/utmr8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/urw/
 times/utmri8a.pfb>
-Output written on "Template Report PSM.pdf" (103 pages, 1720799 bytes).
+Output written on "Template Report PSM.pdf" (103 pages, 1720798 bytes).
 PDF statistics:
  433 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

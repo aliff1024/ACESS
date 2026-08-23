@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -832,6 +833,22 @@ html[data-theme="soft"] .border-green-300 { border-color: oklch(0.76 0.02 140) !
   display: block;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Educators build lessons as repeating [floated image + text] blocks
+   separated by <hr>. Without clearing, a later block's <hr>/image/text
+   renders inside the still-open float from the previous block, causing
+   images and dividers to overlap instead of stacking in order. */
+.rich-content hr,
+.tiptap hr {
+  clear: both;
+}
+
+.rich-content::after,
+.tiptap::after {
+  content: '';
+  display: table;
+  clear: both;
 }
 
 

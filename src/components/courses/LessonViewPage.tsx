@@ -395,13 +395,18 @@ export function LessonViewPage({
       supabase.from('enrollments').select('id').eq('user_id', user.id).eq('course_id', courseId).neq('status', 'dropped').maybeSingle()
         .then(({ data: enrollment }) => {
           if (!enrollment) return;
-          supabase.from('lesson_progress').select('lesson_id').eq('enrollment_id', enrollment.id).eq('is_viewed', true)
-            .then(({ data: lpData }) => {
-              if (lpData) {
-                setCompletedLessons(lpData.length);
-                setCompletedLessonIds(new Set(lpData.map(lp => lp.lesson_id)));
-              }
-            }).catch(() => {});
+          Promise.all([
+            supabase.from('lesson_progress').select('lesson_id').eq('enrollment_id', enrollment.id).eq('is_viewed', true),
+            supabase.from('lessons').select('id').eq('course_id', courseId).eq('status', 'published').or('visibility_status.eq.visible,visibility_status.is.null'),
+          ]).then(([{ data: lpData }, { data: currentLessons }]) => {
+            // Only count progress on lessons still published in this course —
+            // otherwise a removed lesson's leftover progress row can push
+            // completed lessons past total_lessons (shows >100% progress).
+            const currentLessonIds = new Set((currentLessons || []).map((l) => l.id));
+            const completedIds = (lpData || []).filter((lp) => currentLessonIds.has(lp.lesson_id)).map((lp) => lp.lesson_id);
+            setCompletedLessons(completedIds.length);
+            setCompletedLessonIds(new Set(completedIds));
+          }).catch(() => {});
         }).catch(() => {});
     }).catch(() => {});
     
@@ -559,7 +564,31 @@ export function LessonViewPage({
     utterance.rate = ttsRateRef.current;
     if (settings.tts_voice_uri) {
       const voice = window.speechSynthesis.getVoices().find((v) => v.voiceURI === settings.tts_voice_uri);
-      if (voice) utterance.voice = voice;
+      if (voice) {
+        utterance.voice = voice;
+        utterance.lang = voice.lang;
+      }
+    } else {
+      const voices = window.speechSynthesis.getVoices();
+      const isMalay = settings.preferred_language === 'ms';
+      
+      const premiumMalay = voices.find(v => v.lang.includes('ms') && v.name.includes('Natural'));
+      const googleMalay = voices.find(v => (v.lang.includes('ms') || v.lang.includes('id')) && v.name.includes('Google'));
+      const premiumEnglish = voices.find(v => v.lang.includes('en') && v.name.includes('Natural'));
+      const googleEnglish = voices.find(v => v.lang.includes('en') && v.name.includes('Google'));
+      const basicMalay = voices.find(v => v.lang.includes('ms'));
+      
+      let bestVoice;
+      if (isMalay) {
+        bestVoice = premiumMalay || googleMalay || basicMalay || premiumEnglish || googleEnglish || voices[0];
+      } else {
+        bestVoice = premiumEnglish || googleEnglish || voices[0];
+      }
+      
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      }
+      utterance.lang = isMalay ? 'ms-MY' : 'en-US';
     }
     utteranceRef.current = utterance;
     utterance.onstart = () => {
@@ -575,7 +604,7 @@ export function LessonViewPage({
       setTtsStatusMessage('');
     };
     window.speechSynthesis.speak(utterance);
-  }, [settings.tts_voice_uri]);
+  }, [settings.tts_voice_uri, settings.preferred_language]);
 
   const stopTTS = useCallback(() => {
     window.speechSynthesis.cancel();
@@ -1217,13 +1246,13 @@ export function LessonViewPage({
   });
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {ttsStatusMessage}
-      </div>
-      {!effectiveFocusMode && (
-        <div className="sticky top-0 z-10 bg-card border-b border-border shadow-sm transition-all duration-300">
-          <div className={`${layoutContainer} mx-auto px-6 py-3`}>
+    <div className="min-h-screen bg-background relative" id="main-content">
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {ttsStatusMessage}
+        </div>
+        {!effectiveFocusMode && (
+          <header className="sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm transition-all duration-300 shrink-0">
+            <div className={`${layoutContainer} mx-auto px-6 py-3`}>
             {!isScrolled ? (
               <>
                 <Breadcrumb className="mb-2 simplifiable">
@@ -1257,7 +1286,7 @@ export function LessonViewPage({
                         <span className="text-gray-300 mx-1">|</span>
                       </span>
                     )}
-                    Lesson {lesson.sequence_order} of {lesson.total_lessons}
+                    Lesson {Math.min(lesson.sequence_order, lesson.total_lessons || lesson.sequence_order)} of {lesson.total_lessons}
                   </div>
                 </div>
 
@@ -1328,12 +1357,12 @@ export function LessonViewPage({
                       <motion.div
                         className="h-full bg-blue-500 rounded-full"
                         initial={{ width: 0 }}
-                        animate={{ width: `${lesson.total_lessons > 0 ? Math.round((completedLessons / lesson.total_lessons) * 100) : 0}%` }}
+                        animate={{ width: `${lesson.total_lessons > 0 ? Math.min(100, Math.round((completedLessons / lesson.total_lessons) * 100)) : 0}%` }}
                         transition={{ duration: 0.8, ease: 'easeOut' }}
                       />
                     </div>
                     <span className="text-xs text-gray-500 whitespace-nowrap">
-                      {completedLessons} of {lesson.total_lessons} lessons complete
+                      {Math.min(completedLessons, lesson.total_lessons)} of {lesson.total_lessons} lessons complete
                     </span>
                   </div>
                 )}
@@ -1370,7 +1399,7 @@ export function LessonViewPage({
               </div>
             )}
           </div>
-        </div>
+        </header>
       )}
 
 
@@ -1780,8 +1809,8 @@ export function LessonViewPage({
                     >
                       {currentChunkHtml ? (
                         <div
-                          className={`prose max-w-4xl mx-auto text-gray-900 rich-content ${contentLineSpacing} ${contentFontSize} ${
-                            simplifiedMode ? 'prose-xl prose-amber' : 'prose-lg'
+                          className={`prose dark:prose-invert max-w-4xl mx-auto text-foreground rich-content ${contentLineSpacing} ${contentFontSize} ${
+                            simplifiedMode ? 'prose-xl prose-amber' : ''
                           }`}
                           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentChunkHtml, { ADD_ATTR: ['data-align', 'style'], ADD_TAGS: ['style'] }) }}
                         />
@@ -1883,8 +1912,8 @@ export function LessonViewPage({
                 </div>
                 {currentChunkHtml ? (
                   <div
-                    className={`prose max-w-none text-gray-900 rich-content ${contentLineSpacing} ${contentFontSize} ${
-                      simplifiedMode ? 'prose-xl prose-amber' : 'prose-lg'
+                    className={`prose dark:prose-invert max-w-none text-foreground rich-content ${contentLineSpacing} ${contentFontSize} ${
+                      simplifiedMode ? 'prose-xl prose-amber' : ''
                     }`}
                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentChunkHtml, { ADD_ATTR: ['data-align', 'style'], ADD_TAGS: ['style'] }) }}
                   />
@@ -1961,7 +1990,7 @@ export function LessonViewPage({
               const activeId = selectedActivityTabId && sorted.some(i => i.id === selectedActivityTabId) ? selectedActivityTabId : sorted[0].id;
               const activeItem = sorted.find(i => i.id === activeId)!;
               return (
-                <CollapsibleCard icon={<Gamepad2 className="w-4 h-4 text-indigo-600" />} title="Interactive Practice" defaultOpen={true} keepMounted={true} badge={`${sorted.length} activities`}>
+                <CollapsibleCard icon={<Gamepad2 className="w-4 h-4 text-indigo-600" />} title="Interactive Practice" defaultOpen={true} keepMounted={true} badge={`${sorted.length} ${sorted.length === 1 ? 'activity' : 'activities'}`}>
                   
                   {sorted.length > 1 && (
                     <div className="bg-gray-50 border-b border-gray-200 p-3 overflow-x-auto rounded-t-xl">
@@ -2602,7 +2631,6 @@ export function LessonViewPage({
           )}
         </div>
       )}
-
     </div>
   );
 }

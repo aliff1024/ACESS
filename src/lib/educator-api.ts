@@ -604,21 +604,34 @@ export async function fetchStudentsWithProgress(educatorId: string): Promise<Stu
     .eq('status', 'published');
     
   const lessonCounts = new Map<string, number>();
+  const lessonIdsByCourse = new Map<string, Set<string>>();
   for (const l of lessons || []) {
     lessonCounts.set(l.course_id, (lessonCounts.get(l.course_id) || 0) + 1);
+    if (!lessonIdsByCourse.has(l.course_id)) lessonIdsByCourse.set(l.course_id, new Set());
+    lessonIdsByCourse.get(l.course_id)!.add(l.id);
+  }
+
+  const enrollmentCourseMap = new Map<string, string>();
+  for (const e of (enrollments || []) as unknown as { id: string; course_id: string }[]) {
+    enrollmentCourseMap.set(e.id, e.course_id);
   }
 
   // 2. Fetch lesson_progress for all enrollments
   const { data: progressData } = await supabase
     .from('lesson_progress')
-    .select('enrollment_id, is_viewed, last_viewed_at')
+    .select('enrollment_id, lesson_id, is_viewed, last_viewed_at')
     .in('enrollment_id', enrollmentIds);
-    
+
   const progressMap = new Map<string, number>();
   const lastActiveMap = new Map<string, string>();
-  
+
   for (const p of progressData || []) {
-    if (p.is_viewed) {
+    // Only count progress on lessons still published for that enrollment's
+    // course — a stale lesson_progress row for a removed lesson would
+    // otherwise push completed lessons past the course's total (>100%).
+    const courseId = enrollmentCourseMap.get(p.enrollment_id);
+    const validLessonIds = courseId ? lessonIdsByCourse.get(courseId) : undefined;
+    if (p.is_viewed && validLessonIds?.has(p.lesson_id)) {
       progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
     }
     if (p.last_viewed_at) {
@@ -747,14 +760,15 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
     .eq('status', 'published');
 
   if (lessonsError) throw lessonsError;
-  const totalLessons = lessons?.length || 0;
+  const lessonIds = new Set((lessons || []).map((l) => l.id));
+  const totalLessons = lessonIds.size;
 
   const enrollmentIds = enrollments.map(e => e.id);
 
   // Get progress for these enrollments
   const { data: progressData, error: progressError } = await supabase
     .from('lesson_progress')
-    .select('enrollment_id, is_viewed, last_viewed_at, time_spent_learning')
+    .select('enrollment_id, lesson_id, is_viewed, last_viewed_at, time_spent_learning')
     .in('enrollment_id', enrollmentIds);
 
   if (progressError) throw progressError;
@@ -764,7 +778,9 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
   const timeSpentMap = new Map<string, number>();
 
   for (const p of progressData || []) {
-    if (p.is_viewed) {
+    // Only count lessons still published in this course — otherwise a
+    // removed lesson's leftover progress row could push completed past total.
+    if (p.is_viewed && lessonIds.has(p.lesson_id)) {
       progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
     }
     

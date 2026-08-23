@@ -314,8 +314,13 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
       .in('enrollment_id', enrollmentIds)
 
     for (const e of enrollmentsArr) {
+      // Only count progress on lessons that are still part of the course's
+      // current published/visible lesson set — a lesson_progress row can
+      // outlive a lesson that was later unpublished/removed, which would
+      // otherwise inflate completed_lessons past total_lessons (>100% progress).
+      const currentLessonIds = new Set(lessonMap.get(e.course_id) || [])
       const viewed = (lp || []).filter(
-        (p) => p.enrollment_id === e.id && p.is_viewed
+        (p) => p.enrollment_id === e.id && p.is_viewed && currentLessonIds.has(p.lesson_id)
       )
       completedCounts.set(e.course_id, viewed.length)
     }
@@ -585,17 +590,28 @@ export async function fetchLessonContent(lessonId: string): Promise<LessonConten
 
   if (!lesson) return null
 
-  const { count } = await supabase
+  // Derive the lesson's display position from its rank within the course's
+  // current published/visible lesson list, rather than trusting the raw
+  // sequence_order column directly — sequence_order isn't renumbered when
+  // earlier lessons are unpublished/removed, so it can exceed the visible
+  // lesson count (e.g. "Lesson 6 of 5").
+  const { data: siblingLessons } = await supabase
     .from('lessons')
-    .select('id', { count: 'exact', head: true })
+    .select('id')
     .eq('course_id', lesson.course_id)
+    .eq('status', 'published')
     .or('visibility_status.eq.visible,visibility_status.is.null')
+    .order('sequence_order', { ascending: true })
+
+  const total = siblingLessons?.length ?? 0
+  const rankIndex = siblingLessons?.findIndex((l) => l.id === lesson.id) ?? -1
+  const displayPosition = rankIndex >= 0 ? rankIndex + 1 : Math.min(lesson.sequence_order, total || lesson.sequence_order)
 
   return {
     id: lesson.id,
     title: lesson.title,
-    sequence_order: lesson.sequence_order,
-    total_lessons: count ?? 0,
+    sequence_order: displayPosition,
+    total_lessons: total,
     content_html: lesson.content_html || '',
     transcript: lesson.transcript,
     video_url: lesson.video_url,
@@ -856,13 +872,14 @@ export async function fetchSystemCourseProgress(courseId: string): Promise<Syste
     .order('sequence_order', { ascending: true })
 
   const totalLessons = lessons?.length ?? 0
+  const currentLessonIds = new Set((lessons || []).map((l) => l.id))
 
   const { data: lp } = await supabase
     .from('lesson_progress')
     .select('lesson_id, is_viewed, last_viewed_at')
     .eq('enrollment_id', enrollment.id)
 
-  const completedSet = new Set((lp || []).filter(p => p.is_viewed).map(p => p.lesson_id))
+  const completedSet = new Set((lp || []).filter(p => p.is_viewed && currentLessonIds.has(p.lesson_id)).map(p => p.lesson_id))
   const completedLessons = completedSet.size
 
   // Find next incomplete lesson

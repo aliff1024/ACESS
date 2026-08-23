@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
@@ -49,7 +49,6 @@ export function TextToSpeechEngine() {
       const validTags = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'A', 'BUTTON', 'LI', 'LABEL', 'STRONG', 'EM'];
       
       // If it's a huge container (like DIV) and has a lot of children, it might read the whole page. 
-      // We will read it if it's a valid tag, or if it's a small leaf node DIV.
       if (!validTags.includes(target.tagName) && target.children.length > 0) {
         return; 
       }
@@ -67,13 +66,26 @@ export function TextToSpeechEngine() {
       const utterance = new SpeechSynthesisUtterance(textContent);
       utterance.rate = settings.tts_rate || 1;
       
-      if (settings.tts_voice_uri) {
-        const voices = window.speechSynthesis.getVoices();
-        const voice = voices.find(v => v.voiceURI === settings.tts_voice_uri);
-        if (voice) {
-          utterance.voice = voice;
-        }
+      const voices = window.speechSynthesis.getVoices();
+      const isMalay = settings.preferred_language === 'ms';
+      
+      const premiumMalay = voices.find(v => v.lang.includes('ms') && v.name.includes('Natural'));
+      const googleMalay = voices.find(v => (v.lang.includes('ms') || v.lang.includes('id')) && v.name.includes('Google'));
+      const premiumEnglish = voices.find(v => v.lang.includes('en') && v.name.includes('Natural'));
+      const googleEnglish = voices.find(v => v.lang.includes('en') && v.name.includes('Google'));
+      const basicMalay = voices.find(v => v.lang.includes('ms'));
+      
+      let bestVoice;
+      if (isMalay) {
+        bestVoice = premiumMalay || googleMalay || basicMalay || premiumEnglish || googleEnglish || voices[0];
+      } else {
+        bestVoice = premiumEnglish || googleEnglish || voices[0];
       }
+      
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      }
+      utterance.lang = isMalay ? 'ms-MY' : 'en-US';
 
       window.speechSynthesis.speak(utterance);
       isSpeaking = true;
@@ -102,7 +114,7 @@ export function TextToSpeechEngine() {
         currentTarget.classList.remove('tts-active-element');
       }
     };
-  }, [settings.tts_enabled, settings.tts_rate, settings.tts_voice_uri]);
+  }, [settings.tts_enabled, settings.tts_rate, settings.preferred_language]);
 
   return null; // This is a headless component
 }

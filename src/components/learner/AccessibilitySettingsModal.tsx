@@ -415,23 +415,7 @@ export function AccessibilitySettingsModal({
                         ))}
                       </div>
                     </div>
-                    {availableVoices.length > 0 && (
-                      <div>
-                        <Label className="text-xs text-gray-600 mb-2 block">{t('accessibility.ttsVoice')}</Label>
-                        <select
-                          value={ttsVoiceUri}
-                          onChange={(e) => { setTtsVoiceUri(e.target.value); setCustom(); }}
-                          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white"
-                        >
-                          <option value="">System default</option>
-                          {availableVoices.map((voice) => (
-                            <option key={voice.voiceURI} value={voice.voiceURI}>
-                              {voice.name} ({voice.lang})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+                    {/* The voice dropdown has been removed. The system now automatically assigns the highest-quality Natural cloud voice based on the Preferred Language selected above. */}
                   </div>
                 )}
               </div>
