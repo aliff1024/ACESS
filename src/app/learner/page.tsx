@@ -13,7 +13,7 @@ export default function LearnerDashboardPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const { settings } = useAccessibility();
-  const activePreset = settings?.active_preset || 'none';
+  const activePreset = settings?.base_preset || settings?.active_preset || 'none';
 
   // --- ADHD Dashboard ---
   // Hyper-focused on Next Steps. Progress charts hidden to reduce anxiety/distraction.
@@ -74,13 +74,41 @@ export default function LearnerDashboardPage() {
 
 
 
-  // --- Dyslexia / Default Dashboard ---
-  // Dyslexia largely relies on the CSS variables for font size, spacing, etc., 
-  // which apply naturally to the default structure.
-  
+  // --- Dyslexia Dashboard ---
+  // docs/accessibility/03 §4.4, docs/accessibility/04 §4.1: before this
+  // branch existed, Dyslexia fell through to the same dashboard as every
+  // other learner (just a wider sidebar and `space-y-16`) — colours and
+  // spacing, no actual behavioural identity. This is one column, one
+  // recommendation instead of a 3-card grid, no stat-tile grid, generous
+  // vertical rhythm (space-y-16, matching the wider inter-block spacing
+  // used elsewhere for this preset), and content kept within the
+  // measure-driven .content-column rather than the full max-w-7xl shell.
+  if (activePreset === 'dyslexia') {
+    return (
+      <div className="content-column mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-16 readable-content">
+        <section>
+          <WelcomeSection />
+        </section>
+        <section>
+          <h2 className="px-1 text-sm font-bold tracking-wider text-primary uppercase mb-4">Continue reading</h2>
+          <AdaptiveRecommendations
+            maxItems={1}
+            singleColumn
+            onStartLesson={(lessonId, cId) => router.push(`/learner/lesson/${lessonId}?courseId=${cId || ''}`)}
+            onViewCourse={(courseId) => router.push(`/learner/courses/${courseId}`)}
+          />
+        </section>
+        <section>
+          <MyCoursesSection singleColumn onContinue={(courseId) => router.push(`/learner/courses/${courseId}`)} />
+        </section>
+      </div>
+    );
+  }
+
+  // --- Default Dashboard ---
   if (settings.chunked_content_mode) {
     return (
-      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 readable-content ${activePreset === 'dyslexia' ? 'space-y-16' : ''}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 readable-content">
         <Tabs defaultValue="welcome" className="space-y-8">
           <TabsList className="flex flex-wrap h-auto gap-2 p-1 bg-gray-100/50 rounded-xl w-full">
             <TabsTrigger value="welcome" className="flex-1 text-sm md:text-base py-3 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">{t('dashboard.tabWelcome')}</TabsTrigger>
@@ -99,7 +127,7 @@ export default function LearnerDashboardPage() {
   }
 
   return (
-    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-12 readable-content ${activePreset === 'dyslexia' ? 'space-y-16' : ''}`}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-12 readable-content">
       {/* Hero Section */}
       <section>
         <WelcomeSection />

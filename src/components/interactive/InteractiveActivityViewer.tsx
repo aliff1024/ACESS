@@ -41,21 +41,31 @@ export function InteractiveActivityViewer({
     flashcards: 'Review each card. Click to flip and see the answer.',
     drag_drop: 'Drag the items to their matching drop zones.',
     fill_blanks: 'Type the missing words in the blanks.',
-    memory_game: 'Click tiles to find matching pairs.',
+    memory_game: 'Click two cards to flip them. Find every matching pair to finish.',
     timeline: 'Review events in chronological order.',
   };
+  const instruction = instructionsMap[contentType] || 'Complete this activity.';
+  const isChecklistMode = settings.structure_mode === 'checklist';
 
   return (
-    <div className={`border border-gray-200 rounded-xl bg-white p-6 ${settings.reading_spotlight ? 'ring-4 ring-blue-400 ring-offset-4 shadow-xl' : ''}`}>
-      <div className="flex items-start gap-3 mb-4">
+    <div className={settings.reading_spotlight ? 'ring-4 ring-blue-400 ring-offset-4 shadow-xl rounded-xl' : ''}>
+      <div className="flex items-start gap-3 mb-5">
         {settings.reading_spotlight && <Target className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />}
-        <div>
+        <div className="min-w-0">
           <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-          {settings.structure_mode === 'checklist' && (
+          {/* Every activity gets a plain-language instruction so a first-time
+              learner knows what to do without guessing. Structure Mode (an
+              accessibility setting) upgrades this into a more prominent,
+              boxed callout instead of duplicating it. */}
+          {isChecklistMode ? (
             <div className="flex items-center gap-2 mt-2 bg-blue-50 text-blue-800 px-3 py-2 rounded-lg text-sm border border-blue-100">
-              <Info className="w-4 h-4" />
-              <span><strong>Instruction:</strong> {instructionsMap[contentType] || 'Complete this activity.'}</span>
+              <Info className="w-4 h-4 shrink-0" />
+              <span><strong>Instruction:</strong> {instruction}</span>
             </div>
+          ) : (
+            <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+              <Info className="w-3.5 h-3.5 shrink-0" /> {instruction}
+            </p>
           )}
         </div>
       </div>

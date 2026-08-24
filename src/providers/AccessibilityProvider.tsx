@@ -5,6 +5,7 @@ import { fetchFullProfile, saveAccessibilitySettings, type AccessibilitySettings
 import { useAuth } from './AuthProvider';
 import { applyReadingLevelDefaults } from '@/lib/accessibility-utils';
 import { computeAdaptiveSettings, applyPreset as applyPresetSettings, type EffectiveAccessibilitySettings } from '@/lib/adaptive-engine';
+import { resolveSettings, type SettingConflict } from '@/lib/accessibility-resolver';
 
 interface AccessibilityContextType {
   settings: AccessibilitySettingsData;
@@ -17,6 +18,13 @@ interface AccessibilityContextType {
   loading: boolean;
   distractionFreeOverride: boolean | null;
   setDistractionFreeOverride: (val: boolean | null) => void;
+  /** Plain-language explanations from resolveSettings() for whichever
+   *  precedence rules fired against the current settings — e.g. "Slide
+   *  view isn't available with the ADHD preset". Additive: nothing reads
+   *  this yet, but it's live and correct now so the settings-panel work
+   *  in docs/accessibility/05 (inline conflict notices per row) has a
+   *  real source instead of needing to re-derive these rules itself. */
+  settingsConflicts: SettingConflict[];
 }
 
 const defaultSettings: AccessibilitySettingsData = {
@@ -35,6 +43,7 @@ const defaultSettings: AccessibilitySettingsData = {
   tts_voice_uri: null,
   // Preset fields
   active_preset: 'none',
+  base_preset: 'none',
   font_family: 'arial',
   font_size_px: 16,
   line_spacing_multiplier: 1.5,
@@ -52,11 +61,18 @@ const defaultSettings: AccessibilitySettingsData = {
   task_checklist_enabled: false,
   visual_schedule_enabled: false,
   step_by_step_enabled: false,
-  auto_save_enabled: true,
+  // Unlike the other executive-function supports above, this used to default
+  // to true for every learner — which would surface the AutoSaveIndicator
+  // pill on the default (no-preset) page the moment it's mounted anywhere,
+  // even though the indicator is meant as an ADHD/Dyslexia/Autism support.
+  // Lessons already autosave regardless of this flag; it only gates the
+  // visual indicator, so defaulting it off keeps the default page clean.
+  auto_save_enabled: false,
   progress_timeline_enabled: false,
+  ai_assistant_enabled: true,
 };
 
-function applySettingsToDOM(settings: AccessibilitySettingsData, distractionFreeOverride: boolean | null = null) {
+function applySettingsToDOM(settings: Partial<AccessibilitySettingsData>, distractionFreeOverride: boolean | null = null) {
   const root = document.documentElement;
 
   // ─── Legacy data-* attributes (backward compatibility) ─────────────
@@ -80,7 +96,11 @@ function applySettingsToDOM(settings: AccessibilitySettingsData, distractionFree
   const backgroundTint = settings.background_tint || 'white';
   const animationLevel = settings.animation_level || 'normal';
 
-  const activePreset = settings.active_preset || 'none';
+  // Use base_preset (survives individual setting tweaks) rather than
+  // active_preset (resets to 'custom' the moment anything is manually
+  // changed) so the preset's color palette and preset-gated behavior
+  // don't silently disappear after one small adjustment.
+  const activePreset = settings.base_preset || settings.active_preset || 'none';
 
   root.setAttribute('data-preset', activePreset);
   root.setAttribute('data-font-family', fontFamily);
@@ -93,13 +113,18 @@ function applySettingsToDOM(settings: AccessibilitySettingsData, distractionFree
   root.setAttribute('data-structure-mode', settings.structure_mode || 'full');
   root.setAttribute('data-animation-level', animationLevel);
   root.setAttribute('data-soft-bg', String(!!settings.low_contrast));
-  root.setAttribute('data-low-contrast', String(!!settings.low_contrast)); // deprecated fallback
+  // data-low-contrast intentionally no longer emitted: it drove a deprecated
+  // `filter: contrast(0.85)` rule that *reduced* text contrast — the
+  // opposite of what an accessibility setting should do. See globals.css.
   root.setAttribute('data-muted-colors', String(!!settings.muted_colors));
 
   // ─── CSS custom properties for continuous values ──────────────────
   root.style.setProperty('--user-font-size', `${fontSizePx}px`);
   root.style.setProperty('--user-line-spacing', String(lineSpacingMultiplier));
-  root.style.setProperty('--user-word-spacing', `${(wordSpacingPct / 100) * 0.3}em`);
+  // ×0.4em (not the old ×0.3em) so the slider's own maximum, 50%, reaches
+  // 0.2em — comfortably past the WCAG 1.4.12 floor of 0.16em, which now
+  // sits at 40% instead of being unreachable at any slider position.
+  root.style.setProperty('--user-word-spacing', `${(wordSpacingPct / 100) * 0.4}em`);
 
   // ─── Theme class management ───────────────────────────────────────
   const isDarkPreset = backgroundTint.startsWith('dark_');
@@ -128,6 +153,7 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   loading: true,
   distractionFreeOverride: null,
   setDistractionFreeOverride: () => {},
+  settingsConflicts: [],
 });
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
@@ -156,17 +182,30 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [userAgeGroup, setUserAgeGroup] = useState<'6-12' | '13-17' | '18+'>('18+');
   const [loading, setLoading] = useState(true);
   const [distractionFreeOverride, setDistractionFreeOverride] = useState<boolean | null>(null);
+  const [settingsConflicts, setSettingsConflicts] = useState<SettingConflict[]>([]);
   const fetched = useRef(false);
 
   const recomputeAdaptive = useCallback((s: AccessibilitySettingsData) => {
-    const computed = computeAdaptiveSettings(s.disability_type, s);
+    // resolveSettings normalizes the layout_mode/chunked_content_mode
+    // split (and any other precedence rule that applies) before it ever
+    // reaches computeAdaptiveSettings or the DOM — see
+    // src/lib/accessibility-resolver.ts. Every consumer downstream of
+    // adaptiveOverrides.ui now sees one consistent, already-resolved
+    // settings object instead of re-deriving the same rules itself.
+    const { effective, conflicts } = resolveSettings(s);
+    const computed = computeAdaptiveSettings(effective.disability_type, effective);
     setAdaptiveOverrides(computed);
+    setSettingsConflicts(conflicts);
   }, []);
 
-  // Effect to apply the distraction free override to the DOM without requiring a full save
+  // Effect to apply the distraction free override to the DOM without requiring a full save.
+  // Applies adaptiveOverrides.ui (settings merged with the disability_type-driven
+  // recommendation, user settings always winning) rather than raw `settings` —
+  // otherwise a learner's declared disability type never visibly changes anything,
+  // since only .lesson_modes was previously read from the recommendation.
   useEffect(() => {
-    applySettingsToDOM(settings, distractionFreeOverride);
-  }, [distractionFreeOverride, settings]);
+    applySettingsToDOM(adaptiveOverrides.ui, distractionFreeOverride);
+  }, [distractionFreeOverride, adaptiveOverrides]);
 
   useEffect(() => {
     if (!user) {
@@ -257,10 +296,10 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   }, [user, settings, recomputeAdaptive]);
 
   return (
-    <AccessibilityContext.Provider value={{ 
-      settings, adaptiveOverrides, userAgeGroup, 
+    <AccessibilityContext.Provider value={{
+      settings, adaptiveOverrides, userAgeGroup,
       updateSettings, previewSettings, revertSettings, applyPreset, loading,
-      distractionFreeOverride, setDistractionFreeOverride
+      distractionFreeOverride, setDistractionFreeOverride, settingsConflicts
     }}>
       {children}
     </AccessibilityContext.Provider>

@@ -457,6 +457,11 @@ export const en: Record<string, string> = {
   'quiz.expectationAttempts': 'You have {n} attempt(s) remaining.',
   'quiz.expectationUnlimited': 'You have unlimited attempts.',
   'quiz.expectationNoTricks': 'There are no trick questions. Read carefully and do your best.',
+  'quiz.lowTimeNotice': 'Less than a quarter of your time is left.',
+  'quiz.addMoreTime': 'Add more time',
+  'quiz.timeUpTitle': "Time's up",
+  'quiz.timeUpDesc': 'Your answers so far are saved. You can add more time, or submit now.',
+  'quiz.submitNow': 'Submit now',
 
   'certificates.loading': 'Loading achievements...',
   'certificates.myAchievements': 'My Achievements',
@@ -541,4 +546,6 @@ export const en: Record<string, string> = {
   'accessibility.percentDone': '{n}% Done',
   'accessibility.visualSchedule': 'Visual Schedule',
   'accessibility.happeningNow': 'Happening Now',
+  'accessibility.itineraryIntro': 'This lesson has {count} parts. About {minutes} minutes in total.',
+  'accessibility.done': 'Done',
 }

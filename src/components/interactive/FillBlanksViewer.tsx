@@ -110,7 +110,15 @@ export function FillBlanksViewer({ data, onComplete }: FillBlanksViewerProps) {
           {segments.map((seg, idx) => {
             if (seg.isBlank) {
               const result = isCorrect(idx)
-              
+              // docs/accessibility/07 §7.2 "each [blank] with a label
+              // naming its position" — a bare <input>/<select> reads as
+              // just "textbox"/"combobox" with no indication of which
+              // blank it is or how many there are, so a screen-reader
+              // user has no way to navigate this activity by ear.
+              const blankNumber = blankIndices.indexOf(idx) + 1
+              const positionLabel = `Blank ${blankNumber} of ${blankIndices.length}`
+              const hintId = `fill-blanks-hint-${idx}`
+
               // Render Select Dropdown for Word Bank or Mixed Mode with options
               if (mode === 'word_bank' || (mode === 'mixed' && seg.options && seg.options.length > 0)) {
                 let options = mode === 'word_bank' ? wordBank : (seg.options || [])
@@ -118,13 +126,16 @@ export function FillBlanksViewer({ data, onComplete }: FillBlanksViewerProps) {
                 if (mode === 'mixed' && seg.answer && !options.includes(seg.answer)) {
                   options = [...options, seg.answer]
                 }
-                
+
                 return (
                   <span key={idx} className="inline-block mx-1 relative">
                     <select
                       value={answers[idx] ?? ''}
                       onChange={(e) => setAnswers((prev) => ({ ...prev, [idx]: e.target.value }))}
                       disabled={revealed}
+                      aria-label={positionLabel}
+                      aria-invalid={result === 'incorrect'}
+                      aria-describedby={revealed && result === 'incorrect' ? hintId : undefined}
                       className={`h-10 px-8 py-1 rounded-md border-b-2 appearance-none bg-gray-50 focus:outline-none focus:border-blue-500 font-semibold text-center min-w-[120px] shadow-inner transition-colors cursor-pointer ${
                         result === 'correct' ? 'border-green-500 bg-green-50 text-green-700' :
                         result === 'incorrect' ? 'border-red-500 bg-red-50 text-red-700' :
@@ -140,11 +151,11 @@ export function FillBlanksViewer({ data, onComplete }: FillBlanksViewerProps) {
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
-                    {revealed && result === 'correct' && <CheckCircle2 className="absolute -top-3 -right-3 w-5 h-5 text-green-500 bg-white rounded-full" />}
-                    {revealed && result === 'incorrect' && <XCircle className="absolute -top-3 -right-3 w-5 h-5 text-red-500 bg-white rounded-full" />}
+                    {revealed && result === 'correct' && <CheckCircle2 className="absolute -top-3 -right-3 w-5 h-5 text-green-500 bg-white rounded-full" aria-hidden="true" />}
+                    {revealed && result === 'incorrect' && <XCircle className="absolute -top-3 -right-3 w-5 h-5 text-red-500 bg-white rounded-full" aria-hidden="true" />}
                     {revealed && result === 'incorrect' && (
-                      <span className="absolute top-full left-0 mt-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
-                        {seg.answer}
+                      <span id={hintId} className="absolute top-full left-0 mt-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
+                        Correct answer: {seg.answer}
                       </span>
                     )}
                   </span>
@@ -159,17 +170,20 @@ export function FillBlanksViewer({ data, onComplete }: FillBlanksViewerProps) {
                     onChange={(e) => setAnswers((prev) => ({ ...prev, [idx]: e.target.value }))}
                     placeholder={seg.text || "______"}
                     disabled={revealed}
+                    aria-label={positionLabel}
+                    aria-invalid={result === 'incorrect'}
+                    aria-describedby={revealed && result === 'incorrect' ? hintId : undefined}
                     className={`h-10 px-3 py-1 rounded-md border-b-2 border-t-0 border-x-0 bg-gray-50 focus-visible:ring-0 focus-visible:border-blue-500 font-semibold text-center min-w-[120px] shadow-inner transition-colors ${
                       result === 'correct' ? 'border-green-500 bg-green-50 text-green-700' :
                       result === 'incorrect' ? 'border-red-500 bg-red-50 text-red-700' :
                       'border-gray-300 text-blue-600'
                     }`}
                   />
-                  {revealed && result === 'correct' && <CheckCircle2 className="absolute -top-3 -right-3 w-5 h-5 text-green-500 bg-white rounded-full" />}
-                  {revealed && result === 'incorrect' && <XCircle className="absolute -top-3 -right-3 w-5 h-5 text-red-500 bg-white rounded-full" />}
+                  {revealed && result === 'correct' && <CheckCircle2 className="absolute -top-3 -right-3 w-5 h-5 text-green-500 bg-white rounded-full" aria-hidden="true" />}
+                  {revealed && result === 'incorrect' && <XCircle className="absolute -top-3 -right-3 w-5 h-5 text-red-500 bg-white rounded-full" aria-hidden="true" />}
                   {revealed && result === 'incorrect' && (
-                    <span className="absolute top-full left-0 mt-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
-                      {seg.answer}
+                    <span id={hintId} className="absolute top-full left-0 mt-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
+                      Correct answer: {seg.answer}
                     </span>
                   )}
                 </span>

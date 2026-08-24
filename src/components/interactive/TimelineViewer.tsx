@@ -13,7 +13,7 @@ interface TimelineViewerProps {
 }
 
 // Sortable Item Component for Interactive Modes
-function SortableTimelineItem({ id, event, isEven, revealed, isCorrect, mode }: { id: string, event: TimelineEvent, isEven: boolean, revealed: boolean, isCorrect: boolean, mode: TimelineMode }) {
+function SortableTimelineItem({ id, event, index, total, isEven, revealed, isCorrect, mode }: { id: string, event: TimelineEvent, index: number, total: number, isEven: boolean, revealed: boolean, isCorrect: boolean, mode: TimelineMode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: revealed })
 
   const style = {
@@ -23,8 +23,18 @@ function SortableTimelineItem({ id, event, isEven, revealed, isCorrect, mode }: 
     opacity: isDragging ? 0.8 : 1,
   }
 
+  // docs/accessibility/07 §7.2 "Timeline | Tab through events in order;
+  // ↑↓ reorders" — useSortable's own `attributes` already give this a
+  // button role and keyboard-drag support (via the KeyboardSensor
+  // configured below); what it doesn't give is a name saying which
+  // position this is, so a screen-reader user tabbing through has no
+  // sense of place without this label.
+  const positionLabel = revealed
+    ? `${event.title}, position ${index + 1} of ${total}`
+    : `${event.title}. Position ${index + 1} of ${total}. Press space to pick up, then use arrow keys to reorder and space again to drop.`
+
   return (
-    <div ref={setNodeRef} style={style} className={`relative flex flex-col sm:flex-row items-center sm:items-start group my-4 ${revealed ? '' : 'cursor-grab active:cursor-grabbing'}`} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} className={`relative flex flex-col sm:flex-row items-center sm:items-start group my-4 ${revealed ? '' : 'cursor-grab active:cursor-grabbing'}`} {...attributes} {...listeners} aria-label={positionLabel}>
       {/* Center Node */}
       <div className={`absolute left-8 sm:left-1/2 w-4 h-4 rounded-full -translate-x-1/2 mt-6 sm:mt-1.5 shadow-sm transition-colors z-10 ${
         revealed ? (isCorrect ? 'bg-green-500 border-green-200' : 'bg-red-500 border-red-200') : 'bg-white border-blue-500 group-hover:scale-125'
@@ -228,12 +238,14 @@ export function TimelineViewer({ data, onComplete }: TimelineViewerProps) {
                 const isCorrect = revealed ? event.id === correctOrder[index].id : false
                 
                 return (
-                  <SortableTimelineItem 
-                    key={event.id} 
-                    id={event.id} 
-                    event={event} 
-                    isEven={isEven} 
-                    revealed={revealed} 
+                  <SortableTimelineItem
+                    key={event.id}
+                    id={event.id}
+                    event={event}
+                    index={index}
+                    total={items.length}
+                    isEven={isEven}
+                    revealed={revealed}
                     isCorrect={isCorrect}
                     mode={mode}
                   />

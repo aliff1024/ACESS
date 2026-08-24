@@ -1786,6 +1786,12 @@ export interface AccessibilitySettingsData {
   tts_voice_uri?: string | null
   // ─── Accessibility Presets (new granular fields) ──────────────
   active_preset?: string | null
+  /** Which preset this configuration is still "based on" even after manual
+   * tweaks reset active_preset to 'custom' — lets preset-specific behavior
+   * (color palette, forced focus/chunking, etc.) survive a single tweak
+   * instead of silently disappearing. Set once when a preset is applied,
+   * left untouched by later individual setting changes. */
+  base_preset?: string | null
   font_family?: string | null
   font_size_px?: number | null
   line_spacing_multiplier?: number | null
@@ -1806,6 +1812,7 @@ export interface AccessibilitySettingsData {
   step_by_step_enabled?: boolean | null
   auto_save_enabled?: boolean | null
   progress_timeline_enabled?: boolean | null
+  ai_assistant_enabled?: boolean | null
 }
 
 export interface NotificationSettingsData {
@@ -1874,6 +1881,7 @@ export async function fetchFullProfile(): Promise<FullProfile> {
       tts_voice_uri: a.tts_voice_uri ?? null,
       // Accessibility Presets fields
       active_preset: a.active_preset ?? 'none',
+      base_preset: a.base_preset ?? a.active_preset ?? 'none',
       font_family: a.font_family ?? 'arial',
       font_size_px: a.font_size_px ?? 16,
       line_spacing_multiplier: a.line_spacing_multiplier ?? 1.5,
@@ -1882,6 +1890,8 @@ export async function fetchFullProfile(): Promise<FullProfile> {
       reading_spotlight: a.reading_spotlight ?? false,
       distraction_free_mode: a.distraction_free_mode ?? false,
       chunked_content_mode: a.chunked_content_mode ?? false,
+      layout_mode: a.layout_mode ?? 'slide',
+      structure_mode: a.structure_mode ?? 'full',
       animation_level: a.animation_level ?? 'normal',
       high_contrast: a.high_contrast ?? false,
       low_contrast: a.low_contrast ?? false,
@@ -1889,7 +1899,7 @@ export async function fetchFullProfile(): Promise<FullProfile> {
       task_checklist_enabled: a.task_checklist_enabled ?? false,
       visual_schedule_enabled: a.visual_schedule_enabled ?? false,
       step_by_step_enabled: a.step_by_step_enabled ?? false,
-      auto_save_enabled: a.auto_save_enabled ?? true,
+      auto_save_enabled: a.auto_save_enabled ?? false,
       progress_timeline_enabled: a.progress_timeline_enabled ?? false,
     } : null,
     notifications: n ? {

@@ -457,6 +457,11 @@ export const ms: Record<string, string> = {
   'quiz.expectationAttempts': 'Anda mempunyai {n} cubaan lagi.',
   'quiz.expectationUnlimited': 'Anda mempunyai cubaan tanpa had.',
   'quiz.expectationNoTricks': 'Tiada soalan muslihat. Baca dengan teliti dan lakukan yang terbaik.',
+  'quiz.lowTimeNotice': 'Kurang daripada suku masa anda tinggal.',
+  'quiz.addMoreTime': 'Tambah Masa',
+  'quiz.timeUpTitle': 'Masa Tamat',
+  'quiz.timeUpDesc': 'Jawapan anda setakat ini telah disimpan. Anda boleh menambah masa, atau hantar sekarang.',
+  'quiz.submitNow': 'Hantar Sekarang',
 
   'certificates.loading': 'Memuatkan pencapaian...',
   'certificates.myAchievements': 'Pencapaian Saya',
@@ -541,4 +546,6 @@ export const ms: Record<string, string> = {
   'accessibility.percentDone': '{n}% Selesai',
   'accessibility.visualSchedule': 'Jadual Visual',
   'accessibility.happeningNow': 'Sedang Berlangsung',
+  'accessibility.itineraryIntro': 'Pelajaran ini mempunyai {count} bahagian. Kira-kira {minutes} minit kesemuanya.',
+  'accessibility.done': 'Selesai',
 }

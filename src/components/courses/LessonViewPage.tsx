@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '../ui/breadcrumb';
@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dia
 import DOMPurify from 'dompurify';
 
 import { LessonDiscussion } from '../community/LessonDiscussion';
+import { LessonAIAssistant } from './LessonAIAssistant';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, MapPin, Lock, Layout, Image, Link, Gamepad2, List, Download, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, Lock, Layout, Image, Link, Gamepad2, List, Download, MessageSquare, AlertTriangle } from 'lucide-react';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint, fetchSystemCourseProgress, fetchLessonProgressMeta, saveLessonProgressMeta, fetchQuizAttemptHistory } from '@/lib/learner-api';
 import type { LessonContent, QuizData, LearnerLessonCheckpoint } from '@/lib/learner-api';
@@ -34,6 +35,11 @@ import { toast } from 'sonner';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { TaskChecklist } from '@/components/accessibility/TaskChecklist';
 import { VisualSchedule } from '@/components/accessibility/VisualSchedule';
+import { ProgressTimeline } from '@/components/accessibility/ProgressTimeline';
+import { AutoSaveIndicator } from '@/components/accessibility/AutoSaveIndicator';
+import { ReadingSpotlight } from '@/components/accessibility/ReadingSpotlight';
+import { ReadingToolbar } from '@/components/accessibility/ReadingToolbar';
+import { NowBar } from '@/components/accessibility/NowBar';
 import { StepByStepGuidance, type GuidedStep } from '@/components/accessibility/StepByStepGuidance';
 
 // ─── Utils ────────────────────────────────────────────────────────────────
@@ -96,45 +102,6 @@ function CelebrationAnimation({ animationLevel = 'normal' }: { animationLevel?: 
 
 // ─── Sub-components ──────────────────────────────────────────────────────
 
-function GuidedPathBanner({
-  currentChunk,
-  totalChunks,
-  estimatedDuration,
-  hasSummary,
-  showSimplifiedSummary,
-}: {
-  currentChunk: number;
-  totalChunks: number;
-  estimatedDuration?: number | null;
-  hasSummary: boolean;
-  showSimplifiedSummary: boolean;
-}) {
-  const sectionProgress = Math.round(((currentChunk + 1) / totalChunks) * 100);
-  return (
-    <Card className="p-4 border-2 border-indigo-200 bg-indigo-50">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-indigo-600 shrink-0" />
-          <span className="text-sm font-semibold text-indigo-900">Guided lesson path</span>
-        </div>
-        {estimatedDuration && (
-          <span className="text-xs text-indigo-700 bg-indigo-100 px-2 py-1 rounded-full">
-            About {estimatedDuration} min — take a break anytime
-          </span>
-        )}
-      </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-indigo-800 mb-3">
-        {showSimplifiedSummary && <span className="font-medium">Step 1: Overview</span>}
-        <span className="font-medium">Step 2: Section {currentChunk + 1} of {totalChunks}</span>
-        {hasSummary && <span className={currentChunk >= totalChunks - 1 ? 'font-medium' : 'text-indigo-500'}>Step 3: Wrap-up</span>}
-      </div>
-      <div className="h-2 bg-indigo-200 rounded-full overflow-hidden" role="progressbar" aria-valuenow={sectionProgress} aria-valuemin={0} aria-valuemax={100} aria-label="Section progress">
-        <div className="h-full bg-indigo-600 rounded-full transition-all duration-300" style={{ width: `${sectionProgress}%` }} />
-      </div>
-    </Card>
-  );
-}
-
 function ChunkNavigation({
   currentChunk,
   totalChunks,
@@ -144,6 +111,7 @@ function ChunkNavigation({
   onPrev,
   onNext,
   position,
+  estimatedMinutes,
 }: {
   currentChunk: number;
   totalChunks: number;
@@ -153,16 +121,23 @@ function ChunkNavigation({
   onPrev: () => void;
   onNext: () => void;
   position: 'top' | 'bottom';
+  /** Estimated reading time for the *current* section, in whole minutes —
+   *  docs/accessibility/03 §4.6 "reading-aware chunking": a section label
+   *  is more useful when it also says how long the section is, so a
+   *  learner can pace themselves rather than guessing. Omitted (no label
+   *  suffix) when 0 or not provided. */
+  estimatedMinutes?: number;
 }) {
   const isLast = currentChunk >= totalChunks - 1;
   const sectionLabel = currentChunk === 0 ? 'Intro' : `Section ${currentChunk} of ${totalChunks - 1}`;
+  const timeLabel = estimatedMinutes && estimatedMinutes > 0 ? ` · ~${estimatedMinutes} min` : '';
 
   if (guidedMode && position === 'top') return null;
 
   return (
     <div className={`flex items-center justify-between chunk-nav ${position === 'bottom' ? 'pt-2' : ''}`}>
       <Badge variant="secondary" className="text-xs">
-        {guidedMode ? `Step ${currentChunk + 1} of ${totalChunks}` : sectionLabel}
+        {(guidedMode ? `Step ${currentChunk + 1} of ${totalChunks}` : sectionLabel) + timeLabel}
       </Badge>
       <div className="flex gap-2 items-center">
         {currentChunk > 0 && (
@@ -266,6 +241,9 @@ export function LessonViewPage({
   const [guidedStepIndex, setGuidedStepIndex] = useState(0);
   const [lastCompletedStepIndex, setLastCompletedStepIndex] = useState(-1);
   const [showChecklistPopup, setShowChecklistPopup] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const [autoSavedAt, setAutoSavedAt] = useState<Date | null>(null);
+  const [autoSaveError, setAutoSaveError] = useState(false);
 
   const { settings, adaptiveOverrides, updateSettings, setDistractionFreeOverride, distractionFreeOverride } = useAccessibility();
   const adaptiveLessonModes = adaptiveOverrides.lesson_modes;
@@ -279,6 +257,7 @@ export function LessonViewPage({
   const [activePhase, setActivePhase] = useState<'content' | 'activity' | 'quiz' | 'finish'>('content');
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [simulatedAttempts, setSimulatedAttempts] = useState(0);
 
 
@@ -289,13 +268,17 @@ export function LessonViewPage({
   // TTS ref and state
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const ttsTextRef = useRef('');
-  const ttsAutoStarted = useRef(false);
   const [ttsPlaying, setTtsPlaying] = useState(false);
   const [ttsStatusMessage, setTtsStatusMessage] = useState('');
   const [ttsRate, setTtsRate] = useState(settings.tts_rate ?? 1);
   const contentTopRef = useRef<HTMLDivElement>(null);
   const ttsRateRef = useRef(ttsRate);
   ttsRateRef.current = ttsRate;
+  // Mirrors ttsPlaying for use inside the "read from here" callback below,
+  // which is created once (via useCallback) and would otherwise close over
+  // a stale ttsPlaying value from whichever render created it.
+  const ttsPlayingRef = useRef(false);
+  ttsPlayingRef.current = ttsPlaying;
 
   // Video questions state
   const [videoQuestions, setVideoQuestions] = useState<LearnerVideoQuestion[]>([]);
@@ -312,6 +295,11 @@ export function LessonViewPage({
   const [quizAttemptCount, setQuizAttemptCount] = useState(0);
   const [courseModules, setCourseModules] = useState<{ id: string | null; title: string; lessons: any[] }[]>([]);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+  // Display rank (1..N) per lesson, derived from position in the course's
+  // ordered lesson list — not the raw sequence_order column, which isn't
+  // renumbered when earlier lessons are removed/unpublished and can produce
+  // numbers like "11." on a 10-lesson course.
+  const [lessonRankMap, setLessonRankMap] = useState<Map<string, number>>(new Map());
 
   const playerRef = useRef<YT.Player | null>(null);
   const ytApiReadyRef = useRef(false);
@@ -417,6 +405,8 @@ export function LessonViewPage({
       const data = lessonsRes.data;
       const chaptersData = chaptersRes.data;
       if (!data) return;
+
+      setLessonRankMap(new Map(data.map((l: any, idx: number) => [l.id, idx + 1])));
 
       const chaptersMap = new Map();
       if (chaptersData) {
@@ -556,8 +546,12 @@ export function LessonViewPage({
     return () => window.clearInterval(intervalId);
   }, [ytApiLoaded, videoQuestions, answeredQuestionIds, vqCompletedIds, temporarilySkippedIds, activeVideoQuestion]);
 
-  const speak = useCallback(() => {
-    const text = ttsTextRef.current;
+  // overrideText lets "read from here" (via ReadingSpotlight's
+  // onBlockActivate below) start speech partway through the chunk instead
+  // of always from the top — optional and backward compatible, every
+  // existing call site still just calls speak() with no arguments.
+  const speak = useCallback((overrideText?: string) => {
+    const text = overrideText ?? ttsTextRef.current;
     if (!text) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -614,7 +608,6 @@ export function LessonViewPage({
   }, []);
 
   useEffect(() => {
-    ttsAutoStarted.current = false;
     setTtsStatusMessage('');
     setCurrentChunk(0);
     setAcknowledgedCheckpoints(new Set());
@@ -729,16 +722,21 @@ export function LessonViewPage({
     const chunkHtml = lessonChunks && lessonChunks.length > 0
       ? (currentChunk === 0 ? lessonChunks[0] : slideshowActive ? lessonChunks[currentChunk] : `<h2>${lessonChunks[currentChunk]}`)
       : contentHtml;
+    // Kept up to date for the manual Listen button (handlePlayTTS/speak),
+    // but deliberately never auto-starts speech here — see below.
     ttsTextRef.current = chunkHtml.replace(/<[^>]*>/g, '').trim();
+  }, [lesson, currentChunk]);
 
-    if (settings.tts_enabled && ttsTextRef.current && !ttsAutoStarted.current) {
-      ttsAutoStarted.current = true;
-      const timer = setTimeout(() => speak(), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [lesson, currentChunk, settings.tts_enabled, speak]);
+  // TTS never starts on its own — WCAG 3.2.5 (Change on Request), and the
+  // Dyslexia preset enables tts_enabled by default, which used to mean
+  // applying that preset made the page start talking unprompted. Reading
+  // aloud now only ever starts from an explicit press of the Listen
+  // control (handlePlayTTS below).
 
-  const activePreset = settings?.active_preset || 'none';
+  // base_preset survives individual setting tweaks (active_preset resets to
+  // 'custom' the moment anything is manually changed) — using it here keeps
+  // preset-driven lesson behavior from silently disappearing after one tweak.
+  const activePreset = settings?.base_preset || settings?.active_preset || 'none';
   const educatorLayout = lesson?.lesson_layout || 'standard';
   const isSlideMode = (activePreset === 'autism' || activePreset === 'adhd') ? false : (viewMode !== null ? viewMode === 'slide' : (settings.layout_mode === 'slide' || (!settings.layout_mode && educatorLayout === 'slideshow')));
 
@@ -761,6 +759,19 @@ export function LessonViewPage({
       speak();
     }
   }, [ttsPlaying, speak, stopTTS, lessonId, courseId]);
+
+  // "Read from here" (docs/accessibility/03 §4.2): clicking a paragraph
+  // while TTS is already playing jumps reading to that paragraph, rather
+  // than only ever being able to restart from the top of the chunk. Only
+  // does anything while ttsPlaying — clicking lesson text never has any
+  // effect otherwise, so normal reading/selecting is untouched. The
+  // Listen button remains the sole way to *start* reading and stays fully
+  // keyboard-operable; this is a supplementary pointer affordance layered
+  // on top of it, not a replacement for it.
+  const handleReadFromHere = useCallback((fromHereText: string) => {
+    if (!ttsPlayingRef.current) return;
+    speak(fromHereText);
+  }, [speak]);
   const pdfPptxAssets = assets.filter(a => {
     const kind = (a.kind || '').toLowerCase();
     const url = (a.url || '').toLowerCase();
@@ -799,6 +810,14 @@ export function LessonViewPage({
   };
 
 
+
+  // Maps a phase id to the section it should scroll to on the flowing default
+  // page (used by the stepper and the prev/next section nav below).
+  const phaseAnchorIds: Record<string, string> = { content: 'lesson-video', activity: 'lesson-activities', quiz: 'lesson-quiz', finish: 'lesson-finish' };
+  const scrollToPhase = (phaseId: string) => {
+    const el = document.getElementById(phaseAnchorIds[phaseId] || '') || document.getElementById('lesson-content');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const renderPhaseStepper = (isCompact: boolean = false) => {
     if (lessonPhases.length < 2) return null;
@@ -854,7 +873,7 @@ export function LessonViewPage({
                       toast.warning(`Complete "${prevUndoneNames.join('", "')}" before moving ahead`);
                     }
                     setActivePhase(p.id);
-                    document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+                    scrollToPhase(p.id);
                   }}
                   className={`flex flex-col items-center gap-1.5 transition-all cursor-pointer hover:scale-105 ${isActive && !p.done ? 'scale-110' : ''}`}
                 >
@@ -918,11 +937,18 @@ export function LessonViewPage({
   useEffect(() => {
     if (!enrollmentId || !lessonId) return;
     const timer = setTimeout(() => {
+      setAutoSaving(true);
       saveLessonProgressMeta(lessonId, courseId, {
         ...tracker,
         guided_step_index: guidedStepIndex,
         last_completed_step_index: lastCompletedStepIndex,
-      }).catch(err => console.error('[lesson-progress] save error:', err));
+      }).then(() => {
+        setAutoSaveError(false);
+        setAutoSavedAt(new Date());
+      }).catch(err => {
+        console.error('[lesson-progress] save error:', err);
+        setAutoSaveError(true);
+      }).finally(() => setAutoSaving(false));
     }, 300);
     return () => clearTimeout(timer);
   }, [tracker, guidedStepIndex, lastCompletedStepIndex, lessonId, courseId, enrollmentId]);
@@ -974,64 +1000,116 @@ export function LessonViewPage({
   const guidedHasActivity = interactiveContent.length > 0 || h5pContent.length > 0;
   const guidedHasQuiz = !!(quizData && quizData.questions.length > 0 && lesson?.has_quiz !== false);
 
-  const guidedSteps: GuidedStep[] = lesson ? [
+  // Memoized, not a fresh array literal every render: two separate
+  // effects below (the clampedIndex sync and the activePhase sync) both
+  // depend on guidedSteps. An unmemoized array is a new reference on
+  // every render regardless of whether video/content/activity/quiz
+  // completion actually changed, which defeats React's dependency
+  // comparison and made the activePhase-sync effect re-run on every
+  // single render — including ones triggered by the *other* effect's own
+  // setGuidedStepIndex call, which is exactly the shape of a real
+  // "Maximum update depth exceeded" loop, reproduced live on a lesson
+  // with two guided phases (content + activity, no chunk headings) —
+  // precisely the kind of lesson docs/accessibility/03 §7.1's fix above
+  // made guided mode reachable on for the first time, so this bug was
+  // never exercised before that fix existed.
+  const guidedSteps: GuidedStep[] = useMemo(() => lesson ? [
     ...(guidedHasVideo ? [{ id: 'video', title: 'Watch Video', completed: tracker.video }] : []),
     ...(guidedHasContent ? [{ id: 'content', title: 'Read Lesson Content', completed: tracker.scroll }] : []),
     ...(guidedHasActivity ? [{ id: 'activity', title: 'Complete Activity', completed: tracker.activity }] : []),
     ...(guidedHasQuiz ? [{ id: 'quiz', title: 'Take Quiz', completed: tracker.quiz }] : []),
-  ] : [];
+  ] : [], [lesson, guidedHasVideo, guidedHasContent, guidedHasActivity, guidedHasQuiz, tracker.video, tracker.scroll, tracker.activity, tracker.quiz]);
 
   const firstIncomplete = guidedSteps.findIndex(s => !s.completed);
   const clampedIndex = firstIncomplete === -1
     ? Math.max(0, guidedSteps.length - 1)
     : Math.min(guidedStepIndex, firstIncomplete);
 
+  // Single effect deciding guidedStepIndex, not two. This used to be two
+  // separate effects — one clamping guidedStepIndex to completion
+  // progress (lastCompletedStepIndex/firstIncomplete), one syncing it to
+  // activePhase — each reacting to the other's setGuidedStepIndex call.
+  // They agree in most cases, but for a lesson that's already fully
+  // completed, the clamp effect parks on the *last* step
+  // (firstIncomplete === -1) while activePhase resets to 'content' on
+  // every fresh page load — two effects permanently disagreeing about
+  // the same piece of state, each "correcting" the other back and forth
+  // every render. Reproduced live as "Maximum update depth exceeded" on
+  // a fully-completed lesson. One computation per render, with one
+  // precedence rule (activePhase wins when it maps to an existing guided
+  // step; the completion-based clamp is the fallback for 'finish', which
+  // guidedSteps never contains), makes disagreement structurally
+  // impossible rather than just less likely.
   useEffect(() => {
-    let newIndex = clampedIndex;
-    if (settings.step_by_step_enabled && lastCompletedStepIndex >= 0) {
-      newIndex = Math.min(lastCompletedStepIndex + 1, clampedIndex);
-    }
-    if (newIndex !== guidedStepIndex && guidedSteps.length > 0) {
-      setGuidedStepIndex(newIndex);
-    }
-  }, [guidedSteps.length, settings.step_by_step_enabled, clampedIndex, lastCompletedStepIndex, guidedStepIndex]);
-
-  // Sync guidedStepIndex with activePhase when activePhase changes externally
-  useEffect(() => {
-    if (!lesson) return;
-    const simplifiedMode = settings.simplified_ui ?? (activePreset === 'autism' || activePreset === 'adhd');
+    if (!lesson || guidedSteps.length === 0) return;
+    // `||`, not `??`: every preset (including Autism/ADHD) writes
+    // simplified_ui: false explicitly, so ?? never fell through to the
+    // preset check on its right — simplifiedMode was always false for
+    // Autism/ADHD regardless of intent. That silently sent the content
+    // container's width to the *educator's* per-lesson layout choice
+    // instead of the preset's, so an Autism-preset learner got a
+    // different page width in every course — the opposite of the
+    // consistent, predictable structure the preset promises.
+    const simplifiedMode = settings.simplified_ui || (activePreset === 'autism' || activePreset === 'adhd');
     const effectiveFocusMode = (focusMode || activePreset === 'adhd') && !focusModeManuallyExited;
     const effectiveChunkedEnabled = (settings.chunked_content_mode || lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content || activePreset === 'adhd' || activePreset === 'autism') && !chunkedModeManuallyExited;
-    const contentHtml = lesson.content_html || '';
-    const chunks = !contentHtml ? null : isSlideMode ? contentHtml.split(/<hr\s*\/?>/i).filter(p => p.trim()) : !effectiveChunkedEnabled ? null : contentHtml.split(/<h2\b[^>]*>/i).filter(p => p.trim());
-    const totalChunks = chunks?.length ?? 0;
-    const showChunkNav = totalChunks > 1;
-    const computedGuidedMode = !!settings.step_by_step_enabled && !isSlideMode && !effectiveFocusMode && showChunkNav && (effectiveChunkedEnabled || simplifiedMode || activePreset === 'autism');
+    // docs/accessibility/03 §7.1 "one sequencer, no chunk-count
+    // precondition": guided mode steps between lesson *phases* (video /
+    // content / activity / quiz), which exist independently of whether the
+    // content itself is split into <h2> chunks. Gating this on showChunkNav
+    // (>1 chunk) was the root cause of docs/accessibility/02 §4.3 — a
+    // lesson with fewer than two headings got the StepByStepGuidance wizard
+    // chrome (gated only on the raw step_by_step_enabled flag below) while
+    // this computed value stayed false, so nothing was actually sequenced.
+    // guidedSteps.length > 1 is the correct precondition: there must be at
+    // least two phases to step between.
+    const computedGuidedMode = !!settings.step_by_step_enabled && !isSlideMode && !effectiveFocusMode && guidedSteps.length > 1 && (effectiveChunkedEnabled || simplifiedMode || activePreset === 'autism');
+    if (!computedGuidedMode) return;
 
-    if (computedGuidedMode && guidedSteps.length > 0) {
-      const currentStep = guidedSteps[guidedStepIndex];
-      if (!currentStep) return;
-      if (activePhase === 'activity' && currentStep.id !== 'activity') {
-        const idx = guidedSteps.findIndex(s => s.id === 'activity');
-        if (idx >= 0) setGuidedStepIndex(idx);
-      } else if (activePhase === 'quiz' && currentStep.id !== 'quiz') {
-        const idx = guidedSteps.findIndex(s => s.id === 'quiz');
-        if (idx >= 0) setGuidedStepIndex(idx);
-      } else if (activePhase === 'finish' && currentStep.id !== 'finish') {
-        const idx = guidedSteps.findIndex(s => s.id === 'finish');
-        if (idx >= 0) setGuidedStepIndex(idx);
-      } else if (activePhase === 'content' && currentStep.id !== 'video' && currentStep.id !== 'content') {
-         const idx = guidedSteps.findIndex(s => s.id === 'content');
-         if (idx >= 0) setGuidedStepIndex(idx);
-         else {
-           const vidIdx = guidedSteps.findIndex(s => s.id === 'video');
-           if (vidIdx >= 0) setGuidedStepIndex(vidIdx);
-         }
-      }
+    let activePhaseTarget: number | null = null;
+    if (activePhase === 'activity') {
+      const idx = guidedSteps.findIndex(s => s.id === 'activity');
+      if (idx >= 0) activePhaseTarget = idx;
+    } else if (activePhase === 'quiz') {
+      const idx = guidedSteps.findIndex(s => s.id === 'quiz');
+      if (idx >= 0) activePhaseTarget = idx;
+    } else if (activePhase === 'content') {
+      // Prefer 'content' over 'video' when both exist — matches the
+      // original two-effect version's fallback order.
+      const idx = guidedSteps.findIndex(s => s.id === 'content');
+      activePhaseTarget = idx >= 0 ? idx : guidedSteps.findIndex(s => s.id === 'video');
+      if (activePhaseTarget === -1) activePhaseTarget = null;
+    }
+    // activePhase === 'finish' never maps to a guided step — guidedSteps
+    // only ever contains video/content/activity/quiz.
+
+    // How far completion actually allows the wizard to sit, independent
+    // of activePhase.
+    let completionIndex = clampedIndex;
+    if (settings.step_by_step_enabled && lastCompletedStepIndex >= 0) {
+      completionIndex = Math.min(lastCompletedStepIndex + 1, clampedIndex);
+    }
+
+    // activePhase may move the wizard *backward* to revisit an earlier
+    // (already-earned) step freely, but must never let it skip *forward*
+    // past an incomplete one. activePhase's value is 'content' by
+    // default on every fresh mount — that default isn't a deliberate
+    // "skip ahead" signal from the learner, so honouring it unclamped
+    // let the wizard jump straight past an unwatched video straight to
+    // the content step, while the Itinerary panel (computed independently
+    // from actual completion) correctly still called the video "Happening
+    // Now" — two supports disagreeing about the same lesson, and the
+    // video section itself never rendering because its own guard
+    // (guidedSteps[guidedStepIndex]?.id === 'video') was never satisfied.
+    // Reproduced live.
+    const targetIndex = activePhaseTarget !== null ? Math.min(activePhaseTarget, completionIndex) : completionIndex;
+
+    if (targetIndex !== guidedStepIndex) {
+      setGuidedStepIndex(targetIndex);
     }
   }, [
-    lesson, activePhase, guidedStepIndex, guidedSteps,
-    settings.simplified_ui, activePreset, focusMode, focusModeManuallyExited,
+    lesson, activePhase, guidedStepIndex, guidedSteps, clampedIndex, lastCompletedStepIndex,
+    settings.simplified_ui, settings.step_by_step_enabled, activePreset, focusMode, focusModeManuallyExited,
     settings.chunked_content_mode, adaptiveLessonModes.chunked_content,
     chunkedModeManuallyExited, isSlideMode
   ]);
@@ -1073,28 +1151,48 @@ export function LessonViewPage({
   const layout = lesson.lesson_layout || 'standard';
   const layoutContainer = layout === 'focus' ? 'max-w-4xl' : layout === 'two_column' || layout === 'wide' ? 'max-w-7xl' : 'max-w-6xl';
 
-  const simplifiedMode = settings.simplified_ui ?? (activePreset === 'autism' || activePreset === 'adhd');
+  // `||`, not `??` — see the matching comment above; every preset sets
+  // simplified_ui: false explicitly, so ?? never reached the preset check.
+  const simplifiedMode = settings.simplified_ui || (activePreset === 'autism' || activePreset === 'adhd');
   
   // ADHD profile forcefully applies chunked learning and focus mode.
   const effectiveFocusMode = (focusMode || activePreset === 'adhd') && !focusModeManuallyExited;
   const effectiveChunkedEnabled = (settings.chunked_content_mode || settings.layout_mode === 'chunked' || lesson.chunked_content_enabled || adaptiveLessonModes.chunked_content || activePreset === 'adhd' || activePreset === 'autism') && !chunkedModeManuallyExited;
 
-  // For Dyslexia, enforce max-w-2xl for better line lengths (typically 60-70 characters).
-  // For ADHD, keep focus mode tight.
+  // `.content-column` (docs/accessibility/04 §3.1) reads --content-measure,
+  // which is set per accessibility preset in globals.css (62ch Dyslexia,
+  // 66ch ADHD/Autism, 72ch default) — a font-relative (ch) width that
+  // stays within the WCAG 1.4.8 80-character cap at any font size,
+  // unlike the old fixed max-w-2xl/max-w-4xl (rem-based, silently drifts
+  // past the cap as font size grows).
+  //
+  // Distraction-free mode used to jump to max-w-full here — "remove
+  // distractions" was, in the one place it mattered most, producing the
+  // single most fatiguing possible line length instead. Distraction-free
+  // now only ever removes chrome (sidebar/topbar, via the CSS side of
+  // data-distraction-free), never the reading measure.
   const contentContainerClass = settings.distraction_free_mode
-    ? 'max-w-full px-4 sm:px-8 xl:px-12'
+    ? 'content-column px-4 sm:px-8 xl:px-12'
     : effectiveFocusMode
       ? 'max-w-3xl'
       : activePreset === 'dyslexia'
-        ? 'max-w-2xl text-lg' // tighter width, larger text
+        ? 'content-column text-lg' // measure-driven width, larger text
         : simplifiedMode
-          ? 'max-w-4xl'
+          ? 'content-column'
           : layoutContainer;
 
-  const lineSpacingMap: Record<string, string> = { tight: 'leading-tight', normal: 'leading-normal', relaxed: 'leading-relaxed', wide: 'leading-loose', loose: 'leading-loose' };
-  const fontSizeMap: Record<string, string> = { small: 'text-sm prose-sm', medium: 'text-base prose-base', large: 'text-lg prose-lg', xlarge: 'text-xl prose-xl' };
-  const contentLineSpacing = lineSpacingMap[settings.line_spacing ?? 'normal'] || 'leading-normal';
-  const contentFontSize = fontSizeMap[settings.preferred_font_size ?? 'medium'] || 'text-base prose-base';
+  // Font size, line spacing and word spacing for lesson content all come
+  // from the CSS custom properties (--user-font-size / --user-line-spacing
+  // / --user-word-spacing, set in AccessibilityProvider and consumed in
+  // globals.css) rather than from the legacy 3–4 value enums this used to
+  // read. Those enums are still written for backward-compatible database
+  // rows, but reading them here meant the Reading tab's sliders visibly
+  // changed nothing inside a lesson — the enum-derived Tailwind classes
+  // always won. font-size is applied inline on the .prose wrapper below,
+  // which Typography's own em-relative heading/body sizes scale against
+  // correctly; line spacing is handled by the .rich-content rule in
+  // globals.css.
+  const contentInlineStyle: React.CSSProperties = { fontSize: 'var(--user-font-size, 16px)' };
 
   const contentHtml = lesson.content_html || '';
 
@@ -1110,10 +1208,27 @@ export function LessonViewPage({
     ? (currentChunk === 0 ? chunks[0] : isSlideMode ? chunks[currentChunk] : `<h2>${chunks[currentChunk]}`)
     : contentHtml;
 
+  // ~200 words/minute is the conventional reading-speed estimate used for
+  // "N min read" labels; rounded up so a 30-second section still reads as
+  // "~1 min" rather than "~0 min" (docs/accessibility/03 §4.6).
+  const currentChunkWordCount = currentChunkHtml
+    ? currentChunkHtml.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length
+    : 0;
+  const currentChunkMinutes = currentChunkWordCount > 0 ? Math.max(1, Math.ceil(currentChunkWordCount / 200)) : 0;
+
   const totalChunks = chunks?.length ?? 0;
   const showChunkNav = totalChunks > 1;
 
-  const guidedMode = !!settings.step_by_step_enabled && !isSlideMode && !effectiveFocusMode && showChunkNav && (effectiveChunkedEnabled || simplifiedMode || activePreset === 'autism');
+  // docs/accessibility/03 §7.1 / 02 §4.3 — see the matching comment on
+  // computedGuidedMode above. Must stay in sync with that copy (duplicated
+  // because this one can't be computed before the `if (!lesson)` early
+  // return, which the useEffect above runs ahead of).
+  const guidedMode = !!settings.step_by_step_enabled && !isSlideMode && !effectiveFocusMode && guidedSteps.length > 1 && (effectiveChunkedEnabled || simplifiedMode || activePreset === 'autism');
+  // Default students see every section of the lesson on one flowing page —
+  // Video, Content, Activities, Quiz, Finish all render together, in order.
+  // Accessibility modes that need one-thing-at-a-time (Focus mode, guided
+  // step-by-step) opt back into the original single-section-visible behavior.
+  const sequentialMode = effectiveFocusMode || guidedMode;
   const requireCheckpoint = !isSlideMode && (!!lesson.checkpoints_enabled || adaptiveLessonModes.checkpoints || activePreset === 'autism') && showChunkNav && !effectiveFocusMode;
   const currentDbCheckpoint = lessonCheckpoints.length > 0
     ? (lessonCheckpoints.find((cp) => cp.sequence_order === currentChunk) ?? lessonCheckpoints[currentChunk] ?? null)
@@ -1141,7 +1256,11 @@ export function LessonViewPage({
   const goToPrevChunk = () => {
     setCurrentChunk((c) => Math.max(0, c - 1));
     setAdaptiveHint(null);
-    contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Slide mode keeps the deck in a fixed viewport — scrolling to the top of
+    // the lesson on every arrow click would yank the page away from the slide.
+    if (!isSlideMode) {
+      contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const goToNextChunk = () => {
@@ -1154,7 +1273,9 @@ export function LessonViewPage({
       }
       return next;
     });
-    contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!isSlideMode) {
+      contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const handleCheckpointAcknowledge = async (cp: LearnerLessonCheckpoint) => {
@@ -1240,16 +1361,81 @@ export function LessonViewPage({
     ...(interactiveContent.length > 0 ? [{ id: 'activity', title: 'Complete Activities', duration: 'Activities', completed: tracker.activity }] : []),
     ...(quizData && lesson.has_quiz !== false ? [{ id: 'quiz', title: 'Knowledge Check', duration: 'Quiz', completed: tracker.quiz }] : [])
   ];
-  const dynamicSchedule = scheduleItems.filter(i => !i.completed).map((item, index) => {
-    const type: 'now' | 'next' | 'later' = index === 0 ? 'now' : index === 1 ? 'next' : 'later';
-    return { id: item.id, title: item.title, duration: item.duration, type };
+  // docs/accessibility/03 §5.1 "Itinerary panel" / 02 §4.4 "right idea,
+  // wrong place": the Autism preset's VisualSchedule used to render only
+  // the *remaining* phases, at the bottom of the page, after the content a
+  // learner would use it to prepare for. This keeps every phase —
+  // including ones already finished, marked done — so the panel can move
+  // to the top and show the whole path before the first step, per the
+  // preset's "you see the entire path before you take the first step"
+  // thesis.
+  let seenIncompletePhase = 0;
+  const itinerarySchedule = scheduleItems.map((item) => {
+    if (item.completed) {
+      return { id: item.id, title: item.title, duration: item.duration, type: 'later' as const, done: true };
+    }
+    const type: 'now' | 'next' | 'later' = seenIncompletePhase === 0 ? 'now' : seenIncompletePhase === 1 ? 'next' : 'later';
+    seenIncompletePhase += 1;
+    return { id: item.id, title: item.title, duration: item.duration, type, done: false };
   });
+
+  // "Your Journey" timeline for ProgressTimeline — flattens the course's
+  // modules into a single ordered list, marking each lesson against this
+  // enrollment's actual completion state.
+  const timelineNodes = courseModules
+    .flatMap((m) => m.lessons)
+    .map((l): { id: string; title: string; status: 'completed' | 'current' | 'upcoming' } => ({
+      id: l.id,
+      title: l.title,
+      status: l.id === lessonId ? 'current' : completedLessonIds.has(l.id) ? 'completed' : 'upcoming',
+    }));
+
+  // ADHD Now Bar derived values (docs/accessibility/03 §6.1). Only used
+  // when the Now Bar itself renders (activePreset === 'adhd' &&
+  // effectiveFocusMode below), but computed here alongside the other
+  // pre-return derived values for consistency.
+  const nowBarPhase = lessonPhases.find((p) => !p.done) || lessonPhases[lessonPhases.length - 1];
+  const nowBarActionLabel = nowBarPhase
+    ? (nowBarPhase.id === 'content' && showChunkNav
+        ? `Read section ${currentChunk + 1} of ${totalChunks}`
+        : nowBarPhase.fullName)
+    : lesson.title;
+  const nowBarEstimatedMinutes = nowBarPhase?.id === 'content' ? currentChunkMinutes : undefined;
+  const nowBarProgressPercent = lessonPhases.length > 0
+    ? Math.round((lessonPhases.filter((p) => p.done).length / lessonPhases.length) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-background relative" id="main-content">
         <div className="sr-only" aria-live="polite" aria-atomic="true">
           {ttsStatusMessage}
         </div>
+
+        {/* ── Now Bar (ADHD preset) ──
+            docs/accessibility/03 §6.1. ADHD forces effectiveFocusMode on,
+            which hides the <header> below — by design, focus mode removes
+            distractions. But the OTHER header variant ("Focus Mode Slide
+            Navigation" further down) only renders for a manually-toggled
+            focusMode, which ADHD's forced focus never sets. Without this,
+            an ADHD-preset learner got neither header: no title, no back
+            button, and — because the executive-function supports section
+            is also gated on !effectiveFocusMode — none of the Task
+            Checklist / Progress Timeline / Auto-Save the preset itself
+            turns on. This is that state's entire chrome now. */}
+        {activePreset === 'adhd' && effectiveFocusMode && (
+          <NowBar
+            currentActionLabel={nowBarActionLabel}
+            estimatedMinutes={nowBarEstimatedMinutes}
+            progressPercent={nowBarProgressPercent}
+            tasks={dynamicTasks}
+            timelineNodes={timelineNodes}
+            autoSaving={autoSaving}
+            autoSavedAt={autoSavedAt}
+            autoSaveError={autoSaveError}
+            onBack={onBack}
+          />
+        )}
+
         {!effectiveFocusMode && (
           <header className="sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm transition-all duration-300 shrink-0">
             <div className={`${layoutContainer} mx-auto px-6 py-3`}>
@@ -1280,7 +1466,7 @@ export function LessonViewPage({
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3 text-sm text-gray-600">
                     {chapterTitle && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 lesson-secondary-badge">
                         <Layers className="w-3.5 h-3.5 text-purple-500" />
                         {chapterTitle}
                         <span className="text-gray-300 mx-1">|</span>
@@ -1312,17 +1498,17 @@ export function LessonViewPage({
                       <Clock className="w-3 h-3" /> {durationLabel}
                     </Badge>
                     {adaptiveOverrides.active_recommendation && (
-                      <Badge className="bg-violet-100 text-violet-700 border-violet-200 text-xs flex items-center gap-1 shrink-0">
+                      <Badge className="bg-violet-100 text-violet-700 border-violet-200 text-xs flex items-center gap-1 shrink-0 lesson-secondary-badge">
                         <Sparkles className="w-3 h-3" /> Adaptive
                       </Badge>
                     )}
                     {isSystemCourse && (
-                      <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs flex items-center gap-1 shrink-0 simplifiable">
+                      <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs flex items-center gap-1 shrink-0 simplifiable lesson-secondary-badge">
                         <Shield className="w-3 h-3" /> Official Course
                       </Badge>
                     )}
                     {prerequisiteTitle && (
-                      <Badge variant="outline" className="text-amber-700 border-amber-300 text-xs shrink-0 simplifiable">
+                      <Badge variant="outline" className="text-amber-700 border-amber-300 text-xs shrink-0 simplifiable lesson-secondary-badge">
                         Requires: {prerequisiteTitle}
                       </Badge>
                     )}
@@ -1330,7 +1516,7 @@ export function LessonViewPage({
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2">
-                    {lesson.has_pdf !== false && (
+                    {hasPdfAssets && (
                       <Button variant="outline" size="sm" onClick={() => setIsResourcesOpen(true)} className="flex items-center gap-1.5 font-medium border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800">
                         <FileText className="w-4 h-4" /> Resources
                       </Button>
@@ -1340,8 +1526,13 @@ export function LessonViewPage({
                         <MessageSquare className="w-4 h-4" /> Discussion
                       </Button>
                     )}
-                    {lesson.has_quiz && hasQuiz && (
-                      <Button variant="outline" size="sm" onClick={() => { setActivePhase('quiz'); document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' }); }} className="flex items-center gap-1.5 font-medium border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800">
+                    {settings.ai_assistant_enabled !== false && (
+                      <Button variant="outline" size="sm" onClick={() => setIsAiAssistantOpen(true)} className="flex items-center gap-1.5 font-medium border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800">
+                        <Sparkles className="w-4 h-4" /> AI Assistant
+                      </Button>
+                    )}
+                    {lesson.has_quiz !== false && hasQuiz && (
+                      <Button variant="outline" size="sm" onClick={() => { setActivePhase('quiz'); scrollToPhase('quiz'); }} className="flex items-center gap-1.5 font-medium border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800">
                         <HelpCircle className="w-4 h-4" /> Quiz
                       </Button>
                     )}
@@ -1372,7 +1563,7 @@ export function LessonViewPage({
               <div className="flex flex-col items-center justify-center w-full py-1">
                 <div className="flex flex-wrap items-center justify-between w-full gap-4">
                   <div className="flex items-center gap-2 shrink-0">
-                    {lesson.has_pdf !== false && (
+                    {hasPdfAssets && (
                       <Button variant="ghost" size="sm" onClick={() => setIsResourcesOpen(true)} className="flex items-center gap-1.5 text-orange-700 hover:bg-orange-50 font-medium">
                         <FileText className="w-4 h-4" /> <span className="hidden sm:inline">Resources</span>
                       </Button>
@@ -1382,8 +1573,13 @@ export function LessonViewPage({
                         <MessageSquare className="w-4 h-4" /> <span className="hidden sm:inline">Discussion</span>
                       </Button>
                     )}
+                    {settings.ai_assistant_enabled !== false && (
+                      <Button variant="ghost" size="sm" onClick={() => setIsAiAssistantOpen(true)} className="flex items-center gap-1.5 text-indigo-700 hover:bg-indigo-50 font-medium">
+                        <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">AI Assistant</span>
+                      </Button>
+                    )}
                     {lessonPhases.some(p => p.id === 'quiz') && (
-                      <Button variant="ghost" size="sm" onClick={() => setActivePhase('quiz')} className="flex items-center gap-1.5 text-purple-700 hover:bg-purple-50 font-medium">
+                      <Button variant="ghost" size="sm" onClick={() => { setActivePhase('quiz'); scrollToPhase('quiz'); }} className="flex items-center gap-1.5 text-purple-700 hover:bg-purple-50 font-medium">
                         <HelpCircle className="w-4 h-4" /> <span className="hidden sm:inline">Quiz</span>
                       </Button>
                     )}
@@ -1402,6 +1598,19 @@ export function LessonViewPage({
         </header>
       )}
 
+      {/* ── Reading Toolbar (Dyslexia preset) ──
+          docs/accessibility/03 §4.1: reading controls live next to the
+          content, not three taps into Settings. Hidden in focus mode —
+          focus mode is a different reduction strategy and showing extra
+          chrome there would work against it. */}
+      {activePreset === 'dyslexia' && !effectiveFocusMode && (
+        <ReadingToolbar
+          ttsPlaying={ttsPlaying}
+          onToggleListen={handlePlayTTS}
+          ttsRate={ttsRate}
+          onRateChange={(rate) => { setTtsRate(rate); ttsRateRef.current = rate; if (ttsPlaying) { stopTTS(); speak(); } }}
+        />
+      )}
 
       {/* ── Focus Mode Slide Navigation ── */}
       {focusMode && !simplifiedMode && focusSteps.length > 0 && (
@@ -1461,21 +1670,62 @@ export function LessonViewPage({
         </div>
       )}
 
-      <div id="lesson-main-content" ref={contentTopRef} className={`learner-view ${contentContainerClass} mx-auto px-6 py-4`}>
+      <div id="lesson-content-wrapper" ref={contentTopRef} className={`learner-view ${contentContainerClass} mx-auto px-6 py-4`}>
           <div className={layout === 'two_column' && !effectiveFocusMode ? 'grid grid-cols-2 gap-6' : 'space-y-8'}>
             
             <div className="block space-y-8" data-guided-container>
-      {/* ── Guided Mode Wizard ── */}
-      {settings.step_by_step_enabled && guidedSteps.length > 0 && (
-        <StepByStepGuidance
-          title={lesson.title || 'Lesson Steps'}
-          steps={guidedSteps}
-          currentIndex={guidedStepIndex}
-          onStepChange={handleGuidedStepChange}
-          onStepComplete={handleGuidedStepComplete}
-          onExitGuidedMode={handleExitGuidedMode}
-          embedded
-        />
+      {/* ── Itinerary + Guided Wizard, merged ──
+          docs/accessibility/00 §4 Phase 5, later addenda. Three rounds of
+          live feedback on this one spot:
+          1. VisualSchedule used to render below the lesson content — a
+             schedule read after finishing isn't a schedule. Promoted to
+             the top.
+          2. The Itinerary and the guided wizard were two separate cards
+             both answering "where am I" (the schedule's "Happening Now"
+             row and the wizard's own title + "Step N of M" duplicated
+             each other) — merged into one card, wizard rendered with
+             `compact` so it contributes only its unique value (the
+             actual Previous/Next controls and the disabled-Next
+             explanation), not a second copy of the position indicator.
+          3. Position: "the middle column is narrow and there's unused
+             space beside it, and I have to scroll back up to check the
+             schedule." `position: sticky` was tried first and reverted
+             (see git history / IMPLEMENTATION-STATUS.md — it computed
+             the right offset but something in the `.content-column`
+             ancestor chain broke sticky's containing block, so it
+             rendered pinned over the header instead of below it).
+             `position: fixed` sidesteps that entirely — it positions
+             against the viewport regardless of ancestor overflow/stacking
+             context, which is exactly why it's used here instead of
+             trying sticky again. Hidden below `xl` — there's no side
+             space to float into on a narrower viewport, and it would
+             just cover content instead of using empty space. */}
+      {/* top-44 (176px) clears the header's tallest (non-condensed,
+          ~172px measured live) state — a static value is enough here,
+          unlike the sticky attempt, because `fixed` positions against
+          the viewport once and stays there regardless of scroll, it
+          never needs to track the header's condensed/full height
+          change the way something scrolling past it would. z-10, under
+          the header's z-30, so the header still wins the sliver where
+          they'd otherwise overlap while condensed. */}
+      {!effectiveFocusMode && (settings.visual_schedule_enabled || guidedMode) && (
+        <div className="hidden xl:flex xl:flex-col xl:gap-3 fixed right-6 top-44 w-72 z-10 max-h-[calc(100vh-12rem)] overflow-y-auto">
+          {settings.visual_schedule_enabled && <VisualSchedule schedule={itinerarySchedule} />}
+          {guidedMode && (
+            <div className="bg-white border-2 border-teal-100 rounded-xl p-5 shadow-sm">
+              <StepByStepGuidance
+                title={lesson.title || 'Lesson Steps'}
+                steps={guidedSteps}
+                currentIndex={guidedStepIndex}
+                onStepChange={handleGuidedStepChange}
+                onStepComplete={handleGuidedStepComplete}
+                onExitGuidedMode={handleExitGuidedMode}
+                compact
+                embedded
+              />
+            </div>
+          )}
+        </div>
       )}
       {/* ── Phase Stepper ── */}
       {renderPhaseStepper(false)}
@@ -1526,18 +1776,8 @@ export function LessonViewPage({
               </Card>
             )}
 
-            {guidedMode && (
-              <GuidedPathBanner
-                currentChunk={currentChunk}
-                totalChunks={totalChunks}
-                estimatedDuration={lesson.estimated_duration}
-                hasSummary={!!lesson.has_summary_activity}
-                showSimplifiedSummary={simplifiedMode && !!lesson.simplified_summary}
-              />
-            )}
-
             {/* ── Video (optional) ── */}
-            <div className={activePhase === 'content' || effectiveFocusMode ? 'block' : 'hidden'} id="lesson-video" data-guided-section="video">
+            <div className={!sequentialMode || activePhase === 'content' || effectiveFocusMode ? 'block' : 'hidden'} id="lesson-video" data-guided-section="video">
               {lesson.video_url && lesson.has_video !== false && (!effectiveFocusMode || currentFocusId === 'video') && (!guidedMode || guidedSteps[guidedStepIndex]?.id === 'video') && (!showChunkNav || isSlideMode || currentChunk === 0) && (
                 <CollapsibleCard
                   icon={<Video className="w-4 h-4 text-rose-600" />}
@@ -1697,7 +1937,7 @@ export function LessonViewPage({
             </div>
 
             {/* ── Lesson Content ── */}
-            <div className={activePhase === 'content' || effectiveFocusMode ? 'block' : 'hidden'} id="lesson-main-content" data-guided-section="content">
+            <div className={!sequentialMode || activePhase === 'content' || effectiveFocusMode ? 'block' : 'hidden'} id="lesson-content" data-guided-section="content">
             {/* The Actual Content Rendering */}
             {(!effectiveFocusMode || currentFocusId === 'content') && (!guidedMode || guidedSteps[guidedStepIndex]?.id === 'content') && contentHtml && (
               <div className="flex items-center justify-end gap-2 mb-3">
@@ -1731,6 +1971,7 @@ export function LessonViewPage({
                 onPrev={goToPrevChunk}
                 onNext={goToNextChunk}
                 position="top"
+                estimatedMinutes={currentChunkMinutes}
               />
             )}
 
@@ -1808,12 +2049,15 @@ export function LessonViewPage({
                       className="p-8 md:p-12"
                     >
                       {currentChunkHtml ? (
-                        <div
-                          className={`prose dark:prose-invert max-w-4xl mx-auto text-foreground rich-content ${contentLineSpacing} ${contentFontSize} ${
-                            simplifiedMode ? 'prose-xl prose-amber' : ''
-                          }`}
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentChunkHtml, { ADD_ATTR: ['data-align', 'style'], ADD_TAGS: ['style'] }) }}
-                        />
+                        <ReadingSpotlight onBlockActivate={handleReadFromHere} readAloudActive={ttsPlaying}>
+                          <div
+                            className={`prose dark:prose-invert max-w-4xl mx-auto text-foreground rich-content ${
+                              simplifiedMode ? 'prose-xl prose-amber' : ''
+                            }`}
+                            style={contentInlineStyle}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentChunkHtml, { ADD_ATTR: ['data-align', 'style'], ADD_TAGS: ['style'] }) }}
+                          />
+                        </ReadingSpotlight>
                       ) : (
                         <div className="text-center py-12">
                           <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -1891,32 +2135,39 @@ export function LessonViewPage({
                     {ttsPlaying ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                     {ttsPlaying ? 'Stop' : 'Listen'}
                   </button>
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">Speed</span>
-                  {([0.5, 0.75, 1, 1.25, 1.5, 2] as const).map((speed) => (
-                    <button
-                      key={speed}
-                      onClick={() => {
-                        ttsRateRef.current = speed;
-                        setTtsRate(speed);
-                        if (ttsPlaying) { stopTTS(); speak(); }
-                      }}
-                      className={`px-2 py-0.5 text-[10px] font-medium rounded-md transition-colors ${
-                        ttsRate === speed
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {speed}x
-                    </button>
-                  ))}
+                  {ttsPlaying && (
+                    <>
+                      <span className="text-[10px] text-gray-400 uppercase tracking-wider">Speed</span>
+                      {([0.5, 0.75, 1, 1.25, 1.5, 2] as const).map((speed) => (
+                        <button
+                          key={speed}
+                          onClick={() => {
+                            ttsRateRef.current = speed;
+                            setTtsRate(speed);
+                            if (ttsPlaying) { stopTTS(); speak(); }
+                          }}
+                          className={`px-2 py-0.5 text-[10px] font-medium rounded-md transition-colors ${
+                            ttsRate === speed
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {speed}x
+                        </button>
+                      ))}
+                    </>
+                  )}
                 </div>
                 {currentChunkHtml ? (
-                  <div
-                    className={`prose dark:prose-invert max-w-none text-foreground rich-content ${contentLineSpacing} ${contentFontSize} ${
-                      simplifiedMode ? 'prose-xl prose-amber' : ''
-                    }`}
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentChunkHtml, { ADD_ATTR: ['data-align', 'style'], ADD_TAGS: ['style'] }) }}
-                  />
+                  <ReadingSpotlight onBlockActivate={handleReadFromHere} readAloudActive={ttsPlaying}>
+                    <div
+                      className={`prose dark:prose-invert max-w-none text-foreground rich-content ${
+                        simplifiedMode ? 'prose-xl prose-amber' : ''
+                      }`}
+                      style={contentInlineStyle}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentChunkHtml, { ADD_ATTR: ['data-align', 'style'], ADD_TAGS: ['style'] }) }}
+                    />
+                  </ReadingSpotlight>
                 ) : (
                   <div className="text-center py-6">
                     <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
@@ -1929,14 +2180,17 @@ export function LessonViewPage({
             {/* ── Executive Function Supports ── */}
             {!effectiveFocusMode && (
               <div className="space-y-4">
+                <div className="flex justify-end">
+                  <AutoSaveIndicator lastSavedAt={autoSavedAt} saving={autoSaving} error={autoSaveError} />
+                </div>
                 <TaskChecklist tasks={dynamicTasks} />
-                <VisualSchedule schedule={dynamicSchedule.length > 0 ? dynamicSchedule : undefined} />
+                <ProgressTimeline nodes={timelineNodes.length > 0 ? timelineNodes : undefined} />
               </div>
             )}
             </div>
 
             {/* ── Native Interactive Activities (tabbed or focus) ── */}
-            <div id="lesson-activities" className={activePhase === 'activity' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'activity') ? 'block' : 'hidden'} data-guided-section="activity">
+            <div id="lesson-activities" className={!sequentialMode || activePhase === 'activity' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'activity') ? 'block' : 'hidden'} data-guided-section="activity">
               {interactiveContent.length > 0 && (() => {
                 const sorted = [...interactiveContent].sort((a, b) => a.sequence_order - b.sequence_order);
               
@@ -2020,23 +2274,21 @@ export function LessonViewPage({
                       </div>
                     </div>
                   )}
-                  <div className="p-6 bg-white">
-                    <InteractiveActivityViewer
-                      key={activeItem.id}
-                      contentType={activeItem.content_type}
-                      title={activeItem.title}
-                      data={activeItem.content_data as unknown as InteractiveActivityData}
-                      onComplete={() => {
-                        setCompletedActivityIds((prev) => {
-                          const next = new Set(prev).add(activeItem.id);
-                          if (next.size === interactiveContent.length) {
-                            setTracker((p) => ({ ...p, activity: true }));
-                          }
-                          return next;
-                        });
-                      }}
-                    />
-                  </div>
+                  <InteractiveActivityViewer
+                    key={activeItem.id}
+                    contentType={activeItem.content_type}
+                    title={activeItem.title}
+                    data={activeItem.content_data as unknown as InteractiveActivityData}
+                    onComplete={() => {
+                      setCompletedActivityIds((prev) => {
+                        const next = new Set(prev).add(activeItem.id);
+                        if (next.size === interactiveContent.length) {
+                          setTracker((p) => ({ ...p, activity: true }));
+                        }
+                        return next;
+                      });
+                    }}
+                  />
                 </CollapsibleCard>
               );
             })()}
@@ -2128,6 +2380,7 @@ export function LessonViewPage({
             <Dialog open={isResourcesOpen} onOpenChange={setIsResourcesOpen}>
                 <DialogContent style={{ maxWidth: '1152px', width: '95vw' }} className="max-h-[85vh] overflow-y-auto p-0 sm:p-6 bg-gray-50 rounded-xl">
                 <DialogTitle className="sr-only">Resources & Material</DialogTitle>
+                <DialogDescription className="sr-only">Downloadable files and links for this lesson.</DialogDescription>
             {hasPdfAssets && (!effectiveFocusMode || currentFocusId === 'summary') && (
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
                 <div className="flex items-center gap-3 mb-6">
@@ -2183,17 +2436,9 @@ export function LessonViewPage({
             </Dialog>
 
             {/* ── Quiz ── */}
-            <div className={activePhase === 'quiz' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'quiz') ? 'block' : 'hidden'} data-guided-section="quiz">
-              {!lesson.has_quiz || !quizData ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm mb-8">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <HelpCircle className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Quiz Available</h3>
-                  <p className="text-gray-500">This lesson doesn&apos;t have a quiz. You can continue to the next lesson or review the material.</p>
-                </div>
-              ) : (
-                (!effectiveFocusMode || currentFocusId === 'summary') && (
+            {lesson.has_quiz !== false && hasQuiz && (
+              <div id="lesson-quiz" className={!sequentialMode || activePhase === 'quiz' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'quiz') ? 'block' : 'hidden'} data-guided-section="quiz">
+                {(!effectiveFocusMode || currentFocusId === 'summary') && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
@@ -2201,7 +2446,7 @@ export function LessonViewPage({
                       </div>
                       <div>
                         <h2 className="text-xl font-bold text-gray-900">Knowledge Check</h2>
-                        <p className="text-sm text-gray-500">{quizData.questions.length} questions to test your understanding</p>
+                        <p className="text-sm text-gray-500">{quizData!.questions.length} questions to test your understanding</p>
                       </div>
                     </div>
                     <QuizPage
@@ -2221,12 +2466,12 @@ export function LessonViewPage({
                       simulatedAttempts={simulatedAttempts}
                     />
                   </div>
-                )
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* ── Chunk Navigation (bottom of content) ── */}
-            {showChunkNav && !effectiveFocusMode && !isSlideMode && activePhase === 'content' && (
+            {showChunkNav && !effectiveFocusMode && !isSlideMode && (!sequentialMode || activePhase === 'content') && (
               <ChunkNavigation
                 currentChunk={currentChunk}
                 totalChunks={totalChunks}
@@ -2236,10 +2481,11 @@ export function LessonViewPage({
                 onPrev={goToPrevChunk}
                 onNext={goToNextChunk}
                 position="bottom"
+                estimatedMinutes={currentChunkMinutes}
               />
             )}
             {/* ── Student Summary (optional) ── */}
-            <div className={activePhase === 'finish' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'finish') ? 'block' : 'hidden'} data-guided-section="finish">
+            <div id="lesson-finish" className={!sequentialMode || activePhase === 'finish' || effectiveFocusMode || (guidedMode && guidedSteps[guidedStepIndex]?.id === 'finish') ? 'block' : 'hidden'} data-guided-section="finish">
             {(!effectiveFocusMode || currentFocusId === 'summary') && (
               <>
             {lesson.has_summary_activity && !lessonCompleted && (
@@ -2330,8 +2576,13 @@ export function LessonViewPage({
             )}
             </div>
 
-            {/* ── PHASE NAVIGATION ── */}
-            {!effectiveFocusMode && (() => {
+            {/* ── PHASE NAVIGATION ──
+                Only meaningful in guided step-by-step mode, which still
+                advances one phase at a time. On the default flowing page
+                every section is already visible, so a "jump to next phase"
+                button at the very bottom (after the user has already
+                scrolled past everything) has nothing useful to do. */}
+            {guidedMode && !effectiveFocusMode && (() => {
               const currentPhaseIndex = lessonPhases.findIndex(p => p.id === activePhase);
               if (currentPhaseIndex === -1) return null;
               const prevPhase = currentPhaseIndex > 0 ? lessonPhases[currentPhaseIndex - 1] : null;
@@ -2376,6 +2627,7 @@ export function LessonViewPage({
               <Dialog open={isDiscussionOpen} onOpenChange={setIsDiscussionOpen}>
               <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0 sm:p-6 bg-gray-50">
                   <DialogTitle className="sr-only">Class Discussion</DialogTitle>
+                  <DialogDescription className="sr-only">Discussion thread for this lesson.</DialogDescription>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 mb-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                     <MessageSquare className="w-6 h-6 text-blue-600" />
@@ -2383,6 +2635,22 @@ export function LessonViewPage({
                   </h2>
                   <LessonDiscussion lessonId={lesson.id} />
                 </div>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* ── AI ASSISTANT ── */}
+            {settings.ai_assistant_enabled !== false && (
+              <Dialog open={isAiAssistantOpen} onOpenChange={setIsAiAssistantOpen}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 sm:p-6 bg-gray-50">
+                  <DialogTitle className="sr-only">AI Lesson Assistant</DialogTitle>
+                  <DialogDescription className="sr-only">AI-generated summary and Q&amp;A for this lesson.</DialogDescription>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                      <Sparkles className="w-6 h-6 text-indigo-600" /> AI Lesson Assistant
+                    </h2>
+                    <LessonAIAssistant lessonId={lesson.id} lessonTitle={lesson.title} />
+                  </div>
                 </DialogContent>
               </Dialog>
             )}
@@ -2506,7 +2774,7 @@ export function LessonViewPage({
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className={`font-medium truncate ${isCurrent ? 'text-indigo-900' : 'text-gray-700'}`}>
-                                {l.sequence_order}. {l.title}
+                                {lessonRankMap.get(l.id) ?? l.sequence_order}. {l.title}
                               </p>
                             </div>
                             {l.has_quiz && (
@@ -2530,6 +2798,7 @@ export function LessonViewPage({
             <DialogTitle className="text-lg font-semibold text-gray-900">
               {assets.find(a => a.id === viewingAsset)?.title || 'View Resource'}
             </DialogTitle>
+            <DialogDescription className="sr-only">Preview of the selected lesson resource.</DialogDescription>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => {
                 const asset = assets.find(a => a.id === viewingAsset);

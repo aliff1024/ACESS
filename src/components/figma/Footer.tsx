@@ -51,6 +51,7 @@ export function Footer({ variant }: { variant?: 'full' | 'simple' }) {
             <ul className="space-y-2 mb-4">
               <li><Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="text-gray-400 hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="/accessibility-statement" className="text-gray-400 hover:text-white transition-colors">Accessibility Statement</Link></li>
             </ul>
             <h4 className="text-lg font-semibold mb-4">Connect With Us</h4>
             <div className="flex gap-4">

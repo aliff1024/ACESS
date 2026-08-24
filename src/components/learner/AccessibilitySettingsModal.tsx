@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
@@ -8,13 +8,16 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { Loader2, Type, Target, Eye, ListChecks, Volume2, Globe, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useTranslation } from '@/lib/useTranslation';
 import { dedupeSpeechVoices, TTS_SPEED_OPTIONS, FONT_FAMILIES, ANIMATION_LEVELS } from '@/lib/accessibility-utils';
-import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, getAllPresets } from '@/lib/adaptive-engine';
+import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, getAllPresets, trackSettingsEvent } from '@/lib/adaptive-engine';
 import { SliderSetting } from '@/components/accessibility/SliderSetting';
 import { TintPicker } from '@/components/accessibility/TintPicker';
+import { PresetDetailsDialog } from '@/components/accessibility/PresetDetailsDialog';
 import { fetchFullProfile, saveUserProfile } from '@/lib/learner-api';
+import type { AccessibilitySettingsData } from '@/lib/learner-api';
 
 interface AccessibilitySettingsModalProps {
   isOpen: boolean;
@@ -29,6 +32,16 @@ export function AccessibilitySettingsModal({
   const { t, setLocale } = useTranslation();
 
   const [activePreset, setActivePreset] = useState<string>(() => settings.active_preset || 'none');
+  // docs/accessibility/03 §8 / 05 §5 item 1: a preset chip used to apply
+  // instantly, with no description or diff. Clicking a chip now stages it
+  // here instead of applying it; PresetDetailsDialog (rendered below)
+  // shows what would change, and only its own "Apply preset" button
+  // actually calls handleApplyPreset.
+  const [pendingPresetId, setPendingPresetId] = useState<string | null>(null);
+  // What the config is still "based on" even after a manual tweak sets
+  // activePreset to 'custom' — kept separate so preset-driven behavior
+  // doesn't silently vanish after one slider adjustment.
+  const [basePreset, setBasePreset] = useState<string>(() => settings.base_preset || settings.active_preset || 'none');
   const [birthDate, setBirthDate] = useState<string>('');
 
   useEffect(() => {
@@ -55,11 +68,19 @@ export function AccessibilitySettingsModal({
   const [saving, setSaving] = useState(false);
 
   // Focus
-  const [layoutMode, setLayoutMode] = useState<'scroll'|'slide'|'chunked'>(() => settings.layout_mode || 'slide');
+  // One control for layout, not two: layout_mode ('scroll'/'slide'/'chunked')
+  // and the old separate chunked_content_mode switch used to both exist and
+  // write to each other (one Focus-tab control writing a field the other
+  // read), and the Focus tab only ever rendered two buttons for this
+  // three-value field — so under the Dyslexia/ADHD presets, which default
+  // to 'chunked', neither button appeared selected. chunked_content_mode is
+  // now purely derived (layoutMode === 'chunked') wherever it's saved below.
+  const [layoutMode, setLayoutMode] = useState<'scroll'|'slide'|'chunked'>(
+    () => settings.chunked_content_mode ? 'chunked' : (settings.layout_mode || 'slide')
+  );
   const [structureMode, setStructureMode] = useState<'full'|'minimal'|'checklist'>(() => settings.structure_mode || 'full');
   const [readingSpotlight, setReadingSpotlight] = useState<boolean>(() => !!settings.reading_spotlight);
   const [distractionFreeMode, setDistractionFreeMode] = useState<boolean>(() => !!settings.distraction_free_mode);
-  const [chunkedContentMode, setChunkedContentMode] = useState<boolean>(() => !!settings.chunked_content_mode);
   const [simplifiedUi, setSimplifiedUi] = useState<boolean>(() => !!settings.simplified_ui);
 
   // Sensory
@@ -76,6 +97,7 @@ export function AccessibilitySettingsModal({
   const [stepByStepEnabled, setStepByStepEnabled] = useState<boolean>(() => !!settings.step_by_step_enabled);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(() => settings.auto_save_enabled ?? true);
   const [progressTimelineEnabled, setProgressTimelineEnabled] = useState<boolean>(() => !!settings.progress_timeline_enabled);
+  const [aiAssistantEnabled, setAiAssistantEnabled] = useState<boolean>(() => settings.ai_assistant_enabled ?? true);
 
   useEffect(() => {
     if (!isOpen || typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -88,6 +110,7 @@ export function AccessibilitySettingsModal({
   useEffect(() => {
     if (!isOpen) return;
     setActivePreset(settings.active_preset || 'none');
+    setBasePreset(settings.base_preset || settings.active_preset || 'none');
     setFontFamily(settings.font_family || 'arial');
     setFontSizePx(settings.font_size_px ?? 16);
     setLineSpacingMultiplier(settings.line_spacing_multiplier ?? 1.5);
@@ -99,8 +122,7 @@ export function AccessibilitySettingsModal({
     setPreferredLanguage(settings.preferred_language || 'en');
     setReadingSpotlight(!!settings.reading_spotlight);
     setDistractionFreeMode(!!settings.distraction_free_mode);
-    setChunkedContentMode(!!settings.chunked_content_mode);
-    setLayoutMode(settings.layout_mode || 'slide');
+    setLayoutMode(settings.chunked_content_mode ? 'chunked' : (settings.layout_mode || 'slide'));
     setStructureMode(settings.structure_mode || 'full');
     setSimplifiedUi(!!settings.simplified_ui);
     setPreferredTheme(settings.preferred_theme || 'light');
@@ -114,58 +136,81 @@ export function AccessibilitySettingsModal({
     setStepByStepEnabled(!!settings.step_by_step_enabled);
     setAutoSaveEnabled(settings.auto_save_enabled ?? true);
     setProgressTimelineEnabled(!!settings.progress_timeline_enabled);
+    setAiAssistantEnabled(settings.ai_assistant_enabled ?? true);
   }, [isOpen]); // Only sync when modal opens
+
+  // The modal's local state as a settings-shaped snapshot — memoized so
+  // both the live-preview effect below and PresetDetailsDialog (which
+  // needs "what would change from here" before any preset is applied)
+  // read the same stable object, rather than the dialog comparing against
+  // the possibly-stale settings from context or the effect re-running on
+  // every render because a freshly-built object never matches by identity.
+  const currentLocalSettings: AccessibilitySettingsData = useMemo(() => ({
+    ...settings,
+    active_preset: activePreset,
+    base_preset: basePreset,
+    font_family: fontFamily,
+    font_size_px: fontSizePx,
+    line_spacing_multiplier: lineSpacingMultiplier,
+    word_spacing_pct: wordSpacingPct,
+    background_tint: backgroundTint,
+    tts_enabled: ttsEnabled,
+    tts_rate: ttsRate,
+    tts_voice_uri: ttsVoiceUri || null,
+    preferred_language: preferredLanguage,
+    reading_spotlight: readingSpotlight,
+    distraction_free_mode: distractionFreeMode,
+    // Derived, not independently stored: layoutMode is the single source
+    // of truth for this axis now (see the layoutMode state declaration).
+    chunked_content_mode: layoutMode === 'chunked',
+    layout_mode: layoutMode,
+    structure_mode: structureMode,
+    simplified_ui: simplifiedUi,
+    preferred_theme: preferredTheme,
+    animation_level: animationLevel,
+    muted_colors: mutedColors,
+    low_contrast: lowContrast,
+    captions_enabled: captionsEnabled,
+    keyboard_navigation_enabled: keyboardNavigationEnabled,
+    task_checklist_enabled: taskChecklistEnabled,
+    visual_schedule_enabled: visualScheduleEnabled,
+    step_by_step_enabled: stepByStepEnabled,
+    auto_save_enabled: autoSaveEnabled,
+    progress_timeline_enabled: progressTimelineEnabled,
+    ai_assistant_enabled: aiAssistantEnabled,
+    // Update legacy mappings
+    preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
+    dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
+    high_contrast: preferredTheme === 'high_contrast',
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [
+    isOpen, activePreset, basePreset, fontFamily, fontSizePx, lineSpacingMultiplier, wordSpacingPct, backgroundTint, ttsEnabled,
+    ttsRate, ttsVoiceUri, preferredLanguage, readingSpotlight, distractionFreeMode, layoutMode, structureMode, simplifiedUi,
+    preferredTheme, animationLevel, mutedColors, lowContrast, captionsEnabled, keyboardNavigationEnabled,
+    taskChecklistEnabled, visualScheduleEnabled, stepByStepEnabled, autoSaveEnabled, progressTimelineEnabled, aiAssistantEnabled,
+  ]);
 
   // Push preview to context when local states change
   useEffect(() => {
     if (!isOpen) return;
-    previewSettings({
-      ...settings,
-      active_preset: activePreset,
-      font_family: fontFamily,
-      font_size_px: fontSizePx,
-      line_spacing_multiplier: lineSpacingMultiplier,
-      word_spacing_pct: wordSpacingPct,
-      background_tint: backgroundTint,
-      tts_enabled: ttsEnabled,
-      tts_rate: ttsRate,
-      tts_voice_uri: ttsVoiceUri || null,
-      preferred_language: preferredLanguage,
-      reading_spotlight: readingSpotlight,
-      distraction_free_mode: distractionFreeMode,
-      chunked_content_mode: chunkedContentMode,
-      layout_mode: layoutMode,
-      structure_mode: structureMode,
-      simplified_ui: simplifiedUi,
-      preferred_theme: preferredTheme,
-      animation_level: animationLevel,
-      muted_colors: mutedColors,
-      low_contrast: lowContrast,
-      captions_enabled: captionsEnabled,
-      keyboard_navigation_enabled: keyboardNavigationEnabled,
-      task_checklist_enabled: taskChecklistEnabled,
-      visual_schedule_enabled: visualScheduleEnabled,
-      step_by_step_enabled: stepByStepEnabled,
-      auto_save_enabled: autoSaveEnabled,
-      progress_timeline_enabled: progressTimelineEnabled,
-      // Update legacy mappings
-      preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
-      dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
-      high_contrast: preferredTheme === 'high_contrast',
-    });
-  }, [
-    isOpen, activePreset, fontFamily, fontSizePx, lineSpacingMultiplier, wordSpacingPct, backgroundTint, ttsEnabled,
-    ttsRate, ttsVoiceUri, preferredLanguage, readingSpotlight, distractionFreeMode, chunkedContentMode, layoutMode, structureMode, simplifiedUi,
-    preferredTheme, animationLevel, mutedColors, lowContrast, captionsEnabled, keyboardNavigationEnabled,
-    taskChecklistEnabled, visualScheduleEnabled, stepByStepEnabled, autoSaveEnabled, progressTimelineEnabled, previewSettings
-  ]);
+    previewSettings(currentLocalSettings);
+  }, [isOpen, currentLocalSettings, previewSettings]);
 
   const setCustom = () => {
     setActivePreset('custom');
   };
 
-  const handleApplyPreset = (presetId: string) => {
+  const handleApplyPreset = async (presetId: string) => {
+    // docs/accessibility/09 §3.1 "preset_applied ... Whether the details
+    // dialog changes behaviour" — this is the confirmed-apply path now
+    // that every chip click routes through PresetDetailsDialog first
+    // (docs/accessibility/00 §4 Phase 7), so every event recorded here
+    // was, by construction, previewed via the dialog before being
+    // applied. Fire-and-forget, matches trackAdaptation()'s existing
+    // "never let analytics break the UX" discipline.
+    trackSettingsEvent('preset_applied', presetId);
     setActivePreset(presetId);
+    setBasePreset(presetId);
     let s;
     if (presetId === 'none') {
       s = DEFAULT_PRESET_SETTINGS;
@@ -181,9 +226,9 @@ export function AccessibilitySettingsModal({
       setTtsEnabled(s.tts_enabled);
       setReadingSpotlight(s.reading_spotlight);
       setDistractionFreeMode(s.distraction_free_mode);
-      setChunkedContentMode(s.chunked_content_mode);
       setSimplifiedUi(s.simplified_ui);
-      setLayoutMode(s.layout_mode || 'slide');
+      const resolvedLayoutMode = s.chunked_content_mode ? 'chunked' : (s.layout_mode || 'slide');
+      setLayoutMode(resolvedLayoutMode);
       setStructureMode(s.structure_mode || 'full');
       setAnimationLevel(s.animation_level);
       setMutedColors(s.muted_colors);
@@ -194,6 +239,48 @@ export function AccessibilitySettingsModal({
       setStepByStepEnabled(s.step_by_step_enabled);
       setAutoSaveEnabled(s.auto_save_enabled);
       setProgressTimelineEnabled(s.progress_timeline_enabled);
+
+      // Persist immediately, not just preview. "Apply preset" that only
+      // staged local state — still requiring the separate Save Settings
+      // button to actually take effect — read as a bug in testing: the
+      // dialog's own button says "Apply", so it should apply. Built from
+      // `s` and `currentLocalSettings` directly rather than the setX()
+      // state above, because those state updates are async and wouldn't
+      // be visible yet within this same function call.
+      try {
+        await updateSettings({
+          ...currentLocalSettings,
+          active_preset: presetId,
+          base_preset: presetId,
+          font_family: s.font_family,
+          font_size_px: s.font_size_px,
+          line_spacing_multiplier: s.line_spacing_multiplier,
+          word_spacing_pct: s.word_spacing_pct,
+          background_tint: s.background_tint,
+          tts_enabled: s.tts_enabled,
+          reading_spotlight: s.reading_spotlight,
+          distraction_free_mode: s.distraction_free_mode,
+          chunked_content_mode: resolvedLayoutMode === 'chunked',
+          layout_mode: resolvedLayoutMode,
+          structure_mode: s.structure_mode || 'full',
+          simplified_ui: s.simplified_ui,
+          animation_level: s.animation_level,
+          muted_colors: s.muted_colors,
+          low_contrast: s.low_contrast,
+          preferred_theme: s.preferred_theme,
+          task_checklist_enabled: s.task_checklist_enabled,
+          visual_schedule_enabled: s.visual_schedule_enabled,
+          step_by_step_enabled: s.step_by_step_enabled,
+          auto_save_enabled: s.auto_save_enabled,
+          progress_timeline_enabled: s.progress_timeline_enabled,
+          preferred_font: s.font_family === 'opendyslexic' || s.font_family === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
+          dyslexia_friendly_font: s.font_family === 'opendyslexic' || s.font_family === 'atkinson_hyperlegible',
+          high_contrast: s.preferred_theme === 'high_contrast',
+        });
+      } catch (err) {
+        console.error('[accessibility] failed to persist applied preset:', err);
+        toast.error('Could not save your preset. Your changes are previewed, but press Save Settings to make sure they stick.');
+      }
     }
   };
 
@@ -203,40 +290,7 @@ export function AccessibilitySettingsModal({
     try {
       setLocale(preferredLanguage as 'en' | 'ms');
       await Promise.all([
-        updateSettings({
-          ...settings,
-          active_preset: activePreset,
-          font_family: fontFamily,
-          font_size_px: fontSizePx,
-          line_spacing_multiplier: lineSpacingMultiplier,
-          word_spacing_pct: wordSpacingPct,
-          background_tint: backgroundTint,
-          tts_enabled: ttsEnabled,
-          tts_rate: ttsRate,
-          tts_voice_uri: ttsVoiceUri || null,
-          preferred_language: preferredLanguage,
-          reading_spotlight: readingSpotlight,
-          distraction_free_mode: distractionFreeMode,
-          chunked_content_mode: chunkedContentMode,
-          layout_mode: layoutMode,
-          structure_mode: structureMode,
-          simplified_ui: simplifiedUi,
-          preferred_theme: preferredTheme,
-          animation_level: animationLevel,
-          muted_colors: mutedColors,
-          low_contrast: lowContrast,
-          captions_enabled: captionsEnabled,
-          keyboard_navigation_enabled: keyboardNavigationEnabled,
-          task_checklist_enabled: taskChecklistEnabled,
-          visual_schedule_enabled: visualScheduleEnabled,
-          step_by_step_enabled: stepByStepEnabled,
-          auto_save_enabled: autoSaveEnabled,
-          progress_timeline_enabled: progressTimelineEnabled,
-          // Update legacy mappings
-          preferred_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible' ? 'dyslexia' : 'default',
-          dyslexia_friendly_font: fontFamily === 'opendyslexic' || fontFamily === 'atkinson_hyperlegible',
-          high_contrast: preferredTheme === 'high_contrast',
-        }),
+        updateSettings(currentLocalSettings),
         birthDate ? saveUserProfile({ birth_date: birthDate }) : Promise.resolve(),
       ]);
       onClose();
@@ -251,6 +305,7 @@ export function AccessibilitySettingsModal({
   };
 
   return (
+    <>
     <Dialog key={isOpen ? 'open' : 'closed'} open={isOpen} onOpenChange={(open) => { if (!open) handleCancel() }}>
       <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden h-[85vh] max-h-[800px] flex flex-col">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
@@ -266,7 +321,7 @@ export function AccessibilitySettingsModal({
             <Button
               variant={activePreset === 'none' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => handleApplyPreset('none')}
+              onClick={() => setPendingPresetId('none')}
               className={activePreset === 'none' ? 'bg-blue-600 text-white' : ''}
             >
               Default
@@ -276,13 +331,18 @@ export function AccessibilitySettingsModal({
                 key={preset.id}
                 variant={activePreset === preset.id ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => handleApplyPreset(preset.id)}
+                onClick={() => setPendingPresetId(preset.id)}
                 className={activePreset === preset.id ? 'bg-blue-600 text-white' : ''}
               >
                 {preset.label.replace(' Preset', '')}
               </Button>
             ))}
           </div>
+          {activePreset === 'custom' && basePreset !== 'none' && (
+            <p className="text-xs text-gray-500 mt-2">
+              Customized from the <span className="font-semibold text-gray-700">{ACCESSIBILITY_PRESETS[basePreset]?.label.replace(' Preset', '') || basePreset}</span> preset — its layout and behavior still apply alongside your changes.
+            </p>
+          )}
         </div>
 
         <Tabs defaultValue="reading" className="flex flex-col flex-1 overflow-hidden min-h-0">
@@ -425,9 +485,17 @@ export function AccessibilitySettingsModal({
             <TabsContent value="focus" className="space-y-4 m-0">
               <div className="border border-gray-200 rounded-xl p-4">
                 <Label className="text-sm font-semibold mb-3 block">Layout Mode</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant={layoutMode === 'scroll' ? 'default' : 'outline'} onClick={() => { setLayoutMode('scroll'); setChunkedContentMode(false); setCustom(); }} className="h-auto py-2"><span className="text-xs">Scroll View</span></Button>
-                  <Button variant={layoutMode === 'slide' ? 'default' : 'outline'} onClick={() => { setLayoutMode('slide'); setChunkedContentMode(false); setCustom(); }} className="h-auto py-2"><span className="text-xs">Slide View</span></Button>
+                {/* One three-way control, not two buttons plus a separate
+                    switch that wrote to the same field: this used to be a
+                    Scroll/Slide button pair alongside a "Chunked Content"
+                    switch that both read and wrote layoutMode, so whenever
+                    a preset (or the switch itself) set it to 'chunked', no
+                    button below appeared selected — the control was lying
+                    about its own state. */}
+                <div className="grid grid-cols-3 gap-2">
+                  <Button variant={layoutMode === 'scroll' ? 'default' : 'outline'} onClick={() => { setLayoutMode('scroll'); setCustom(); }} className="h-auto py-2"><span className="text-xs">Scroll View</span></Button>
+                  <Button variant={layoutMode === 'slide' ? 'default' : 'outline'} onClick={() => { setLayoutMode('slide'); setCustom(); }} className="h-auto py-2"><span className="text-xs">Slide View</span></Button>
+                  <Button variant={layoutMode === 'chunked' ? 'default' : 'outline'} onClick={() => { setLayoutMode('chunked'); setCustom(); }} className="h-auto py-2"><span className="text-xs text-center">One Section at a Time</span></Button>
                 </div>
               </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
@@ -443,13 +511,6 @@ export function AccessibilitySettingsModal({
                   <p className="text-xs text-gray-500">Hide sidebar, widgets, and notifications</p>
                 </div>
                 <Switch checked={distractionFreeMode} onCheckedChange={(v) => { setDistractionFreeMode(v); setCustom(); }} />
-              </div>
-              <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
-                <div>
-                  <Label className="text-sm font-semibold">Chunked Content</Label>
-                  <p className="text-xs text-gray-500">Show one section at a time</p>
-                </div>
-                <Switch checked={chunkedContentMode} onCheckedChange={(v) => { setChunkedContentMode(v); if(v) setLayoutMode('chunked'); else if(layoutMode === 'chunked') setLayoutMode('scroll'); setCustom(); }} />
               </div>
               <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
@@ -536,6 +597,13 @@ export function AccessibilitySettingsModal({
                 </div>
                 <Switch checked={progressTimelineEnabled} onCheckedChange={(v) => { setProgressTimelineEnabled(v); setCustom(); }} />
               </div>
+              <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-semibold">AI Lesson Assistant</Label>
+                  <p className="text-xs text-gray-500">Show the AI summary &amp; Q&amp;A assistant on lessons</p>
+                </div>
+                <Switch checked={aiAssistantEnabled} onCheckedChange={(v) => { setAiAssistantEnabled(v); setCustom(); }} />
+              </div>
             </TabsContent>
 
             <TabsContent value="profile" className="p-6 space-y-6">
@@ -573,5 +641,17 @@ export function AccessibilitySettingsModal({
         </div>
       </DialogContent>
     </Dialog>
+    {pendingPresetId !== null && (
+      <PresetDetailsDialog
+        presetId={pendingPresetId}
+        currentSettings={currentLocalSettings}
+        onCancel={() => setPendingPresetId(null)}
+        onApply={() => {
+          handleApplyPreset(pendingPresetId);
+          setPendingPresetId(null);
+        }}
+      />
+    )}
+    </>
   );
 }

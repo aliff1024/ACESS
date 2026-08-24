@@ -13,6 +13,15 @@ import { useAccessibility } from '@/providers/AccessibilityProvider';
 interface AdaptiveRecommendationsProps {
   onStartLesson: (lessonId: string, courseId?: string) => void;
   onViewCourse?: (courseId: string) => void;
+  /** Caps how many cards render, in addition to the existing internal
+   *  3-item cap. Optional and defaults to showing everything the internal
+   *  cap already allows — existing callers are unaffected. Added for the
+   *  Dyslexia dashboard (docs/accessibility/04 §4.1), which shows exactly
+   *  one recommendation instead of a grid. */
+  maxItems?: number;
+  /** Renders a single column instead of the default 3-column grid.
+   *  Optional, defaults to false (existing behaviour). */
+  singleColumn?: boolean;
 }
 
 const tierConfig: Record<string, { labelKey: string; color: string; badgeColor: string; icon: typeof Book }> = {
@@ -36,7 +45,8 @@ const tierConfig: Record<string, { labelKey: string; color: string; badgeColor: 
   },
 };
 
-export function AdaptiveRecommendations({ onStartLesson, onViewCourse }: AdaptiveRecommendationsProps) {
+export function AdaptiveRecommendations({ onStartLesson, onViewCourse, maxItems, singleColumn }: AdaptiveRecommendationsProps) {
+  const gridClass = singleColumn ? 'grid grid-cols-1 gap-6' : 'grid grid-cols-1 md:grid-cols-3 gap-6';
   const { t } = useTranslation();
   const { settings, userAgeGroup } = useAccessibility();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -97,8 +107,8 @@ export function AdaptiveRecommendations({ onStartLesson, onViewCourse }: Adaptiv
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {courseRecs.map((course, index) => {
+        <div className={gridClass}>
+          {(maxItems ? courseRecs.slice(0, maxItems) : courseRecs).map((course, index) => {
             return (
               <Card
                 key={`course-rec-${course.id}-${index}`}
@@ -170,8 +180,8 @@ export function AdaptiveRecommendations({ onStartLesson, onViewCourse }: Adaptiv
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {recommendations.map((rec, index) => {
+      <div className={gridClass}>
+        {(maxItems ? recommendations.slice(0, maxItems) : recommendations).map((rec, index) => {
           const config = tierConfig[rec.difficulty_tier] || tierConfig.standard;
           const Icon = config.icon;
           return (

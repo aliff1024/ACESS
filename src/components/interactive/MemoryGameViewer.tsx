@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { MemoryGameData, MemoryGameMode } from '@/lib/interactive-types'
 import { Button } from '@/components/ui/button'
 import { RotateCcw, Trophy, Timer } from 'lucide-react'
@@ -21,6 +21,7 @@ export function MemoryGameViewer({ data, onComplete }: MemoryGameViewerProps) {
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [isTimerRunning, setIsTimerRunning] = useState(false)
+  const completedRef = useRef(false)
 
   const reset = () => {
     const shuffled = [...(data.cards ?? [])]
@@ -33,6 +34,7 @@ export function MemoryGameViewer({ data, onComplete }: MemoryGameViewerProps) {
     setStartTime(null)
     setElapsedSeconds(0)
     setIsTimerRunning(false)
+    completedRef.current = false
   }
 
   // Initialize
@@ -75,15 +77,7 @@ export function MemoryGameViewer({ data, onComplete }: MemoryGameViewerProps) {
 
       if (first.pairId === second.pairId) {
         setTimeout(() => {
-          setCards((prev) => {
-            const nextCards = prev.map((c) => (c.id === firstId || c.id === secondId ? { ...c, matched: true } : c))
-            // Check for game completion
-            if (nextCards.every(c => c.matched)) {
-              setIsTimerRunning(false)
-              onComplete?.()
-            }
-            return nextCards
-          })
+          setCards((prev) => prev.map((c) => (c.id === firstId || c.id === secondId ? { ...c, matched: true } : c)))
           setSelected([])
         }, 500)
       } else {
@@ -98,6 +92,19 @@ export function MemoryGameViewer({ data, onComplete }: MemoryGameViewerProps) {
   }
 
   const allMatched = cards.length > 0 && cards.every((c) => c.matched)
+
+  // Fire onComplete as its own effect, not from inside the setCards updater
+  // above — calling a parent's setState while React is still computing this
+  // component's next state trips "Cannot update a component while rendering
+  // a different component".
+  useEffect(() => {
+    if (allMatched && !completedRef.current) {
+      completedRef.current = true
+      setIsTimerRunning(false)
+      onComplete?.()
+    }
+  }, [allMatched, onComplete])
+
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0')
     const s = (secs % 60).toString().padStart(2, '0')
@@ -160,8 +167,18 @@ export function MemoryGameViewer({ data, onComplete }: MemoryGameViewerProps) {
         </div>
       </div>
 
+      {/* docs/accessibility/07 §7.2 "Each card has a stable accessible
+          name (Card 3, row 1, face down)" — the grid's column count is
+          responsive (2/3/4 columns), so a fixed row/column would be
+          wrong at some viewport width; "Card N of Total" stays correct
+          at every width and still gives a screen-reader user a stable
+          position to navigate by. */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-4xl mx-auto" style={{ perspective: '1000px' }}>
-        {cards.map((card) => (
+        {cards.map((card, index) => {
+          const positionLabel = `Card ${index + 1} of ${cards.length}`
+          const stateLabel = card.matched ? 'matched' : card.flipped ? 'face up' : 'face down'
+          const cardLabel = card.flipped || card.matched ? `${card.text}. ${positionLabel}, ${stateLabel}.` : `${positionLabel}, ${stateLabel}.`
+          return (
           <button
             key={card.id}
             type="button"
@@ -173,7 +190,7 @@ export function MemoryGameViewer({ data, onComplete }: MemoryGameViewerProps) {
               transform: card.flipped || card.matched ? 'rotateY(180deg)' : 'none',
               opacity: card.matched ? 0.4 : 1,
             }}
-            aria-label={card.flipped || card.matched ? card.text : "Hidden card"}
+            aria-label={cardLabel}
           >
             {/* Back of Card (Hidden when flipped) */}
             <div
@@ -202,7 +219,8 @@ export function MemoryGameViewer({ data, onComplete }: MemoryGameViewerProps) {
               )}
             </div>
           </button>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

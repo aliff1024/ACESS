@@ -79,16 +79,19 @@ export function FlashcardViewer({ data, accessibilitySettings, onComplete }: Fla
           aria-label={isFlipped ? "Show front of card" : "Show back of card"}
           aria-live="polite"
         >
-          {/* Front of Card */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-md hover:shadow-lg rounded-2xl overflow-hidden transition-shadow" style={{ backfaceVisibility: 'hidden' }}>
+          {/* Front of Card. `backface-visibility: hidden` only hides this
+              visually when flipped — the element and its text stay in the
+              DOM and, without aria-hidden, a screen reader has no reason
+              not to read both faces regardless of which one is showing. */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-md hover:shadow-lg rounded-2xl overflow-hidden transition-shadow" style={{ backfaceVisibility: 'hidden' }} aria-hidden={isFlipped}>
             {renderCardContent(card.front, card.front_image ?? card.image_url, card.front_layout)}
             <div className="absolute bottom-3 right-4 text-gray-400 opacity-60">
               <RotateCcw className="w-4 h-4" />
             </div>
           </div>
-          
+
           {/* Back of Card */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-md rounded-2xl overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-md rounded-2xl overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }} aria-hidden={!isFlipped}>
             {renderCardContent(card.back, card.back_image, card.back_layout)}
             <div className="absolute bottom-3 right-4 text-blue-400 opacity-60">
               <RotateCcw className="w-4 h-4" />

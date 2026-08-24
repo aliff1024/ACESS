@@ -12,9 +12,16 @@ import { useState, useEffect } from 'react';
 
 interface MyCoursesSectionProps {
   onContinue: (courseId: string) => void;
+  /** Renders one card per row instead of the default up-to-4-column grid.
+   *  Optional, defaults to false (existing behaviour unaffected). Used by
+   *  the Dyslexia dashboard (docs/accessibility/04 §4.1's density budget —
+   *  1 column for Dyslexia vs 3–4 default). This changes density only;
+   *  the card itself keeps its existing banner/badge layout rather than
+   *  becoming a true list row, which would be a larger redesign. */
+  singleColumn?: boolean;
 }
 
-export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
+export function MyCoursesSection({ onContinue, singleColumn }: MyCoursesSectionProps) {
   const { t } = useTranslation();
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +63,7 @@ export function MyCoursesSection({ onContinue }: MyCoursesSectionProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className={singleColumn ? 'grid grid-cols-1 gap-6' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}>
         {courses.length === 0 ? (
           <Card className="col-span-full p-16 border-dashed border-2 border-gray-200 bg-gray-50/50 rounded-3xl text-center">
             <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />

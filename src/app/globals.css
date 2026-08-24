@@ -72,6 +72,15 @@
 }
 
 :root {
+  /* ─── Reading measure (docs/accessibility/03 §3.1, 04 §3) ────────────
+     A single, font-relative source of truth for how wide the actual
+     reading column is allowed to get. `ch` rather than `rem`/`px` on
+     purpose: WCAG 1.4.8 caps line length at 80 characters, and a
+     rem-based max-width (e.g. max-w-2xl = 42rem) silently drifts past
+     that cap the moment a learner raises font size — ch stays correct at
+     every size. Per-preset values are set on html[data-preset="…"] below,
+     next to that preset's other design tokens. */
+  --content-measure: 72ch;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -140,13 +149,17 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* ─── Preset: Dyslexia (Cream, Soft Yellow, Low-Glare, High Spacing) ─── */
+/* ─── Preset: Dyslexia (Cream, Soft Yellow, Low-Glare, High Spacing) ───
+   background/card/popover are intentionally NOT set here — this preset
+   always pairs with data-bg-tint="cream" (below), which owns those three
+   variables. Setting them in both places let the two hand-tuned cream
+   values silently drift apart; data-bg-tint is now the single source. ── */
 html[data-preset="dyslexia"] {
-  --background: oklch(0.97 0.02 90); /* Cream */
+  /* 62ch, not the old fixed max-w-2xl (42rem): BDA recommends 50–70
+     characters per line, and ch stays correct as font size changes. */
+  --content-measure: 62ch;
   --foreground: oklch(0.20 0 0); /* Dark grey for high readability */
-  --card: oklch(0.99 0.01 90); /* Slightly lighter cream */
   --card-foreground: oklch(0.20 0 0);
-  --popover: oklch(0.99 0.01 90);
   --popover-foreground: oklch(0.20 0 0);
   --primary: oklch(0.40 0.1 260); /* Muted legible blue */
   --primary-foreground: oklch(0.98 0 0);
@@ -164,13 +177,39 @@ html[data-preset="dyslexia"] {
   --sidebar-accent-foreground: oklch(0.20 0 0);
   --sidebar-border: oklch(0.85 0.02 90);
 }
+/* Letter spacing has no learner-facing slider yet, so it stays a plain
+   preset-level rule — but NOT !important, so it never again shadows a
+   learner-controllable value the way the old word-spacing override did.
+   0.12em is the WCAG 1.4.12 floor ("at least 0.12x font size"), not the
+   previous 0.1em, which sat just under it. Word spacing is intentionally
+   NOT set here: it is fully driven by --user-word-spacing (below), which
+   the Dyslexia preset's word_spacing_pct default already reaches the
+   0.16em floor through — see AccessibilityProvider.tsx. */
 html[data-preset="dyslexia"] body {
-  letter-spacing: 0.1em !important;
-  word-spacing: 0.2em !important;
+  letter-spacing: 0.12em;
+}
+
+/* ─── Preset: Dyslexia — typography rules from the BDA Style Guide 2023 ──
+   (docs/accessibility/01 §3.2, §3.5): never justify, never italicise for
+   emphasis (italics measurably slow reading for dyslexic readers), and
+   let the browser hyphenate only where the author explicitly marks a
+   break rather than guessing — automatic hyphenation can fragment words
+   in ways that undo the wider letter/word spacing above. Scoped to
+   .rich-content (the lesson/quiz text itself), not the whole page, so
+   UI chrome (buttons, badges) is unaffected. */
+html[data-preset="dyslexia"] .rich-content {
+  text-align: left !important;
+  hyphens: manual;
+}
+html[data-preset="dyslexia"] .rich-content em,
+html[data-preset="dyslexia"] .rich-content i {
+  font-style: normal;
+  font-weight: 600;
 }
 
 /* ─── Preset: ADHD (Soft Grey, Distraction-Free, Focus-First) ─── */
 html[data-preset="adhd"] {
+  --content-measure: 66ch;
   --background: oklch(0.95 0 0); /* Soft Grey */
   --foreground: oklch(0.25 0 0);
   --card: oklch(0.98 0 0);
@@ -196,6 +235,16 @@ html[data-preset="adhd"] {
 
 /* ─── Preset: Autism (Muted Colors, Soft Blue, Predictable) ─── */
 html[data-preset="autism"] {
+  /* Widened from 66ch to match the 72ch default — live feedback called
+     the reading column "still a bit small in the middle" even after
+     fixing the actual layout bugs nearby (an overflowing image, a
+     stuck-open drag float). 66ch matched ADHD's value by default rather
+     than for an Autism-specific reason; unlike Dyslexia's 62ch (a BDA
+     Style Guide recommendation, 50-70 characters), Autism's need is
+     predictability and reduced distraction, not a narrow decoding
+     measure, so there's no floor being protected by keeping it tighter
+     than default. Still comfortably under the WCAG 1.4.8 80ch ceiling. */
+  --content-measure: 72ch;
   --background: oklch(0.95 0.02 240); /* Soft Blue */
   --foreground: oklch(0.30 0.02 240);
   --card: oklch(0.98 0.01 240);
@@ -394,7 +443,9 @@ html[data-font-family="calibri"] body { font-family: Calibri, 'Gill Sans', sans-
 html[data-font-family="atkinson_hyperlegible"] body { font-family: 'Atkinson Hyperlegible', sans-serif !important; }
 html[data-font-family="opendyslexic"] body {
   font-family: 'OpenDyslexic', sans-serif !important;
-  letter-spacing: 0.05em !important;
+  /* 0.12em is the WCAG 1.4.12 floor, not !important so it composes with
+     data-preset="dyslexia" above instead of racing it. */
+  letter-spacing: 0.12em;
 }
 
 /* ─── Accessibility Presets: Continuous Font Size (via CSS variable) ──── */
@@ -410,6 +461,21 @@ html[data-font-family] body {
 /* ─── Accessibility Presets: Word Spacing (via CSS variable) ─────────── */
 html[data-font-family] body {
   word-spacing: var(--user-word-spacing, 0em);
+}
+
+/* ─── Accessibility Presets: Lesson Content Line Height (via CSS variable) ───
+   Tailwind Typography hardcodes line-height as a fixed unitless ratio
+   directly on p/li/headings/etc (e.g. round(28/16)), not inherited from
+   .prose — so the body-level line-height rule above never reached lesson
+   content, and LessonViewPage was instead applying its own legacy
+   leading-* utility class derived from a separate 3-value enum, which is
+   what the Line Spacing slider actually fought with. These selectors
+   target the elements directly with normal (non-:where()) specificity,
+   which is enough to beat Typography's zero-specificity :where() rules
+   without needing !important. Word spacing needs no equivalent rule:
+   Typography never sets it, so it already inherits from body above. */
+html[data-font-family] .rich-content :where(p, li, blockquote, td, th, h1, h2, h3, h4, h5, h6) {
+  line-height: var(--user-line-spacing, 1.5);
 }
 
 /* ─── Accessibility Presets: Background Tints ────────────────────────── */
@@ -467,22 +533,61 @@ html[data-bg-tint]:not([data-bg-tint="white"]):not([data-bg-tint="none"]):not([d
   background-color: var(--background) !important;
 }
 
-/* ─── Accessibility Presets: Reading Spotlight ────────────────────────── */
-html[data-reading-spotlight="true"] .prose:has(> *:hover) > *,
-html[data-reading-spotlight="true"] .readable-content:has(> *:hover) > * {
-  opacity: 0.15;
-  filter: blur(0.5px);
-  transition: opacity 0.3s ease, filter 0.3s ease;
+/* ─── Accessibility Presets: Reading Spotlight ─────────────────────────
+   Driven by the <ReadingSpotlight> component, which tracks the active
+   paragraph via IntersectionObserver (scroll position) as the primary,
+   input-agnostic signal — works for keyboard paging and touch scrolling,
+   not just a mouse. Hover is kept as a secondary, more precise trigger
+   for mouse users. Scoped to .reading-spotlight-container so it only
+   affects lesson content the component actually wraps. ────────────── */
+html[data-reading-spotlight="true"] .reading-spotlight-container .prose > *,
+html[data-reading-spotlight="true"] .reading-spotlight-container .readable-content > * {
+  /* No blur: blurring text raises decoding cost for the dyslexic readers
+     this feature is aimed at. Dim by opacity only. Raised from 0.35 to
+     0.45 so the dimmed text stays legible and further from the WCAG 1.4.3
+     4.5:1 floor. */
+  opacity: 0.45;
+  transition: opacity 0.25s ease;
 }
-html[data-reading-spotlight="true"] .prose > *:hover,
-html[data-reading-spotlight="true"] .readable-content > *:hover {
-  opacity: 1 !important;
-  filter: none !important;
-  background: var(--spotlight-bg, rgba(100, 150, 255, 0.05));
+html[data-reading-spotlight="true"] .reading-spotlight-container .prose > *:hover,
+html[data-reading-spotlight="true"] .reading-spotlight-container .readable-content > *:hover,
+html[data-reading-spotlight="true"] .reading-spotlight-container .prose > *.spotlight-active,
+html[data-reading-spotlight="true"] .reading-spotlight-container .readable-content > *.spotlight-active {
+  opacity: 1;
+  filter: none;
+  background: var(--spotlight-bg, rgba(100, 150, 255, 0.06));
   border-radius: 0.5rem;
-  box-shadow: 0 0 0 8px var(--spotlight-bg, rgba(100, 150, 255, 0.05));
-  z-index: 10;
+  box-shadow: 0 0 0 8px var(--spotlight-bg, rgba(100, 150, 255, 0.06));
   position: relative;
+  z-index: 10;
+}
+
+/* ─── "Read from here" affordance (docs/accessibility/03 §4.2) ─────────
+   Only present while TTS is actually playing (ReadingSpotlight adds the
+   .reading-spotlight-seekable class conditionally) — a pointer cursor
+   never appears over ordinary text when clicking it would do nothing. */
+.reading-spotlight-seekable .prose > *,
+.reading-spotlight-seekable .readable-content > * {
+  cursor: pointer;
+}
+
+/* ─── Accessibility Presets: Structure Mode "minimal" (ADHD) ───────────
+   Hides secondary header metadata (chapter tag, adaptive/official/
+   prerequisite badges) that add visual noise without being needed to
+   complete the lesson. */
+html[data-structure-mode="minimal"] .lesson-secondary-badge {
+  display: none !important;
+}
+
+/* ─── Reading measure utility (docs/accessibility/04 §3.1) ─────────────
+   The single width-constraining class for actual reading content — the
+   lesson/quiz prose column, never page chrome. Deliberately carries no
+   padding of its own: callers already bring their own px-* utilities,
+   and giving this its own padding-inline would double up with those
+   rather than replace them. */
+.content-column {
+  max-width: var(--content-measure, 72ch);
+  margin-inline: auto;
 }
 
 /* ─── Accessibility Presets: Distraction-Free Mode ───────────────────── */
@@ -520,11 +625,14 @@ html[data-animation-level="low"] *::after {
   transition-duration: 100ms !important;
 }
 
-/* ─── Accessibility Presets: Soft Backgrounds (softer UI surfaces, keeps text contrast) ── */
+/* ─── Accessibility Presets: Soft Backgrounds (softer UI surfaces, keeps text contrast) ──
+   --background/--card/--popover are intentionally NOT set here anymore.
+   They used to be, at the same specificity as the data-bg-tint rules above
+   but later in the file — so Soft Backgrounds silently won and a learner's
+   chosen tint (e.g. Dyslexia's cream) disappeared with no explanation the
+   moment they turned this on. data-bg-tint is now the single owner of the
+   page ground; Soft Backgrounds only softens secondary surfaces. */
 html[data-soft-bg="true"] {
-  /* Softer backgrounds and borders — foreground text contrast is preserved */
-  --background: oklch(0.97 0.005 260);
-  --card: oklch(0.98 0.003 260);
   --muted: oklch(0.95 0.005 260);
   --muted-foreground: oklch(0.55 0.01 260);
   --border: oklch(0.85 0.005 80);
@@ -532,22 +640,14 @@ html[data-soft-bg="true"] {
   --secondary: oklch(0.94 0.005 85);
   --secondary-foreground: oklch(0.4 0.005 260);
   --accent: oklch(0.94 0.005 85);
-  --sidebar: oklch(0.96 0.003 85);
   --sidebar-border: oklch(0.85 0.005 80);
   --sidebar-accent: oklch(0.94 0.005 85);
-  /* foreground, primary, primary-foreground, destructive, ring — UNCHANGED for WCAG AA */
+  /* background, card, popover, foreground, primary, primary-foreground,
+     destructive, ring — UNCHANGED, owned by data-bg-tint / WCAG AA */
 }
 
 /* ─── Accessibility Presets: Muted Colors ────────────────────────────── */
 html[data-muted-colors="true"] {
-  filter: saturate(0.6);
-}
-/* Deprecated: old low-contrast filter — kept for existing user data */
-html[data-low-contrast="true"] {
-  filter: contrast(0.85);
-}
-html[data-soft-bg="true"][data-muted-colors="true"],
-html[data-low-contrast="true"][data-muted-colors="true"] {
   filter: saturate(0.6);
 }
 
@@ -817,14 +917,28 @@ html[data-theme="soft"] .border-green-300 { border-color: oklch(0.76 0.02 140) !
   background-color: #f9fafb;
 }
 
+/* max-width caps a floated image at under half the column, guaranteeing
+   wrapped text always keeps a usable width to flow into. Without this,
+   an image authored with width="auto" (no fixed pixel size, so the
+   browser can't reserve its layout box ahead of load) renders at up to
+   100% of the — already measure-locked, as narrow as ~430px under
+   Distraction-Free — content column while floated, leaving the wrapped
+   paragraph beside it a sliver or nothing to wrap into: one word (or
+   fewer) per line, sometimes breaking mid-word. Reproduced live on a
+   real authored lesson. Capping the image is the fix regardless of
+   whether the image is still loading or fully sized — a full-width
+   floated "half" of a two-column layout was never the intent of
+   data-align="left/right" to begin with. */
 .rich-content img[data-align="left"] {
   float: left;
+  max-width: 45%;
   margin-right: 1rem;
   margin-bottom: 0.5rem;
 }
 
 .rich-content img[data-align="right"] {
   float: right;
+  max-width: 45%;
   margin-left: 1rem;
   margin-bottom: 0.5rem;
 }

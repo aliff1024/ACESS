@@ -1,8 +1,19 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { DndContext, DragOverlay, useDraggable, useDroppable, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCenter, useDraggable, useDroppable, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
 import type { DragDropData, DragDropItem, DragDropMode } from '@/lib/interactive-types'
 import { RotateCcw, CheckCircle2 } from 'lucide-react'
+
+// docs/accessibility/07 §7.2 "Drag & drop" keyboard model: Tab to item →
+// Space to lift → arrows to choose target → Space to drop → Esc to cancel.
+// This component previously only configured PointerSensor, so none of
+// that worked — dnd-kit's own KeyboardSensor implements exactly this
+// interaction and is already proven working elsewhere in this codebase
+// (TimelineViewer.tsx's sortable mode), so enabling it here follows a
+// pattern already in use rather than inventing new keyboard-drag logic.
+// closestCenter (also already used by TimelineViewer) gives more
+// predictable "which zone is under the keyboard-moved item" resolution
+// than the untuned rectangle-intersection default.
 
 interface DragDropViewerProps {
   data: DragDropData
@@ -30,6 +41,12 @@ function DraggableItem({ item, disabled }: { item: DragDropItem; disabled: boole
       style={style}
       {...listeners}
       {...attributes}
+      // dnd-kit's `attributes` already supplies role="button", tabIndex,
+      // aria-disabled and aria-roledescription="draggable" — this label
+      // gives that button an accessible name beyond its visible text, and
+      // states the interaction so a screen-reader user knows Space picks
+      // it up (docs/accessibility/07 §7.2).
+      aria-label={`${item.text}. Draggable item. Press space to pick up, then use arrow keys to move it and space again to drop it.`}
       className={`inline-flex flex-col items-center gap-2 px-4 py-3 rounded-xl text-sm shadow-sm border cursor-grab active:cursor-grabbing select-none ${
         isDragging ? 'border-blue-400 bg-blue-50' : 'bg-white border-gray-200 hover:border-blue-300'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -50,31 +67,42 @@ function DroppableCategory({ category, items, revealed, onItemClick }: {
   onItemClick: (item: DragDropItem) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `cat:${category}` })
+  const headingId = `dragdrop-cat-${category.replace(/\s+/g, '-')}`
 
   return (
     <div
       ref={setNodeRef}
+      role="group"
+      aria-labelledby={headingId}
       className={`border-2 rounded-xl p-4 min-h-[140px] transition-colors ${
         isOver ? 'border-blue-400 bg-blue-50/90 shadow-md' : 'border-dashed border-gray-300 bg-white/80 backdrop-blur-sm shadow-sm hover:border-gray-400'
       }`}
     >
-      <h4 className="text-sm font-semibold text-gray-700 mb-3 text-center">{category}</h4>
+      <h4 id={headingId} className="text-sm font-semibold text-gray-700 mb-3 text-center">{category}</h4>
       <div className="flex flex-wrap gap-2 justify-center">
         {items.map((item) => {
           const isCorrect = item.category === category
           return (
-            <div
+            // A real <button>, not a clickable <div> — the previous div
+            // had an onClick and nothing else: no tabIndex, no role, no
+            // keyboard equivalent at all (docs/accessibility/07 §2 defect
+            // 3). This is how a placed item gets removed and reassigned
+            // via the dropdown below, without a drag gesture.
+            <button
               key={item.id}
+              type="button"
               onClick={() => !revealed && onItemClick(item)}
+              disabled={revealed}
+              aria-label={revealed ? item.text : `Remove ${item.text} from ${category}`}
               className={`px-3 py-2 rounded-xl text-sm ${!revealed ? 'cursor-pointer hover:bg-gray-50' : ''} border flex flex-col items-center gap-2 shadow-sm ${
-                revealed 
+                revealed
                   ? (isCorrect ? 'bg-green-50 border-green-300 text-green-800' : 'bg-red-50 border-red-300 text-red-800')
                   : 'bg-white border-gray-200'
               }`}
             >
               {item.image_url && <img src={item.image_url} alt="" className="w-28 h-28 rounded object-cover shadow-sm" />}
               <span className="font-medium text-center">{item.text}</span>
-            </div>
+            </button>
           )
         })}
       </div>
@@ -83,12 +111,20 @@ function DroppableCategory({ category, items, revealed, onItemClick }: {
 }
 
 // Droppable Diagram Zone
-function DroppableDiagramZone({ item, zoneId, revealed, isCorrect, currentItem, onRemove }: any) {
+function DroppableDiagramZone({ zoneId, revealed, isCorrect, currentItem, onRemove }: {
+  zoneId: string
+  revealed: boolean
+  isCorrect: boolean
+  currentItem: DragDropItem | undefined
+  onRemove: (item: DragDropItem) => void
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: `zone:${zoneId}` })
-  
+
   return (
     <div
       ref={setNodeRef}
+      role="group"
+      aria-label={currentItem ? `Drop zone. Currently holds: ${currentItem.text}.` : 'Empty drop zone'}
       className={`relative w-full h-full min-h-[40px] min-w-[10px] border-2 border-dashed rounded-md flex items-center justify-center p-2 transition-colors
         ${isOver ? 'bg-blue-100/80 border-blue-500' : 'bg-white/60 border-gray-400'}
         ${currentItem ? 'border-solid border-gray-300 bg-white shadow-sm' : ''}
@@ -96,9 +132,18 @@ function DroppableDiagramZone({ item, zoneId, revealed, isCorrect, currentItem, 
       `}
     >
       {currentItem ? (
-        <div onClick={() => !revealed && onRemove(currentItem)} className={`text-sm font-medium ${!revealed ? 'cursor-pointer' : ''}`}>
-          {currentItem.text}
-        </div>
+        revealed ? (
+          <span className="text-sm font-medium">{currentItem.text}</span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onRemove(currentItem)}
+            aria-label={`Remove ${currentItem.text} from this zone`}
+            className="text-sm font-medium cursor-pointer"
+          >
+            {currentItem.text}
+          </button>
+        )
       ) : (
         <span className="text-xs text-gray-500 font-medium">Drop here</span>
       )}
@@ -119,6 +164,14 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
   const [revealed, setRevealed] = useState(false)
   const [score, setScore] = useState<{correct: number, total: number} | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
+  // docs/accessibility/07 §7.2 "announce each step" — a polite sr-only
+  // region announcing where an item landed. Deliberately scoped to the
+  // outcome (picked up/moved/dropped in one motion via mouse, or the
+  // select) rather than every intermediate keyboard-drag position, which
+  // would need hooking dnd-kit's onDragMove as well and risks the kind
+  // of over-announcing docs/accessibility/06 §4.2 explicitly warns
+  // against ("a slider must not announce every intermediate value").
+  const [announcement, setAnnouncement] = useState('')
 
   // Reset when data changes
   useEffect(() => {
@@ -131,7 +184,10 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
     });
   }, [data])
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  )
 
   const activeItem = useMemo(() => {
     if (!activeId) return null
@@ -182,9 +238,11 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
     // Add to target
     if (targetId === 'unplaced') {
       setUnplaced(prev => [...prev, item])
+      setAnnouncement(`${item.text} moved back to the item bank.`)
     } else if (targetId.startsWith('cat:')) {
       const cat = targetId.slice(4)
       setDroppedCategories(prev => ({...prev, [cat]: [...(prev[cat] || []), item]}))
+      setAnnouncement(`${item.text} placed in ${cat}.`)
     } else if (targetId.startsWith('zone:')) {
       const zoneId = targetId.slice(5)
       // If zone already has an item, send it back to unplaced
@@ -192,6 +250,7 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
         setUnplaced(prev => [...prev, droppedZones[zoneId]])
       }
       setDroppedZones(prev => ({...prev, [zoneId]: item}))
+      setAnnouncement(`${item.text} placed in the drop zone.`)
     }
   }
 
@@ -229,10 +288,28 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
     setScore(null)
   }
 
+  // docs/accessibility/07 §7.2 "Dropdown mode: each item gets a <select>
+  // of targets" — accessibility-utils.ts's ACTIVITY_ACCESSIBILITY already
+  // prescribed this for drag_drop ("Provide keyboard alternatives, e.g.
+  // matching dropdowns") without anything implementing it. This is the
+  // implementation for categories mode specifically — the most common
+  // mode and the one where "which category" maps cleanly onto a flat list
+  // of options, unlike diagram/matching mode's arbitrary x/y zones over
+  // an image, which don't have an equally clean dropdown framing and
+  // rely on the KeyboardSensor above instead (see the status note on
+  // why that mode's dropdown alternative wasn't attempted).
+  const assignToCategory = (item: DragDropItem, category: string) => {
+    if (revealed || !category) return
+    setUnplaced((prev) => prev.filter((i) => i.id !== item.id))
+    setDroppedCategories((prev) => ({ ...prev, [category]: [...(prev[category] || []), item] }))
+    setAnnouncement(`${item.text} placed in ${category}.`)
+  }
+
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="space-y-8 max-w-4xl mx-auto">
-        
+        <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
+
         {/* Score Display */}
         {revealed && score && (
           <div className="bg-white border border-gray-200 rounded-xl p-6 text-center shadow-sm">
@@ -262,6 +339,7 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
                 onItemClick={(item) => {
                   setDroppedCategories(prev => ({...prev, [cat]: prev[cat].filter(i => i.id !== item.id)}))
                   setUnplaced(prev => [...prev, item])
+                  setAnnouncement(`${item.text} removed from ${cat}, back in the item bank.`)
                 }}
               />
             ))}
@@ -304,6 +382,7 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
                            delete nextZones[zone.id]
                            setDroppedZones(nextZones)
                            setUnplaced(prev => [...prev, i])
+                           setAnnouncement(`${i.text} removed from the drop zone, back in the item bank.`)
                          }}
                        />
                      </div>
@@ -316,13 +395,29 @@ export function DragDropViewer({ data, onComplete }: DragDropViewerProps) {
         {/* Draggable Bank */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-700">Drag items from here</h4>
+            <h4 className="font-semibold text-gray-700">Drag items from here{mode === 'categories' ? ', or choose a category from the menu on each item' : ''}</h4>
             {unplaced.length === 0 && <span className="text-sm text-green-600 font-medium flex items-center"><CheckCircle2 className="w-4 h-4 mr-1" /> All items placed</span>}
           </div>
-          
+
           <div className="flex flex-wrap gap-3 min-h-[60px]">
             {unplaced.map((item) => (
-              <DraggableItem key={item.id} item={item} disabled={revealed} />
+              <div key={item.id} className="flex flex-col items-center gap-1.5">
+                <DraggableItem item={item} disabled={revealed} />
+                {mode === 'categories' && (
+                  <select
+                    value=""
+                    onChange={(e) => assignToCategory(item, e.target.value)}
+                    disabled={revealed}
+                    aria-label={`Move "${item.text}" to a category`}
+                    className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-gray-50 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    <option value="" disabled>Choose category…</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
             ))}
           </div>
         </div>

@@ -36,6 +36,13 @@ export function QuizPage({
 }: QuizPageProps) {
   const { t } = useTranslation();
   const { settings } = useAccessibility();
+  // docs/accessibility/07-ASSESSMENT-POLICY.md governs quiz behaviour for a
+  // learner on one of the three accessibility presets — softened timing,
+  // no visual urgency, one-question-per-screen regardless of the lesson's
+  // own reading-layout setting. A learner with no preset keeps today's
+  // behaviour unchanged; this program doesn't change the default product
+  // experience, only what accessibility presets do.
+  const activePreset = settings?.base_preset || settings?.active_preset || 'none';
   const [activeTab, setActiveTab] = useState<'info' | 'history'>('info');
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +56,14 @@ export function QuizPage({
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  // docs/accessibility/07 §3 "never auto-submit": under an accessibility
+  // preset, a timer reaching zero offers Extend / Submit now instead of
+  // silently submitting. hasExtended caps this at one self-serve
+  // extension per attempt ("at least once" — bounded to keep the timer a
+  // finite state machine rather than something a learner could stall
+  // indefinitely).
+  const [timeUpPrompt, setTimeUpPrompt] = useState(false);
+  const [hasExtended, setHasExtended] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [adaptiveHint, setAdaptiveHint] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -124,14 +139,29 @@ export function QuizPage({
       setTimeRemaining((prev) => {
         if (prev === null || prev <= 1) {
           clearTimer();
-          autoSubmitRef.current();
+          if (activePreset !== 'none') {
+            setTimeUpPrompt(true);
+          } else {
+            autoSubmitRef.current();
+          }
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearTimer();
-  }, [isTimerActive, clearTimer]);
+  }, [isTimerActive, clearTimer, activePreset]);
+
+  const handleExtendTime = () => {
+    if (!quizData?.time_limit_seconds) return;
+    // At least one self-serve extension (docs/accessibility/07 §3) —
+    // 25% of the original limit, floored at 1 minute so a short quiz
+    // still gets a meaningful extension.
+    const extension = Math.max(60, Math.round(quizData.time_limit_seconds * 0.25));
+    setHasExtended(true);
+    setTimeUpPrompt(false);
+    setTimeRemaining((prev) => (prev ?? 0) + extension);
+  };
 
   const handleSelectOption = (optionId: string) => {
     setSelectedOption(optionId);
@@ -218,6 +248,17 @@ export function QuizPage({
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
+  // docs/accessibility/07 §4 "read-aloud always available ... independent
+  // of tts_enabled" — tts_enabled controls autoplay-adjacent behaviour
+  // elsewhere in the product, never whether this button exists. Shared by
+  // both the chunked and full-scroll views below.
+  const handleReadQuestionAloud = (text: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  };
+
   const answeredCount = answers.length;
   const reviewCount = markedForReview.size;
 
@@ -266,6 +307,12 @@ export function QuizPage({
 
   const questions = quizData.questions;
   const timeLow = timeRemaining !== null && timeRemaining <= 120;
+  // docs/accessibility/07 §3 "warn at 25% remaining" — a preset-only
+  // notice offering the one self-serve extension, separate from timeLow
+  // (which still drives the default-preset pulsing badge below).
+  const lowTimeThreshold = quizData.time_limit_seconds ? Math.ceil(quizData.time_limit_seconds * 0.25) : null;
+  const showExtendNotice = activePreset !== 'none' && !hasExtended && !timeUpPrompt
+    && timeRemaining !== null && lowTimeThreshold !== null && timeRemaining > 0 && timeRemaining <= lowTimeThreshold;
 
   if (showStartScreen) {
     const bestScore = attemptHistory.length > 0 ? Math.max(...attemptHistory.map(a => a.score_pct)) : null;
@@ -315,7 +362,14 @@ export function QuizPage({
               </div>
             </div>
 
-            {settings.structure_mode === 'checklist' && (
+            {/* docs/accessibility/07 §6.1 "promote the existing checklist
+                panel to unconditional" — was gated on
+                structure_mode === 'checklist', which only the Autism
+                preset sets by default, so Dyslexia and ADHD learners never
+                saw stated expectations before starting a timed,
+                potentially high-stakes task. Now shown for every
+                accessibility preset; default (no preset) is unchanged. */}
+            {activePreset !== 'none' && (
               <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-5 mb-6 text-blue-900">
                 <h3 className="font-bold flex items-center gap-2 mb-2"><Info className="w-5 h-5 text-blue-600"/> {t('quiz.clearExpectations')}</h3>
                 <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -469,7 +523,16 @@ export function QuizPage({
         <div className="flex items-center gap-3 shrink-0">
           {timeRemaining !== null ? (
             <div className={`quiz-timer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
-              timeLow && !settings.distraction_free_mode && !settings.simplified_ui ? 'bg-red-50 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700'
+              // docs/accessibility/07 §3 "no visual urgency ... at any
+              // threshold" — was gated on distraction_free_mode ||
+              // simplified_ui, but simplified_ui is false in every preset's
+              // defaults (never suppresses anything) and distraction_free_mode
+              // is only a *preset default*, not locked — a learner can turn
+              // it off and keep the preset, bringing the pulse straight back.
+              // Gate on the preset itself instead: no accessibility preset
+              // learner ever gets a pulsing red countdown; default (no
+              // preset) behaviour is unchanged.
+              timeLow && activePreset === 'none' ? 'bg-red-50 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700'
             }`}>
               <Clock className="w-4 h-4" />
               <span className="tabular-nums">{formatTime(timeRemaining)}</span>
@@ -482,6 +545,34 @@ export function QuizPage({
           )}
         </div>
       </header>
+
+      {showExtendNotice && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-2.5 flex items-center justify-between gap-4 shrink-0">
+          <span className="text-sm text-amber-800">{t('quiz.lowTimeNotice')}</span>
+          <Button size="sm" variant="outline" onClick={handleExtendTime} className="border-amber-300 text-amber-800 hover:bg-amber-100 shrink-0">
+            {t('quiz.addMoreTime')}
+          </Button>
+        </div>
+      )}
+
+      {timeUpPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6">
+          <Card className="max-w-sm w-full p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">{t('quiz.timeUpTitle')}</h2>
+            <p className="text-sm text-gray-600 mb-5">{t('quiz.timeUpDesc')}</p>
+            <div className="flex gap-3">
+              {!hasExtended && (
+                <Button variant="outline" onClick={handleExtendTime} className="flex-1">
+                  {t('quiz.addMoreTime')}
+                </Button>
+              )}
+              <Button onClick={handleAutoSubmit} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                {t('quiz.submitNow')}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       <div className="flex-1 flex overflow-hidden">
         {/* ── Left sidebar ── */}
@@ -547,9 +638,24 @@ export function QuizPage({
 
         {/* ── Main content ── */}
         <main className="flex-1 overflow-y-auto p-6 relative">
-          <div className={settings.distraction_free_mode ? "max-w-full px-4 sm:px-8 xl:px-12 mx-auto" : "max-w-3xl mx-auto"}>
-            
-            {!(settings.chunked_content_mode || settings.layout_mode === 'slide') ? (
+          {/* .content-column reads --content-measure (docs/accessibility/04 §3.1)
+              instead of the old max-w-full, which — same bug as
+              LessonViewPage's contentContainerClass — made distraction-free
+              mode produce the widest possible line length instead of the
+              narrowest. Distraction-free removes chrome, never measure. */}
+          <div className={settings.distraction_free_mode ? "content-column px-4 sm:px-8 xl:px-12 mx-auto" : "max-w-3xl mx-auto"}>
+            {/* docs/accessibility/07 §4 "one question per screen ...
+                decoupled from lesson-reading settings" — this used to key
+                off chunked_content_mode/layout_mode, which describe how the
+                *lesson* is read, not the quiz. The Autism preset in
+                particular defaults layout_mode to 'scroll' (predictable,
+                non-chunked lesson reading) while still needing one question
+                at a time here — a quiz is its own, separate decision.
+                activePreset !== 'none' forces the one-question view for
+                every accessibility preset regardless of the lesson setting;
+                default (no preset) keeps reading the lesson's own setting,
+                unchanged. */}
+            {!(settings.chunked_content_mode || settings.layout_mode === 'slide' || activePreset !== 'none') ? (
               // ── FULL SCROLL VIEW (CHUNKED OFF) ──
               <div className="space-y-12 pb-24">
                 {questions.map((q, qIndex) => {
@@ -584,8 +690,17 @@ export function QuizPage({
                         <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
                           {q.question_text}
                         </h2>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          onClick={() => handleReadQuestionAloud(q.question_text)}
+                          title={t('quiz.readAloud')}
+                        >
+                          <Volume2 className="w-5 h-5" />
+                        </Button>
                       </div>
-                      
+
                       {q.image_url && (
                         <div className="mt-4 mb-6 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
                           <img src={q.image_url} alt="" className="w-full max-h-64 object-contain" role="presentation" />
@@ -678,21 +793,15 @@ export function QuizPage({
                     <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
                       {currentQuestion.question_text}
                     </h2>
-                    {(settings.tts_enabled) && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        onClick={() => {
-                          window.speechSynthesis.cancel();
-                          const u = new SpeechSynthesisUtterance(currentQuestion.question_text);
-                          window.speechSynthesis.speak(u);
-                        }}
-                        title={t('quiz.readAloud')}
-                      >
-                        <Volume2 className="w-5 h-5" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      onClick={() => handleReadQuestionAloud(currentQuestion.question_text)}
+                      title={t('quiz.readAloud')}
+                    >
+                      <Volume2 className="w-5 h-5" />
+                    </Button>
                   </div>
                   {currentQuestion.image_url && (
                     <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">

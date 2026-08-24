@@ -36,7 +36,7 @@ function isCoursesView(view: string): boolean {
 export function Sidebar({ activeView, onNavigate, onAccessibilityClick, className = '' }: SidebarProps) {
   const { t } = useTranslation();
   const { settings, userAgeGroup } = useAccessibility();
-  const activePreset = settings?.active_preset || 'none';
+  const activePreset = settings?.base_preset || settings?.active_preset || 'none';
   const [coursesOpen, setCoursesOpen] = useState(isCoursesView(activeView));
 
   const menuItems = useMemo<MenuItem[]>(() => {
@@ -67,24 +67,33 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
       ];
     }
 
-    // Autism Profile: Highly structured, predictable, explicitly numbered labels
+    // Autism Profile: Highly structured, predictable, plain-language labels.
+    // docs/accessibility/03 §5.4 "resolve the double numbering" — this used
+    // to prefix every entry with "Step N:" (and sub-items "N.N"), which
+    // competed with the dashboard's own 1-3 numbered sections for the same
+    // learner's attention. Two numbering systems on screen for two
+    // different things (site navigation vs. a single page's task order) is
+    // itself a source of confusion. Numbering is now reserved for
+    // within-task sequences only (the dashboard, guided lesson steps); the
+    // sidebar — which is site-wide navigation, not a sequence — gets plain
+    // labels instead.
     if (activePreset === 'autism') {
       return [
-        { id: 'dashboard', key: 'nav.dashboard', icon: LayoutDashboard, labelOverride: 'Step 1: Dashboard' },
+        { id: 'dashboard', key: 'nav.dashboard', icon: LayoutDashboard, labelOverride: 'Dashboard' },
         {
           id: 'courses',
           key: 'nav.myCourses',
           icon: BookOpen,
-          labelOverride: 'Step 2: Courses',
+          labelOverride: 'Courses',
           subItems: [
-            { id: 'courses', key: 'nav.allCourses', icon: BookOpen, labelOverride: '2.1 All Courses' },
-            { id: 'courses_enrolled', key: 'nav.enrolled', icon: BookMarked, labelOverride: '2.2 My Active Courses' },
-            { id: 'courses_favorites', key: 'nav.favourites', icon: Heart, labelOverride: '2.3 Saved for Later' },
+            { id: 'courses', key: 'nav.allCourses', icon: BookOpen, labelOverride: 'All Courses' },
+            { id: 'courses_enrolled', key: 'nav.enrolled', icon: BookMarked, labelOverride: 'My Active Courses' },
+            { id: 'courses_favorites', key: 'nav.favourites', icon: Heart, labelOverride: 'Saved for Later' },
           ],
         },
-        { id: 'progress', key: 'nav.progress', icon: TrendingUp, labelOverride: 'Step 3: Progress' },
-        { id: 'certificates', key: 'nav.achievements', icon: Trophy, labelOverride: 'Step 4: Certificates' },
-        { id: 'accessibility', key: 'nav.accessibility', icon: Settings, labelOverride: 'Step 5: Settings' },
+        { id: 'progress', key: 'nav.progress', icon: TrendingUp, labelOverride: 'Progress' },
+        { id: 'certificates', key: 'nav.achievements', icon: Trophy, labelOverride: 'Certificates' },
+        { id: 'accessibility', key: 'nav.accessibility', icon: Settings, labelOverride: 'Settings' },
       ];
     }
 

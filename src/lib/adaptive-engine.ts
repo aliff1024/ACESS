@@ -87,7 +87,10 @@ export const DEFAULT_PRESET_SETTINGS: PresetSettings = {
   task_checklist_enabled: false,
   visual_schedule_enabled: false,
   step_by_step_enabled: false,
-  auto_save_enabled: true,
+  // Kept in sync with AccessibilityProvider's defaultSettings — the
+  // AutoSaveIndicator pill should stay off on the plain default experience,
+  // same as the other executive-function supports above.
+  auto_save_enabled: false,
   progress_timeline_enabled: false,
 }
 
@@ -101,16 +104,19 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
     settings: {
       ...DEFAULT_PRESET_SETTINGS,
       font_family: 'atkinson_hyperlegible',
-      font_size_px: 18,
-      line_spacing_multiplier: 1.6,
-      word_spacing_pct: 20,
+      font_size_px: 19,
+      line_spacing_multiplier: 1.7,
+      // 40% × the 0.4em scale in AccessibilityProvider = 0.16em, the
+      // WCAG 1.4.12 word-spacing floor. The old value (20% × the old
+      // 0.3em scale) rendered 0.06em — see docs/accessibility/01 §7.
+      word_spacing_pct: 40,
       background_tint: 'cream',
       reading_spotlight: true,
       chunked_content_mode: true,
       layout_mode: 'chunked',
       structure_mode: 'full',
       animation_level: 'low',
-      tts_enabled: false,
+      tts_enabled: true,
       preferred_theme: 'light',
       auto_save_enabled: true,
     },
@@ -124,13 +130,16 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       ...DEFAULT_PRESET_SETTINGS,
       font_family: 'arial',
       font_size_px: 18,
-      line_spacing_multiplier: 1.5,
-      word_spacing_pct: 10,
+      line_spacing_multiplier: 1.6,
+      word_spacing_pct: 20, // 0.08em at the 0.4em scale — see docs/accessibility/01 §7
       background_tint: 'grey',
       reading_spotlight: true,
       distraction_free_mode: true,
       chunked_content_mode: true,
-      layout_mode: 'slide',
+      // Note: LessonViewPage always treats ADHD as non-slideshow (isSlideMode
+      // is forced off for this preset) — 'chunked' reflects what actually
+      // renders instead of a layout the learner will never see.
+      layout_mode: 'chunked',
       structure_mode: 'minimal',
       animation_level: 'low',
       preferred_theme: 'light',
@@ -148,8 +157,8 @@ export const ACCESSIBILITY_PRESETS: Record<string, PresetDefinition> = {
       ...DEFAULT_PRESET_SETTINGS,
       font_family: 'arial',
       font_size_px: 18,
-      line_spacing_multiplier: 1.5,
-      word_spacing_pct: 10,
+      line_spacing_multiplier: 1.6,
+      word_spacing_pct: 20, // 0.08em at the 0.4em scale — see docs/accessibility/01 §7
       background_tint: 'pale_blue',
       layout_mode: 'scroll',
       structure_mode: 'checklist',
@@ -271,6 +280,7 @@ export function applyPreset(presetName: string, currentSettings?: Partial<Access
     return {
       ...currentSettings,
       active_preset: 'none',
+      base_preset: 'none',
     } as AccessibilitySettingsData
   }
 
@@ -279,6 +289,7 @@ export function applyPreset(presetName: string, currentSettings?: Partial<Access
   return {
     ...currentSettings,
     active_preset: presetName,
+    base_preset: presetName,
     font_family: s.font_family,
     font_size_px: s.font_size_px,
     line_spacing_multiplier: s.line_spacing_multiplier,
@@ -287,6 +298,8 @@ export function applyPreset(presetName: string, currentSettings?: Partial<Access
     reading_spotlight: s.reading_spotlight,
     distraction_free_mode: s.distraction_free_mode,
     chunked_content_mode: s.chunked_content_mode,
+    layout_mode: s.layout_mode,
+    structure_mode: s.structure_mode,
     animation_level: s.animation_level,
     tts_enabled: s.tts_enabled,
     high_contrast: s.high_contrast,
@@ -352,8 +365,14 @@ export function computeAdaptiveSettings(
     }
   }
 
-  // Merge lesson modes from active_preset (presets act as a stronger signal)
-  const activePreset = userSettings.active_preset
+  // Merge lesson modes from base_preset (presets act as a stronger signal).
+  // base_preset, not active_preset: active_preset flips to 'custom' the
+  // moment a learner tweaks a single switch, which was silently dropping
+  // the preset's chunking/checkpoint lesson modes on the very first
+  // adjustment while applySettingsToDOM (which already reads base_preset)
+  // kept the color palette — two different "current preset" answers from
+  // two different places.
+  const activePreset = userSettings.base_preset || userSettings.active_preset
   if (activePreset && activePreset !== 'none' && PRESET_LESSON_MODES[activePreset]) {
     lessonModes = {
       ...lessonModes,
@@ -434,5 +453,77 @@ export async function trackAdaptation(
     })
   } catch {
     // Analytics failures should never break the user experience
+  }
+}
+
+// ─── Settings Analytics (docs/accessibility/09 §3.1) ─────────────────────
+//
+// docs/accessibility/09-MEASUREMENT-PLAN.md names a set of "settings
+// events" (setting_changed, preset_applied, preset_abandoned,
+// setting_reset, conflict_shown/ignored) needed to answer whether Phase
+// 7's Preset Details dialog and the rest of this program actually changed
+// learner behaviour. §9's own acceptance criteria say these should have
+// shipped "before any Phase 1 fix," to capture a real before/after
+// baseline — that window has already closed (Phase 0 never ran), so
+// nothing shipped now can retroactively answer that question. It's wired
+// up anyway so evaluation *from this point forward* has real data instead
+// of none, which is the one piece of Phase 8 that's actually
+// implementable without real learners, an independent reviewer, or AT
+// hardware this environment doesn't have.
+//
+// Deliberately narrow: only preset_applied is implemented.
+// - setting_changed would need a paired call at every one of
+//   AccessibilitySettingsModal.tsx's ~28 onChange handlers, several of
+//   them (sliders) firing rapidly enough to need debouncing to avoid
+//   flooding the table — a wide, error-prone change across a file this
+//   session didn't otherwise touch, not safe to do unverified.
+// - preset_abandoned ("applied then reverted within 24h") is a *derived*
+//   metric computed from a sequence of preset_applied events over time,
+//   not something a single client-side call can honestly fire in the
+//   moment it happens — building it correctly is a query/dashboard
+//   concern, not an instrumentation call.
+// - disabled_control_activated (e.g. pressing the disabled Next in
+//   StepByStepGuidance.tsx) can't be wired via a click handler at all:
+//   native `disabled` buttons never fire click events in the first place,
+//   so tracking "attempted" presses needs an architecture change to an
+//   already-shipped, already-verified control — not something to risk
+//   blind, with no live server to confirm it still behaves correctly.
+//
+// The underlying table (adaptive_interactions) has no structured-payload
+// column — just the fixed columns trackAdaptation() above already uses —
+// so which preset was applied is encoded directly in the event string
+// (`preset_applied:dyslexia`) rather than a separate property. A real
+// properties column is a schema migration this session has no way to
+// verify against a live database, so this reuses the column that already
+// exists rather than guessing at one that doesn't.
+
+export type SettingsEventType = 'preset_applied'
+
+export async function trackSettingsEvent(
+  event: SettingsEventType,
+  detail: string,
+  options?: {
+    userId?: string
+    sessionId?: string
+  },
+): Promise<void> {
+  try {
+    let userId = options?.userId
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      userId = user.id
+    }
+    await supabase.from('adaptive_interactions').insert({
+      user_id: userId,
+      lesson_id: null,
+      course_id: null,
+      adaptation_used: `${event}:${detail}`,
+      session_id: options?.sessionId ?? null,
+      duration_seconds: null,
+    })
+  } catch {
+    // Analytics failures should never break the settings UX, same
+    // discipline as trackAdaptation() above.
   }
 }

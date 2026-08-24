@@ -53,6 +53,13 @@ See `.env.local` for values. Required vars:
 | `SMTP_USER` | Gmail address |
 | `SMTP_PASS` | Gmail App Password (16 chars) |
 | `EMAIL_FROM` | Sender address |
+| `GEMINI_API_KEY` | Google Gemini API key, powers the AI Lesson Assistant (summary + Q&A) |
+| `GEMINI_MODEL` | Gemini model id (optional, defaults to `gemini-flash-latest`) |
+
+To get a free Gemini API key: go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey),
+sign in with a Google account, click "Create API key", and add it to `.env.local` as
+`GEMINI_API_KEY=...`. Without this key set, the AI Lesson Assistant shows a
+configuration error but the rest of the app is unaffected.
 
 ## Quick Start
 
@@ -62,6 +69,17 @@ npm run dev        # http://localhost:3000
 npm run build      # Production build
 npm run lint       # ESLint
 ```
+
+## Documentation
+
+| Doc | Covers |
+|-----|--------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System structure |
+| [DATABASE.md](DATABASE.md) | Schema and migrations |
+| [FEATURES.md](FEATURES.md) | Feature inventory |
+| [SETUP.md](SETUP.md) | Local setup |
+| [Accessibility.md](Accessibility.md) | Original accessibility preset specification (statement of intent) |
+| [accessibility/](accessibility/README.md) | **Accessibility deep-dive** — learning-disability standards, per-setting reference + conflict matrix, and the preset redesign plan |
 
 ## Roles
 
