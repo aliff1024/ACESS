@@ -210,7 +210,7 @@ export async function fetchStudentsDeepProgress(educatorId: string, studentId?: 
   if (enrollmentIds.length > 0) {
     const { data: lpData } = await supabase
       .from('lesson_progress')
-      .select('enrollment_id, is_viewed, last_viewed_at, time_spent_learning')
+      .select('enrollment_id, is_viewed, is_completed, last_viewed_at, time_spent_learning')
       .in('enrollment_id', enrollmentIds)
       
     for (const lp of lpData || []) {
@@ -259,7 +259,12 @@ export async function fetchStudentsDeepProgress(educatorId: string, studentId?: 
     
     // Calculate progress based on lessons
     const lps = lessonProgressMap.get((raw as any).id) || []
-    const completedLessons = lps.filter(lp => lp.is_viewed).length
+    // is_completed, not is_viewed: this figure is labelled "completed" and is
+    // compared against the learner's own progress. The rest of this file
+    // already counts is_completed (and models is_viewed && !is_completed as
+    // "skipped"), so counting opened lessons here made the educator dashboard
+    // disagree with both the learner and its own other panels.
+    const completedLessons = lps.filter(lp => lp.is_completed).length
     // No fallback for missing time: a viewed lesson with no recorded duration
     // contributes 0, not a fabricated 20 minutes.
     const totalTimeSpent = lps.reduce((acc, lp) => acc + ((lp.time_spent_learning as number) || 0), 0)

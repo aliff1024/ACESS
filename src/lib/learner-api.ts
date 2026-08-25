@@ -1,7 +1,6 @@
 import { supabase } from './supabase'
 import { v4 as uuidv4 } from 'uuid'
 import { createNotification } from './notifications'
-import { evaluateAchievements } from './achievement-engine'
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -817,48 +816,43 @@ export async function markLessonViewed(lessonId: string, courseId: string): Prom
 }
 
 /**
- * Marks the enrollment complete once every published lesson of the course has
- * been completed.
+ * Asks the database to recompute this learner's state for a course.
  *
- * Course completion used to be a side-effect of *claiming a certificate*
- * (`/api/certificates/claim`, `/api/certificates/custom`,
- * `/api/educator/certificates/issue` were the only three places that ever set
- * `enrollments.status = 'completed'`). That had two consequences:
- *   - a course with `certificate_enabled = false` could never be completed at
- *     all, however many lessons the learner finished;
- *   - a learner who finished every lesson but hadn't claimed their certificate
- *     stayed `active`, so the dashboard's "Courses Completed" tile and the
- *     Progress page under-counted them. Observed live: two courses showing
- *     100% while the tile read 1.
+ * Course completion and achievement awards are DERIVED, not asserted. They
+ * used to be written straight from the browser, which meant a learner could
+ * assert them: the escalation probe confirmed that
+ *   .from('enrollments').update({ status: 'completed' })
+ * and a direct insert into `user_achievements` were both accepted through the
+ * public anon key. Both writes are now blocked at the database, and the
+ * derivation lives in `sync_learner_course_state()` (SECURITY DEFINER), which
+ * is the single authoritative implementation of:
  *
- * Completion only ever moves forward here. If an educator later adds a lesson
- * to a finished course, the learner keeps the completion (and any certificate
- * issued against it) rather than silently reverting to in-progress.
+ *   course completed   -> every published, visible lesson of the course has a
+ *                         completed progress row on this enrollment
+ *   achievement earned -> course_achievements criteria evaluated against that
+ *                         same data, server-side
+ *
+ * Completion only ever moves forward, so adding a lesson to a finished course
+ * does not revoke a learner's completion or their certificate.
  */
-async function syncEnrollmentCompletion(enrollmentId: string, courseId: string): Promise<void> {
-  const { data: publishedLessons } = await supabase
-    .from('lessons')
-    .select('id')
-    .eq('course_id', courseId)
-    .eq('status', 'published')
-    .or('visibility_status.eq.visible,visibility_status.is.null')
+export interface LearnerCourseState {
+  enrolled: boolean
+  enrollment_id?: string
+  status?: string
+  lessons_total?: number
+  lessons_completed?: number
+  progress_pct?: number
+  avg_score?: number
+  newly_awarded?: Array<{ id: string; name: string }>
+}
 
-  if (!publishedLessons || publishedLessons.length === 0) return
-
-  const { count } = await supabase
-    .from('lesson_progress')
-    .select('id', { count: 'exact', head: true })
-    .eq('enrollment_id', enrollmentId)
-    .eq('is_completed', true)
-    .in('lesson_id', publishedLessons.map((l) => l.id))
-
-  if ((count ?? 0) < publishedLessons.length) return
-
-  await supabase
-    .from('enrollments')
-    .update({ status: 'completed', completed_at: new Date().toISOString() })
-    .eq('id', enrollmentId)
-    .eq('status', 'active')
+export async function syncLearnerCourseState(courseId: string): Promise<LearnerCourseState | null> {
+  const { data, error } = await supabase.rpc('sync_learner_course_state', { p_course_id: courseId })
+  if (error) {
+    console.error('sync_learner_course_state failed:', error)
+    return null
+  }
+  return data as unknown as LearnerCourseState
 }
 
 export async function completeLesson(lessonId: string, courseId: string): Promise<void> {
@@ -904,10 +898,10 @@ export async function completeLesson(lessonId: string, courseId: string): Promis
     })
   }
 
-  // Derive course completion from lesson completion, not from certificate claims.
-  await syncEnrollmentCompletion(enrollment.id, courseId)
+  // Course completion and achievements are derived server-side from the
+  // progress row just written — the client no longer asserts either.
+  const state = await syncLearnerCourseState(courseId)
 
-  // Hook into Notifications & Achievements
   try {
     const { data: l } = await supabase.from('lessons').select('title').eq('id', lessonId).single()
     if (l) {
@@ -918,9 +912,17 @@ export async function completeLesson(lessonId: string, courseId: string): Promis
         body: `You finished "${l.title}".`,
         metadata: { lesson_id: lessonId }
       })
-      await evaluateAchievements(userId, courseId)
-      await checkAndNotifyCertificateEligibility(userId, courseId)
     }
+    for (const badge of state?.newly_awarded ?? []) {
+      await createNotification({
+        user_id: userId,
+        type: 'badge_earned',
+        title: 'Badge Unlocked!',
+        body: `You just earned the "${badge.name}" badge.`,
+        metadata: { achievement_id: badge.id, course_id: courseId }
+      })
+    }
+    await checkAndNotifyCertificateEligibility(userId, courseId)
   } catch (err) {
     console.error('Failed to process lesson hooks:', err)
   }
@@ -1175,8 +1177,12 @@ export async function fetchQuizData(lessonId: string): Promise<QuizData | null> 
 
   const questionIds = (questions || []).map((q) => q.id)
 
+  // quiz_options_scoped, not quiz_options: the view returns the same shape but
+  // withholds is_correct until the learner has actually submitted an attempt
+  // for the quiz. Reading the base table let any learner download the answer
+  // key for every quiz on the platform before answering a single question.
   const { data: options, error: oError } = await supabase
-    .from('quiz_options')
+    .from('quiz_options_scoped')
     .select('id, question_id, option_text, is_correct, sequence_order, image_url')
     .in('question_id', questionIds)
     .order('sequence_order', { ascending: true })
@@ -1216,6 +1222,27 @@ export async function fetchQuizData(lessonId: string): Promise<QuizData | null> 
   }
 }
 
+/**
+ * Was the option the learner just chose the correct one?
+ *
+ * The adaptive-learning hint used to answer this in the browser by reading
+ * quiz_options.is_correct. The answer key is no longer served before an
+ * attempt (see migration 20260825001200), so the check moved server-side.
+ * It validates a choice the learner has already made without revealing which
+ * option is correct.
+ */
+export async function checkQuizAnswer(questionId: string, optionId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('check_quiz_answer', {
+    p_question_id: questionId,
+    p_option_id: optionId,
+  })
+  if (error) {
+    console.error('check_quiz_answer failed:', error)
+    return true // never block progress on a feedback-only check
+  }
+  return data === true
+}
+
 export async function submitQuizAttempt(params: {
   quizId: string
   courseId: string
@@ -1223,67 +1250,34 @@ export async function submitQuizAttempt(params: {
 }): Promise<{ score: number; passed: boolean; attemptId: string }> {
   const userId = await ensureUserId()
 
-  const { data: enrollment } = await supabase
-    .from('enrollments')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('course_id', params.courseId)
-    .neq('status', 'dropped')
-    .single()
+  // Grading happens in the database, not here.
+  //
+  // This function used to read quiz_options.is_correct in the browser, compute
+  // score_pct itself and insert the attempt. That made the score a client
+  // assertion: a learner could skip the quiz entirely and insert
+  // { score_pct: 100, result: 'pass' }. Quiz scores feed achievement criteria
+  // and the certificate quiz threshold, so a forged score bought real
+  // credentials. submit_quiz_attempt() (SECURITY DEFINER) now verifies
+  // enrollment, enforces max_attempts, grades against the stored answer key,
+  // and writes both the attempt and its answers; direct client writes to
+  // quiz_attempts are rejected by a trigger.
+  const { data, error } = await supabase.rpc('submit_quiz_attempt', {
+    p_quiz_id: params.quizId,
+    p_answers: params.answers.map((a) => ({
+      questionId: a.questionId,
+      selectedOptionId: a.selectedOptionId,
+    })),
+  })
 
-  const { data: existingAttempts } = await supabase
-    .from('quiz_attempts')
-    .select('attempt_number')
-    .eq('enrollment_id', enrollment.id)
-    .eq('quiz_id', params.quizId)
-    .order('attempt_number', { ascending: false })
-    .limit(1)
+  if (error) throw error
 
-  const attemptNumber = (existingAttempts?.[0]?.attempt_number || 0) + 1
-
-  const { data: quiz } = await supabase
-    .from('quizzes')
-    .select('pass_threshold_pct')
-    .eq('id', params.quizId)
-    .single()
-
-  let correctCount = 0
-  const totalQuestions = params.answers.length
-
-  for (const answer of params.answers) {
-    const { data: opt } = await supabase
-      .from('quiz_options')
-      .select('is_correct')
-      .eq('id', answer.selectedOptionId)
-      .single()
-    if (opt?.is_correct) correctCount++
+  const result = data as unknown as {
+    attempt_id: string
+    score_pct: number
+    passed: boolean
   }
-
-  const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0
-  const passed = (quiz?.pass_threshold_pct ?? 80) <= score
-
-  const { data: attempt, error: attemptError } = await supabase
-    .from('quiz_attempts')
-    .insert({
-      enrollment_id: enrollment.id,
-      quiz_id: params.quizId,
-      attempt_number: attemptNumber,
-      score_pct: score,
-      result: passed ? 'pass' : 'fail',
-    })
-    .select()
-    .single()
-
-  if (attemptError) throw attemptError
-
-  const answerRows = params.answers.map((a) => ({
-    attempt_id: attempt.id,
-    question_id: a.questionId,
-    selected_option_id: a.selectedOptionId,
-  }))
-
-  const { error: ansError } = await supabase.from('quiz_answers').insert(answerRows)
-  if (ansError) throw ansError
+  const score = result.score_pct
+  const passed = result.passed
 
   // Hook into Notifications & Achievements
   try {
@@ -1296,14 +1290,23 @@ export async function submitQuizAttempt(params: {
         body: `You scored ${score}% on "${q.title}".`,
         metadata: { quiz_id: params.quizId, score }
       })
-      await evaluateAchievements(userId, params.courseId)
+      const quizState = await syncLearnerCourseState(params.courseId)
+      for (const badge of quizState?.newly_awarded ?? []) {
+        await createNotification({
+          user_id: userId,
+          type: 'badge_earned',
+          title: 'Badge Unlocked!',
+          body: `You just earned the "${badge.name}" badge.`,
+          metadata: { achievement_id: badge.id, course_id: params.courseId }
+        })
+      }
       await checkAndNotifyCertificateEligibility(userId, params.courseId)
     }
   } catch (err) {
     console.error('Failed to process quiz hooks:', err)
   }
 
-  return { score, passed, attemptId: attempt.id }
+  return { score, passed, attemptId: result.attempt_id }
 }
 
 export async function fetchQuizAttemptHistory(lessonId: string, courseId: string): Promise<{
@@ -2157,7 +2160,7 @@ export async function enrollInCourse(courseId: string): Promise<{ enrollmentId: 
         body: `You successfully enrolled in "${course.title}".`,
         metadata: { course_id: courseId }
       })
-      await evaluateAchievements(userId, courseId)
+      await syncLearnerCourseState(courseId)
     }
   } catch (err) {
     console.error('Failed to process enrollment hooks:', err)

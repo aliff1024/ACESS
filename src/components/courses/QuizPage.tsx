@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Clock, CheckCircle, Loader2, Flag, AlertTriangle, ChevronLeft, ChevronRight, HelpCircle, BarChart3, RotateCcw, Volume2, Info } from 'lucide-react';
-import { fetchQuizData, checkQuizAttempts, fetchQuizAttemptHistory } from '@/lib/learner-api';
+import { fetchQuizData, checkQuizAttempts, fetchQuizAttemptHistory, checkQuizAnswer } from '@/lib/learner-api';
 import type { QuizData } from '@/lib/learner-api';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useTranslation } from '@/lib/useTranslation';
@@ -70,15 +70,12 @@ export function QuizPage({
   const autoSubmitRef = useRef<() => void>(() => {});
   const answersRef = useRef(answers);
 
-  const calculateScore = useCallback((answersList: { questionId: string; selectedAnswer: string }[]) => {
-    if (!quizData) return 0;
-    const correctCount = answersList.filter((answer) => {
-      const question = quizData.questions.find((q) => q.id === answer.questionId);
-      const correctOption = question?.options.find((o) => o.is_correct);
-      return correctOption && correctOption.id === answer.selectedAnswer;
-    }).length;
-    return (correctCount / quizData.questions.length) * 100;
-  }, [quizData]);
+  // The authoritative score comes from submit_quiz_attempt() on the server;
+  // this is only the provisional figure handed to onSubmit, which the caller
+  // replaces with the server's result. It can no longer be computed in the
+  // browser because the answer key is not served before an attempt, so it
+  // reports 0 and is deliberately not displayed anywhere.
+  const calculateScore = useCallback(() => 0, []);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -90,7 +87,7 @@ export function QuizPage({
   const handleAutoSubmit = useCallback(() => {
     clearTimer();
     setSubmitting(true);
-    const score = calculateScore(answersRef.current);
+    const score = calculateScore();
     onSubmit(score, answersRef.current);
   }, [clearTimer, calculateScore, onSubmit]);
 
@@ -181,12 +178,15 @@ export function QuizPage({
     setSelectedOption(existing?.selectedAnswer || null);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!quizData) return;
     if (selectedOption !== null) {
       const question = quizData.questions[currentQuestionIndex];
-      const correctOption = question.options.find((o) => o.is_correct);
-      const isWrong = correctOption && correctOption.id !== selectedOption;
+      // Asked of the server: the answer key is no longer sent to the browser
+      // before an attempt, so this is the only way the hint can know.
+      const isWrong = adaptiveLearningEnabled
+        ? !(await checkQuizAnswer(question.id, selectedOption))
+        : false;
 
       if (adaptiveLearningEnabled && isWrong) {
         const hint = simplifiedSummary
@@ -205,7 +205,7 @@ export function QuizPage({
 
       if (currentQuestionIndex === quizData.questions.length - 1) {
         setSubmitting(true);
-        const score = calculateScore(updatedAnswers);
+        const score = calculateScore();
         onSubmit(score, updatedAnswers);
       } else {
         setCurrentQuestionIndex(currentQuestionIndex + 1);

@@ -93,12 +93,16 @@ export async function generateRecommendations(userId: string): Promise<void> {
   // 3. Get lesson progress
   const { data: lessonProgress } = await admin
     .from('lesson_progress')
-    .select('enrollment_id, lesson_id, is_viewed')
+    .select('enrollment_id, lesson_id, is_completed')
     .in('enrollment_id', enrollmentIds)
 
+  // Keyed on is_completed. This used to key on is_viewed, which was harmless
+  // only while nothing set that flag on open. trackLessonView() now marks a
+  // lesson viewed the moment it is opened, so recommending "what is next"
+  // from is_viewed would skip every lesson the learner merely glanced at.
   const viewedMap = new Map<string, Set<string>>()
   for (const lp of lessonProgress || []) {
-    if (!lp.is_viewed) continue
+    if (!lp.is_completed) continue
     const set = viewedMap.get(lp.enrollment_id) || new Set()
     set.add(lp.lesson_id)
     viewedMap.set(lp.enrollment_id, set)
