@@ -454,12 +454,35 @@ html[data-font-family] {
 }
 
 /* ─── Accessibility Presets: Continuous Line Spacing (via CSS variable) ─ */
-html[data-font-family] body {
+html[data-font-family] body,
+html[data-font-family] main,
+html[data-font-family] .readable-content {
   line-height: var(--user-line-spacing, 1.5);
 }
 
-/* ─── Accessibility Presets: Word Spacing (via CSS variable) ─────────── */
-html[data-font-family] body {
+/* ─── Accessibility Presets: Word Spacing (via CSS variable) ───────────
+   Applied to the content containers, not only to <body>.
+
+   Audited live 2026-08-25: with the Dyslexia preset active,
+   --user-word-spacing resolved to 0.16em on the root (the WCAG 1.4.12
+   floor), every learner-facing text element still computed
+   word-spacing: 0px. Driving --user-word-spacing to 1em changed nothing,
+   while --user-font-size changed the root font size in the same recalc —
+   so the variable and the recalculation were both fine, and it was the
+   body-scoped rule that never landed. Every other `html[...] body` rule
+   for these properties behaved the same way, including the !important
+   legacy one at data-font-type="dyslexia".
+
+   Word spacing is the single most consistently evidenced dyslexia
+   accommodation and the preset's own preview dialog promises it by name,
+   so it cannot depend on that one selector working. Targeting the
+   containers the learner actually reads mirrors what the .rich-content
+   line-height rule below already had to do for the same class of reason. */
+html[data-font-family] body,
+html[data-font-family] main,
+html[data-font-family] .readable-content,
+html[data-font-family] .rich-content,
+html[data-font-family] .prose {
   word-spacing: var(--user-word-spacing, 0em);
 }
 

@@ -615,6 +615,23 @@ export function LessonViewPage({
     setTtsStatusMessage('Stopped reading');
   }, []);
 
+  // Silence narration when the lesson goes away.
+  //
+  // speechSynthesis is a global, browser-level service: it is not torn down
+  // when the React tree that started it unmounts. Verified live — pressing
+  // Listen and then navigating to /learner/progress left the lesson still
+  // being read aloud, with no Stop control anywhere on the destination page.
+  // The learner's only escape was reloading or leaving the site. Covers
+  // route changes, tab close and reload alike.
+  useEffect(() => {
+    const cancel = () => window.speechSynthesis.cancel();
+    window.addEventListener('pagehide', cancel);
+    return () => {
+      window.removeEventListener('pagehide', cancel);
+      cancel();
+    };
+  }, []);
+
   useEffect(() => {
     setTtsStatusMessage('');
     setCurrentChunk(0);

@@ -260,6 +260,15 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const updateSettings = useCallback(async (data: AccessibilitySettingsData) => {
     setSettings(data);
     setPersistedSettings(data);
+    // Clear the session-level distraction-free override whenever settings are
+    // explicitly saved. Without this the override was sticky for the whole
+    // session: a learner who pressed "Exit Distraction Free Mode" once, then
+    // later chose a preset that turns distraction-free ON (ADHD, Autism), got
+    // distraction_free_mode: true written to the database and shown as enabled
+    // in the settings panel, while the interface stayed in the old state.
+    // Observed live: DB said distraction_free=true, the DOM said
+    // data-distraction-free="false".
+    setDistractionFreeOverride(null);
     applySettingsToDOM(data);
     recomputeAdaptive(data);
     if (typeof window !== 'undefined') {

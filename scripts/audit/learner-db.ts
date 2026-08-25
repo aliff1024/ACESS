@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- audit tooling reads
+   arbitrary PostgREST result shapes across many tables; typing each one adds
+   no safety to a read-only diagnostic script. Matches the existing
+   convention in scripts/. */
 /**
  * Learner DB oracle — audit tooling.
  *
