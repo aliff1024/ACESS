@@ -4,7 +4,13 @@
 UX and performance audit of the ACESS Learner Portal, followed by targeted
 fixes and a regression pass.
 
-**Status:** plan drafted, not yet executed.
+**Status:** EXECUTED 2026-08-25. Results in [02-REPORT.md](02-REPORT.md), evidence in [01-FINDINGS.md](01-FINDINGS.md).
+
+All phases ran. 19 defects found, 18 fixed across 3 commits and 3 database
+migrations. Two P0 security defects (privilege escalation, user-directory
+exposure) fixed and regression-checked. Not fixed: typography accommodations on
+dashboard/list surfaces, and the `ensureUserId()` request cost — both recorded
+with measurements in the report.
 **Created:** 2026-08-25
 
 ---
