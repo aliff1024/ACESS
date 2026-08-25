@@ -8,6 +8,7 @@ import {
   type RuleSeverity,
 } from './accessibility-audit'
 import { resolveFocus } from './accessibility-profiles'
+import { determineStudentRisk, type StudentRiskStatus } from './student-risk'
 
 export type CourseStatus = 'draft' | 'pending_review' | 'published' | 'archived'
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced'
@@ -103,22 +104,6 @@ export interface ActivityItem {
   time: string
 }
 
-export interface AtRiskStudent {
-  name: string
-  course: string
-  progress: number
-  lastActive: string
-}
-
-export interface StudentProgress {
-  id: string
-  name: string
-  email: string
-  courses: { title: string; progress: number; avgScore: number; status: string }[]
-  lastActive: string
-  totalProgress: number
-}
-
 export interface CourseAnalyticsItem {
   title: string
   status: CourseStatus
@@ -191,7 +176,7 @@ export async function fetchCourseById(courseId: string) {
     .select(`
       id, title, description, status, difficulty_level, category,
       thumbnail_url, created_at, updated_at, certificate_enabled,
-      certificate_settings, certification_locked,
+      certificate_settings, certification_locked, created_by,
       primary_disability_focus, secondary_disability_focuses, target_reading_age,
       educator_custom_guide
     `)
@@ -528,215 +513,7 @@ export async function fetchRecentActivity(educatorId: string): Promise<ActivityI
   })
 }
 
-export async function fetchAtRiskStudents(educatorId: string): Promise<AtRiskStudent[]> {
-  const { data: courses, error: coursesError } = await supabase
-    .from('courses')
-    .select('id, title')
-    .eq('created_by', educatorId)
-    .is('deleted_at', null)
-
-  if (coursesError) throw coursesError
-
-  const courseIds = (courses || []).map((c) => c.id)
-
-  if (courseIds.length === 0) return []
-
-  const { data: enrollments, error: enrollError } = await supabase
-    .from('enrollments')
-    .select(`
-      id, status,
-      users:user_id (id, full_name, email),
-      course_id
-    `)
-    .in('course_id', courseIds)
-    .eq('status', 'active')
-
-  if (enrollError) throw enrollError
-
-  const courseMap = new Map<string, string>((courses || []).map((c: { id: string; title: string }) => [c.id, c.title]))
-
-  return (enrollments || []).slice(0, 5).map((e: Record<string, unknown>) => {
-    const users = e.users as { full_name?: string } | null
-    return {
-      name: users?.full_name || 'Unknown',
-      course: courseMap.get(e.course_id as string) || 'Unknown',
-      progress: 0,
-      lastActive: 'Recently',
-    }
-  })
-}
-
 // ─── Students ──────────────────────────────────────────────────────────
-
-export function getSmartStatus(
-  baseStatus: string,
-  lastActive: string,
-  progressPercent: number
-): string {
-  if (baseStatus === 'completed' || baseStatus === 'dropped') {
-    return baseStatus;
-  }
-  const daysSinceActive = (Date.now() - new Date(lastActive).getTime()) / (1000 * 60 * 60 * 24);
-  if (daysSinceActive > 14) return 'inactive';
-  if (daysSinceActive > 7 && progressPercent < 20) return 'at-risk';
-  return 'active';
-}
-
-export async function fetchStudentsWithProgress(educatorId: string): Promise<StudentProgress[]> {
-  const { data: courses, error: coursesError } = await supabase
-    .from('courses')
-    .select('id, title')
-    .eq('created_by', educatorId)
-    .is('deleted_at', null)
-
-  if (coursesError) throw coursesError
-
-  const courseIds = (courses || []).map((c) => c.id)
-
-  if (courseIds.length === 0) return []
-
-  const { data: enrollments, error: enrollError } = await supabase
-    .from('enrollments')
-    .select(`
-      id, status, enrolled_at,
-      users:user_id (id, full_name, email),
-      course_id
-    `)
-    .in('course_id', courseIds)
-    .order('enrolled_at', { ascending: false })
-
-  if (enrollError) throw enrollError
-
-  const courseMap = new Map<string, string>((courses || []).map((c: { id: string; title: string }) => [c.id, c.title]))
-
-  if (enrollments.length === 0) return []
-  const enrollmentIds = enrollments.map(e => e.id);
-
-  // 1. Fetch lesson counts for all these courses
-  const { data: lessons } = await supabase
-    .from('lessons')
-    .select('id, course_id')
-    .in('course_id', courseIds)
-    .eq('status', 'published');
-    
-  const lessonCounts = new Map<string, number>();
-  const lessonIdsByCourse = new Map<string, Set<string>>();
-  for (const l of lessons || []) {
-    lessonCounts.set(l.course_id, (lessonCounts.get(l.course_id) || 0) + 1);
-    if (!lessonIdsByCourse.has(l.course_id)) lessonIdsByCourse.set(l.course_id, new Set());
-    lessonIdsByCourse.get(l.course_id)!.add(l.id);
-  }
-
-  const enrollmentCourseMap = new Map<string, string>();
-  for (const e of (enrollments || []) as unknown as { id: string; course_id: string }[]) {
-    enrollmentCourseMap.set(e.id, e.course_id);
-  }
-
-  // 2. Fetch lesson_progress for all enrollments
-  const { data: progressData } = await supabase
-    .from('lesson_progress')
-    .select('enrollment_id, lesson_id, is_viewed, last_viewed_at')
-    .in('enrollment_id', enrollmentIds);
-
-  const progressMap = new Map<string, number>();
-  const lastActiveMap = new Map<string, string>();
-
-  for (const p of progressData || []) {
-    // Only count progress on lessons still published for that enrollment's
-    // course — a stale lesson_progress row for a removed lesson would
-    // otherwise push completed lessons past the course's total (>100%).
-    const courseId = enrollmentCourseMap.get(p.enrollment_id);
-    const validLessonIds = courseId ? lessonIdsByCourse.get(courseId) : undefined;
-    if (p.is_viewed && validLessonIds?.has(p.lesson_id)) {
-      progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
-    }
-    if (p.last_viewed_at) {
-      const currentLast = lastActiveMap.get(p.enrollment_id);
-      if (!currentLast || new Date(p.last_viewed_at) > new Date(currentLast)) {
-        lastActiveMap.set(p.enrollment_id, p.last_viewed_at);
-      }
-    }
-  }
-
-  // 3. Fetch quiz_attempts
-  const { data: qaData } = await supabase
-    .from('quiz_attempts')
-    .select('enrollment_id, score_pct, submitted_at, started_at')
-    .in('enrollment_id', enrollmentIds);
-    
-  const quizScoresMap = new Map<string, number[]>();
-  for (const qa of qaData || []) {
-    if (!quizScoresMap.has(qa.enrollment_id)) {
-      quizScoresMap.set(qa.enrollment_id, []);
-    }
-    if (qa.score_pct != null) {
-      quizScoresMap.get(qa.enrollment_id)!.push(qa.score_pct);
-    }
-    // Also factor into lastActive
-    const actTime = qa.submitted_at || qa.started_at;
-    if (actTime) {
-      const currentLast = lastActiveMap.get(qa.enrollment_id);
-      if (!currentLast || new Date(actTime) > new Date(currentLast)) {
-        lastActiveMap.set(qa.enrollment_id, actTime);
-      }
-    }
-  }
-
-  const studentMap = new Map<string, StudentProgress>()
-
-  for (const raw of (enrollments || []) as unknown as Record<string, unknown>[]) {
-    const rawUsers = raw.users as { id?: string; full_name?: string; email?: string } | null;
-    const userId = rawUsers?.id;
-    if (!userId) continue
-
-    if (!studentMap.has(userId)) {
-      studentMap.set(userId, {
-        id: userId,
-        name: rawUsers?.full_name || 'Unknown',
-        email: rawUsers?.email || '',
-        courses: [],
-        lastActive: raw.enrolled_at as string, // Will override later
-        totalProgress: 0,
-      })
-    }
-
-    const student = studentMap.get(userId)!
-    
-    // Compute exact progress
-    const totalLessons = lessonCounts.get(raw.course_id as string) || 0;
-    const completed = progressMap.get(raw.id as string) || 0;
-    const progressPercent = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
-    
-    // Compute avg score
-    const scores = quizScoresMap.get(raw.id as string) || [];
-    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-
-    // Compute status
-    const lastActiveStr = lastActiveMap.get(raw.id as string) || (raw.enrolled_at as string);
-    const finalStatus = getSmartStatus(raw.status as string, lastActiveStr, progressPercent);
-    
-    // Update global student lastActive if this course is more recent
-    if (new Date(lastActiveStr) > new Date(student.lastActive)) {
-      student.lastActive = lastActiveStr;
-    }
-
-    student.courses.push({
-      title: courseMap.get(raw.course_id as string) || 'Unknown',
-      progress: progressPercent,
-      avgScore,
-      status: finalStatus,
-    })
-  }
-
-  for (const student of studentMap.values()) {
-    student.lastActive = formatRelativeTime(student.lastActive);
-    student.totalProgress = student.courses.length > 0 
-      ? Math.round(student.courses.reduce((sum, c) => sum + c.progress, 0) / student.courses.length)
-      : 0;
-  }
-
-  return Array.from(studentMap.values())
-}
 
 export interface CourseStudentProgress {
   enrollmentId: string;
@@ -744,7 +521,7 @@ export interface CourseStudentProgress {
   studentName: string;
   studentEmail: string;
   enrolledAt: string;
-  status: string;
+  status: StudentRiskStatus;
   completedLessons: number;
   totalLessons: number;
   progressPercent: number;
@@ -786,7 +563,7 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
   // Get progress for these enrollments
   const { data: progressData, error: progressError } = await supabase
     .from('lesson_progress')
-    .select('enrollment_id, lesson_id, is_viewed, last_viewed_at, time_spent_learning')
+    .select('enrollment_id, lesson_id, is_completed, last_viewed_at, time_spent_learning')
     .in('enrollment_id', enrollmentIds);
 
   if (progressError) throw progressError;
@@ -798,7 +575,7 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
   for (const p of progressData || []) {
     // Only count lessons still published in this course — otherwise a
     // removed lesson's leftover progress row could push completed past total.
-    if (p.is_viewed && lessonIds.has(p.lesson_id)) {
+    if (p.is_completed && lessonIds.has(p.lesson_id)) {
       progressMap.set(p.enrollment_id, (progressMap.get(p.enrollment_id) || 0) + 1);
     }
     
@@ -810,24 +587,30 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
       }
     }
 
-    // Calculate time spent
-    const spent = p.time_spent_learning || (p.is_viewed ? 1200 : 0);
+    // Calculate time spent. Previously fell back to a fabricated 1200
+    // seconds (20 minutes) whenever a lesson was viewed but had no recorded
+    // time — a made-up number presented to educators as a real duration.
+    const spent = p.time_spent_learning || 0;
     timeSpentMap.set(p.enrollment_id, (timeSpentMap.get(p.enrollment_id) || 0) + spent);
   }
 
   // Fetch quiz scores for avg calculation
   const { data: qaData } = await supabase
     .from('quiz_attempts')
-    .select('enrollment_id, score_pct')
+    .select('enrollment_id, score_pct, result')
     .in('enrollment_id', enrollmentIds);
 
   const quizScoresMap = new Map<string, number[]>();
+  const quizFailureMap = new Map<string, boolean>();
   for (const qa of qaData || []) {
     if (!quizScoresMap.has(qa.enrollment_id)) {
       quizScoresMap.set(qa.enrollment_id, []);
     }
     if (qa.score_pct != null) {
       quizScoresMap.get(qa.enrollment_id)!.push(qa.score_pct);
+    }
+    if (qa.result === 'failed') {
+      quizFailureMap.set(qa.enrollment_id, true);
     }
   }
 
@@ -860,7 +643,12 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
     
     // Status calculation
     const lastActive = lastActiveMap.get(raw.id as string) || (raw.enrolled_at as string);
-    const status = getSmartStatus(raw.status as string, lastActive, progressPercent);
+    const status = determineStudentRisk({
+      enrollmentStatus: raw.status as string,
+      lastActive,
+      progressPercent,
+      hasQuizFailure: quizFailureMap.get(raw.id as string) || false,
+    });
     const rawUsers = raw.users as { full_name?: string; email?: string } | null;
 
     return {
@@ -964,12 +752,17 @@ function formatRelativeTime(dateStr: string | null): string {
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMins / 60)
   const diffDays = Math.floor(diffHours / 24)
+  const diffWeeks = Math.floor(diffDays / 7)
+  const diffMonths = Math.floor(diffDays / 30)
+  const diffYears = Math.floor(diffDays / 365)
 
   if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins} minutes ago`
-  if (diffHours < 24) return `${diffHours} hours ago`
-  if (diffDays < 7) return `${diffDays} days ago`
-  return dateStr
+  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+  if (diffDays < 30) return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`
+  if (diffDays < 365) return `${diffMonths} month${diffMonths === 1 ? '' : 's'} ago`
+  return `${diffYears} year${diffYears === 1 ? '' : 's'} ago`
 }
 
 // ─── File Upload ────────────────────────────────────────────────────────
@@ -1439,6 +1232,12 @@ export interface CertificateSettings {
   course_duration_hours: number
   skills: string[]
   allow_custom_certificates?: boolean
+  certificate_title?: string
+  educator_role?: string
+  course_title?: string
+  certificate_description?: string
+  certificate_id_prefix?: string
+  issue_date_behavior?: string
 }
 
 export interface EducatorCertificate {
@@ -1628,91 +1427,217 @@ export async function issueCertificate(params: {
   skills: string[]
   courseDurationHours: number
 }): Promise<{ id: string; referenceCode: string }> {
-  // Check for existing certificate to prevent duplicates
-  const { data: existing } = await supabase
-    .from('certificates')
-    .select('id, reference_code')
-    .eq('enrollment_id', params.enrollmentId)
-    .maybeSingle()
-
-  if (existing) {
-    return { id: existing.id, referenceCode: existing.reference_code }
-  }
-
-  // Validate all lessons are completed before issuing
-  const { count: totalLessons } = await supabase
-    .from('lessons')
-    .select('id', { count: 'exact', head: true })
-    .eq('course_id', params.courseId)
-    .eq('status', 'published')
-
-  const { count: completedLessons } = await supabase
-    .from('lesson_progress')
-    .select('id', { count: 'exact', head: true })
-    .eq('enrollment_id', params.enrollmentId)
-    .eq('is_viewed', true)
-
-  if (completedLessons < totalLessons) {
-    throw new Error(
-      `Cannot issue certificate: learner has only completed ${completedLessons}/${totalLessons} lessons`
-    )
-  }
-
-  // Generate reference code
-  const refCode = await generateReferenceCode()
-
-  const verificationUrl = `${window.location.origin}/verify/${refCode}`
-
-  const { data, error } = await supabase
-    .from('certificates')
-    .insert({
-      enrollment_id: params.enrollmentId,
-      course_id: params.courseId,
-      user_id: params.userId,
-      learner_name: params.learnerName,
-      course_title: params.courseTitle,
-      educator_name: params.educatorName,
-      reference_code: refCode,
-      status: 'issued',
-      issued_at: new Date().toISOString(),
-      completion_date: new Date().toISOString(),
-      verification_url: verificationUrl,
-      skills_earned: params.skills,
-      course_duration_hours: params.courseDurationHours,
-      signed_token: await generateSignedToken(refCode),
+  const response = await fetch('/api/educator/certificates/issue', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      enrollmentId: params.enrollmentId,
+      courseId: params.courseId
     })
-    .select('id, reference_code')
-    .single()
+  });
 
-  if (error) throw error
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to issue certificate');
+  }
 
-  // Update enrollment to completed
-  await supabase
-    .from('enrollments')
-    .update({ status: 'completed', completed_at: new Date().toISOString() })
-    .eq('id', params.enrollmentId)
-
-  return { id: data.id, referenceCode: data.reference_code }
+  return response.json();
 }
 
-async function generateReferenceCode(): Promise<string> {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  const segments = [4, 4, 4]
-  let code = ''
-  for (const len of segments) {
-    if (code) code += '-'
-    for (let i = 0; i < len; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length))
+export interface EducatorCourseCertStatus {
+  courseId: string
+  courseTitle: string
+  certificateEnabled: boolean
+  certificateSettings: Record<string, any>
+  totalEnrolled: number
+  eligibleCount: number
+  awaitingCount: number
+  issuedCount: number
+  eligibleStudents: {
+    enrollmentId: string
+    studentId: string
+    studentName: string
+    studentEmail: string
+    completedLessons: number
+    totalLessons: number
+    progressPercent: number
+    quizScorePercent: number
+    completedAt?: string
+    certificateStatus: 'eligible' | 'issued'
+    certificateId?: string
+    certificateCode?: string
+  }[]
+}
+
+export async function fetchEducatorCoursesCertStatus(educatorId: string): Promise<EducatorCourseCertStatus[]> {
+  const { data: courses, error: coursesError } = await supabase
+    .from('courses')
+    .select('id, title, certificate_enabled, certificate_settings')
+    .eq('created_by', educatorId)
+    .is('deleted_at', null);
+
+  if (coursesError) throw coursesError;
+  if (!courses || courses.length === 0) return [];
+
+  const courseIds = courses.map(c => c.id);
+
+  const { data: enrollments, error: enrollError } = await supabase
+    .from('enrollments')
+    .select('id, user_id, course_id, status, enrolled_at, completed_at, users:user_id (id, full_name, email)')
+    .in('course_id', courseIds);
+
+  if (enrollError) throw enrollError;
+  const enrollmentIds = (enrollments || []).map(e => e.id);
+
+  const { data: certs } = await supabase
+    .from('certificates')
+    .select('id, enrollment_id, reference_code, status, issued_at')
+    .in('enrollment_id', enrollmentIds);
+
+  const certMap = new Map<string, any>();
+  for (const c of certs || []) {
+    certMap.set(c.enrollment_id, c);
+  }
+
+  const { data: lessons } = await supabase
+    .from('lessons')
+    .select('id, course_id')
+    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null');
+
+  const courseLessonsMap = new Map<string, string[]>();
+  for (const l of lessons || []) {
+    if (!courseLessonsMap.has(l.course_id)) {
+      courseLessonsMap.set(l.course_id, []);
+    }
+    courseLessonsMap.get(l.course_id)!.push(l.id);
+  }
+
+  let progressData: any[] = [];
+  if (enrollmentIds.length > 0) {
+    const { data } = await supabase
+      .from('lesson_progress')
+      .select('enrollment_id, lesson_id, is_completed')
+      .in('enrollment_id', enrollmentIds)
+      .eq('is_completed', true);
+    progressData = data || [];
+  }
+
+  const enrollmentProgressMap = new Map<string, Set<string>>();
+  for (const p of progressData) {
+    if (!enrollmentProgressMap.has(p.enrollment_id)) {
+      enrollmentProgressMap.set(p.enrollment_id, new Set());
+    }
+    enrollmentProgressMap.get(p.enrollment_id)!.add(p.lesson_id);
+  }
+
+  const { data: quizzes } = await supabase
+    .from('quizzes')
+    .select('id, lesson_id, lessons:lesson_id (course_id)')
+    .in('lesson_id', (lessons || []).map(l => l.id));
+
+  const courseQuizzesMap = new Map<string, string[]>();
+  for (const q of quizzes || []) {
+    const cid = (q.lessons as any)?.course_id;
+    if (cid) {
+      if (!courseQuizzesMap.has(cid)) {
+        courseQuizzesMap.set(cid, []);
+      }
+      courseQuizzesMap.get(cid)!.push(q.id);
     }
   }
-  // Verify uniqueness
-  const { data } = await supabase
-    .from('certificates')
-    .select('id')
-    .eq('reference_code', code)
-    .maybeSingle()
-  if (data) return generateReferenceCode() // retry
-  return code
+
+  let quizAttempts: any[] = [];
+  if (enrollmentIds.length > 0) {
+    const { data } = await supabase
+      .from('quiz_attempts')
+      .select('enrollment_id, quiz_id, score_pct, result')
+      .in('enrollment_id', enrollmentIds)
+      .eq('result', 'pass');
+    quizAttempts = data || [];
+  }
+
+  const enrollmentPassedQuizzes = new Map<string, Set<string>>();
+  for (const qa of quizAttempts) {
+    if (!enrollmentPassedQuizzes.has(qa.enrollment_id)) {
+      enrollmentPassedQuizzes.set(qa.enrollment_id, new Set());
+    }
+    enrollmentPassedQuizzes.get(qa.enrollment_id)!.add(qa.quiz_id);
+  }
+
+  return courses.map(course => {
+    const courseLessons = courseLessonsMap.get(course.id) || [];
+    const totalLessons = courseLessons.length;
+    const courseQuizzes = courseQuizzesMap.get(course.id) || [];
+    const settings = course.certificate_settings as Record<string, any> || {};
+    const quizThreshold = settings.completion_rules?.quiz_threshold_pct || 80;
+
+    const courseEnrollments = (enrollments || []).filter(e => e.course_id === course.id);
+    const totalEnrolled = courseEnrollments.length;
+
+    let eligibleCount = 0;
+    let awaitingCount = 0;
+    let issuedCount = 0;
+    const eligibleStudents: any[] = [];
+
+    for (const enroll of courseEnrollments) {
+      const completedSet = enrollmentProgressMap.get(enroll.id) || new Set();
+      const completedLessons = courseLessons.filter(lid => completedSet.has(lid)).length;
+      const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+      const passedSet = enrollmentPassedQuizzes.get(enroll.id) || new Set();
+      const passedQuizzesCount = courseQuizzes.filter(qid => passedSet.has(qid)).length;
+      const passRate = courseQuizzes.length > 0 ? Math.round((passedQuizzesCount / courseQuizzes.length) * 100) : 100;
+
+      const lessonsDone = totalLessons > 0 && completedLessons === totalLessons;
+      const quizzesDone = courseQuizzes.length === 0 || passRate >= quizThreshold;
+      const isEligible = lessonsDone && quizzesDone;
+
+      const cert = certMap.get(enroll.id);
+      const isIssued = cert && cert.status === 'issued';
+
+      if (isIssued) {
+        issuedCount++;
+      }
+
+      if (isEligible) {
+        eligibleCount++;
+        if (!isIssued) {
+          awaitingCount++;
+        }
+
+        const studentUser = enroll.users as any;
+        eligibleStudents.push({
+          enrollmentId: enroll.id,
+          studentId: enroll.user_id,
+          studentName: studentUser?.full_name || 'Learner',
+          studentEmail: studentUser?.email || '',
+          completedLessons,
+          totalLessons,
+          progressPercent,
+          quizScorePercent: passRate,
+          completedAt: enroll.completed_at || cert?.issued_at,
+          certificateStatus: isIssued ? 'issued' : 'eligible',
+          certificateId: cert?.id,
+          certificateCode: cert?.reference_code
+        });
+      }
+    }
+
+    const isUniqueCertEnabled = course.certificate_enabled === true;
+
+    return {
+      courseId: course.id,
+      courseTitle: course.title,
+      certificateEnabled: isUniqueCertEnabled,
+      certificateSettings: settings,
+      totalEnrolled,
+      eligibleCount: isUniqueCertEnabled ? eligibleCount : 0,
+      awaitingCount: isUniqueCertEnabled ? awaitingCount : 0,
+      issuedCount,
+      eligibleStudents: isUniqueCertEnabled ? eligibleStudents : []
+    };
+  });
 }
 
 export async function uploadCustomCertificate(

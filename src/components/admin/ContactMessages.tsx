@@ -93,7 +93,13 @@ export function ContactMessages() {
         <p className="text-sm text-gray-600">Manage inquiries and support requests</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      {/* Every category is rendered — this used to `.slice(0, 4)` the
+          category list, which silently dropped whichever categories didn't
+          happen to appear first (not even the 4 most common; just
+          first-seen), with no indication a category was hidden. With 5
+          known categories that meant "Educator Application" messages never
+          showed up here even though the Total card counted them. */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
         <Card className="p-3 bg-blue-50 border-0">
           <p className="text-xs text-gray-600">Total</p>
           <p className="text-2xl font-bold text-blue-700">{stats.total}</p>
@@ -102,7 +108,7 @@ export function ContactMessages() {
           <p className="text-xs text-gray-600">Unread</p>
           <p className="text-2xl font-bold text-amber-700">{stats.unread}</p>
         </Card>
-        {Object.entries(stats.categories || {}).slice(0, 4).map(([cat, count]) => (
+        {Object.entries(stats.categories || {}).map(([cat, count]) => (
           <Card key={cat} className="p-3 bg-gray-50 border-0">
             <p className="text-xs text-gray-600 truncate">{categoryLabels[cat] || cat}</p>
             <p className="text-2xl font-bold text-gray-700">{count as number}</p>

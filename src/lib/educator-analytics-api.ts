@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { determineStudentRisk, type StudentRiskStatus } from './student-risk'
 
 export interface LessonDetail {
   lessonId: string
@@ -18,7 +19,7 @@ export interface EnrolledStudentDetail {
   progress: number
   lastActive: string
   avgQuizScore: number
-  status: 'active' | 'at-risk' | 'inactive'
+  status: StudentRiskStatus
   completedLessons: number
   totalLessons: number
 }
@@ -46,14 +47,14 @@ export interface DetailedStudentProgress {
     title: string
     progress: number
     avgScore: number
-    status: 'completed' | 'at-risk' | 'on-track'
+    status: StudentRiskStatus
     lastActive: string
     timeSpentSeconds: number
   }[]
   lastActive: string
   totalProgress: number
   learningStreak: number
-  status: 'active' | 'inactive' | 'at-risk'
+  status: 'active' | 'inactive' | 'at-risk' | 'completed'
   accessibility_prefs?: Record<string, unknown> | null
 }
 
@@ -69,11 +70,16 @@ export interface TimelineEvent {
 export interface CourseDeepAnalytics {
   courseId: string
   title: string
+  status: string
   stats: {
     totalEnrollments: number
     activeLearners: number
     inactiveLearners: number
+    completedLearners: number
+    atRiskLearners: number
     avgCompletionRate: number
+    avgProgress: number
+    avgLearningTimeSeconds: number
     avgQuizScore: number
     newEnrollmentsThisMonth: number
   }
@@ -85,17 +91,6 @@ export interface CourseDeepAnalytics {
   }
 }
 
-// Helper to determine risk
-function determineStudentRisk(lastActive: Date, completionPct: number, hasFails: boolean): 'active' | 'inactive' | 'at-risk' {
-  const daysInactive = (Date.now() - lastActive.getTime()) / (1000 * 60 * 60 * 24)
-  if (daysInactive > 14) {
-    return 'inactive'
-  }
-  if (daysInactive > 7 || hasFails || (daysInactive > 3 && completionPct < 10)) {
-    return 'at-risk'
-  }
-  return 'active'
-}
 
 function calculateStreak(lps: Record<string, unknown>[]): number {
   if (!lps || lps.length === 0) return 0;
@@ -137,7 +132,18 @@ function calculateStreak(lps: Record<string, unknown>[]): number {
   return streak;
 }
 
-export async function fetchStudentsDeepProgress(educatorId: string): Promise<DetailedStudentProgress[]> {
+/**
+ * @param studentId - When given, scopes every downstream query to this one
+ * student's enrollments instead of the educator's entire roster. Opening a
+ * single student's profile used to call this with no filter and then throw
+ * away everyone else's data client-side — the same roster-wide enrollment,
+ * lesson_progress, quiz_attempts, and lesson-count queries as the Dashboard
+ * and Students Progress page, just to find one row. The security model is
+ * unchanged either way: a student only ever appears in the result if they
+ * have an enrollment in a course this educator owns (`created_by = educatorId`),
+ * so an unrelated studentId still resolves to an empty array, not a leak.
+ */
+export async function fetchStudentsDeepProgress(educatorId: string, studentId?: string): Promise<DetailedStudentProgress[]> {
   const { data: courses, error: coursesError } = await supabase
     .from('courses')
     .select('id, title')
@@ -148,7 +154,7 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
   const courseIds = (courses || []).map((c) => c.id)
   if (courseIds.length === 0) return []
 
-  const { data: enrollments, error: enrollError } = await supabase
+  let enrollmentsQuery = supabase
     .from('enrollments')
     .select(`
       id, status, enrolled_at,
@@ -157,6 +163,12 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
     `)
     .in('course_id', courseIds)
     .order('enrolled_at', { ascending: false })
+
+  if (studentId) {
+    enrollmentsQuery = enrollmentsQuery.eq('user_id', studentId)
+  }
+
+  const { data: enrollments, error: enrollError } = await enrollmentsQuery
 
   if (enrollError) throw enrollError
 
@@ -248,7 +260,9 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
     // Calculate progress based on lessons
     const lps = lessonProgressMap.get((raw as any).id) || []
     const completedLessons = lps.filter(lp => lp.is_viewed).length
-    const totalTimeSpent = lps.reduce((acc, lp) => acc + ((lp.time_spent_learning as number) || ((lp.is_viewed as boolean) ? 1200 : 0)), 0)
+    // No fallback for missing time: a viewed lesson with no recorded duration
+    // contributes 0, not a fabricated 20 minutes.
+    const totalTimeSpent = lps.reduce((acc, lp) => acc + ((lp.time_spent_learning as number) || 0), 0)
     
     // Find last active from lps
     let courseLastActive = new Date(raw.enrolled_at as string)
@@ -280,18 +294,39 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
       title: courseMap.get((raw as any).course_id) || 'Unknown',
       progress: (raw as any).status === 'completed' ? 100 : progress,
       avgScore: avgScore,
-      status: determineStudentRisk(courseLastActive, progress, hasFails) as any,
+      status: determineStudentRisk({
+        enrollmentStatus: (raw as any).status,
+        lastActive: courseLastActive,
+        progressPercent: progress,
+        hasQuizFailure: hasFails,
+      }),
       lastActive: courseLastActive.toISOString(),
       timeSpentSeconds: totalTimeSpent
     })
   }
 
-  // Update overall student status and progress
+  // Update overall student status and progress. This is an aggregate across
+  // every course the student is in with this educator, so no single
+  // enrollment status applies to the whole student — except the case where
+  // every one of their courses is finished (completed or dropped). A
+  // student who completed everything months ago must not fall through to
+  // the time-based rules below and get flagged "inactive" on the Dashboard's
+  // Needs Attention list — there is nothing left to reach out about.
   for (const student of Array.from(studentMap.values())) {
     student.totalProgress = Math.round(
       student.courses.reduce((sum, c) => sum + c.progress, 0) / (student.courses.length || 1)
     )
-    student.status = determineStudentRisk(new Date(student.lastActive), student.totalProgress, false)
+    const allCoursesFinished = student.courses.length > 0 &&
+      student.courses.every(c => c.status === 'completed' || c.status === 'dropped')
+
+    if (allCoursesFinished) {
+      student.status = 'completed'
+    } else {
+      student.status = determineStudentRisk({
+        lastActive: new Date(student.lastActive),
+        progressPercent: student.totalProgress,
+      }) as 'active' | 'at-risk' | 'inactive'
+    }
   }
 
   return Array.from(studentMap.values())
@@ -399,11 +434,24 @@ export async function sendEducatorNotification(
 export async function fetchCourseDeepAnalytics(educatorId: string): Promise<CourseDeepAnalytics[]> {
   const { data: courses, error: coursesError } = await supabase
     .from('courses')
-    .select('id, title')
+    .select('id, title, status')
     .eq('created_by', educatorId)
     .is('deleted_at', null)
 
   if (coursesError || !courses || courses.length === 0) return []
+
+  const courseIds = courses.map(c => c.id)
+
+  const { data: allLessons } = await supabase
+    .from('lessons')
+    .select('id, course_id')
+    .in('course_id', courseIds)
+    .in('status', ['published', 'draft'])
+
+  const courseLessonCountMap = new Map<string, number>()
+  for (const l of allLessons || []) {
+    courseLessonCountMap.set(l.course_id, (courseLessonCountMap.get(l.course_id) || 0) + 1)
+  }
 
   const results: CourseDeepAnalytics[] = []
 
@@ -417,22 +465,16 @@ export async function fetchCourseDeepAnalytics(educatorId: string): Promise<Cour
 
     const totalEnrollments = enrollments.length
     const completed = enrollments.filter(e => e.status === 'completed').length
-    
+
     const now = Date.now()
-    let activeLearners = 0
     let newEnrollmentsThisMonth = 0
-    
-    // We would need to join with lesson_progress to get exact active/inactive,
-    // but for deep analytics overview, we can estimate based on a simpler approach or fetch
-    // To save DB calls, we will mark recent enrollments as active
+
     enrollments.forEach(e => {
        const enrolledDate = new Date(e.enrolled_at).getTime()
        const days = (now - enrolledDate) / (1000 * 60 * 60 * 24)
-       if (days < 14) activeLearners++
        if (days <= 30) newEnrollmentsThisMonth++
     })
 
-    const inactiveLearners = totalEnrollments - activeLearners
     const enrollmentIds = enrollments.map(e => e.id)
     
     // Default insights
@@ -442,22 +484,80 @@ export async function fetchCourseDeepAnalytics(educatorId: string): Promise<Cour
     let mostDifficultLesson = 'Not enough data'
     let mostAttemptedQuiz = 'Not enough data'
 
+    let activeLearners = 0
+    let atRiskLearners = 0
+    let totalProgressSum = 0
+    let totalTimeSum = 0
+    const totalLessons = courseLessonCountMap.get(course.id) || 1
+
     if (enrollmentIds.length > 0) {
       // Fetch Lesson Progress for this course's enrollments
       const { data: lpData } = await supabase
         .from('lesson_progress')
-        .select('lesson_id, is_completed, is_viewed, lessons(title)')
+        .select('enrollment_id, lesson_id, is_completed, is_viewed, time_spent_learning, last_viewed_at, lessons(title)')
         .in('enrollment_id', enrollmentIds)
+
+      const lastActiveMap = new Map<string, number>()
+      const enrollmentCompletedLessons = new Map<string, number>()
+      const enrollmentTimeMap = new Map<string, number>()
+
+      for (const lp of lpData || []) {
+        if (lp.last_viewed_at) {
+          const t = new Date(lp.last_viewed_at).getTime()
+          const current = lastActiveMap.get(lp.enrollment_id)
+          if (!current || t > current) lastActiveMap.set(lp.enrollment_id, t)
+        }
+        if (lp.is_completed) {
+          enrollmentCompletedLessons.set(lp.enrollment_id, (enrollmentCompletedLessons.get(lp.enrollment_id) || 0) + 1)
+        }
+        if (lp.time_spent_learning) {
+          enrollmentTimeMap.set(lp.enrollment_id, (enrollmentTimeMap.get(lp.enrollment_id) || 0) + Number(lp.time_spent_learning))
+        }
+      }
 
       // Fetch Quiz Attempts for this course's enrollments
       const { data: qaData } = await supabase
         .from('quiz_attempts')
-        .select('quiz_id, score_pct, quizzes(title)')
+        .select('enrollment_id, quiz_id, score_pct, result, submitted_at, quizzes(title)')
         .in('enrollment_id', enrollmentIds)
 
+      const enrollmentHasFails = new Map<string, boolean>()
+      for (const qa of qaData || []) {
+        if (qa.submitted_at) {
+          const t = new Date(qa.submitted_at).getTime()
+          const current = lastActiveMap.get(qa.enrollment_id)
+          if (!current || t > current) lastActiveMap.set(qa.enrollment_id, t)
+        }
+        if (qa.result === 'failed' || (qa.score_pct !== null && qa.score_pct < 50)) {
+          enrollmentHasFails.set(qa.enrollment_id, true)
+        }
+      }
+
+      for (const e of enrollments) {
+        const referenceDate = lastActiveMap.get(e.id) ? new Date(lastActiveMap.get(e.id)!) : new Date(e.enrolled_at)
+        const completedCount = enrollmentCompletedLessons.get(e.id) || 0
+        const progress = Math.min(Math.round((completedCount / totalLessons) * 100), 100)
+        const timeSpent = enrollmentTimeMap.get(e.id) || 0
+
+        totalProgressSum += (e.status === 'completed' ? 100 : progress)
+        totalTimeSum += timeSpent
+
+        const riskStatus = determineStudentRisk({
+          enrollmentStatus: e.status,
+          lastActive: referenceDate,
+          progressPercent: progress,
+          hasQuizFailure: enrollmentHasFails.get(e.id) || false
+        })
+
+        if (riskStatus === 'active') activeLearners++
+        else if (riskStatus === 'at-risk') atRiskLearners++
+      }
+
       if (qaData && qaData.length > 0) {
-        const totalScore = qaData.reduce((acc, qa) => acc + (qa.score_pct || 0), 0)
-        avgQuizScore = Math.round(totalScore / qaData.length)
+        const validScores = qaData.map(qa => qa.score_pct).filter((s): s is number => s !== null && s !== undefined)
+        if (validScores.length > 0) {
+          avgQuizScore = Math.round(validScores.reduce((acc, s) => acc + s, 0) / validScores.length)
+        }
 
         // Most attempted quiz
         const quizAttemptCounts = new Map<string, { count: number, title: string }>()
@@ -534,14 +634,21 @@ export async function fetchCourseDeepAnalytics(educatorId: string): Promise<Cour
       }
     }
 
+    const inactiveLearners = Math.max(0, totalEnrollments - activeLearners - atRiskLearners - completed)
+
     results.push({
       courseId: course.id,
       title: course.title,
+      status: course.status,
       stats: {
         totalEnrollments,
         activeLearners,
         inactiveLearners,
+        completedLearners: completed,
+        atRiskLearners,
         avgCompletionRate: totalEnrollments > 0 ? Math.round((completed / totalEnrollments) * 100) : 0,
+        avgProgress: totalEnrollments > 0 ? Math.round(totalProgressSum / totalEnrollments) : 0,
+        avgLearningTimeSeconds: totalEnrollments > 0 ? Math.round(totalTimeSum / totalEnrollments) : 0,
         avgQuizScore,
         newEnrollmentsThisMonth
       },
@@ -625,7 +732,7 @@ export async function fetchCourseDetailData(courseId: string, educatorId: string
   if (enrollmentIds.length > 0) {
     const { data: qaData } = await supabase
       .from('quiz_attempts')
-      .select('quiz_id, score_pct, enrollment_id, submitted_at')
+      .select('quiz_id, score_pct, result, enrollment_id, submitted_at')
       .in('enrollment_id', enrollmentIds)
 
     for (const qa of qaData || []) {
@@ -685,11 +792,13 @@ export async function fetchCourseDetailData(courseId: string, educatorId: string
       if (lp.last_viewed_at && lp.last_viewed_at > lastActive) lastActive = lp.last_viewed_at
     }
 
-    const daysSinceActive = (Date.now() - new Date(lastActive).getTime()) / (1000 * 60 * 60 * 24)
-    const hasFails = qas.some(qa => qa.score_pct !== null && (qa.score_pct as number) < 50)
-    let status: 'active' | 'at-risk' | 'inactive' = 'active'
-    if (daysSinceActive > 14) status = 'inactive'
-    else if (daysSinceActive > 7 || hasFails || (daysSinceActive > 3 && progress < 10)) status = 'at-risk'
+    const hasFails = qas.some(qa => qa.result === 'failed')
+    const status = determineStudentRisk({
+      enrollmentStatus: e.status,
+      lastActive,
+      progressPercent: progress,
+      hasQuizFailure: hasFails,
+    })
 
     return {
       enrollmentId: e.id,
@@ -723,5 +832,462 @@ export async function fetchCourseDetailData(courseId: string, educatorId: string
     lessons: lessonsDetail,
     students: studentsDetail,
     timeline
+  }
+}
+
+export interface CourseDetailedAnalyticsData {
+  courseId: string
+  title: string
+  status: string
+  category: string | null
+  difficulty_level: string | null
+  summary: {
+    totalEnrolled: number
+    activeLearners: number
+    completedLearners: number
+    atRiskLearners: number
+    inactiveLearners: number
+    avgProgress: number
+    completionRate: number
+    avgLearningTimeSeconds: number
+    avgQuizScore: number
+    totalLessons: number
+    totalQuizzes: number
+  }
+  progressDistribution: {
+    bucket: string
+    count: number
+    percentage: number
+  }[]
+  timeline: {
+    date: string
+    lessonViews: number
+    completions: number
+    quizAttempts: number
+  }[]
+  lessonEngagement: {
+    lessonId: string
+    sequenceOrder: number
+    title: string
+    avgTimeSpentSeconds: number
+    totalLearnersStarted: number
+    totalLearnersCompleted: number
+    completionRate: number
+    dropOffCount: number
+    dropOffRate: number
+  }[]
+  accessibilityUsage: {
+    preset: string
+    presetKey: string
+    learnersCount: number
+    percentage: number
+    avgProgress: number
+    completionRate: number
+    avgLearningTimeSeconds: number
+  }[]
+  quizAnalytics: {
+    quizId: string
+    lessonId: string
+    lessonTitle: string
+    title: string
+    attemptsCount: number
+    passCount: number
+    passRate: number
+    avgScore: number
+    minScore: number
+    maxScore: number
+  }[]
+  lowestPerformingQuiz?: {
+    title: string
+    avgScore: number
+    passRate: number
+  }
+  students: {
+    enrollmentId: string
+    studentId: string
+    name: string
+    email: string
+    progress: number
+    completedLessons: number
+    totalLessons: number
+    avgQuizScore: number
+    lastActive: string
+    timeSpentSeconds: number
+    status: StudentRiskStatus
+    accessibilityPreset: string
+  }[]
+}
+
+function formatPresetName(presetKey: string | null | undefined, prefs?: Record<string, unknown> | null): string {
+  if (!presetKey || presetKey === 'none') {
+    if (prefs?.dyslexia_friendly_font) return 'Dyslexia Font';
+    if (prefs?.chunked_content_mode) return 'Chunked Content';
+    if (prefs?.distraction_free_mode) return 'Focus Mode';
+    return 'Default / Standard';
+  }
+  switch (presetKey.toLowerCase()) {
+    case 'dyslexia': return 'Dyslexia / Easy Read';
+    case 'adhd': return 'ADHD-oriented';
+    case 'autism': return 'Autism-oriented';
+    case 'focus': return 'Focus Mode';
+    case 'low_vision': return 'Low Vision / High Contrast';
+    case 'screen_reader': return 'Screen Reader';
+    case 'motion_sensitivity': return 'Motion Sensitivity';
+    case 'custom': return 'Custom';
+    default:
+      return presetKey.charAt(0).toUpperCase() + presetKey.slice(1).replace(/_/g, ' ');
+  }
+}
+
+export async function fetchDetailedCourseAnalytics(courseId: string, educatorId: string): Promise<CourseDetailedAnalyticsData> {
+  const { data: course, error: courseError } = await supabase
+    .from('courses')
+    .select('id, title, status, category, difficulty_level')
+    .eq('id', courseId)
+    .eq('created_by', educatorId)
+    .is('deleted_at', null)
+    .single()
+
+  if (courseError || !course) {
+    throw new Error('Course not found or you are not authorized to view its analytics')
+  }
+
+  const { data: lessons } = await supabase
+    .from('lessons')
+    .select('id, title, sequence_order, status')
+    .eq('course_id', courseId)
+    .in('status', ['published', 'draft'])
+    .order('sequence_order', { ascending: true })
+
+  const allLessons = lessons || []
+  const lessonIds = allLessons.map(l => l.id)
+  const totalLessons = allLessons.length
+
+  const { data: quizzes } = await supabase
+    .from('quizzes')
+    .select('id, lesson_id, title, pass_threshold_pct')
+    .in('lesson_id', lessonIds)
+
+  const allQuizzes = quizzes || []
+  const quizLessonMap = new Map<string, { lessonId: string; lessonTitle: string }>()
+  for (const q of allQuizzes) {
+    const l = allLessons.find(les => les.id === q.lesson_id)
+    quizLessonMap.set(q.id, { lessonId: q.lesson_id, lessonTitle: l?.title || 'Lesson' })
+  }
+
+  const { data: enrollments, error: enrollError } = await supabase
+    .from('enrollments')
+    .select(`
+      id, user_id, status, enrolled_at, completed_at,
+      users:user_id (id, full_name, email)
+    `)
+    .eq('course_id', courseId)
+
+  if (enrollError) throw enrollError
+  const allEnrollments = enrollments || []
+  const enrollmentIds = allEnrollments.map(e => e.id)
+  const userIds = allEnrollments.map((e: any) => e.user_id).filter(Boolean)
+
+  const userProfilesMap = new Map<string, Record<string, unknown>>()
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('user_id, accessibility_prefs')
+      .in('user_id', userIds)
+    for (const p of profiles || []) {
+      userProfilesMap.set(p.user_id, p.accessibility_prefs as Record<string, unknown>)
+    }
+  }
+
+  let progressData: any[] = []
+  if (enrollmentIds.length > 0) {
+    const { data } = await supabase
+      .from('lesson_progress')
+      .select('id, enrollment_id, lesson_id, is_completed, is_viewed, time_spent_learning, first_viewed_at, last_viewed_at')
+      .in('enrollment_id', enrollmentIds)
+    progressData = data || []
+  }
+
+  let quizAttemptsData: any[] = []
+  if (enrollmentIds.length > 0) {
+    const { data } = await supabase
+      .from('quiz_attempts')
+      .select('id, enrollment_id, quiz_id, score_pct, result, submitted_at')
+      .in('enrollment_id', enrollmentIds)
+    quizAttemptsData = data || []
+  }
+
+  const lpByEnrollment = new Map<string, any[]>()
+  const lpByLesson = new Map<string, any[]>()
+  const timelineEvents: { date: string; type: 'lesson_view' | 'completion' | 'quiz_attempt' }[] = []
+
+  for (const lp of progressData) {
+    if (!lpByEnrollment.has(lp.enrollment_id)) lpByEnrollment.set(lp.enrollment_id, [])
+    lpByEnrollment.get(lp.enrollment_id)!.push(lp)
+
+    if (!lpByLesson.has(lp.lesson_id)) lpByLesson.set(lp.lesson_id, [])
+    lpByLesson.get(lp.lesson_id)!.push(lp)
+
+    if (lp.first_viewed_at) {
+      timelineEvents.push({ date: lp.first_viewed_at.slice(0, 10), type: 'lesson_view' })
+    }
+    if (lp.is_completed && lp.last_viewed_at) {
+      timelineEvents.push({ date: lp.last_viewed_at.slice(0, 10), type: 'completion' })
+    }
+  }
+
+  const qaByEnrollment = new Map<string, any[]>()
+  const qaByQuiz = new Map<string, any[]>()
+
+  for (const qa of quizAttemptsData) {
+    if (!qaByEnrollment.has(qa.enrollment_id)) qaByEnrollment.set(qa.enrollment_id, [])
+    qaByEnrollment.get(qa.enrollment_id)!.push(qa)
+
+    if (!qaByQuiz.has(qa.quiz_id)) qaByQuiz.set(qa.quiz_id, [])
+    qaByQuiz.get(qa.quiz_id)!.push(qa)
+
+    if (qa.submitted_at) {
+      timelineEvents.push({ date: qa.submitted_at.slice(0, 10), type: 'quiz_attempt' })
+    }
+  }
+
+  const studentsList: CourseDetailedAnalyticsData['students'] = []
+  let totalTimeAllStudents = 0
+  let totalProgressAllStudents = 0
+  let activeCount = 0
+  let completedCount = 0
+  let atRiskCount = 0
+  let inactiveCount = 0
+
+  const buckets = [
+    { bucket: '0–20%', min: 0, max: 20, count: 0 },
+    { bucket: '21–40%', min: 21, max: 40, count: 0 },
+    { bucket: '41–60%', min: 41, max: 60, count: 0 },
+    { bucket: '61–80%', min: 61, max: 80, count: 0 },
+    { bucket: '81–99%', min: 81, max: 99, count: 0 },
+    { bucket: '100%', min: 100, max: 100, count: 0 }
+  ]
+
+  const presetGroupsMap = new Map<string, {
+    preset: string
+    presetKey: string
+    learnersCount: number
+    totalProgress: number
+    completedCount: number
+    totalTimeSpent: number
+  }>()
+
+  for (const enroll of allEnrollments) {
+    const user = (enroll.users as any) || {}
+    const lps = lpByEnrollment.get(enroll.id) || []
+    const qas = qaByEnrollment.get(enroll.id) || []
+
+    const completedLessonsCount = lps.filter(lp => lp.is_completed).length
+    const progress = totalLessons > 0 ? Math.min(Math.round((completedLessonsCount / totalLessons) * 100), 100) : 0
+    const timeSpentSeconds = lps.reduce((acc, lp) => acc + (Number(lp.time_spent_learning) || 0), 0)
+
+    let lastActive = enroll.enrolled_at as string
+    for (const lp of lps) {
+      if (lp.last_viewed_at && new Date(lp.last_viewed_at) > new Date(lastActive)) {
+        lastActive = lp.last_viewed_at
+      }
+    }
+    for (const qa of qas) {
+      if (qa.submitted_at && new Date(qa.submitted_at) > new Date(lastActive)) {
+        lastActive = qa.submitted_at
+      }
+    }
+
+    const hasQuizFailure = qas.some(qa => qa.result === 'failed' || (qa.score_pct !== null && qa.score_pct < 50))
+    const status = determineStudentRisk({
+      enrollmentStatus: enroll.status,
+      lastActive,
+      progressPercent: progress,
+      hasQuizFailure
+    })
+
+    if (status === 'active') activeCount++
+    else if (status === 'completed' || enroll.status === 'completed') completedCount++
+    else if (status === 'at-risk') atRiskCount++
+    else if (status === 'inactive') inactiveCount++
+
+    totalTimeAllStudents += timeSpentSeconds
+    totalProgressAllStudents += (enroll.status === 'completed' ? 100 : progress)
+
+    const effectiveProgress = enroll.status === 'completed' ? 100 : progress
+    for (const b of buckets) {
+      if (effectiveProgress >= b.min && effectiveProgress <= b.max) {
+        b.count++
+        break
+      }
+    }
+
+    const avgQuizScore = qas.length > 0
+      ? Math.round(qas.reduce((acc, qa) => acc + (qa.score_pct || 0), 0) / qas.length)
+      : 0
+
+    const prefs = userProfilesMap.get(enroll.user_id) || null
+    const presetKey = (prefs?.active_preset as string) || (prefs?.base_preset as string) || 'none'
+    const presetLabel = formatPresetName(presetKey, prefs)
+
+    if (!presetGroupsMap.has(presetLabel)) {
+      presetGroupsMap.set(presetLabel, {
+        preset: presetLabel,
+        presetKey,
+        learnersCount: 0,
+        totalProgress: 0,
+        completedCount: 0,
+        totalTimeSpent: 0
+      })
+    }
+    const pGroup = presetGroupsMap.get(presetLabel)!
+    pGroup.learnersCount++
+    pGroup.totalProgress += effectiveProgress
+    if (effectiveProgress === 100 || enroll.status === 'completed') pGroup.completedCount++
+    pGroup.totalTimeSpent += timeSpentSeconds
+
+    studentsList.push({
+      enrollmentId: enroll.id,
+      studentId: enroll.user_id,
+      name: user.full_name || 'Student',
+      email: user.email || '',
+      progress: effectiveProgress,
+      completedLessons: completedLessonsCount,
+      totalLessons,
+      avgQuizScore,
+      lastActive,
+      timeSpentSeconds,
+      status,
+      accessibilityPreset: presetLabel
+    })
+  }
+
+  const totalEnrolled = allEnrollments.length
+  const avgProgress = totalEnrolled > 0 ? Math.round(totalProgressAllStudents / totalEnrolled) : 0
+  const completionRate = totalEnrolled > 0 ? Math.round((completedCount / totalEnrolled) * 100) : 0
+  const avgLearningTimeSeconds = totalEnrolled > 0 ? Math.round(totalTimeAllStudents / totalEnrolled) : 0
+
+  const allScores = quizAttemptsData.map(qa => qa.score_pct).filter((s): s is number => s !== null && s !== undefined)
+  const avgQuizScore = allScores.length > 0 ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0
+
+  const progressDistribution = buckets.map(b => ({
+    bucket: b.bucket,
+    count: b.count,
+    percentage: totalEnrolled > 0 ? Math.round((b.count / totalEnrolled) * 100) : 0
+  }))
+
+  const timelineMap = new Map<string, { lessonViews: number; completions: number; quizAttempts: number }>()
+  for (const ev of timelineEvents) {
+    if (!timelineMap.has(ev.date)) {
+      timelineMap.set(ev.date, { lessonViews: 0, completions: 0, quizAttempts: 0 })
+    }
+    const entry = timelineMap.get(ev.date)!
+    if (ev.type === 'lesson_view') entry.lessonViews++
+    else if (ev.type === 'completion') entry.completions++
+    else if (ev.type === 'quiz_attempt') entry.quizAttempts++
+  }
+
+  const timeline = Array.from(timelineMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-30)
+    .map(([date, counts]) => ({ date, ...counts }))
+
+  const lessonEngagement: CourseDetailedAnalyticsData['lessonEngagement'] = allLessons.map(l => {
+    const lps = lpByLesson.get(l.id) || []
+    const started = lps.filter(lp => lp.is_viewed || lp.is_completed).length
+    const completed = lps.filter(lp => lp.is_completed).length
+    const totalTime = lps.reduce((acc, lp) => acc + (Number(lp.time_spent_learning) || 0), 0)
+    const avgTime = started > 0 ? Math.round(totalTime / started) : 0
+    const compRate = started > 0 ? Math.round((completed / started) * 100) : 0
+    const dropOff = Math.max(0, started - completed)
+    const dropRate = started > 0 ? Math.round((dropOff / started) * 100) : 0
+
+    return {
+      lessonId: l.id,
+      sequenceOrder: l.sequence_order || 0,
+      title: l.title || 'Lesson',
+      avgTimeSpentSeconds: avgTime,
+      totalLearnersStarted: started,
+      totalLearnersCompleted: completed,
+      completionRate: compRate,
+      dropOffCount: dropOff,
+      dropOffRate: dropRate
+    }
+  })
+
+  const accessibilityUsage = Array.from(presetGroupsMap.values()).map(pg => ({
+    preset: pg.preset,
+    presetKey: pg.presetKey,
+    learnersCount: pg.learnersCount,
+    percentage: totalEnrolled > 0 ? Math.round((pg.learnersCount / totalEnrolled) * 100) : 0,
+    avgProgress: pg.learnersCount > 0 ? Math.round(pg.totalProgress / pg.learnersCount) : 0,
+    completionRate: pg.learnersCount > 0 ? Math.round((pg.completedCount / pg.learnersCount) * 100) : 0,
+    avgLearningTimeSeconds: pg.learnersCount > 0 ? Math.round(pg.totalTimeSpent / pg.learnersCount) : 0
+  })).sort((a, b) => b.learnersCount - a.learnersCount)
+
+  let lowestPerformingQuiz: CourseDetailedAnalyticsData['lowestPerformingQuiz'] = undefined
+  let lowestScore = 101
+
+  const quizAnalytics: CourseDetailedAnalyticsData['quizAnalytics'] = allQuizzes.map(q => {
+    const qas = qaByQuiz.get(q.id) || []
+    const attempts = qas.length
+    const passes = qas.filter(qa => qa.result === 'pass' || (qa.score_pct !== null && qa.score_pct >= (q.pass_threshold_pct || 80))).length
+    const scores = qas.map(qa => qa.score_pct).filter((s): s is number => s !== null && s !== undefined)
+    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
+    const passRate = attempts > 0 ? Math.round((passes / attempts) * 100) : 0
+    const minScore = scores.length > 0 ? Math.min(...scores) : 0
+    const maxScore = scores.length > 0 ? Math.max(...scores) : 0
+
+    const meta = quizLessonMap.get(q.id) || { lessonId: q.lesson_id, lessonTitle: 'Lesson' }
+
+    if (attempts > 0 && avgScore < lowestScore) {
+      lowestScore = avgScore
+      lowestPerformingQuiz = {
+        title: q.title,
+        avgScore,
+        passRate
+      }
+    }
+
+    return {
+      quizId: q.id,
+      lessonId: meta.lessonId,
+      lessonTitle: meta.lessonTitle,
+      title: q.title,
+      attemptsCount: attempts,
+      passCount: passes,
+      passRate,
+      avgScore,
+      minScore,
+      maxScore
+    }
+  })
+
+  return {
+    courseId: course.id,
+    title: course.title,
+    status: course.status,
+    category: course.category,
+    difficulty_level: course.difficulty_level,
+    summary: {
+      totalEnrolled,
+      activeLearners: activeCount,
+      completedLearners: completedCount,
+      atRiskLearners: atRiskCount,
+      inactiveLearners: inactiveCount,
+      avgProgress,
+      completionRate,
+      avgLearningTimeSeconds,
+      avgQuizScore,
+      totalLessons,
+      totalQuizzes: allQuizzes.length
+    },
+    progressDistribution,
+    timeline,
+    lessonEngagement,
+    accessibilityUsage,
+    quizAnalytics,
+    lowestPerformingQuiz,
+    students: studentsList.sort((a, b) => b.progress - a.progress)
   }
 }

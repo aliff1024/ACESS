@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { LayoutDashboard, BookOpen, BookMarked, Heart, TrendingUp, Award, Settings, LogOut, ChevronDown, ChevronRight, Trophy, Calculator, Compass, Clock, Map } from 'lucide-react';
+import Link from 'next/link';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { useTranslation } from '@/lib/useTranslation';
 import { Logo } from '@/components/ui/Logo';
@@ -28,6 +29,27 @@ interface SidebarProps {
   onAccessibilityClick: () => void;
   className?: string;
 }
+
+/**
+ * The real URL behind each sidebar view id.
+ *
+ * Every navigation item used to be a <button> with an onClick that called
+ * router.push(). That meant none of them were links: no middle-click or
+ * open-in-new-tab, no status-bar URL preview, no "copy link address", and a
+ * screen reader announced site navigation as "button" rather than "link" —
+ * on a product whose entire purpose is accessibility. Items that genuinely
+ * are buttons (the collapsible Courses group, and Accessibility, which opens
+ * a dialog rather than navigating) stay buttons.
+ */
+const VIEW_HREF: Record<string, string> = {
+  dashboard: '/learner',
+  courses: '/learner/courses',
+  courses_enrolled: '/learner/courses?filter=enrolled',
+  courses_favorites: '/learner/favorites',
+  progress: '/learner/progress',
+  achievements: '/learner/achievements',
+  certificates: '/learner/certificates',
+};
 
 function isCoursesView(view: string): boolean {
   return view === 'courses' || view === 'courses_enrolled' || view === 'courses_favorites';
@@ -60,7 +82,8 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
           icon: Map,
           subItems: [
             { id: 'progress', key: 'nav.progress', icon: TrendingUp },
-            { id: 'certificates', key: 'nav.achievements', icon: Trophy },
+            { id: 'achievements', key: 'nav.achievements', icon: Trophy },
+            { id: 'certificates', key: 'nav.certificates', icon: Award },
           ],
         },
         { id: 'accessibility', key: 'nav.accessibility', icon: Settings },
@@ -92,7 +115,8 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
           ],
         },
         { id: 'progress', key: 'nav.progress', icon: TrendingUp, labelOverride: 'Progress' },
-        { id: 'certificates', key: 'nav.achievements', icon: Trophy, labelOverride: 'Certificates' },
+        { id: 'achievements', key: 'nav.achievements', icon: Trophy, labelOverride: 'Badges' },
+        { id: 'certificates', key: 'nav.certificates', icon: Award, labelOverride: 'Certificates' },
         { id: 'accessibility', key: 'nav.accessibility', icon: Settings, labelOverride: 'Settings' },
       ];
     }
@@ -113,7 +137,8 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
         ],
       },
       { id: 'progress', key: 'nav.progress', icon: TrendingUp },
-      { id: 'certificates', key: 'nav.achievements', icon: Trophy },
+      { id: 'achievements', key: 'nav.achievements', icon: Trophy },
+      { id: 'certificates', key: 'nav.certificates', icon: Award },
       { id: 'accessibility', key: 'nav.accessibility', icon: Settings },
     ];
   }, [activePreset]);
@@ -180,24 +205,47 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
 
           return (
             <div key={item.id} className={activePreset === 'autism' ? 'mb-2' : ''}>
-              <button
-                onClick={() => handleClick(item)}
-                className={`w-full flex items-center ${itemGap} ${padding} ${buttonRadius} transition-all duration-300 group ${textClass} ${
+              {(() => {
+                const topClass = `w-full flex items-center ${itemGap} ${padding} ${buttonRadius} transition-all duration-300 group ${textClass} ${
                   parentOpen
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground ring-1 ring-sidebar-border'
                     : isItemActive
                     ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
                     : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent hover:ring-1 hover:ring-sidebar-border'
-                }`}
-              >
-                <Icon className={`${iconSize} shrink-0`} />
-                <span className="text-sm">{item.labelOverride || t(item.key)}</span>
-                {hasSub && (
-                  <span className="ml-auto text-gray-400 group-hover:text-gray-600 transition-colors">
-                    {parentOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </span>
-                )}
-              </button>
+                }`;
+                const inner = (
+                  <>
+                    <Icon className={`${iconSize} shrink-0`} />
+                    <span className="text-sm">{item.labelOverride || t(item.key)}</span>
+                    {hasSub && (
+                      <span className="ml-auto text-gray-400 group-hover:text-gray-600 transition-colors">
+                        {parentOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </span>
+                    )}
+                  </>
+                );
+                const href = !hasSub ? VIEW_HREF[item.id] : undefined;
+                if (href) {
+                  return (
+                    <Link
+                      href={href}
+                      aria-current={isItemActive ? 'page' : undefined}
+                      className={topClass}
+                    >
+                      {inner}
+                    </Link>
+                  );
+                }
+                return (
+                  <button
+                    onClick={() => handleClick(item)}
+                    aria-expanded={hasSub ? parentOpen : undefined}
+                    className={topClass}
+                  >
+                    {inner}
+                  </button>
+                );
+              })()}
 
               {/* Sub-menu */}
               {hasSub && parentOpen && (
@@ -206,9 +254,10 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
                     const SubIcon = sub.icon;
                     const isSubActive = isActive(sub.id);
                     return (
-                      <button
+                      <Link
                         key={sub.id}
-                        onClick={() => onNavigate(sub.id)}
+                        href={VIEW_HREF[sub.id] || '/learner'}
+                        aria-current={isSubActive ? 'page' : undefined}
                         className={`w-full flex items-center ${itemGap} px-4 py-2.5 ${buttonRadius} transition-all duration-300 ${textClass} ${
                           isSubActive
                             ? 'bg-sidebar-accent text-sidebar-primary ring-1 ring-sidebar-primary/30'
@@ -217,7 +266,7 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
                       >
                         <SubIcon className="w-4 h-4 shrink-0" />
                         <span>{sub.labelOverride || t(sub.key)}</span>
-                      </button>
+                      </Link>
                     );
                   })}
                 </div>

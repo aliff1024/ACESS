@@ -360,16 +360,31 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             isEmpty={(data?.learners.totalLearners ?? 0) === 0}
             emptyMessage="No learner accounts yet."
           >
-            <div className="h-56">
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={data?.learners.bands ?? []}
                   layout="vertical"
-                  margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
+                  margin={{ top: 4, right: 16, left: 8, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                  <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                  <YAxis type="category" dataKey="label" width={150} axisLine={false} tickLine={false} tick={{ fill: '#374151', fontSize: 12 }} />
+                  <XAxis
+                    type="number"
+                    allowDecimals={false}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    label={{ value: 'Number of learners', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 12 }}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="label"
+                    width={150}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#374151', fontSize: 12 }}
+                    label={{ value: 'Activity band', angle: -90, position: 'insideLeft', fill: '#6b7280', fontSize: 12 }}
+                  />
                   <Tooltip
                     cursor={{ fill: '#f3f4f6' }}
                     contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }}

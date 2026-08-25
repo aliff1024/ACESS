@@ -183,8 +183,17 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
                               : 'bg-gray-900 hover:bg-blue-600 text-white hover:shadow-lg hover:-translate-y-0.5'
                           }`}
                         >
+                          {/* Only offer a certificate when the course actually
+                              has one. This used to promise "View Certificate"
+                              for every completed course, including ones with
+                              certificate_enabled = false, where the detail page
+                              then correctly shows no certificate at all. */}
                           {course.progress === 100 ? (
-                            <>{t('progress.viewCertificate')} <Trophy className="w-4 h-4 ml-2" /></>
+                            course.certificate_enabled ? (
+                              <>{t('progress.viewCertificate')} <Trophy className="w-4 h-4 ml-2" /></>
+                            ) : (
+                              <>{t('progress.reviewCourse')} <Trophy className="w-4 h-4 ml-2" /></>
+                            )
                           ) : (
                             <>{t('progress.continueLearning')} <PlayCircle className="w-4 h-4 ml-2" /></>
                           )}
@@ -294,8 +303,17 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
                               : 'bg-gray-900 hover:bg-blue-600 text-white hover:shadow-lg hover:-translate-y-0.5'
                           }`}
                         >
+                          {/* Only offer a certificate when the course actually
+                              has one. This used to promise "View Certificate"
+                              for every completed course, including ones with
+                              certificate_enabled = false, where the detail page
+                              then correctly shows no certificate at all. */}
                           {course.progress === 100 ? (
-                            <>{t('progress.viewCertificate')} <Trophy className="w-4 h-4 ml-2" /></>
+                            course.certificate_enabled ? (
+                              <>{t('progress.viewCertificate')} <Trophy className="w-4 h-4 ml-2" /></>
+                            ) : (
+                              <>{t('progress.reviewCourse')} <Trophy className="w-4 h-4 ml-2" /></>
+                            )
                           ) : (
                             <>{t('progress.continueLearning')} <PlayCircle className="w-4 h-4 ml-2" /></>
                           )}

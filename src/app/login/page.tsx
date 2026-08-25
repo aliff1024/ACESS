@@ -33,6 +33,9 @@ export default function LoginPage() {
     if (params.get('expired') === 'true') {
       setSessionExpired(true);
     }
+    if (params.get('error') === 'suspended') {
+      setError('Your account has been suspended or deactivated. Please contact support.');
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,7 +68,20 @@ export default function LoginPage() {
         return;
       }
 
-      const role = (data.user.user_metadata?.role as Role) || 'learner';
+      // Check database status and authoritative role
+      const { data: dbUser } = await supabase
+        .from('users')
+        .select('role, is_active, deleted_at')
+        .eq('id', data.user.id)
+        .single();
+
+      if (dbUser?.deleted_at || dbUser?.is_active === false || data.user.user_metadata?.is_active === false) {
+        await supabase.auth.signOut();
+        setError('Your account has been suspended or deactivated. Please contact support.');
+        return;
+      }
+
+      const role = (dbUser?.role || data.user.user_metadata?.role || 'learner') as Role;
 
       // Stamp the sign-in so admin analytics has a real activity signal.
       // The "users can update own profile" RLS policy covers this, so it

@@ -49,6 +49,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (user.user_metadata?.is_active === false || user.user_metadata?.is_deleted === true) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('error', 'suspended');
+    return NextResponse.redirect(url);
+  }
+
   const role = (user.user_metadata?.role as Role) || 'learner';
 
   for (const [prefix, requiredRole] of Object.entries(ROLE_PREFIXES)) {

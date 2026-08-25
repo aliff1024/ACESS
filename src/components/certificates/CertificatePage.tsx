@@ -12,6 +12,11 @@ interface CertificatePageProps {
   onBack: () => void;
   onDownload: () => void;
   onShare: () => void;
+  educatorName?: string;
+  institutionName?: string;
+  skills?: string[];
+  courseDurationHours?: number;
+  educatorRole?: string;
 }
 
 export function CertificatePage({
@@ -22,6 +27,11 @@ export function CertificatePage({
   onBack,
   onDownload,
   onShare,
+  educatorName,
+  institutionName,
+  skills,
+  courseDurationHours,
+  educatorRole,
 }: CertificatePageProps) {
   return (
     <div className="min-h-screen bg-blue-50 py-12 px-6">
@@ -37,8 +47,8 @@ export function CertificatePage({
                 <Award className="w-14 h-14 text-white" />
               </div>
               <Logo size="xl" className="mx-auto" />
-              <p className="text-lg text-gray-600 uppercase tracking-widest">
-                Adaptive Cognitive & Educational Skill Support Platform
+              <p className="text-lg text-gray-600 uppercase tracking-widest mt-2">
+                {institutionName || 'Adaptive Cognitive & Educational Skill Support Platform'}
               </p>
               <div className="w-32 h-1 bg-blue-600 mx-auto mt-4"></div>
             </div>
@@ -51,6 +61,9 @@ export function CertificatePage({
               <p className="text-lg text-gray-600">
                 Demonstrating commitment to accessible and adaptive learning
               </p>
+              {courseDurationHours && courseDurationHours > 0 ? (
+                <p className="text-xs text-gray-500 mt-2">Course Duration: {courseDurationHours} hours</p>
+              ) : null}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
@@ -71,24 +84,25 @@ export function CertificatePage({
             </div>
 
             <div className="mt-8 pt-8 border-t-2 border-gray-200">
-              <div className="flex items-center justify-center gap-8">
-                <div className="text-center">
+              <div className="flex items-center justify-center gap-8 flex-wrap">
+                <div className="text-center min-w-[120px]">
                   <div className="w-24 h-1 bg-gray-900 mx-auto mb-2"></div>
                   <p className="text-sm font-semibold text-gray-900">Platform Director</p>
                 </div>
                 <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
                   <Award className="w-10 h-10 text-white" />
                 </div>
-                <div className="text-center">
+                <div className="text-center min-w-[120px]">
                   <div className="w-24 h-1 bg-gray-900 mx-auto mb-2"></div>
-                  <p className="text-sm font-semibold text-gray-900">Education Lead</p>
+                  <p className="text-sm font-semibold text-gray-900">{educatorRole || 'Course Educator'}</p>
+                  {educatorName && <p className="text-xs text-gray-500 mt-1 font-medium">{educatorName}</p>}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center flex-wrap">
           <Button
             onClick={onDownload}
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"

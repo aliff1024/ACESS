@@ -2,8 +2,14 @@ export interface LevelInfo {
   level: number
   title: string
   xp: number
+  /** Size of the current level band, i.e. total XP between this level and the
+   *  next. NOT the amount the learner still has to earn — see xpRemaining. */
   xpToNext: number
   xpForCurrent: number
+  /** XP the learner still needs to reach the next level. The achievements page
+   *  used to display xpToNext here, which told a learner sitting at 39% of the
+   *  way through a level that they needed the whole level's worth again. */
+  xpRemaining: number
   progress: number
 }
 
@@ -55,6 +61,7 @@ export function getLevelInfo(totalXP: number): LevelInfo {
     xp: totalXP,
     xpToNext,
     xpForCurrent,
+    xpRemaining: Math.max(0, xpForCurrent + xpToNext - totalXP),
     progress,
   }
 }

@@ -16,14 +16,31 @@ import { formatDistanceToNow } from 'date-fns';
 interface StudentProgressViewProps {
   courseId: string;
   courseTitle: string;
+  /**
+   * 'admin' fetches through a service-role API route instead of the direct,
+   * RLS-scoped Supabase query. `enrollments`/`lesson_progress`/`quiz_attempts`
+   * only grant SELECT to the enrolled learner or the course's own creator —
+   * there's no admin-bypass policy on those tables (unlike `certificates`,
+   * which has one) — so an admin viewing a course they didn't personally
+   * author would otherwise see a silent, convincing-looking "0 enrollments"
+   * instead of their real students.
+   */
+  mode?: 'educator' | 'admin';
 }
 
-export default function StudentProgressView({ courseId, courseTitle }: StudentProgressViewProps) {
+async function fetchCourseStudentsProgressAdmin(courseId: string): Promise<CourseStudentProgress[]> {
+  const res = await fetch(`/api/admin/courses/${courseId}/students`);
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.error || 'Failed to load student progress');
+  return body.students;
+}
+
+export default function StudentProgressView({ courseId, courseTitle, mode = 'educator' }: StudentProgressViewProps) {
   const [enrollments, setEnrollments] = useState<CourseStudentProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  
+
   // Messaging state
   const [messageStudentId, setMessageStudentId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
@@ -32,7 +49,9 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
   useEffect(() => {
     const loadEnrollments = async () => {
       try {
-        const data = await fetchCourseStudentsProgress(courseId);
+        const data = mode === 'admin'
+          ? await fetchCourseStudentsProgressAdmin(courseId)
+          : await fetchCourseStudentsProgress(courseId);
         setEnrollments(data);
       } catch (err) {
         console.error(err);
@@ -41,7 +60,7 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
       }
     };
     loadEnrollments();
-  }, [courseId]);
+  }, [courseId, mode]);
 
   const filtered = useMemo(() => {
     return enrollments.filter((e) => {
@@ -80,7 +99,7 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
   };
 
   // Stats
-  const activeCount = enrollments.filter(e => e.status === 'active' || e.status === 'on-track').length;
+  const activeCount = enrollments.filter(e => e.status === 'active').length;
   const atRiskCount = enrollments.filter(e => e.status === 'at-risk').length;
   const inactiveCount = enrollments.filter(e => e.status === 'inactive').length;
   
@@ -244,7 +263,7 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
                           <UserX className="w-3 h-3 mr-1" /> Inactive
                         </Badge>
                       )}
-                      {(row.status === 'active' || row.status === 'on-track') && (
+                      {row.status === 'active' && (
                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                           Active
                         </Badge>
@@ -252,6 +271,11 @@ export default function StudentProgressView({ courseId, courseTitle }: StudentPr
                       {row.status === 'completed' && (
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                           Completed
+                        </Badge>
+                      )}
+                      {row.status === 'dropped' && (
+                        <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200">
+                          Dropped
                         </Badge>
                       )}
                     </td>

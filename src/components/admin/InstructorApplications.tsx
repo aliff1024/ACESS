@@ -28,7 +28,7 @@ const statusColors: Record<string, string> = {
 
 export function InstructorApplications() {
   const [applications, setApplications] = useState<InstructorApplication[]>([])
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 })
+  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, infoRequested: 0 })
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -110,6 +110,10 @@ export function InstructorApplications() {
     { label: 'Pending', value: stats.pending, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Approved', value: stats.approved, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Rejected', value: stats.rejected, color: 'text-red-600', bg: 'bg-red-50' },
+    // 'request_info' is a real, settable status (see statusColors and
+    // handleAction above) that had no card here — the other four never
+    // summed to Total, and there was no way to tell why.
+    { label: 'Info Requested', value: stats.infoRequested, color: 'text-blue-500', bg: 'bg-blue-50' },
   ]
 
   return (
@@ -122,7 +126,7 @@ export function InstructorApplications() {
         <p className="text-sm text-gray-600">Manage educator requests and approvals</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map(s => (
           <Card key={s.label} className={`p-4 ${s.bg} border-0`}>
             <p className="text-sm text-gray-600">{s.label}</p>
@@ -150,6 +154,7 @@ export function InstructorApplications() {
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="approved">Approved</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="request_info">Info Requested</SelectItem>
           </SelectContent>
         </Select>
       </div>

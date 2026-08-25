@@ -7,6 +7,7 @@ import { CertificateListPage } from '@/components/certificates/CertificateListPa
 import { CertificatePage } from '@/components/certificates/CertificatePage';
 import { fetchCertificateDetail } from '@/lib/learner-api';
 import type { FullCertificate } from '@/lib/learner-api';
+import { generatePDFCertificate } from '@/lib/certificate-utils';
 
 export default function CertificatesClientPage({ certificateId }: { certificateId?: string }) {
   const router = useRouter();
@@ -22,11 +23,25 @@ export default function CertificatesClientPage({ certificateId }: { certificateI
       .finally(() => setLoading(false));
   }, [certificateId]);
 
-  const handleDownloadCertificate = () => {
-    toast.success('Certificate downloaded successfully!', {
-      description: 'Your certificate has been saved to your downloads folder.',
-      duration: 3000,
-    });
+  const handleDownloadCertificate = async () => {
+    if (!certData) return;
+    try {
+      await generatePDFCertificate({
+        learnerName: certData.learner_name,
+        courseTitle: certData.course_title,
+        educatorName: certData.educator_name || 'Course Educator',
+        institutionName: certData.institution_name || 'ACESS Platform',
+        completionDate: certData.completion_date,
+        certificateCode: certData.reference_code,
+        verificationUrl: certData.verification_url || '',
+        skills: certData.skills_earned || [],
+        courseDurationHours: certData.course_duration_hours || 0,
+      }, 'download');
+      toast.success('Certificate downloaded successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate PDF certificate');
+    }
   };
 
   const handleShareCertificate = () => {
@@ -56,6 +71,11 @@ export default function CertificatesClientPage({ certificateId }: { certificateI
         onBack={() => router.push('/learner/certificates')}
         onDownload={handleDownloadCertificate}
         onShare={handleShareCertificate}
+        educatorName={certData.educator_name}
+        institutionName={certData.institution_name}
+        skills={certData.skills_earned}
+        courseDurationHours={certData.course_duration_hours}
+        educatorRole={certData.metadata?.educator_role || 'Course Educator'}
       />
     );
   }

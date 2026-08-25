@@ -46,7 +46,7 @@ export default function AchievementsPage() {
   const [loading, setLoading] = useState(true);
   const [courseAchievements, setCourseAchievements] = useState<CourseAchievement[]>([]);
   const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
-  const [levelInfo, setLevelInfo] = useState<{ level: number; title: string; xp: number; xpToNext: number; xpForCurrent: number; progress: number } | null>(null);
+  const [levelInfo, setLevelInfo] = useState<{ level: number; title: string; xp: number; xpToNext: number; xpForCurrent: number; xpRemaining: number; progress: number } | null>(null);
   const [breakdown, setBreakdown] = useState({ lessonXP: 0, quizXP: 0, courseXP: 0, certXP: 0 });
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function AchievementsPage() {
                       </div>
                       <span className="text-sm text-gray-500">
                         {t('achievements.toLevel', { progress: levelInfo.progress, level: levelInfo.level + 1 })}
-                        <span className="text-xs ml-1">{t('achievements.xpNeeded', { xp: levelInfo.xpToNext.toLocaleString() })}</span>
+                        <span className="text-xs ml-1">{t('achievements.xpNeeded', { xp: levelInfo.xpRemaining.toLocaleString() })}</span>
                       </span>
                     </div>
                     <Progress value={levelInfo.progress} className={`h-3 ${colors.progress}`} />
@@ -261,7 +261,7 @@ export default function AchievementsPage() {
                     </div>
                     <span className="text-sm text-gray-500">
                       {levelInfo.progress}% to Level {levelInfo.level + 1}
-                      <span className="text-xs ml-1">({levelInfo.xpToNext.toLocaleString()} XP needed)</span>
+                      <span className="text-xs ml-1">({levelInfo.xpRemaining.toLocaleString()} XP needed)</span>
                     </span>
                   </div>
                   <Progress value={levelInfo.progress} className={`h-3 ${colors.progress}`} />

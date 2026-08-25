@@ -332,8 +332,8 @@ export function LessonViewPage({
             if (typeof meta.last_completed_step_index === 'number') setLastCompletedStepIndex(meta.last_completed_step_index);
           }
         }).catch(err => console.error('[lesson-progress] load error:', err));
-        supabase.from('lesson_progress').select('is_viewed, summary_completed').eq('enrollment_id', enrollment.id).eq('lesson_id', lessonId).maybeSingle().then(({ data: lp }) => {
-          if (lp?.is_viewed) setLessonCompleted(true);
+        supabase.from('lesson_progress').select('is_completed, summary_completed').eq('enrollment_id', enrollment.id).eq('lesson_id', lessonId).maybeSingle().then(({ data: lp }) => {
+          if (lp?.is_completed) setLessonCompleted(true);
           if (lp?.summary_completed) setSummarySubmitted(true);
         }).catch(() => {});
       }).catch(() => {});
@@ -392,7 +392,7 @@ export function LessonViewPage({
         .then(({ data: enrollment }) => {
           if (!enrollment) return;
           Promise.all([
-            supabase.from('lesson_progress').select('lesson_id').eq('enrollment_id', enrollment.id).eq('is_viewed', true),
+            supabase.from('lesson_progress').select('lesson_id').eq('enrollment_id', enrollment.id).eq('is_completed', true),
             supabase.from('lessons').select('id').eq('course_id', courseId).eq('status', 'published').or('visibility_status.eq.visible,visibility_status.is.null'),
           ]).then(([{ data: lpData }, { data: currentLessons }]) => {
             // Only count progress on lessons still published in this course —
@@ -1965,10 +1965,36 @@ export function LessonViewPage({
                           ))}
                         </div>
                       )}
-                      <a href={lesson.video_url} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors">
-                        <ExternalLink className="w-3 h-3" /> Open in YouTube
-                      </a>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <a href={lesson.video_url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors">
+                          <ExternalLink className="w-3 h-3" /> Open in YouTube
+                        </a>
+                        {/* The video requirement used to be satisfiable ONLY by the
+                            embedded YouTube player firing its ENDED event. If the
+                            embed failed to load, was blocked, region-locked or the
+                            video had been removed — or if the learner watched it
+                            elsewhere, or cannot use the player at all — the lesson
+                            became permanently uncompletable with no way out. This
+                            is the alternative path: an explicit self-attestation,
+                            the same kind of proxy the "scrolled through the
+                            content" requirement already uses. */}
+                        {!tracker.video && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => setTracker((p) => ({ ...p, video: true }))}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> I have watched this video
+                          </Button>
+                        )}
+                        {tracker.video && (
+                          <span className="text-xs text-green-600 flex items-center gap-1 font-medium">
+                            <CheckCircle className="w-3.5 h-3.5" /> Video watched
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <a href={lesson.video_url} target="_blank" rel="noopener noreferrer"

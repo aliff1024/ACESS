@@ -9,6 +9,8 @@ import { fetchCertificates, fetchLearnerBadges, fetchLearnerStats, type Certific
 import { LearningLevelTab } from './LearningLevelTab';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useTranslation } from '@/lib/useTranslation';
+import { generatePDFCertificate } from '@/lib/certificate-utils';
+import { toast } from 'sonner';
 
 interface AchievementsDashboardProps {
   onViewCertificate: (certificateId: string) => void;
@@ -40,6 +42,31 @@ export function CertificateListPage({
       .finally(() => setLoading(false));
   }, []);
 
+  const handleDownload = async (cert: Certificate) => {
+    if (cert.pdf_url && cert.is_custom_upload) {
+      window.open(cert.pdf_url, '_blank');
+      return;
+    }
+    
+    try {
+      await generatePDFCertificate({
+        learnerName: cert.learner_name || 'Learner',
+        courseTitle: cert.course_title,
+        educatorName: cert.educator_name || 'Course Educator',
+        institutionName: cert.institution_name || 'ACESS Platform',
+        completionDate: cert.completion_date,
+        certificateCode: cert.certificate_code,
+        verificationUrl: cert.verification_url || '',
+        skills: cert.skills_earned || [],
+        courseDurationHours: cert.course_duration_hours || 0,
+      }, 'download');
+      toast.success('Certificate downloaded successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate PDF certificate');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 gap-4">
@@ -49,8 +76,11 @@ export function CertificateListPage({
     );
   }
 
-  const systemCerts = certificates.filter(c => c.certificate_code && c.verification_url?.includes('/verify/'));
-  const customCerts = certificates.filter(c => c.is_custom_upload);
+  // System/Platform Course Certificates
+  const systemCerts = certificates.filter(c => c.is_system_course);
+  
+  // Educator Course Certificates (Unique Certificates)
+  const customCerts = certificates.filter(c => !c.is_system_course);
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -114,7 +144,7 @@ export function CertificateListPage({
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
-            <Shield className="w-5 h-5" /> {t('certificates.tabSystemCerts')}
+            <Shield className="w-5 h-5" /> {t('certificates.tabSystemCerts') || 'ACESS Certificates'}
             {systemCerts.length > 0 && (
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'system_certs' ? 'bg-white/20' : 'bg-gray-200'}`}>
                 {systemCerts.length}
@@ -129,7 +159,7 @@ export function CertificateListPage({
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
-            <Award className="w-5 h-5" /> {t('certificates.tabCustomCerts')}
+            <Award className="w-5 h-5" /> {t('certificates.tabCustomCerts') || 'Course Certificates'}
             {customCerts.length > 0 && (
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === 'custom_certs' ? 'bg-white/20' : 'bg-gray-200'}`}>
                 {customCerts.length}
@@ -176,20 +206,20 @@ export function CertificateListPage({
           </div>
         )}
 
-        {/* Tab Content: System Certificates */}
+        {/* Tab Content: ACESS Platform Certificates */}
         {activeTab === 'system_certs' && (
           systemCerts.length === 0 ? (
             <Card className="max-w-2xl mx-auto p-12 rounded-3xl border-dashed border-2 border-gray-200 text-center bg-transparent">
               <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 simplifiable">
                 <Shield className="w-12 h-12 text-blue-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">{t('certificates.noSystem')}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">{t('certificates.noSystem') || 'No ACESS Certificates'}</h2>
               <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                {t('certificates.noSystemDesc')}
+                {t('certificates.noSystemDesc') || 'You have not earned any platform certificates yet.'}
               </p>
               <Button onClick={onBrowseCourses} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 px-8">
                 <Search className="w-5 h-5 mr-2" />
-                {t('certificates.browseSystem')}
+                {t('certificates.browseSystem') || 'Browse Courses'}
               </Button>
             </Card>
           ) : (
@@ -202,7 +232,7 @@ export function CertificateListPage({
                     </div>
                     <div>
                       <Badge className="bg-indigo-100 text-indigo-700 border-0 mb-1.5">
-                        {cert.is_system_course ? t('certificates.officialACESS') : t('certificates.platformGenerated') || 'Platform Generated'}
+                        {t('certificates.officialACESS') || 'Official ACESS Certificate'}
                       </Badge>
                       <h3 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{cert.course_title}</h3>
                     </div>
@@ -221,10 +251,10 @@ export function CertificateListPage({
 
                   <div className="flex gap-3 mt-auto">
                     <Button onClick={() => onViewCertificate(cert.id)} className="flex-1 bg-gray-900 hover:bg-blue-600 text-white rounded-xl">
-                      <Eye className="w-4 h-4 mr-2" /> {t('certificates.view')}
+                      <Eye className="w-4 h-4 mr-2" /> {t('certificates.view') || 'View'}
                     </Button>
-                    <Button onClick={() => onDownload(cert.id)} variant="outline" className="flex-1 rounded-xl hover:bg-gray-50">
-                      <Download className="w-4 h-4 mr-2" /> {t('certificates.download')}
+                    <Button onClick={() => handleDownload(cert)} variant="outline" className="flex-1 rounded-xl hover:bg-gray-50 border-gray-300 text-gray-700">
+                      <Download className="w-4 h-4 mr-2" /> {t('certificates.download') || 'Download'}
                     </Button>
                   </div>
                 </Card>
@@ -233,17 +263,21 @@ export function CertificateListPage({
           )
         )}
 
-        {/* Tab Content: Educator Certificates */}
+        {/* Tab Content: Unique Course Certificates */}
         {activeTab === 'custom_certs' && (
           customCerts.length === 0 ? (
             <Card className="max-w-2xl mx-auto p-12 rounded-3xl border-dashed border-2 border-gray-200 text-center bg-transparent">
               <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 simplifiable">
-                <User className="w-12 h-12 text-emerald-600" />
+                <Award className="w-12 h-12 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">{t('certificates.noCustom')}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">No Course Certificates</h2>
               <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                {t('certificates.noCustomDesc')}
+                You have not received any educator-issued course certificates yet. Complete educator courses to earn certificates.
               </p>
+              <Button onClick={onBrowseCourses} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 px-8">
+                <Search className="w-5 h-5 mr-2" />
+                {t('certificates.browseSystem') || 'Browse Courses'}
+              </Button>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -254,7 +288,9 @@ export function CertificateListPage({
                       <Award className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <Badge className="bg-emerald-100 text-emerald-700 border-0 mb-1.5">{t('certificates.educatorIssued')}</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 border-0 mb-1.5">
+                        {cert.is_custom_upload ? (t('certificates.customPDF') || 'Custom Upload') : (t('certificates.educatorIssued') || 'Educator Issued')}
+                      </Badge>
                       <h3 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{cert.course_title}</h3>
                     </div>
                   </div>
@@ -265,20 +301,25 @@ export function CertificateListPage({
                       <span>{cert.completion_date}</span>
                     </div>
                     <div className="flex items-center gap-2.5 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
-                      <FileText className="w-4 h-4 text-gray-400" />
-                      <span>{t('certificates.customPDF')}</span>
+                      <Hash className="w-4 h-4 text-gray-400" />
+                      <span className="font-mono">{cert.certificate_code}</span>
                     </div>
                   </div>
 
                   <div className="flex gap-3 mt-auto">
-                    {cert.pdf_url ? (
+                    {cert.is_custom_upload && cert.pdf_url ? (
                       <Button onClick={() => window.open(cert.pdf_url, '_blank')} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
-                        <Eye className="w-4 h-4 mr-2" /> {t('certificates.viewCertificate')}
+                        <Eye className="w-4 h-4 mr-2" /> {t('certificates.viewCertificate') || 'View PDF'}
                       </Button>
                     ) : (
-                      <Button onClick={() => onViewCertificate(cert.id)} className="w-full bg-gray-900 hover:bg-blue-600 text-white rounded-xl">
-                        <Eye className="w-4 h-4 mr-2" /> {t('certificates.viewDetails')}
-                      </Button>
+                      <>
+                        <Button onClick={() => onViewCertificate(cert.id)} className="flex-1 bg-gray-900 hover:bg-blue-600 text-white rounded-xl">
+                          <Eye className="w-4 h-4 mr-2" /> {t('certificates.view') || 'View'}
+                        </Button>
+                        <Button onClick={() => handleDownload(cert)} variant="outline" className="flex-1 rounded-xl hover:bg-gray-50 border-gray-300 text-gray-700">
+                          <Download className="w-4 h-4 mr-2" /> {t('certificates.download') || 'Download'}
+                        </Button>
+                      </>
                     )}
                   </div>
                 </Card>

@@ -132,10 +132,17 @@ export default function CertificateManagement() {
             }`}
           >
             <Award className="w-5 h-5" />
-            Courses with Certificates
+            Certificate-Enabled Courses
             <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{certCourses.length}</span>
           </button>
         </div>
+        {/* This tab lists courses configured with certificate_enabled=true —
+            eligible to award a certificate on completion — not courses that
+            have actually issued one. It was labelled "Courses with
+            Certificates", which reads as an issuance count; on this data
+            that mismatch is stark (41 configured vs. 7 that have ever
+            issued a certificate). The distinct-course count behind actual
+            issuance is available per certificate on the Issued tab. */}
 
         {activeTab === 'issued' && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

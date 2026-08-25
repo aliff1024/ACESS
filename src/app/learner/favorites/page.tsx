@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Loader2, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchFavoriteCourses } from '@/lib/learner-api';
+import { Heart, HeartOff, Loader2, ArrowLeft, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { fetchFavoriteCourses, toggleFavorite } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 
@@ -16,14 +17,41 @@ export default function FavoritesPage() {
   const { settings } = useAccessibility();
   const [courses, setCourses] = useState<Array<{ id: string; title: string; description: string; thumbnail_url: string | null; difficulty_level: string; category: string | null }>>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
+    setLoadError(false);
     fetchFavoriteCourses()
       .then(setCourses)
-      .catch(() => {})
+      // A failed request used to be swallowed here, so a network or permission
+      // error rendered the "no favourites yet" empty state — telling the
+      // learner their saved courses were gone when they were not.
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleRemoveFavorite = async (courseId: string, title: string) => {
+    setRemovingId(courseId);
+    const previous = courses;
+    setCourses((cs) => cs.filter((c) => c.id !== courseId));
+    try {
+      await toggleFavorite(courseId);
+      toast.success(t('favorites.removed', { title }));
+    } catch {
+      setCourses(previous);
+      toast.error(t('favorites.removeFailed'));
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   useEffect(() => {
     setCurrentPage(1);
@@ -61,7 +89,16 @@ export default function FavoritesPage() {
           </div>
         </div>
 
-        {courses.length === 0 ? (
+        {loadError ? (
+          <div className="text-center py-20">
+            <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4 simplifiable" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('favorites.loadErrorTitle')}</h3>
+            <p className="text-gray-500 mb-4">{t('favorites.loadErrorDesc')}</p>
+            <Button onClick={load} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {t('common.tryAgain')}
+            </Button>
+          </div>
+        ) : courses.length === 0 ? (
           <div className="text-center py-20">
             <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4 simplifiable" />
             <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('favorites.empty')}</h3>
@@ -87,6 +124,18 @@ export default function FavoritesPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <Badge className="bg-gray-100 text-gray-700 border">{course.difficulty_level || 'Beginner'}</Badge>
                     {course.category && <Badge variant="outline" className="text-gray-600">{course.category}</Badge>}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto text-red-500 hover:text-red-700 hover:bg-red-50"
+                      aria-label={t('favorites.removeAria', { title: course.title })}
+                      disabled={removingId === course.id}
+                      onClick={(e) => { e.stopPropagation(); handleRemoveFavorite(course.id, course.title); }}
+                    >
+                      {removingId === course.id
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <HeartOff className="w-4 h-4" />}
+                    </Button>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">{course.title}</h3>
                   <p className="text-sm text-gray-600 line-clamp-2 mb-4">{course.description}</p>

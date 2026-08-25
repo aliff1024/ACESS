@@ -391,12 +391,24 @@ export default function AnalyticsDashboard() {
               isEmpty={(kpis?.totalEnrollments ?? 0) === 0}
               emptyMessage="No enrollments yet."
             >
-              <div className="h-64">
+              <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data?.learners.progressDistribution ?? []} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                  <BarChart data={data?.learners.progressDistribution ?? []} margin={{ top: 8, right: 8, left: 28, bottom: 24 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                    <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                    <XAxis
+                      dataKey="label"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      label={{ value: 'Progress band', position: 'insideBottom', offset: -16, fill: '#6b7280', fontSize: 12 }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      label={{ value: 'Enrollments', angle: -90, position: 'insideLeft', offset: -18, fill: '#6b7280', fontSize: 12 }}
+                    />
                     <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} formatter={(v: number) => [`${v} enrollments`, 'Count']} />
                     <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -549,12 +561,24 @@ export default function AnalyticsDashboard() {
             </Panel>
 
             <Panel className="lg:col-span-2" title="Courses by disability focus" question="Who is the catalogue built for?" isEmpty={(access?.coverage.disabilityFocus.length ?? 0) === 0}>
-              <div className="h-56">
+              <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={access?.coverage.disabilityFocus ?? []} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                  <BarChart data={access?.coverage.disabilityFocus ?? []} margin={{ top: 8, right: 8, left: 28, bottom: 24 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                    <XAxis dataKey="focus" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                    <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                    <XAxis
+                      dataKey="focus"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      label={{ value: 'Disability focus', position: 'insideBottom', offset: -16, fill: '#6b7280', fontSize: 12 }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      label={{ value: 'Courses', angle: -90, position: 'insideLeft', offset: -18, fill: '#6b7280', fontSize: 12 }}
+                    />
                     <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} formatter={(v: number) => [`${v} courses`, 'Courses']} />
                     <Bar dataKey="courses" fill="#7c3aed" radius={[4, 4, 0, 0]} />
                   </BarChart>

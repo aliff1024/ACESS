@@ -79,9 +79,15 @@ export function EducatorDashboardOverview({
   // Aggregate Stats
   const activeStudents = students.filter(s => s.status === 'active').length;
   const needsAttentionStudents = students.filter(s => s.status === 'at-risk' || s.status === 'inactive');
-  const avgCompletion = students.length > 0 
+  const avgCompletion = students.length > 0
     ? Math.round(students.reduce((acc, s) => acc + s.totalProgress, 0) / students.length)
     : 0;
+  // "Active Courses" = published, not just "not deleted" — a course sitting
+  // in draft isn't active to an educator, even though fetchCourses() (which
+  // also powers course management, where drafts must stay visible) returns
+  // every status.
+  const publishedCourseCount = courses.filter(c => c.status === 'published').length;
+  const draftCourseCount = courses.length - publishedCourseCount;
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -117,9 +123,14 @@ export function EducatorDashboardOverview({
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Active Courses</p>
-              <p className="text-3xl font-bold text-gray-900">{courses.length}</p>
+              <p className="text-3xl font-bold text-gray-900">{publishedCourseCount}</p>
             </div>
           </div>
+          {draftCourseCount > 0 && (
+            <div className="text-sm font-medium text-gray-400">
+              +{draftCourseCount} in draft
+            </div>
+          )}
         </Card>
 
         <Card className="p-6 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-shadow relative overflow-hidden group cursor-pointer" onClick={onViewStudents}>

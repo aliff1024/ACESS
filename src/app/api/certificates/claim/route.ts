@@ -70,18 +70,30 @@ export async function POST(request: Request) {
     // Re-verify completion eligibility server-side — the client-side check in
     // checkCourseCertificateEligibility() is UX-only and must not be trusted
     // as the authorization boundary for this endpoint.
-    const { count: totalLessons } = await supabaseAdmin
+    // Both counts must be taken over the SAME lesson set. This previously
+    // compared "published + visible lessons" against "every progress row on
+    // the enrollment", so a row left behind by an unpublished or deleted
+    // lesson could satisfy the gate without the course being finished. It also
+    // counted is_viewed (merely opened) rather than is_completed.
+    const { data: publishedLessons } = await supabaseAdmin
       .from('lessons')
-      .select('id', { count: 'exact', head: true })
+      .select('id')
       .eq('course_id', courseId)
       .eq('status', 'published')
       .or('visibility_status.eq.visible,visibility_status.is.null');
 
-    const { count: completedLessons } = await supabaseAdmin
-      .from('lesson_progress')
-      .select('id', { count: 'exact', head: true })
-      .eq('enrollment_id', enrollment.id)
-      .eq('is_viewed', true);
+    const totalLessons = publishedLessons?.length ?? null;
+
+    let completedLessons: number | null = 0;
+    if (publishedLessons && publishedLessons.length > 0) {
+      const { count } = await supabaseAdmin
+        .from('lesson_progress')
+        .select('id', { count: 'exact', head: true })
+        .eq('enrollment_id', enrollment.id)
+        .eq('is_completed', true)
+        .in('lesson_id', publishedLessons.map((l) => l.id));
+      completedLessons = count;
+    }
 
     if (totalLessons === null || completedLessons === null || completedLessons < totalLessons) {
       return NextResponse.json({ error: 'Complete all lessons before claiming a certificate' }, { status: 400 });
@@ -225,9 +237,9 @@ export async function POST(request: Request) {
         .insert({
           user_id: course.created_by,
           title: 'Action Required: Publish Unique Certificate',
-          message: message,
+          body: message,
           type: 'course_update',
-          read: false
+          is_read: false
         });
     }
 

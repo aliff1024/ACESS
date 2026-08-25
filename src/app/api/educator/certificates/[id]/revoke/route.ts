@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { createServerSupabase } from '@/lib/supabase-server';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -12,12 +13,44 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: 'Server configuration missing' }, { status: 500 });
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-    
+    const serverSupabase = await createServerSupabase();
+    const { data: { user } } = await serverSupabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id: certId } = await context.params;
     
     if (!certId) {
        return NextResponse.json({ error: 'Certificate ID missing' }, { status: 400 });
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    // Fetch certificate and verify educator owns the course or is admin
+    const { data: cert, error: fetchError } = await supabaseAdmin
+      .from('certificates')
+      .select('id, user_id, course_id, courses:course_id (created_by)')
+      .eq('id', certId)
+      .maybeSingle();
+
+    if (fetchError || !cert) {
+      return NextResponse.json({ error: 'Certificate not found' }, { status: 404 });
+    }
+
+    const isEducator = (cert.courses as any)?.created_by === user.id;
+
+    // Check if the user is an admin
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    const isAdmin = userData?.role === 'admin';
+
+    if (!isEducator && !isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized to modify this certificate' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -42,34 +75,28 @@ export async function PATCH(request: Request, context: RouteContext) {
       };
     }
 
-    // We use the service role key to bypass RLS, ensuring the update succeeds
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('certificates')
       .update(updateData)
       .eq('id', certId);
 
     if (updateError) throw updateError;
 
-    // Optional: Fetch the certificate to find the learner and send a notification
+    // Fetch the course to find its title and notify the student
     if (scope === 'both' || scope === 'system') {
-      const { data: cert } = await supabase
-        .from('certificates')
-        .select('user_id, course_id')
-        .eq('id', certId)
-        .single();
-
-      if (cert?.user_id) {
-        const { data: course } = await supabase
+      if (cert.user_id) {
+        const { data: course } = await supabaseAdmin
           .from('courses')
           .select('title')
           .eq('id', cert.course_id)
           .single();
           
-        await supabase.from('notifications').insert({
+        await supabaseAdmin.from('notifications').insert({
           user_id: cert.user_id,
           type: 'certificate_revoked',
           title: 'Certificate Revoked',
-          body: `Your certificate for "${course?.title || 'a course'}" has been revoked. Reason: ${reason || 'Not provided'}`
+          body: `Your certificate for "${course?.title || 'a course'}" has been revoked. Reason: ${reason || 'Not provided'}`,
+          is_read: false
         });
       }
     }

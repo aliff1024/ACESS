@@ -36,7 +36,9 @@ function StudentStatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
     active: { label: 'Active', variant: 'default' },
     'at-risk': { label: 'At Risk', variant: 'destructive' },
-    inactive: { label: 'Inactive', variant: 'secondary' }
+    inactive: { label: 'Inactive', variant: 'secondary' },
+    completed: { label: 'Completed', variant: 'default' },
+    dropped: { label: 'Dropped', variant: 'secondary' }
   };
   const s = map[status] || { label: status, variant: 'outline' };
   return <Badge variant={s.variant}>{s.label}</Badge>;

@@ -599,8 +599,12 @@ export async function getInstructorApplicationStats() {
   const pending = data?.filter(a => a.status === 'pending').length || 0
   const approved = data?.filter(a => a.status === 'approved').length || 0
   const rejected = data?.filter(a => a.status === 'rejected').length || 0
+  // 'request_info' is a real, reachable application status (the page can set
+  // it), but it was missing from this summary, so pending+approved+rejected
+  // never added up to total and the difference was unexplained.
+  const infoRequested = data?.filter(a => a.status === 'request_info').length || 0
 
-  return { total, pending, approved, rejected }
+  return { total, pending, approved, rejected, infoRequested }
 }
 
 // ─── Contact Messages Management ─────────────────────────────────────

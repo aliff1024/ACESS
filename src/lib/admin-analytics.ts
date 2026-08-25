@@ -270,6 +270,8 @@ export interface RawCertificate {
   status: string
   issued_at: string
   revoked_at: string | null
+  reference_code?: string | null
+  verification_url?: string | null
 }
 
 export interface RawAdaptation {
@@ -282,11 +284,16 @@ export interface RawAdaptation {
 
 export interface RawProfile {
   user_id: string
+  username?: string | null
+  phone_number?: string | null
+  bio?: string | null
+  avatar_url?: string | null
   birth_date: string | null
   country: string | null
   preferred_language: string | null
   disability_type: string | null
   accessibility_prefs: Record<string, unknown> | null
+  notification_prefs?: Record<string, boolean> | null
 }
 
 export interface AnalyticsSnapshot {
@@ -350,14 +357,14 @@ export async function loadSnapshot(client?: SupabaseClient): Promise<AnalyticsSn
       .select('enrollment_id, quiz_id, score_pct, result, started_at, submitted_at'),
     db
       .from('certificates')
-      .select('id, user_id, course_id, enrollment_id, status, issued_at, revoked_at'),
+      .select('id, user_id, course_id, enrollment_id, status, issued_at, revoked_at, reference_code, verification_url'),
     db
       .from('adaptive_interactions')
       .select('user_id, lesson_id, course_id, adaptation_used, created_at'),
     db
       .from('user_profiles')
       .select(
-        'user_id, birth_date, country, preferred_language, disability_type, accessibility_prefs'
+        'user_id, username, phone_number, bio, avatar_url, birth_date, country, preferred_language, disability_type, accessibility_prefs, notification_prefs'
       ),
   ])
 
@@ -1319,6 +1326,15 @@ export interface EducatorDetail {
   courses: CoursePerformance[]
 }
 
+export interface UserEarnedCertificate {
+  id: string
+  courseId: string | null
+  courseTitle: string
+  referenceCode: string | null
+  issuedAt: string
+  verificationUrl: string | null
+}
+
 export interface UserDetail {
   id: string
   email: string
@@ -1334,7 +1350,13 @@ export interface UserDetail {
     country: string | null
     preferredLanguage: string | null
     birthDateRecorded: boolean
+    birthDate: string | null
+    username: string | null
+    phoneNumber: string | null
+    bio: string | null
+    avatarUrl: string | null
   }
+  notifications: Record<string, boolean> | null
   learner: {
     totalEnrollments: number
     inProgress: number
@@ -1345,6 +1367,7 @@ export interface UserDetail {
     lessonsStarted: number
     lessonsCompleted: number
     certificates: number
+    earnedCertificates: UserEarnedCertificate[]
     courses: UserCourseRow[]
     recentLessons: UserLessonActivity[]
     quizzes: UserQuizRow[]
@@ -1546,6 +1569,21 @@ export function computeUserDetail(
 
     const progressSum = courses.reduce((s, c) => s + c.progress, 0)
 
+    const earnedCertificates: UserEarnedCertificate[] = snap.certificates
+      .filter((c) => c.status === 'issued' && (c.user_id === userId || enrollmentIds.has(c.enrollment_id)))
+      .map((c) => {
+        const course = c.course_id ? index.courseById.get(c.course_id) : null
+        return {
+          id: c.id,
+          courseId: c.course_id || null,
+          courseTitle: course?.title || 'Course Certificate',
+          referenceCode: c.reference_code || null,
+          issuedAt: c.issued_at,
+          verificationUrl: c.verification_url || (c.reference_code ? `/verify/${c.reference_code}` : null),
+        }
+      })
+      .sort((a, b) => +new Date(b.issuedAt) - +new Date(a.issuedAt))
+
     learner = {
       totalEnrollments: courses.length,
       inProgress: courses.filter((c) => c.enrollmentStatus === 'active').length,
@@ -1555,7 +1593,8 @@ export function computeUserDetail(
       totalLearningSeconds: courses.reduce((s, c) => s + c.learningSeconds, 0),
       lessonsStarted: courses.reduce((s, c) => s + c.lessonsStarted, 0),
       lessonsCompleted: courses.reduce((s, c) => s + c.lessonsCompleted, 0),
-      certificates: certByEnrollment.size,
+      certificates: earnedCertificates.length || certByEnrollment.size,
+      earnedCertificates,
       courses,
       recentLessons,
       quizzes: Array.from(quizByKey.values()).sort(
@@ -1612,10 +1651,16 @@ export function computeUserDetail(
     activityBand: band,
     activityBandLabel: ACTIVITY_BAND_LABELS[band],
     profile: {
+      username: profile?.username ?? null,
+      phoneNumber: profile?.phone_number ?? null,
+      bio: profile?.bio ?? null,
+      avatarUrl: profile?.avatar_url ?? null,
       country: profile?.country ?? null,
       preferredLanguage: profile?.preferred_language ?? null,
       birthDateRecorded: !!profile?.birth_date,
+      birthDate: profile?.birth_date ?? null,
     },
+    notifications: (profile?.notification_prefs as Record<string, boolean>) || null,
     learner,
     educator,
     accessibility,

@@ -54,6 +54,7 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
   
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
   const [enrollmentStatus, setEnrollmentStatus] = useState<string>(filterParam === 'enrolled' ? 'Enrolled' : 'All');
+  const isEnrolledView = enrollmentStatus === 'Enrolled';
 
   // Reset filters when switching tabs (Enrolled / All Courses)
   const filterParamRef = useRef(filterParam);
@@ -271,8 +272,16 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
         </button>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">Browse Courses</h1>
-            <p className="text-lg text-gray-500 font-medium">Discover new skills and add them to your learning path.</p>
+            {/* "Enrolled" is this same page with ?filter=enrolled. It used to
+                keep the discovery heading, so a learner who clicked "Enrolled"
+                landed on a page titled "Browse Courses" telling them to
+                discover new skills — with their own courses underneath it. */}
+            <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
+              {isEnrolledView ? t('course.myCoursesTitle') : t('course.browseTitle')}
+            </h1>
+            <p className="text-lg text-gray-500 font-medium">
+              {isEnrolledView ? t('course.myCoursesDesc') : t('course.browseDesc')}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -490,10 +499,18 @@ export function CourseListPage({ onViewCourse, onBack }: CourseListPageProps) {
                     )}
                   </div>
                   
-                  {/* Favorite Toggle */}
+                  {/* Favorite Toggle. Icon-only control: without an accessible
+                      name a screen reader announced this as just "button", and
+                      without aria-pressed its on/off state was carried purely
+                      by a fill colour. */}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course.id); }}
                     disabled={toggling === course.id}
+                    aria-label={isFav
+                      ? t('course.removeFavoriteAria', { title: course.title })
+                      : t('course.addFavoriteAria', { title: course.title })}
+                    aria-pressed={isFav}
+                    title={isFav ? t('course.removeFavorite') : t('course.addFavorite')}
                     className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md shadow-sm transition-transform hover:scale-110 ${
                       isFav ? 'bg-red-50 text-red-500' : 'bg-white/20 text-white hover:bg-white/40'
                     }`}

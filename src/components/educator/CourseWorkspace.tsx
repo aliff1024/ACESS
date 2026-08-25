@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion, Reorder } from 'framer-motion';
 import {
   ArrowLeft, BookOpen, FileText, Users, Settings, Plus, Loader2,
@@ -78,6 +78,7 @@ interface CourseData {
   certificate_enabled?: boolean;
   certificate_settings?: Record<string, unknown>;
   certification_locked?: boolean;
+  created_by?: string;
 }
 
 interface QuizQuestionForm {
@@ -188,7 +189,14 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   const [course, setCourse] = useState<CourseData | null>(null);
   const [lessons, setLessons] = useState<LessonWithQuiz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'performance' | 'admin'>('lessons');
+  const [unauthorized, setUnauthorized] = useState(false);
+  const searchParams = useSearchParams();
+  const initialTab = searchParams ? searchParams.get('tab') : null;
+  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'performance' | 'admin'>(
+    (initialTab && ['overview', 'lessons', 'assets', 'students', 'certificates', 'achievements', 'settings', 'performance', 'admin'].includes(initialTab))
+      ? (initialTab as any)
+      : 'lessons'
+  );
 
   // Lesson editor modal
   const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
@@ -295,6 +303,24 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
         l = results[1];
       }
       if (!c) throw new Error('Course not found');
+
+      // The "All Courses" catalog links every course (including other
+      // educators' and system courses, visible there because published
+      // courses are publicly readable) into this same management route.
+      // Without this check, a non-owner would land in the full edit
+      // workspace — publish/lesson/settings controls and all — and only
+      // discover it doesn't work when each mutation silently fails RLS,
+      // with tabs like Students rendering a misleading "0 enrolled"
+      // instead of an actual permission message.
+      if (mode === 'educator') {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData.user && c.created_by && c.created_by !== authData.user.id) {
+          setUnauthorized(true);
+          setLoading(false);
+          return;
+        }
+      }
+
       setCourse(c);
       setLessons(l);
       setOverviewTitle(c.title);
@@ -638,6 +664,17 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
     return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
   }
 
+  if (unauthorized) {
+    return (
+      <div className="p-8 text-center max-w-md mx-auto mt-16">
+        <Shield className="w-10 h-10 text-red-500 mx-auto mb-4" />
+        <p className="text-xl font-semibold mb-2">You don&apos;t manage this course</p>
+        <p className="text-gray-500 mb-6">This course belongs to another educator, so you can&apos;t edit its content, students, or settings here. Browse it from All Courses instead.</p>
+        <Button onClick={onBack}>Back to Courses</Button>
+      </div>
+    );
+  }
+
   if (!course) {
     return <div className="p-8 text-center"><p className="text-xl mb-4">Course not found</p><Button onClick={onBack}>Back to Courses</Button></div>;
   }
@@ -897,7 +934,7 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
 
         {/* ─── Students Tab ─────────────────────────────────────────── */}
         {activeTab === 'students' && (
-          <StudentProgressView courseId={courseId} courseTitle={course.title} />
+          <StudentProgressView courseId={courseId} courseTitle={course.title} mode={mode} />
         )}
 
         {/* ─── Certificates Tab ────────────────────────────────────── */}

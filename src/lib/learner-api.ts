@@ -201,6 +201,11 @@ export interface Certificate {
   verification_url?: string
   is_system_course?: boolean
   is_custom_upload?: boolean
+  educator_name?: string
+  institution_name?: string
+  skills_earned?: string[]
+  course_duration_hours?: number
+  learner_name?: string
 }
 
 export interface Recommendation {
@@ -317,7 +322,7 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
 
     const { data: lp } = await supabase
       .from('lesson_progress')
-      .select('lesson_id, enrollment_id, is_viewed')
+      .select('lesson_id, enrollment_id, is_completed')
       .in('enrollment_id', enrollmentIds)
 
     for (const e of enrollmentsArr) {
@@ -326,10 +331,10 @@ export async function fetchEnrolledCourses(): Promise<EnrolledCourse[]> {
       // outlive a lesson that was later unpublished/removed, which would
       // otherwise inflate completed_lessons past total_lessons (>100% progress).
       const currentLessonIds = new Set(lessonMap.get(e.course_id) || [])
-      const viewed = (lp || []).filter(
-        (p) => p.enrollment_id === e.id && p.is_viewed && currentLessonIds.has(p.lesson_id)
+      const completed = (lp || []).filter(
+        (p) => p.enrollment_id === e.id && p.is_completed && currentLessonIds.has(p.lesson_id)
       )
-      completedCounts.set(e.course_id, viewed.length)
+      completedCounts.set(e.course_id, completed.length)
     }
 
     for (const e of enrollmentsArr) {
@@ -524,7 +529,7 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
       .from('lesson_progress')
       .select('lesson_id')
       .eq('enrollment_id', enrollment.id)
-      .eq('is_viewed', true)
+      .eq('is_completed', true)
 
     completedSet = new Set((lp || []).map((p) => p.lesson_id))
   }
@@ -794,18 +799,66 @@ export async function markLessonViewed(lessonId: string, courseId: string): Prom
   if (existing) {
     await supabase
       .from('lesson_progress')
-      .update({ view_count: (existing.view_count || 0) + 1, last_viewed_at: new Date().toISOString() })
+      .update({ is_viewed: true, view_count: (existing.view_count || 0) + 1, last_viewed_at: new Date().toISOString() })
       .eq('id', existing.id)
   } else {
     await supabase.from('lesson_progress').insert({
       enrollment_id: enrollment.id,
       lesson_id: lessonId,
-      is_viewed: false,
+      // Opening the lesson IS the "viewed" event. This used to insert
+      // is_viewed: false, which left the flag meaning nothing at all — the
+      // only code that ever set it true was completeLesson().
+      is_viewed: true,
       view_count: 1,
       first_viewed_at: new Date().toISOString(),
       last_viewed_at: new Date().toISOString(),
     })
   }
+}
+
+/**
+ * Marks the enrollment complete once every published lesson of the course has
+ * been completed.
+ *
+ * Course completion used to be a side-effect of *claiming a certificate*
+ * (`/api/certificates/claim`, `/api/certificates/custom`,
+ * `/api/educator/certificates/issue` were the only three places that ever set
+ * `enrollments.status = 'completed'`). That had two consequences:
+ *   - a course with `certificate_enabled = false` could never be completed at
+ *     all, however many lessons the learner finished;
+ *   - a learner who finished every lesson but hadn't claimed their certificate
+ *     stayed `active`, so the dashboard's "Courses Completed" tile and the
+ *     Progress page under-counted them. Observed live: two courses showing
+ *     100% while the tile read 1.
+ *
+ * Completion only ever moves forward here. If an educator later adds a lesson
+ * to a finished course, the learner keeps the completion (and any certificate
+ * issued against it) rather than silently reverting to in-progress.
+ */
+async function syncEnrollmentCompletion(enrollmentId: string, courseId: string): Promise<void> {
+  const { data: publishedLessons } = await supabase
+    .from('lessons')
+    .select('id')
+    .eq('course_id', courseId)
+    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
+
+  if (!publishedLessons || publishedLessons.length === 0) return
+
+  const { count } = await supabase
+    .from('lesson_progress')
+    .select('id', { count: 'exact', head: true })
+    .eq('enrollment_id', enrollmentId)
+    .eq('is_completed', true)
+    .in('lesson_id', publishedLessons.map((l) => l.id))
+
+  if ((count ?? 0) < publishedLessons.length) return
+
+  await supabase
+    .from('enrollments')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('id', enrollmentId)
+    .eq('status', 'active')
 }
 
 export async function completeLesson(lessonId: string, courseId: string): Promise<void> {
@@ -828,15 +881,21 @@ export async function completeLesson(lessonId: string, courseId: string): Promis
     .eq('lesson_id', lessonId)
     .maybeSingle()
 
+  // `is_completed` is the canonical completion flag — it is what admin and
+  // educator analytics read, and what every learner-side percentage, course
+  // completion check and certificate eligibility check now reads too. This
+  // used to write only `is_viewed`, so lessons a learner genuinely finished
+  // were counted as "skipped" on the educator's dashboard.
   if (existing) {
     await supabase
       .from('lesson_progress')
-      .update({ is_viewed: true, summary_completed: true, last_viewed_at: new Date().toISOString() })
+      .update({ is_completed: true, is_viewed: true, summary_completed: true, last_viewed_at: new Date().toISOString() })
       .eq('id', existing.id)
   } else {
     await supabase.from('lesson_progress').insert({
       enrollment_id: enrollment.id,
       lesson_id: lessonId,
+      is_completed: true,
       is_viewed: true,
       summary_completed: true,
       view_count: 1,
@@ -844,6 +903,9 @@ export async function completeLesson(lessonId: string, courseId: string): Promis
       last_viewed_at: new Date().toISOString(),
     })
   }
+
+  // Derive course completion from lesson completion, not from certificate claims.
+  await syncEnrollmentCompletion(enrollment.id, courseId)
 
   // Hook into Notifications & Achievements
   try {
@@ -857,6 +919,7 @@ export async function completeLesson(lessonId: string, courseId: string): Promis
         metadata: { lesson_id: lessonId }
       })
       await evaluateAchievements(userId, courseId)
+      await checkAndNotifyCertificateEligibility(userId, courseId)
     }
   } catch (err) {
     console.error('Failed to process lesson hooks:', err)
@@ -904,10 +967,10 @@ export async function fetchSystemCourseProgress(courseId: string): Promise<Syste
 
   const { data: lp } = await supabase
     .from('lesson_progress')
-    .select('lesson_id, is_viewed, last_viewed_at')
+    .select('lesson_id, is_completed, last_viewed_at, time_spent_learning')
     .eq('enrollment_id', enrollment.id)
 
-  const completedSet = new Set((lp || []).filter(p => p.is_viewed && currentLessonIds.has(p.lesson_id)).map(p => p.lesson_id))
+  const completedSet = new Set((lp || []).filter(p => p.is_completed && currentLessonIds.has(p.lesson_id)).map(p => p.lesson_id))
   const completedLessons = completedSet.size
 
   // Find next incomplete lesson
@@ -974,8 +1037,13 @@ export async function fetchSystemCourseProgress(courseId: string): Promise<Syste
     }
   }
 
-  // Time spent (simple estimate: count view records * 10 min each)
-  const timeSpentMinutes = (lp || []).filter(p => p.is_viewed).length * 10
+  // Time spent — real measured seconds from lesson_progress.time_spent_learning.
+  // This used to be `viewed_lessons * 10`, a fabricated figure presented to the
+  // learner as their own study time while the actual measurement sat unused in
+  // the same rows being read here.
+  const timeSpentMinutes = Math.round(
+    (lp || []).reduce((acc, p) => acc + (p.time_spent_learning ?? 0), 0) / 60
+  )
 
   // Last activity
   const datesWithActivity = (lp || [])
@@ -1229,6 +1297,7 @@ export async function submitQuizAttempt(params: {
         metadata: { quiz_id: params.quizId, score }
       })
       await evaluateAchievements(userId, params.courseId)
+      await checkAndNotifyCertificateEligibility(userId, params.courseId)
     }
   } catch (err) {
     console.error('Failed to process quiz hooks:', err)
@@ -1309,7 +1378,7 @@ export async function fetchLearnerStats(): Promise<LearnerStats> {
       .from('lesson_progress')
       .select('id')
       .in('enrollment_id', enrollmentIds)
-      .eq('is_viewed', true)
+      .eq('is_completed', true)
     totalViewed = lp?.length ?? 0
   }
 
@@ -1374,11 +1443,11 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
   if (enrollment) {
     const { data: lp } = await supabase
       .from('lesson_progress')
-      .select('lesson_id, is_viewed')
+      .select('lesson_id, is_completed')
       .eq('enrollment_id', enrollment.id)
 
     for (const p of lp || []) {
-      if (p.is_viewed) {
+      if (p.is_completed) {
         completedSet.add(p.lesson_id)
       }
     }
@@ -1502,7 +1571,7 @@ export async function fetchCertificates(): Promise<Certificate[]> {
 
   const { data: certs, error: certErr } = await supabase
     .from('certificates')
-    .select('id, enrollment_id, reference_code, issued_at, pdf_url, verification_url, metadata')
+    .select('id, enrollment_id, reference_code, issued_at, pdf_url, verification_url, metadata, educator_name, institution_name, skills_earned, course_duration_hours, learner_name')
     .in('enrollment_id', enrollmentIds)
     .eq('status', 'issued')
 
@@ -1555,7 +1624,12 @@ export async function fetchCertificates(): Promise<Certificate[]> {
       pdf_url: c.pdf_url || c.verification_url,
       verification_url: c.verification_url,
       is_system_course: (courseInfo as any)?.system_course || false,
-      is_custom_upload: !!isCustomUpload
+      is_custom_upload: !!isCustomUpload,
+      educator_name: c.educator_name || undefined,
+      institution_name: c.institution_name || undefined,
+      skills_earned: c.skills_earned || undefined,
+      course_duration_hours: c.course_duration_hours ? Number(c.course_duration_hours) : undefined,
+      learner_name: c.learner_name || undefined
     }
   })
 }
@@ -1887,10 +1961,13 @@ export interface AccessibilitySettingsData {
 }
 
 export interface NotificationSettingsData {
+  in_app_notifications?: boolean | null
   email_notifications?: boolean | null
   push_notifications?: boolean | null
   course_updates?: boolean | null
   certificate_notifications?: boolean | null
+  achievement_notifications?: boolean | null
+  feedback_notifications?: boolean | null
   marketing_notifications?: boolean | null
 }
 
@@ -1974,22 +2051,42 @@ export async function fetchFullProfile(): Promise<FullProfile> {
       progress_timeline_enabled: a.progress_timeline_enabled ?? false,
     } : null,
     notifications: n ? {
-      email_notifications: n.email_notifications,
-      push_notifications: n.push_notifications,
-      course_updates: n.course_updates,
-      certificate_notifications: n.certificate_notifications,
-      marketing_notifications: n.marketing_notifications,
+      in_app_notifications: n.in_app_notifications ?? true,
+      email_notifications: n.email_notifications ?? true,
+      push_notifications: n.push_notifications ?? true,
+      course_updates: n.course_updates ?? true,
+      certificate_notifications: n.certificate_notifications ?? true,
+      achievement_notifications: n.achievement_notifications ?? true,
+      feedback_notifications: n.feedback_notifications ?? true,
+      marketing_notifications: n.marketing_notifications ?? false,
     } : null,
   }
 }
 
-export async function saveUserProfile(data: UserProfileData): Promise<void> {
+export async function saveUserProfile(data: UserProfileData, fullName?: string): Promise<void> {
   const userId = await ensureUserId()
   const { error } = await supabase.from('user_profiles').upsert(
     { user_id: userId, ...data },
     { onConflict: 'user_id' }
   )
   if (error) throw error
+
+  if (fullName && fullName.trim()) {
+    const { error: userError } = await supabase
+      .from('users')
+      .update({ full_name: fullName.trim() })
+      .eq('id', userId)
+
+    if (userError) {
+      console.warn('Could not update users.full_name:', userError)
+    }
+
+    try {
+      await supabase.auth.updateUser({ data: { full_name: fullName.trim() } })
+    } catch {
+      // ignore
+    }
+  }
 }
 
 export async function saveAccessibilitySettings(data: AccessibilitySettingsData): Promise<void> {
@@ -2190,6 +2287,7 @@ export interface FullCertificate {
   issued_at: string
   template_id: string
   enrollment_id: string
+  metadata?: Record<string, any>
 }
 
 export async function fetchCertificateDetail(certId: string): Promise<FullCertificate | null> {
@@ -2244,6 +2342,7 @@ export async function fetchCertificateDetail(certId: string): Promise<FullCertif
     issued_at: data.issued_at,
     template_id: data.template_id || 'default',
     enrollment_id: data.enrollment_id,
+    metadata: data.metadata || undefined,
   }
 }
 
@@ -2303,22 +2402,40 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
     return { eligible: true, reason: 'Certificate already issued', alreadyIssued: true, certificateId: existing.id, ...customCertInfo }
   }
 
-  // Count lessons
-  const { count: totalLessons } = await supabase
+  // Count lessons. The two counts must be taken over the SAME lesson set:
+  // previously `totalLessons` was scoped to published+visible lessons while
+  // `completedLessons` counted every progress row on the enrollment, so a row
+  // left behind by an unpublished or removed lesson could push the learner to
+  // completedLessons >= totalLessons and issue a certificate for a course they
+  // had not actually finished. It also counted `is_viewed` (merely opened)
+  // rather than `is_completed`.
+  const { data: publishedLessons } = await supabase
     .from('lessons')
-    .select('id', { count: 'exact', head: true })
+    .select('id')
     .eq('course_id', courseId)
     .eq('status', 'published')
     .or('visibility_status.eq.visible,visibility_status.is.null')
 
-  const { count: completedLessons } = await supabase
-    .from('lesson_progress')
-    .select('id', { count: 'exact', head: true })
-    .eq('enrollment_id', enrollment.id)
-    .eq('is_viewed', true)
-
-  if (completedLessons === null || totalLessons === null) {
+  if (publishedLessons === null) {
     return { eligible: false, reason: 'Error counting lessons', ...customCertInfo }
+  }
+
+  const totalLessons = publishedLessons.length
+  const publishedLessonIds = publishedLessons.map((l) => l.id)
+
+  let completedLessons = 0
+  if (publishedLessonIds.length > 0) {
+    const { count, error: countError } = await supabase
+      .from('lesson_progress')
+      .select('id', { count: 'exact', head: true })
+      .eq('enrollment_id', enrollment.id)
+      .eq('is_completed', true)
+      .in('lesson_id', publishedLessonIds)
+
+    if (countError || count === null) {
+      return { eligible: false, reason: 'Error counting lessons', ...customCertInfo }
+    }
+    completedLessons = count
   }
 
   if (completedLessons < totalLessons) {
@@ -2424,6 +2541,59 @@ export async function claimCertificate(courseId: string): Promise<{
   }
 
   return response.json()
+}
+
+export async function checkAndNotifyCertificateEligibility(userId: string, courseId: string): Promise<void> {
+  try {
+    const { data: course } = await supabase
+      .from('courses')
+      .select('title, created_by, certificate_enabled, system_course')
+      .eq('id', courseId)
+      .single()
+
+    if (!course || !course.certificate_enabled || course.system_course) return
+
+    const { data: enrollment } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('course_id', courseId)
+      .neq('status', 'dropped')
+      .maybeSingle()
+
+    if (!enrollment) return
+
+    const eligibility = await checkCourseCertificateEligibility(courseId)
+    if (!eligibility.eligible || eligibility.alreadyIssued) return
+
+    const { data: learner } = await supabase
+      .from('users')
+      .select('full_name')
+      .eq('id', userId)
+      .single()
+
+    const learnerName = learner?.full_name || 'A student'
+
+    const { data: existingNotif } = await supabase
+      .from('notifications')
+      .select('id')
+      .eq('user_id', course.created_by)
+      .eq('type', 'course_update')
+      .eq('title', 'Action Required: Certificate Awaiting Issuance')
+      .maybeSingle()
+
+    if (!existingNotif) {
+      await createNotification({
+        user_id: course.created_by,
+        type: 'course_update' as any,
+        title: 'Action Required: Certificate Awaiting Issuance',
+        body: `${learnerName} has completed "${course.title}" and is eligible for a Unique Certificate.`,
+        metadata: { enrollment_id: enrollment.id, course_id: courseId, learner_name: learnerName }
+      })
+    }
+  } catch (err) {
+    console.error('Failed to run checkAndNotifyCertificateEligibility:', err)
+  }
 }
 
 // ─── Public Certificate Verification ───────────────────────────────────
@@ -2628,7 +2798,9 @@ export async function saveLessonProgressMeta(
     await supabase.from('lesson_progress').insert({
       enrollment_id: enrollment.id,
       lesson_id: lessonId,
-      is_viewed: false,
+      // Saving resume state only happens while the learner is inside the
+      // lesson, so it has necessarily been viewed.
+      is_viewed: true,
       view_count: 1,
       progress_meta: meta as unknown as Record<string, unknown>,
       first_viewed_at: new Date().toISOString(),

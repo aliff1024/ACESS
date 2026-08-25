@@ -6,7 +6,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Input } from '../ui/input';
-import { ArrowLeft, BookOpen, Clock, Activity, Target, Mail, Send, CheckCircle2, AlertCircle, Calendar, MessageSquare, Loader2, Eye, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Activity, Target, Mail, Send, CheckCircle2, AlertCircle, Calendar, MessageSquare, Loader2, Eye, ShieldAlert, Award, ExternalLink } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { 
   fetchStudentsDeepProgress, 
@@ -21,6 +21,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 export function StudentDetailDashboard({ studentId }: { studentId: string }) {
   const [student, setStudent] = useState<DetailedStudentProgress | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [certificates, setCertificates] = useState<{ id: string; reference_code: string; course_title: string; issued_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -31,12 +32,22 @@ export function StudentDetailDashboard({ studentId }: { studentId: string }) {
       try {
         const { data: user } = await supabase.auth.getUser();
         if (user.user) {
-          const students = await fetchStudentsDeepProgress(user.user.id);
+          const students = await fetchStudentsDeepProgress(user.user.id, studentId);
           const currentStudent = students.find(s => s.id === studentId);
           if (currentStudent) {
             setStudent(currentStudent);
-            const events = await fetchStudentTimeline(studentId, user.user.id);
+            const [events, certsRes] = await Promise.all([
+              fetchStudentTimeline(studentId, user.user.id),
+              supabase
+                .from('certificates')
+                .select('id, reference_code, course_title, issued_at')
+                .eq('user_id', studentId)
+                .eq('status', 'issued')
+            ]);
             setTimeline(events);
+            if (certsRes.data) {
+              setCertificates(certsRes.data);
+            }
           }
         }
       } catch (err) {
@@ -115,6 +126,11 @@ export function StudentDetailDashboard({ studentId }: { studentId: string }) {
               {student.status === 'inactive' && (
                 <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
                   Inactive
+                </Badge>
+              )}
+              {student.status === 'completed' && (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  Completed
                 </Badge>
               )}
             </div>
@@ -238,8 +254,12 @@ export function StudentDetailDashboard({ studentId }: { studentId: string }) {
                     </div>
                     {course.status === 'completed' ? (
                       <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-0">Completed</Badge>
+                    ) : course.status === 'dropped' ? (
+                      <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100 border-0">Dropped</Badge>
                     ) : course.status === 'at-risk' ? (
                       <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 border-0">Falling Behind</Badge>
+                    ) : course.status === 'inactive' ? (
+                      <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-0">Inactive</Badge>
                     ) : (
                       <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0">In Progress</Badge>
                     )}
@@ -310,6 +330,44 @@ export function StudentDetailDashboard({ studentId }: { studentId: string }) {
               </div>
             </Card>
           </div>
+
+          {certificates.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-900">Earned Certificates</h3>
+              <Card className="p-6 border-0 shadow-sm ring-1 ring-green-200 bg-green-50/20 rounded-2xl space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700">
+                    <Award className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Verified Course Certificates</h4>
+                    <p className="text-xs text-gray-500">{certificates.length} certificate{certificates.length === 1 ? '' : 's'} earned and recorded</p>
+                  </div>
+                </div>
+
+                <div className="divide-y divide-green-100/80 pt-1">
+                  {certificates.map(cert => (
+                    <div key={cert.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-sm text-gray-900">{cert.course_title}</p>
+                        <p className="text-xs font-mono text-gray-500 mt-0.5">
+                          ID: {cert.reference_code} • Issued: {format(new Date(cert.issued_at), 'MMM d, yyyy')}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(`/verify/${cert.reference_code}`, '_blank')}
+                        className="text-xs border-green-300 text-green-800 hover:bg-green-100/50 shrink-0 w-fit"
+                      >
+                        Verify Certificate <ExternalLink className="w-3 h-3 ml-1" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
           
         </div>
 

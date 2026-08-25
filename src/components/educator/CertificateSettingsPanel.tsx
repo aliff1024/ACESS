@@ -18,6 +18,7 @@ import {
 } from '@/lib/educator-api';
 import { generatePDFCertificate, MOCK_PREVIEW_DATA, formatDate, type CertificateRenderData } from '@/lib/certificate-utils';
 import { useAuth } from '@/providers/AuthProvider';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   courseId: string
@@ -48,6 +49,14 @@ export default function CertificateSettingsPanel({
   const [previewOpen, setPreviewOpen] = useState(false)
   const [downloading, setDownloading] = useState(false)
 
+  // Advanced Unique Certificate Settings
+  const [certificateTitle, setCertificateTitle] = useState('Certificate of Completion')
+  const [educatorRole, setEducatorRole] = useState('Course Educator')
+  const [customCourseTitle, setCustomCourseTitle] = useState('')
+  const [certificateDescription, setCertificateDescription] = useState('for successfully completing the course')
+  const [certificateIdPrefix, setCertificateIdPrefix] = useState('ACESS')
+  const [issueDateBehavior, setIssueDateBehavior] = useState('completion_date')
+
   const [eligibleStudents, setEligibleStudents] = useState<CourseStudentProgress[]>([])
   const [uploadingFor, setUploadingFor] = useState<string | null>(null)
 
@@ -64,16 +73,37 @@ export default function CertificateSettingsPanel({
       setPassThreshold(((settings.completion_rules as Record<string, unknown>)?.quiz_threshold_pct as number) || 80)
       setAllowCustom((settings.allow_custom_certificates as boolean) || false)
 
+      // Advanced settings load
+      setCertificateTitle((settings.certificate_title as string) || 'Certificate of Completion')
+      setEducatorRole((settings.educator_role as string) || 'Course Educator')
+      setCustomCourseTitle((settings.course_title as string) || courseTitle || '')
+      setCertificateDescription((settings.certificate_description as string) || 'for successfully completing the course')
+      setCertificateIdPrefix((settings.certificate_id_prefix as string) || 'ACESS')
+      setIssueDateBehavior((settings.issue_date_behavior as string) || 'completion_date')
+
       if (data.certificate_enabled || (settings.allow_custom_certificates as boolean)) {
         const students = await fetchCourseStudentsProgress(courseId)
-        setEligibleStudents(students.filter(s => s.progressPercent >= (((settings.completion_rules as Record<string, unknown>)?.quiz_threshold_pct as number) || 80)))
+        // Verify if quizzes exist for this course to perform correct eligibility check
+        const { count: quizCount } = await supabase
+          .from('quizzes')
+          .select('id', { count: 'exact', head: true })
+          .in('lesson_id', (
+            await supabase.from('lessons').select('id').eq('course_id', courseId).eq('status', 'published')
+          ).data?.map(l => l.id) || [])
+
+        const qThreshold = ((settings.completion_rules as Record<string, unknown>)?.quiz_threshold_pct as number) || 80
+        setEligibleStudents(students.filter(s => {
+          const lessonsDone = s.progressPercent === 100
+          const quizzesDone = quizCount === 0 || s.avgScore >= qThreshold
+          return lessonsDone && quizzesDone
+        }))
       }
     } catch {
       toast.error('Failed to load certificate settings')
     } finally {
       setLoading(false)
     }
-  }, [courseId])
+  }, [courseId, courseTitle])
 
   useEffect(() => {
     loadSettings()
@@ -98,6 +128,12 @@ export default function CertificateSettingsPanel({
           mandatory_activities: true,
         },
         allow_custom_certificates: allowCustom,
+        certificate_title: certificateTitle,
+        educator_role: educatorRole,
+        course_title: customCourseTitle,
+        certificate_description: certificateDescription,
+        certificate_id_prefix: certificateIdPrefix,
+        issue_date_behavior: issueDateBehavior,
       })
 
       // Lock certification if publishing or has enrollments
@@ -218,14 +254,47 @@ export default function CertificateSettingsPanel({
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Educator Name</label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Certificate Title</label>
                 <Input
-                  value={educatorName}
-                  onChange={(e) => setEducatorName(e.target.value)}
-                  placeholder="e.g., Dr. Jane Smith"
+                  value={certificateTitle}
+                  onChange={(e) => setCertificateTitle(e.target.value)}
+                  placeholder="e.g., Certificate of Completion"
                   disabled={locked}
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Course Title on Certificate</label>
+                <Input
+                  value={customCourseTitle}
+                  onChange={(e) => setCustomCourseTitle(e.target.value)}
+                  placeholder="e.g., Web Development Fundamentals"
+                  disabled={locked}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Educator / Issuer Name</label>
+                <Input
+                  value={educatorName}
+                  onChange={(e) => setEducatorName(e.target.value)}
+                  placeholder="e.g., Dr. Sarah Chen"
+                  disabled={locked}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Educator Role / Title</label>
+                <Input
+                  value={educatorRole}
+                  onChange={(e) => setEducatorRole(e.target.value)}
+                  placeholder="e.g., Lead Instructor / Professor"
+                  disabled={locked}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-1">Institution Name</label>
                 <Input
@@ -234,6 +303,39 @@ export default function CertificateSettingsPanel({
                   placeholder="ACESS Platform"
                   disabled={locked}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Certificate ID Prefix</label>
+                <Input
+                  value={certificateIdPrefix}
+                  onChange={(e) => setCertificateIdPrefix(e.target.value)}
+                  placeholder="e.g., ACESS"
+                  disabled={locked}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Certificate Description / Text</label>
+                <Input
+                  value={certificateDescription}
+                  onChange={(e) => setCertificateDescription(e.target.value)}
+                  placeholder="e.g., for successfully completing the course"
+                  disabled={locked}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Issue Date Behavior</label>
+                <select
+                  value={issueDateBehavior}
+                  onChange={(e) => setIssueDateBehavior(e.target.value)}
+                  disabled={locked}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                >
+                  <option value="completion_date">Date of Completion</option>
+                  <option value="issue_date">Date of Issuance</option>
+                </select>
               </div>
             </div>
 
@@ -456,14 +558,14 @@ export default function CertificateSettingsPanel({
               <div className="text-center">
                 <div className="mb-4">
                   <Award className="w-12 h-12 text-blue-600 mx-auto" />
-                  <p className="text-lg font-bold text-blue-900 mt-2">Certificate of Completion</p>
+                  <p className="text-lg font-bold text-blue-900 mt-2">{certificateTitle || 'Certificate of Completion'}</p>
                   <p className="text-xs text-gray-500">{institutionName || 'ACESS Platform'}</p>
                 </div>
                 <div className="border-t-2 border-b-2 border-blue-200 py-6 my-4">
                   <p className="text-gray-600 mb-3 text-sm">This certifies that</p>
                   <p className="text-3xl font-bold text-gray-900 mb-3">{getPreviewStudentName()}</p>
-                  <p className="text-gray-600 mb-2 text-sm">has successfully completed</p>
-                  <p className="text-xl font-bold text-blue-700">{courseTitle}</p>
+                  <p className="text-gray-600 mb-2 text-sm">{certificateDescription || 'for successfully completing the course'}</p>
+                  <p className="text-xl font-bold text-blue-700">{customCourseTitle || courseTitle}</p>
                   {courseDurationHours > 0 && (
                     <p className="text-xs text-gray-500 mt-2">{courseDurationHours} hours</p>
                   )}
@@ -475,7 +577,7 @@ export default function CertificateSettingsPanel({
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Code</p>
-                    <p className="font-mono">{MOCK_PREVIEW_DATA.certificateCode}</p>
+                    <p className="font-mono">{certificateIdPrefix ? `${certificateIdPrefix}-XXXX-YYYY` : MOCK_PREVIEW_DATA.certificateCode}</p>
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Educator</p>
@@ -496,7 +598,7 @@ export default function CertificateSettingsPanel({
                   </div>
                   <div className="text-center">
                     <div className="w-20 h-0.5 bg-gray-900 mx-auto mb-1" />
-                    <p className="text-xs font-semibold text-gray-800">Education Lead</p>
+                    <p className="text-xs font-semibold text-gray-800">{educatorRole || 'Course Educator'}</p>
                   </div>
                 </div>
               </div>
