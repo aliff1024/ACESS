@@ -77,7 +77,7 @@ async function main() {
   console.log('-'.repeat(96));
 
   let mismatches = 0;
-  for (const e of enrollments || []) {
+  for (const e of (enrollments || []) as any[]) {
     const published = (lessons || []).filter((l: any) => l.course_id === e.course_id && isPublished(l));
     const publishedIds = new Set(published.map((l: any) => l.id));
     const mine = (progress || []).filter((p: any) => p.enrollment_id === e.id);

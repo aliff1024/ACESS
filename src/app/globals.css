@@ -299,10 +299,23 @@ html[data-font-type="serif"] body {
 html[data-font-type="sans_serif"] body {
   font-family: Arial, Helvetica, sans-serif !important;
 }
+/* Legacy data-font-type block, kept only for the font stack.
+   Audited live 2026-08-25: with the Dyslexia preset active and the learner's
+   word spacing set to 0.16em (the WCAG 1.4.12 floor), <body> computed 2.28px
+   = 0.12em — this rule's hard-coded value winning by !important over the
+   learner's own slider, while content inside <main> correctly showed 3.04px
+   = 0.16em. Its letter-spacing did the same thing to the 0.12em floor set by
+   html[data-preset="dyslexia"] below, pinning it to 0.035em.
+
+   The comment above that preset block already states word spacing is
+   "intentionally NOT set here: it is fully driven by --user-word-spacing" —
+   this rule was the thing contradicting it. Both hard-coded values are
+   removed so the learner-controlled values govern everywhere. The font stack
+   stays: it is a fallback for the legacy dyslexia_friendly_font flag, and is
+   superseded in order by html[data-font-family="..."] when a preset sets a
+   specific face. */
 html[data-font-type="dyslexia"] body {
-  font-family: 'Trebuchet MS', 'Tahoma', 'Verdana', sans-serif !important;
-  letter-spacing: 0.035em !important;
-  word-spacing: 0.12em !important;
+  font-family: 'Trebuchet MS', 'Tahoma', 'Verdana', sans-serif;
 }
 
 /* ─── Accessibility: Soft Theme (cognitive-friendly light mode) ──────── */
@@ -461,23 +474,23 @@ html[data-font-family] .readable-content {
 }
 
 /* ─── Accessibility Presets: Word Spacing (via CSS variable) ───────────
-   Applied to the content containers, not only to <body>.
+   Applied to the content containers as well as <body>.
 
-   Audited live 2026-08-25: with the Dyslexia preset active,
-   --user-word-spacing resolved to 0.16em on the root (the WCAG 1.4.12
-   floor), every learner-facing text element still computed
-   word-spacing: 0px. Driving --user-word-spacing to 1em changed nothing,
-   while --user-font-size changed the root font size in the same recalc —
-   so the variable and the recalculation were both fine, and it was the
-   body-scoped rule that never landed. Every other `html[...] body` rule
-   for these properties behaved the same way, including the !important
-   legacy one at data-font-type="dyslexia".
+   Diagnosed live 2026-08-25. Two separate problems were in play:
 
-   Word spacing is the single most consistently evidenced dyslexia
-   accommodation and the preset's own preview dialog promises it by name,
-   so it cannot depend on that one selector working. Targeting the
-   containers the learner actually reads mirrors what the .rich-content
-   line-height rule below already had to do for the same class of reason. */
+   1. html[data-font-type="dyslexia"] body hard-coded word-spacing: 0.12em
+      !important, which beat the learner's own --user-word-spacing on <body>.
+      That rule has been reduced to its font stack (see above), so the
+      learner-controlled value now governs.
+
+   2. Tailwind utility classes set line-height directly on most headings and
+      text elements, so a rule on <body> alone never reached them. Listing the
+      content containers explicitly is the same approach the .rich-content
+      line-height rule below already had to take for the same reason.
+
+   Verified after both fixes, Dyslexia preset at 0.16em (the WCAG 1.4.12
+   floor): <main> and lesson content compute 3.04px = 0.16em x 19px on the
+   dashboard, the catalogue and the lesson page alike. */
 html[data-font-family] body,
 html[data-font-family] main,
 html[data-font-family] .readable-content,

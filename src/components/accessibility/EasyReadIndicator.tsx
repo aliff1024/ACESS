@@ -11,7 +11,16 @@ export function EasyReadIndicator({ dismissible = false }: { dismissible?: boole
   if (!settings.simplified_ui) return null;
 
   const handleExit = async () => {
-    await updateSettings({ ...settings, simplified_ui: false });
+    // preferred_reading_level has to be cleared too, not just simplified_ui.
+    // applyReadingLevelDefaults() re-derives simplified_ui from the reading
+    // level on every load, so clearing the flag alone made Exit look like it
+    // worked and then silently undo itself: verified live, Easy Read was back
+    // on after a page reload.
+    await updateSettings({
+      ...settings,
+      simplified_ui: false,
+      preferred_reading_level: 'standard',
+    });
   };
 
   return (

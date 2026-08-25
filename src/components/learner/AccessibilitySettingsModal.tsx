@@ -7,7 +7,7 @@ import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
-import { Loader2, Type, Target, Eye, ListChecks, Volume2, Globe, FileText } from 'lucide-react';
+import { Loader2, Type, Target, Eye, ListChecks, Volume2, Globe, FileText, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useTranslation } from '@/lib/useTranslation';
@@ -16,6 +16,7 @@ import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, getAllPresets, trackSet
 import { SliderSetting } from '@/components/accessibility/SliderSetting';
 import { TintPicker } from '@/components/accessibility/TintPicker';
 import { PresetDetailsDialog } from '@/components/accessibility/PresetDetailsDialog';
+import { shouldAutoEnableEasyRead } from '@/lib/accessibility-utils';
 import { fetchFullProfile, saveUserProfile } from '@/lib/learner-api';
 import type { AccessibilitySettingsData } from '@/lib/learner-api';
 
@@ -61,6 +62,12 @@ export function AccessibilitySettingsModal({
   const [wordSpacingPct, setWordSpacingPct] = useState<number>(() => settings.word_spacing_pct ?? 0);
   const [backgroundTint, setBackgroundTint] = useState<string>(() => settings.background_tint || 'white');
   const [ttsEnabled, setTtsEnabled] = useState<boolean>(() => !!settings.tts_enabled);
+  // Easy Read is stored as preferred_reading_level ('simplified' | 'standard'),
+  // which drives shouldAutoEnableEasyRead() -> simplified_ui. It was only
+  // settable from the profile dialog, so the accessibility panel — where every
+  // other accessibility control lives — could not turn it on at all, and no
+  // preset sets it either. That is why it had never been exercised.
+  const [easyRead, setEasyRead] = useState<boolean>(() => shouldAutoEnableEasyRead(settings.preferred_reading_level));
   const [ttsRate, setTtsRate] = useState<number>(() => settings.tts_rate ?? 1);
   const [ttsVoiceUri, setTtsVoiceUri] = useState<string>(() => settings.tts_voice_uri || '');
   const [preferredLanguage, setPreferredLanguage] = useState<string>(() => settings.preferred_language || 'en');
@@ -117,6 +124,7 @@ export function AccessibilitySettingsModal({
     setWordSpacingPct(settings.word_spacing_pct ?? 0);
     setBackgroundTint(settings.background_tint || 'white');
     setTtsEnabled(!!settings.tts_enabled);
+    setEasyRead(shouldAutoEnableEasyRead(settings.preferred_reading_level));
     setTtsRate(settings.tts_rate ?? 1);
     setTtsVoiceUri(settings.tts_voice_uri || '');
     setPreferredLanguage(settings.preferred_language || 'en');
@@ -155,6 +163,7 @@ export function AccessibilitySettingsModal({
     word_spacing_pct: wordSpacingPct,
     background_tint: backgroundTint,
     tts_enabled: ttsEnabled,
+    preferred_reading_level: easyRead ? 'simplified' : 'standard',
     tts_rate: ttsRate,
     tts_voice_uri: ttsVoiceUri || null,
     preferred_language: preferredLanguage,
@@ -184,7 +193,7 @@ export function AccessibilitySettingsModal({
     high_contrast: preferredTheme === 'high_contrast',
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [
-    isOpen, activePreset, basePreset, fontFamily, fontSizePx, lineSpacingMultiplier, wordSpacingPct, backgroundTint, ttsEnabled,
+    isOpen, activePreset, basePreset, fontFamily, fontSizePx, lineSpacingMultiplier, wordSpacingPct, backgroundTint, ttsEnabled, easyRead,
     ttsRate, ttsVoiceUri, preferredLanguage, readingSpotlight, distractionFreeMode, layoutMode, structureMode, simplifiedUi,
     preferredTheme, animationLevel, mutedColors, lowContrast, captionsEnabled, keyboardNavigationEnabled,
     taskChecklistEnabled, visualScheduleEnabled, stepByStepEnabled, autoSaveEnabled, progressTimelineEnabled, aiAssistantEnabled,
@@ -440,6 +449,21 @@ export function AccessibilitySettingsModal({
                   >
                     Bahasa Melayu
                   </Button>
+                </div>
+              </div>
+
+              <div className="border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 bg-yellow-100 rounded-lg flex items-center justify-center shrink-0">
+                      <BookOpen className="w-4 h-4 text-yellow-700" />
+                    </div>
+                    <div className="min-w-0">
+                      <Label className="text-sm font-semibold">{t('accessibility.easyRead')}</Label>
+                      <p className="text-xs text-gray-500">{t('accessibility.easyReadDesc')}</p>
+                    </div>
+                  </div>
+                  <Switch checked={easyRead} onCheckedChange={(v) => { setEasyRead(v); setSimplifiedUi(v); setCustom(); }} />
                 </div>
               </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { getCurrentUserId } from '@/lib/current-user';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '../ui/breadcrumb';
@@ -319,7 +320,8 @@ export function LessonViewPage({
       if (data) setIsSystemCourse(data.course_type === 'system');
     }).catch(() => {});
     // Check lesson completion status
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    getCurrentUserId().then((userId) => {
+      const user = userId ? { id: userId } : null;
       if (!user) return;
       supabase.from('enrollments').select('id').eq('user_id', user.id).eq('course_id', courseId).neq('status', 'dropped').maybeSingle().then(({ data: enrollment }) => {
         if (!enrollment) return;
@@ -386,7 +388,8 @@ export function LessonViewPage({
     // Fetch course title, progress count, and next lesson title
     supabase.from('courses').select('title').eq('id', courseId).single()
       .then(({ data }) => { if (data) setCourseTitle(data.title); }).catch(() => {});
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    getCurrentUserId().then((userId) => {
+      const user = userId ? { id: userId } : null;
       if (!user) return;
       supabase.from('enrollments').select('id').eq('user_id', user.id).eq('course_id', courseId).neq('status', 'dropped').maybeSingle()
         .then(({ data: enrollment }) => {

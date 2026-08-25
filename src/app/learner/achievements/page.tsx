@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getCurrentUserId } from '@/lib/current-user';
 import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -55,7 +56,8 @@ export default function AchievementsPage() {
 
   const loadData = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser();
+      const uid = await getCurrentUserId();
+      const user = { user: uid ? { id: uid } : null };
       if (!user.user) return;
 
       const [stats] = await Promise.all([

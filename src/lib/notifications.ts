@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { getCurrentUserId } from './current-user';
 
 export type NotificationType =
   | 'certificate'
@@ -63,7 +64,8 @@ export interface NotificationItem {
  * Fetch all notifications for the authenticated user
  */
 export async function fetchNotifications(limit = 40): Promise<NotificationItem[]> {
-  const { data: user } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
+  const user = { user: userId ? { id: userId } : null };
   if (!user.user) return [];
 
   const { data, error } = await supabase
@@ -88,7 +90,8 @@ export async function fetchNotifications(limit = 40): Promise<NotificationItem[]
  * Get count of unread notifications for currently authenticated user
  */
 export async function getUnreadCount(): Promise<number> {
-  const { data: user } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
+  const user = { user: userId ? { id: userId } : null };
   if (!user.user) return 0;
 
   const { count, error } = await supabase
@@ -108,7 +111,8 @@ export async function getUnreadCount(): Promise<number> {
  * Get count of unresolved action-required notifications for currently authenticated user
  */
 export async function getActionRequiredCount(): Promise<number> {
-  const { data: user } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
+  const user = { user: userId ? { id: userId } : null };
   if (!user.user) return 0;
 
   const { data, error } = await supabase
@@ -144,7 +148,8 @@ export async function markAsRead(notificationId: string): Promise<void> {
  * Action-required items become read, but their requires_action/action_completed status remains intact.
  */
 export async function markAllAsRead(): Promise<void> {
-  const { data: user } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
+  const user = { user: userId ? { id: userId } : null };
   if (!user.user) return;
 
   const { error } = await supabase

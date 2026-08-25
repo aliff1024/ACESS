@@ -43,6 +43,8 @@ export const ms: Record<string, string> = {
   'accessibility.dyslexia': 'Disleksia',
   'accessibility.tts': 'Teks-ke-Pertuturan',
   'accessibility.ttsDesc': 'Dayakan penceritaan suara untuk kandungan',
+  'accessibility.easyRead': 'Bacaan Mudah',
+  'accessibility.easyReadDesc': 'Sembunyikan hiasan tambahan dan kekalkan halaman kepada perkara penting untuk pembelajaran',
 
   'accessibility.language': 'Bahasa',
   'accessibility.languageDesc': 'Pilih bahasa pilihan anda',

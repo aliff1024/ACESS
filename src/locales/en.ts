@@ -43,6 +43,8 @@ export const en: Record<string, string> = {
   'accessibility.dyslexia': 'Dyslexia',
   'accessibility.tts': 'Text-to-Speech',
   'accessibility.ttsDesc': 'Enable voice narration for content',
+  'accessibility.easyRead': 'Easy Read',
+  'accessibility.easyReadDesc': 'Hide decorative extras and keep the page to what matters for learning',
 
   'accessibility.language': 'Language',
   'accessibility.languageDesc': 'Choose your preferred language',

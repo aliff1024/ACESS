@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { requireCurrentUserId } from './current-user'
 import { v4 as uuidv4 } from 'uuid'
 import { createNotification } from './notifications'
 
@@ -224,10 +225,19 @@ export interface LearnerSettings {
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 
+/**
+ * The signed-in learner's id.
+ *
+ * Every exported function in this module starts by resolving the current user.
+ * This used to call `supabase.auth.getUser()` — a network round-trip to the
+ * auth server on EVERY call, measured at 24 hits to /auth/v1/user for a single
+ * dashboard load. It now delegates to the shared, memoised resolver in
+ * ./current-user, which reads the session the client already holds. See that
+ * file for why filtering by a session-derived id is safe while RLS remains the
+ * actual authorization boundary.
+ */
 async function ensureUserId(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data.user) throw new Error('Not authenticated')
-  return data.user.id
+  return requireCurrentUserId()
 }
 
 // ─── Profile ───────────────────────────────────────────────────────────
