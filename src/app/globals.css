@@ -588,6 +588,32 @@ html[data-structure-mode="minimal"] .lesson-secondary-badge {
 .content-column {
   max-width: var(--content-measure, 72ch);
   margin-inline: auto;
+  /* Establishes a query container so floated media inside the lesson can
+     react to the *reading column's* width rather than the viewport's. The
+     viewport is irrelevant here: the column is capped at 62–72ch no matter
+     how wide the screen gets. */
+  container-type: inline-size;
+  container-name: reading;
+}
+
+/* TipTap renders an image as a node-view wrapper div that carries the float
+   as a Tailwind class (`float-left`), with the <img> nested inside. The
+   img[data-align] caps further down never matched that structure, so authored
+   images floated at their natural width and the measure only ever applied to
+   the container — the text beside a 205px image in a 62ch column wrapped at
+   roughly 25 characters, well under the 50-character floor the Dyslexia
+   preset exists to protect. Cap the wrapper too. */
+.rich-content :is(.node-image, [data-node-view-wrapper]) > [class*="float-left"],
+.rich-content :is(.node-image, [data-node-view-wrapper]) > [class*="float-right"],
+.tiptap :is(.node-image, [data-node-view-wrapper]) > [class*="float-left"],
+.tiptap :is(.node-image, [data-node-view-wrapper]) > [class*="float-right"] {
+  max-width: 45%;
+}
+
+.rich-content :is(.node-image, [data-node-view-wrapper]) img,
+.tiptap :is(.node-image, [data-node-view-wrapper]) img {
+  max-width: 100%;
+  height: auto;
 }
 
 /* ─── Accessibility Presets: Distraction-Free Mode ───────────────────── */
@@ -941,6 +967,23 @@ html[data-theme="soft"] .border-green-300 { border-color: oklch(0.76 0.02 140) !
   max-width: 45%;
   margin-left: 1rem;
   margin-bottom: 0.5rem;
+}
+
+/* Below this column width a 45% float still leaves the text under ~35
+   characters, so stop floating altogether and let the image sit above its
+   paragraph full width. Capping alone cannot rescue a narrow measure — the
+   only way to give the text its 50–70 characters is to stop sharing the
+   line. 44rem is the point at which the remaining column clears ~45ch. */
+@container reading (max-width: 44rem) {
+  .rich-content :is(.node-image, [data-node-view-wrapper]) > [class*="float-left"],
+  .rich-content :is(.node-image, [data-node-view-wrapper]) > [class*="float-right"],
+  .rich-content img[data-align="left"],
+  .rich-content img[data-align="right"] {
+    float: none;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 .rich-content img[data-align="center"] {

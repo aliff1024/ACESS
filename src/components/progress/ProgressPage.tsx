@@ -146,7 +146,7 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
                       <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-3 mb-2">
                           <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{course.title}</h3>
-                          {course.enrollment_status === 'completed' ? (
+                          {course.progress === 100 ? (
                             <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 shadow-sm">{t('course.completed')}</Badge>
                           ) : (
                             <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-0 shadow-sm">{t('course.current')}</Badge>
@@ -257,7 +257,7 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses }: Progress
                       <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-3 mb-2">
                           <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{course.title}</h3>
-                          {course.enrollment_status === 'completed' ? (
+                          {course.progress === 100 ? (
                             <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 shadow-sm">{t('course.completed')}</Badge>
                           ) : (
                             <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-0 shadow-sm">{t('course.current')}</Badge>

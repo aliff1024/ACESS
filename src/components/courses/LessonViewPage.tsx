@@ -13,6 +13,7 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Volume2, VolumeX, FileText, BookOpen, HelpCircle, ChevronLeft, ChevronRight, Loader2, Video, ExternalLink, Shield, Target, Layers, Clock, Maximize2, Minimize2, CheckCircle, Home, Award, Sparkles, Lock, Layout, Image, Link, Gamepad2, List, Download, MessageSquare, AlertTriangle } from 'lucide-react';
+import { parseObjectives } from '@/lib/accessibility-audit';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { fetchLessonContent, fetchQuizData, submitQuizAttempt, markLessonViewed, completeLesson, fetchLessonCheckpoints, fetchCompletedCheckpointIds, completeLearnerCheckpoint, fetchSystemCourseProgress, fetchLessonProgressMeta, saveLessonProgressMeta, fetchQuizAttemptHistory } from '@/lib/learner-api';
 import type { LessonContent, QuizData, LearnerLessonCheckpoint } from '@/lib/learner-api';
@@ -209,6 +210,12 @@ export function LessonViewPage({
   const [loading, setLoading] = useState(true);
   const [isSystemCourse, setIsSystemCourse] = useState(false);
   const [learningObjectives, setLearningObjectives] = useState<string | null>(null);
+  /**
+   * Parsed form of the above. The column is TEXT but has held a JSON array
+   * since the seed script, so it goes through the shared parser rather than
+   * being printed raw.
+   */
+  const lessonObjectives = useMemo(() => parseObjectives(learningObjectives), [learningObjectives]);
   const [chapterTitle, setChapterTitle] = useState<string | null>(null);
   const [prerequisiteTitle, setPrerequisiteTitle] = useState<string | null>(null);
   const [courseTitle, setCourseTitle] = useState<string>('');
@@ -333,7 +340,8 @@ export function LessonViewPage({
     }).catch(() => {});
 
     Promise.all([
-      fetchLessonContent(lessonId),
+      // Educators previewing their own course may read drafts; learners may not.
+      fetchLessonContent(lessonId, { includeUnpublished: isPreview }),
       fetchLessonAssets(lessonId).catch(() => [] as LessonAsset[]),
       fetchQuizData(lessonId),
       fetchLessonInteractiveContent(lessonId).catch(() => []),
@@ -1204,8 +1212,15 @@ export function LessonViewPage({
         ? null
         : contentHtml.split(/<h2\b[^>]*>/i).filter(p => p.trim());
 
+  // Slide mode splits on <hr> and chunked mode splits on <h2> — switching
+  // between them (e.g. via an accessibility preset change) can leave
+  // `currentChunk` pointing past the end of the newly-split `chunks` array,
+  // so every read of `chunks[currentChunk]` below is clamped rather than
+  // indexed directly to avoid rendering the literal string "undefined".
+  const safeCurrentChunk = chunks && chunks.length > 0 ? Math.min(currentChunk, chunks.length - 1) : currentChunk;
+
   const currentChunkHtml = chunks && chunks.length > 0
-    ? (currentChunk === 0 ? chunks[0] : isSlideMode ? chunks[currentChunk] : `<h2>${chunks[currentChunk]}`)
+    ? (safeCurrentChunk === 0 ? chunks[0] : isSlideMode ? chunks[safeCurrentChunk] : `<h2>${chunks[safeCurrentChunk]}`)
     : contentHtml;
 
   // ~200 words/minute is the conventional reading-speed estimate used for
@@ -1730,17 +1745,58 @@ export function LessonViewPage({
       {/* ── Phase Stepper ── */}
       {renderPhaseStepper(false)}
 
-      {/* ── Learning Objectives (system courses) ── */}
-      {isSystemCourse && learningObjectives && (!effectiveFocusMode || currentFocusId === 'summary') && (
+      {/* ── What this lesson covers ──
+          Objectives and the plain-language summary both belong before the
+          content: they exist so a learner knows what they are committing to
+          before they start reading, which is the whole point of the standard.
+          Previously objectives were shown only on system courses, so nothing an
+          educator typed here ever reached a learner. */}
+      {(lessonObjectives.length > 0 || lesson.simplified_summary) &&
+        (!effectiveFocusMode || currentFocusId === 'summary') && (
           <div className={`${layoutContainer} mx-auto px-6 py-4 mt-2 simplifiable`}>
-          <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-5">
-            <h2 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
-              <Target className="w-4 h-4" /> Learning Objectives
-            </h2>
-            <p className="text-purple-900 text-sm leading-relaxed">{learningObjectives}</p>
+            <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-5 space-y-4">
+              {lesson.simplified_summary && (
+                <div>
+                  <h2 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" /> What this lesson is about
+                    {guidedMode && (
+                      <Badge variant="outline" className="text-[10px] text-purple-700 border-purple-300">
+                        Step 1 — start here
+                      </Badge>
+                    )}
+                    {highlightSimplifiedSummary && !simplifiedMode && (
+                      <Badge className="text-[10px] bg-purple-200 text-purple-900">
+                        Recommended for your reading level
+                      </Badge>
+                    )}
+                  </h2>
+                  <p className="text-purple-900 text-sm leading-relaxed">
+                    {lesson.simplified_summary}
+                  </p>
+                </div>
+              )}
+
+              {lessonObjectives.length > 0 && (
+                <div className={lesson.simplified_summary ? 'pt-4 border-t border-purple-200' : ''}>
+                  <h2 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
+                    <Target className="w-4 h-4" /> By the end you will be able to
+                  </h2>
+                  <ul className="space-y-1.5">
+                    {lessonObjectives.map((objective, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-purple-900 text-sm leading-relaxed"
+                      >
+                        <CheckCircle className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
+                        {objective}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* ── Key Concepts ── */}
       {lesson.summary_key_points && lesson.summary_key_points.length > 0 && (!effectiveFocusMode || currentFocusId === 'summary') && (
@@ -1761,20 +1817,9 @@ export function LessonViewPage({
         </div>
       )}
             
-            {/* ── Simplified Summary Card ── */}
-            {(simplifiedMode || highlightSimplifiedSummary || (effectiveFocusMode && currentFocusId === 'summary')) && lesson.simplified_summary && (
-              <Card className={`p-6 border-2 ${highlightSimplifiedSummary ? 'border-amber-400 ring-2 ring-amber-200' : 'border-amber-200'} bg-amber-50`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <BookOpen className="w-5 h-5 text-amber-600" />
-                  <h3 className="font-semibold text-amber-900">Simplified Summary</h3>
-                  {guidedMode && <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-300">Step 1 — start here</Badge>}
-                  {highlightSimplifiedSummary && !simplifiedMode && (
-                    <Badge className="text-[10px] bg-amber-200 text-amber-900">Recommended for your reading level</Badge>
-                  )}
-                </div>
-                <p className="text-amber-800 text-sm leading-relaxed">{lesson.simplified_summary}</p>
-              </Card>
-            )}
+            {/* The simplified summary used to be repeated here for simplified
+                and focus modes. It now renders once, above the lesson content,
+                where every learner sees it — badges included. */}
 
             {/* ── Video (optional) ── */}
             <div className={!sequentialMode || activePhase === 'content' || effectiveFocusMode ? 'block' : 'hidden'} id="lesson-video" data-guided-section="video">

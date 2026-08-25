@@ -1,188 +1,274 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/admin-guard'
+import {
+  loadSnapshot,
+  buildIndex,
+  resolveRange,
+  previousRange,
+  computeKpis,
+  computeCoursePerformance,
+  computeAdaptationUsage,
+  computePresetAdoption,
+  computeSettingsAdoption,
+  computeAccessibilityCoverage,
+  buildBuckets,
+  bucketCounts,
+  earliestStamp,
+  calcChange,
+  activityBand,
+  ACTIVITY_BAND_LABELS,
+  formatDuration,
+  type ActivityBand,
+  type Change,
+} from '@/lib/admin-analytics'
 
-export async function GET() {
+/**
+ * One range-aware payload serving both the Admin Dashboard and the Analytics
+ * page. Every figure is derived in `admin-analytics.ts`, so the two screens
+ * cannot disagree.
+ *
+ * Query: ?range=7d|30d|3m|6m|1y|all   (default: all — see resolveRange)
+ */
+export async function GET(request: Request) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
-    if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 })
+    const { searchParams } = new URL(request.url)
+    const range = resolveRange(searchParams.get('range'))
+    const prior = previousRange(range)
+
+    const snap = await loadSnapshot()
+    const index = buildIndex(snap)
+
+    const kpis = computeKpis(snap, index, range)
+    const priorKpis = prior ? computeKpis(snap, index, prior) : null
+
+    const change = (pick: (k: typeof kpis) => number): Change | null =>
+      priorKpis ? calcChange(pick(kpis), pick(priorKpis)) : null
+
+    // ─── Trends ──────────────────────────────────────────────────────────
+    const buckets = buildBuckets(range, earliestStamp(snap))
+    const g = range.granularity
+
+    const enrollmentSeries = bucketCounts(
+      snap.enrollments.map((e) => e.enrolled_at),
+      buckets,
+      g
+    )
+    const completionSeries = bucketCounts(
+      snap.enrollments.map((e) => e.completed_at),
+      buckets,
+      g
+    )
+    const registrationSeries = bucketCounts(
+      snap.users.map((u) => u.created_at),
+      buckets,
+      g
+    )
+    const courseSeries = bucketCounts(
+      snap.courses.map((c) => c.created_at),
+      buckets,
+      g
+    )
+    const adaptationSeries = bucketCounts(
+      snap.adaptations.map((a) => a.created_at),
+      buckets,
+      g
+    )
+    const lessonActivitySeries = bucketCounts(
+      snap.lessonProgress.map((p) => p.last_viewed_at),
+      buckets,
+      g
+    )
+
+    const trends = buckets.map((b) => ({
+      key: b.key,
+      label: b.label,
+      enrollments: enrollmentSeries.get(b.key) ?? 0,
+      completions: completionSeries.get(b.key) ?? 0,
+      registrations: registrationSeries.get(b.key) ?? 0,
+      coursesCreated: courseSeries.get(b.key) ?? 0,
+      adaptations: adaptationSeries.get(b.key) ?? 0,
+      lessonActivity: lessonActivitySeries.get(b.key) ?? 0,
+    }))
+
+    // ─── Composition ─────────────────────────────────────────────────────
+    const roleCounts = new Map<string, number>()
+    for (const u of snap.users) roleCounts.set(u.role, (roleCounts.get(u.role) ?? 0) + 1)
+
+    const statusCounts = new Map<string, number>()
+    for (const c of snap.courses) statusCounts.set(c.status, (statusCounts.get(c.status) ?? 0) + 1)
+
+    const difficultyCounts = new Map<string, number>()
+    for (const c of snap.courses) {
+      const key = c.difficulty_level ?? 'unspecified'
+      difficultyCounts.set(key, (difficultyCounts.get(key) ?? 0) + 1)
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
-
-    // 1. Admin Analytics
-    const { count: totalActiveLearners } = await supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'learner')
-      .eq('is_active', true)
-      .is('deleted_at', null)
-
-    const { data: enrollments } = await supabase
-      .from('enrollments')
-      .select('id, status, enrolled_at')
-
-    const totalEnrollments = enrollments?.length ?? 0
-    const completedEnrollments = (enrollments || []).filter((e: any) => e.status === 'completed').length
-    const avgCompletionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0
-
-    const { data: attempts } = await supabase
-      .from('quiz_attempts')
-      .select('score_pct')
-      .neq('result', 'in_progress')
-
-    const scores = (attempts || []).map((a: any) => a.score_pct).filter((s: any): s is number => s !== null)
-    const avgQuizScore = scores.length > 0 ? Math.round(scores.reduce((a: any, b: any) => a + b, 0) / scores.length) : 0
-
-    const activeEnrollmentIds = (enrollments || [])
-      .filter((e: any) => e.status === 'active')
-      .map((e: any) => e.id)
-
-    let atRiskLearners = 0
-    if (activeEnrollmentIds.length > 0) {
-      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-      const { data: recentViews } = await supabase
-        .from('lesson_progress')
-        .select('enrollment_id', { count: 'exact', head: true })
-        .in('enrollment_id', activeEnrollmentIds)
-        .gte('last_viewed_at', oneWeekAgo)
-      atRiskLearners = activeEnrollmentIds.length - (recentViews?.length ?? 0)
-      if (atRiskLearners < 0) atRiskLearners = 0
+    const categoryCounts = new Map<string, number>()
+    for (const c of snap.courses) {
+      const key = c.category ?? 'Uncategorised'
+      categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + 1)
     }
 
-    const { count: kbUsers } = await supabase
-      .from('user_profiles')
-      .select('id', { count: 'exact', head: true })
-      .contains('accessibility_prefs', { keyboard_navigation_enabled: true })
-
-    const { count: hcUsers } = await supabase
-      .from('user_profiles')
-      .select('id', { count: 'exact', head: true })
-      .contains('accessibility_prefs', { preferred_theme: 'high_contrast' })
-
-    const totalUsersWithAccessibility = (kbUsers ?? 0) + (hcUsers ?? 0) || 1
-
-    const { count: totalCourses } = await supabase
-      .from('courses')
-      .select('id', { count: 'exact', head: true })
-      .is('deleted_at', null)
-
-    const { count: totalEducators } = await supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'educator')
-      .is('deleted_at', null)
-
-    const { count: totalInteractiveActivities } = await supabase
-      .from('lesson_interactive_content')
-      .select('id', { count: 'exact', head: true })
-
-    const analytics = {
-      totalActiveLearners: totalActiveLearners ?? 0,
-      avgCompletionRate,
-      avgQuizScore,
-      atRiskLearners,
-      totalCourses: totalCourses ?? 0,
-      totalEducators: totalEducators ?? 0,
-      totalInteractiveActivities: totalInteractiveActivities ?? 0,
-      accessibilityMetrics: {
-        keyboardNavigation: Math.round(((kbUsers ?? 0) / totalUsersWithAccessibility) * 100),
-        highContrastMode: Math.round(((hcUsers ?? 0) / totalUsersWithAccessibility) * 100),
-      },
+    // ─── Learner activity bands ──────────────────────────────────────────
+    const bandCounts: Record<ActivityBand, number> = {
+      'active-7': 0,
+      'active-30': 0,
+      'dormant-90': 0,
+      never: 0,
+    }
+    for (const u of snap.users) {
+      if (u.role !== 'learner') continue
+      bandCounts[activityBand(index.lastActive.get(u.id))]++
     }
 
-    // 2. Enrollment Trends & Completion Trends
-    const twelveMonthsAgo = new Date()
-    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11)
-    twelveMonthsAgo.setDate(1)
-    
-    const enrollmentMonthMap = new Map<string, number>()
-    const completionMonthMap = new Map<string, { total: number; completed: number }>()
-    
-    for (const e of enrollments || []) {
-      const eDate = new Date(e.enrolled_at)
-      if (eDate >= twelveMonthsAgo) {
-        const key = eDate.toISOString().slice(0, 7)
-        // Enrollments
-        enrollmentMonthMap.set(key, (enrollmentMonthMap.get(key) || 0) + 1)
-        // Completions
-        const entry = completionMonthMap.get(key) || { total: 0, completed: 0 }
-        entry.total++
-        if (e.status === 'completed') entry.completed++
-        completionMonthMap.set(key, entry)
-      }
-    }
-
-    const enrollmentTrends = []
-    const completionTrends = []
-    const d = new Date(twelveMonthsAgo)
-    for (let i = 0; i < 12; i++) {
-      const key = d.toISOString().slice(0, 7)
-      const monthName = d.toLocaleString('en-US', { month: 'short', year: '2-digit' })
-      
-      enrollmentTrends.push({ month: monthName, count: enrollmentMonthMap.get(key) || 0 })
-      
-      const entry = completionMonthMap.get(key) || { total: 0, completed: 0 }
-      completionTrends.push({
-        month: monthName,
-        rate: entry.total > 0 ? Math.round((entry.completed / entry.total) * 100) : 0,
-        total: entry.total,
-        completed: entry.completed,
-      })
-      
-      d.setMonth(d.getMonth() + 1)
-    }
-
-    // 3. User Trends
-    const { data: usersForTrends } = await supabase
-      .from('users')
-      .select('created_at')
-      .gte('created_at', twelveMonthsAgo.toISOString())
-
-    const userMonthMap = new Map<string, number>()
-    for (const u of usersForTrends || []) {
-      const key = new Date(u.created_at).toISOString().slice(0, 7)
-      userMonthMap.set(key, (userMonthMap.get(key) || 0) + 1)
-    }
-
-    const userTrends = []
-    const d2 = new Date(twelveMonthsAgo)
-    for (let i = 0; i < 12; i++) {
-      const key = d2.toISOString().slice(0, 7)
-      const monthName = d2.toLocaleString('en-US', { month: 'short', year: '2-digit' })
-      userTrends.push({ label: monthName, count: userMonthMap.get(key) || 0 })
-      d2.setMonth(d2.getMonth() + 1)
-    }
-
-    // 4. Age Distribution
-    const { data: userProfiles } = await supabase
-      .from('user_profiles')
-      .select('age_group')
-
-    const groups: Record<string, number> = { '6-12': 0, '13-17': 0, '18+': 0 }
-    for (const p of userProfiles || []) {
-      if (p.age_group === '6-12') groups['6-12']++
-      else if (p.age_group === '13-17') groups['13-17']++
-      else groups['18+']++
-    }
-
-    const ageDistribution = [
-      { label: '6-12 yrs', count: groups['6-12'] },
-      { label: '13-17 yrs', count: groups['13-17'] },
-      { label: '18+ yrs', count: groups['18+'] },
+    // ─── Progress distribution ───────────────────────────────────────────
+    const progressBands = [
+      { label: '0%', min: 0, max: 0, count: 0 },
+      { label: '1–25%', min: 1, max: 25, count: 0 },
+      { label: '26–50%', min: 26, max: 50, count: 0 },
+      { label: '51–75%', min: 51, max: 75, count: 0 },
+      { label: '76–99%', min: 76, max: 99, count: 0 },
+      { label: '100%', min: 100, max: 100, count: 0 },
     ]
+    for (const e of snap.enrollments) {
+      const pct = index.progress.get(e.id) ?? 0
+      const band = progressBands.find((b) => pct >= b.min && pct <= b.max)
+      if (band) band.count++
+    }
+
+    // ─── Courses ─────────────────────────────────────────────────────────
+    const courses = computeCoursePerformance(snap, index)
+    const enrolled = courses.filter((c) => c.enrollments > 0)
+
+    const topByEnrollment = [...enrolled].sort((a, b) => b.enrollments - a.enrollments).slice(0, 8)
+    const topByCompletion = [...enrolled]
+      .filter((c) => c.enrollments >= 3)
+      .sort((a, b) => b.markedCompleteRate - a.markedCompleteRate)
+      .slice(0, 8)
+    const lowEngagement = courses
+      .filter((c) => c.status === 'published' && c.enrollments === 0)
+      .sort((a, b) => a.title.localeCompare(b.title))
+
+    // ─── Accessibility ───────────────────────────────────────────────────
+    const adaptationUsage = computeAdaptationUsage(snap, range)
+    const presetAdoption = computePresetAdoption(snap, range)
+    const settingsAdoption = computeSettingsAdoption(snap)
+    const coverage = computeAccessibilityCoverage(snap)
+
+    const adaptationUsers = new Set(
+      snap.adaptations
+        .filter((a) => (!range.from || new Date(a.created_at) >= range.from))
+        .map((a) => a.user_id)
+    ).size
+    const learnerTotal = snap.users.filter((u) => u.role === 'learner').length
+
+    // ─── Recent activity ─────────────────────────────────────────────────
+    const recentUsers = [...snap.users]
+      .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+      .slice(0, 5)
+      .map((u) => ({
+        type: 'user_registration' as const,
+        name: u.full_name ?? u.email,
+        detail: `Registered as ${u.role}`,
+        at: u.created_at,
+      }))
+
+    const recentCourses = [...snap.courses]
+      .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+      .slice(0, 5)
+      .map((c) => ({
+        type: 'course_created' as const,
+        name: index.userById.get(c.created_by)?.full_name ?? 'Unknown',
+        detail: `Created course: ${c.title}`,
+        at: c.created_at,
+      }))
+
+    const recentCerts = snap.certificates
+      .filter((c) => c.status === 'issued')
+      .sort((a, b) => +new Date(b.issued_at) - +new Date(a.issued_at))
+      .slice(0, 5)
+      .map((c) => ({
+        type: 'certificate_issued' as const,
+        name: (c.user_id && index.userById.get(c.user_id)?.full_name) || 'Unknown',
+        detail: `Certificate issued${
+          c.course_id ? `: ${index.courseById.get(c.course_id)?.title ?? ''}` : ''
+        }`,
+        at: c.issued_at,
+      }))
+
+    const recentActivity = [...recentUsers, ...recentCourses, ...recentCerts]
+      .sort((a, b) => +new Date(b.at) - +new Date(a.at))
+      .slice(0, 10)
 
     return NextResponse.json({
-      analytics,
-      enrollmentTrends,
-      completionTrends,
-      userTrends,
-      ageDistribution
+      range: {
+        key: range.key,
+        label: range.label,
+        from: range.from?.toISOString() ?? null,
+        to: range.to.toISOString(),
+        granularity: range.granularity,
+        comparisonAvailable: prior !== null,
+      },
+      kpis,
+      changes: {
+        newUsers: change((k) => k.newUsers),
+        activeUsers: change((k) => k.activeUsers),
+        newEnrollments: change((k) => k.newEnrollments),
+        newCourses: change((k) => k.newCourses),
+        lessonsCompleted: change((k) => k.lessonsCompleted),
+        certificatesIssued: change((k) => k.certificatesIssued),
+      },
+      trends,
+      composition: {
+        roles: Array.from(roleCounts, ([label, count]) => ({ label, count })).sort(
+          (a, b) => b.count - a.count
+        ),
+        courseStatus: Array.from(statusCounts, ([label, count]) => ({ label, count })).sort(
+          (a, b) => b.count - a.count
+        ),
+        difficulty: Array.from(difficultyCounts, ([label, count]) => ({ label, count })).sort(
+          (a, b) => b.count - a.count
+        ),
+        categories: Array.from(categoryCounts, ([label, count]) => ({ label, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10),
+      },
+      learners: {
+        bands: (Object.keys(bandCounts) as ActivityBand[]).map((band) => ({
+          band,
+          label: ACTIVITY_BAND_LABELS[band],
+          count: bandCounts[band],
+        })),
+        progressDistribution: progressBands.map(({ label, count }) => ({ label, count })),
+        totalLearners: learnerTotal,
+      },
+      courses: {
+        topByEnrollment,
+        topByCompletion,
+        lowEngagement,
+        total: courses.length,
+      },
+      accessibility: {
+        adaptationUsage,
+        presetAdoption,
+        settingsAdoption,
+        coverage,
+        reach: {
+          usersWithEvents: adaptationUsers,
+          learnerTotal,
+        },
+      },
+      recentActivity,
+      totals: {
+        learningTimeLabel: formatDuration(kpis.totalLearningSeconds),
+      },
     })
-  } catch (error: any) {
-    console.error('Error fetching admin analytics:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to load analytics'
+    console.error('Admin analytics error:', error)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

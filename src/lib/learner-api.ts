@@ -173,6 +173,13 @@ export interface CourseProgress {
   completion_date: string | null
   lessons: LessonProgress[]
   avg_score: number
+  certificate_id?: string
+  certificate_enabled?: boolean
+  custom_cert_pdf_url?: string
+  allow_custom_certs?: boolean
+  cert_eligible?: boolean
+  cert_eligibility_reason?: string
+  quizzes_need_improvement?: { quizId: string; quizTitle: string; lessonId: string; lessonTitle: string }[]
 }
 
 export interface LessonProgress {
@@ -483,6 +490,10 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
     .from('lessons')
     .select('id, title, sequence_order, estimated_duration')
     .eq('course_id', courseId)
+    // Draft lessons are unfinished work and must never appear to a learner.
+    // Every other learner-facing lesson query already filters on this; this
+    // one did not, so drafts were listed on the course page.
+    .eq('status', 'published')
     .or('visibility_status.eq.visible,visibility_status.is.null')
     .order('sequence_order', { ascending: true })
 
@@ -572,8 +583,20 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
 
 // ─── Lesson Content ────────────────────────────────────────────────────
 
-export async function fetchLessonContent(lessonId: string): Promise<LessonContent | null> {
-  const { data: lesson, error } = await supabase
+/**
+ * Loads a lesson for reading.
+ *
+ * Draft lessons are excluded by default: listing them was one bug, but a
+ * learner who has a draft lesson's id could also open it directly, so the
+ * check belongs here too rather than only on the list query. The educator
+ * "Preview as Learner" route passes `includeUnpublished` so authors can still
+ * review their own drafts.
+ */
+export async function fetchLessonContent(
+  lessonId: string,
+  options: { includeUnpublished?: boolean } = {},
+): Promise<LessonContent | null> {
+  let query = supabase
     .from('lessons')
     .select(`
       id, title, sequence_order, content_html, transcript, video_url, course_id,
@@ -582,7 +605,12 @@ export async function fetchLessonContent(lessonId: string): Promise<LessonConten
       lesson_layout, simplified_summary, focus_mode_enabled, chunked_content_enabled, checkpoints_enabled, estimated_duration, adaptive_learning_enabled, allow_discussions
     `)
     .eq('id', lessonId)
-    .maybeSingle()
+
+  if (!options.includeUnpublished) {
+    query = query.eq('status', 'published')
+  }
+
+  const { data: lesson, error } = await query.maybeSingle()
 
   if (error) {
     return null
@@ -1314,7 +1342,7 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
 
   const { data: course, error: cError } = await supabase
     .from('courses')
-    .select('id, title, description')
+    .select('id, title, description, certificate_enabled, certificate_settings')
     .eq('id', courseId)
     .single()
 
@@ -1397,6 +1425,42 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
   const scores = lessonProgressList.filter((l) => l.score !== null).map((l) => l.score!)
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
 
+  let certificateId: string | undefined = undefined;
+  let customCertPdfUrl: string | undefined = undefined;
+  if (enrollment) {
+    // Get certificate row (system or custom coexist on the single row)
+    const { data: certRow } = await supabase
+      .from('certificates')
+      .select('id, verification_url, pdf_url')
+      .eq('enrollment_id', enrollment.id)
+      .maybeSingle()
+
+    if (certRow) {
+      if (certRow.verification_url?.includes('/verify/')) {
+        certificateId = certRow.id;
+      }
+      if (certRow.pdf_url) {
+        customCertPdfUrl = certRow.pdf_url;
+      }
+    }
+  }
+
+  const certSettings = course.certificate_settings as Record<string, unknown> | null;
+  const allowCustomCerts = certSettings?.allow_custom_certificates === true;
+
+  // Fetch eligibility details to align CourseProgressDetailPage with CourseDetailPage
+  let certEligible = false;
+  let certReason = '';
+  let quizzesNeedImprovement: any[] = [];
+  try {
+    const elig = await checkCourseCertificateEligibility(courseId);
+    certEligible = elig.eligible;
+    certReason = elig.reason || '';
+    quizzesNeedImprovement = elig.quizzesNeedImprovement || [];
+  } catch (err) {
+    console.error('fetchCourseProgress eligibility check error:', err);
+  }
+
   return {
     id: course.id,
     title: course.title,
@@ -1406,6 +1470,13 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
     completion_date: enrollment?.completed_at || null,
     lessons: lessonProgressList,
     avg_score: avgScore,
+    certificate_id: certificateId,
+    certificate_enabled: course.certificate_enabled || false,
+    custom_cert_pdf_url: customCertPdfUrl,
+    allow_custom_certs: allowCustomCerts,
+    cert_eligible: certEligible,
+    cert_eligibility_reason: certReason,
+    quizzes_need_improvement: quizzesNeedImprovement,
   }
 }
 
@@ -2077,13 +2148,26 @@ export async function unenrollFromCourse(courseId: string): Promise<void> {
 
 // ─── Adjacent Lessons ──────────────────────────────────────────────────
 
-export async function fetchLessonIdsInCourse(courseId: string): Promise<string[]> {
-  const { data, error } = await supabase
+/**
+ * Ordered lesson ids, used to drive next/previous navigation. Drafts are
+ * excluded for learners — otherwise "Next lesson" could step straight into
+ * unpublished work — but kept for the educator preview route.
+ */
+export async function fetchLessonIdsInCourse(
+  courseId: string,
+  options: { includeUnpublished?: boolean } = {},
+): Promise<string[]> {
+  let query = supabase
     .from('lessons')
     .select('id')
     .eq('course_id', courseId)
     .or('visibility_status.eq.visible,visibility_status.is.null')
-    .order('sequence_order', { ascending: true })
+
+  if (!options.includeUnpublished) {
+    query = query.eq('status', 'published')
+  }
+
+  const { data, error } = await query.order('sequence_order', { ascending: true })
 
   if (error) throw error
   return (data || []).map((l) => l.id)
@@ -2168,6 +2252,11 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
   reason?: string
   completed?: number
   total?: number
+  alreadyIssued?: boolean
+  certificateId?: string
+  customCertPdfUrl?: string | null
+  customCertStatus?: 'published' | 'pending' | null
+  quizzesNeedImprovement?: { quizId: string; quizTitle: string; lessonId: string; lessonTitle: string }[]
 }> {
   const userId = await ensureUserId()
 
@@ -2190,14 +2279,29 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
 
   if (!course?.certificate_enabled) return { eligible: false, reason: 'Certificates not enabled for this course' }
 
-  // Check existing certificate
+  // Check existing certificate row (system or custom)
   const { data: existing } = await supabase
     .from('certificates')
-    .select('id, status')
+    .select('id, status, verification_url, pdf_url, metadata')
     .eq('enrollment_id', enrollment.id)
     .maybeSingle()
 
-  if (existing && existing.status === 'issued') return { eligible: true, reason: 'Certificate already issued' }
+  const certSettings = course?.certificate_settings as Record<string, unknown> | null
+  const allowCustom = certSettings?.allow_custom_certificates === true
+
+  const customCertInfo = (existing && existing.pdf_url) ? {
+    customCertPdfUrl: existing.pdf_url || null,
+    customCertStatus: 'published' as const,
+  } : {
+    customCertPdfUrl: null as string | null,
+    customCertStatus: (allowCustom ? 'pending' : null) as 'published' | 'pending' | null,
+  }
+
+  const isSystemIssued = existing && existing.status === 'issued' && existing.verification_url?.includes('/verify/');
+
+  if (isSystemIssued) {
+    return { eligible: true, reason: 'Certificate already issued', alreadyIssued: true, certificateId: existing.id, ...customCertInfo }
+  }
 
   // Count lessons
   const { count: totalLessons } = await supabase
@@ -2214,7 +2318,7 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
     .eq('is_viewed', true)
 
   if (completedLessons === null || totalLessons === null) {
-    return { eligible: false, reason: 'Error counting lessons' }
+    return { eligible: false, reason: 'Error counting lessons', ...customCertInfo }
   }
 
   if (completedLessons < totalLessons) {
@@ -2223,6 +2327,7 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
       reason: `Complete all lessons (${completedLessons}/${totalLessons})`,
       completed: completedLessons,
       total: totalLessons,
+      ...customCertInfo,
     }
   }
 
@@ -2235,11 +2340,15 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
     .select('id')
     .eq('course_id', courseId)
     .eq('status', 'published')
+    .not('has_quiz', 'eq', false)
     .or('visibility_status.eq.visible,visibility_status.is.null')
 
   const { data: quizzes } = await supabase
     .from('quizzes')
-    .select('id')
+    .select(`
+      id, title, lesson_id,
+      lessons:lesson_id (title)
+    `)
     .in('lesson_id', lessonsQuery?.map(l => l.id) || [])
 
   if (quizzes && quizzes.length > 0) {
@@ -2254,17 +2363,28 @@ export async function checkCourseCertificateEligibility(courseId: string): Promi
     const passedQuizIds = new Set((attempts || []).map(a => a.quiz_id))
     const passRate = Math.round((passedQuizIds.size / quizzes.length) * 100)
 
+    const quizzesNeedImprovement = quizzes
+      .filter(q => !passedQuizIds.has(q.id))
+      .map(q => ({
+        quizId: q.id,
+        quizTitle: q.title,
+        lessonId: q.lesson_id,
+        lessonTitle: (q.lessons as any)?.title || 'Unknown Lesson',
+      }))
+
     if (passRate < quizThreshold) {
       return {
         eligible: false,
         reason: `Quiz pass rate ${passRate}% below threshold ${quizThreshold}%`,
         completed: completedLessons,
         total: totalLessons,
+        quizzesNeedImprovement,
+        ...customCertInfo,
       }
     }
   }
 
-  return { eligible: true, completed: completedLessons, total: totalLessons }
+  return { eligible: true, completed: completedLessons, total: totalLessons, quizzesNeedImprovement: [], ...customCertInfo }
 }
 
 export async function claimCertificate(courseId: string): Promise<{
@@ -2283,85 +2403,27 @@ export async function claimCertificate(courseId: string): Promise<{
 
   if (!enrollment) return null
 
-  // Check eligibility
+  // Check eligibility client-side first
   const eligibility = await checkCourseCertificateEligibility(courseId)
   if (!eligibility.eligible) {
     console.warn('claimCertificate: eligibility check failed', eligibility.reason, eligibility)
     throw new Error(eligibility.reason || 'Not eligible for certificate')
   }
 
-  // Get course and user data
-  const [{ data: course }, { data: userData }] = await Promise.all([
-    supabase.from('courses').select('title, certificate_settings, created_by').eq('id', courseId).single(),
-    supabase.from('users').select('full_name').eq('id', userId).single(),
-  ])
+  const response = await fetch('/api/certificates/claim', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ courseId }),
+  })
 
-  if (!course || !userData) return null
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to claim certificate')
+  }
 
-  // Get educator name
-  const { data: educator } = await supabase
-    .from('users')
-    .select('full_name')
-    .eq('id', course.created_by)
-    .single()
-
-  const settings = course.certificate_settings as Record<string, unknown> | null || {}
-  // Call issueCertificate via educator-api logic — but we call it inline
-  // to avoid circular dependency, call supabase directly
-  const refCode = await (async function genCode(): Promise<string> {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    const segs = [4, 4, 4]
-    let c = ''
-    for (const l of segs) {
-      if (c) c += '-'
-      for (let i = 0; i < l; i++) c += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    const { data: exist } = await supabase.from('certificates').select('id').eq('reference_code', c).maybeSingle()
-    if (exist) return genCode()
-    return c
-  })()
-
-  const verificationUrl = `${window.location.origin}/verify/${refCode}`
-
-  // Create signed token
-  const tokenData = `${refCode}:${Date.now()}:acess-cert`
-  const encoder = new TextEncoder()
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(tokenData))
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  const signedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32)
-
-  const skills = (settings.skills as string[]) || []
-
-  const { data: cert, error } = await supabase
-    .from('certificates')
-    .insert({
-      enrollment_id: enrollment.id,
-      course_id: courseId,
-      user_id: userId,
-      learner_name: userData.full_name || 'Learner',
-      course_title: course.title,
-      educator_name: educator?.full_name || 'Educator',
-      reference_code: refCode,
-      status: 'issued',
-      issued_at: new Date().toISOString(),
-      completion_date: new Date().toISOString(),
-      verification_url: verificationUrl,
-      skills_earned: skills,
-      course_duration_hours: (settings.course_duration_hours as number) || 0,
-      signed_token: signedToken,
-    })
-    .select('id, reference_code')
-    .single()
-
-  if (error) throw error
-
-  // Update enrollment status
-  await supabase
-    .from('enrollments')
-    .update({ status: 'completed', completed_at: new Date().toISOString() })
-    .eq('id', enrollment.id)
-
-  return { id: cert.id, referenceCode: cert.reference_code }
+  return response.json()
 }
 
 // ─── Public Certificate Verification ───────────────────────────────────

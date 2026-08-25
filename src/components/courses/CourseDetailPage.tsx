@@ -53,9 +53,18 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
   const [isFav, setIsFav] = useState(false);
   const [togglingFav, setTogglingFav] = useState(false);
   const [unenrolling, setUnenrolling] = useState(false);
-  const [certEligible, setCertEligible] = useState<{ eligible: boolean; reason?: string } | null>(null);
+  const [certEligible, setCertEligible] = useState<{
+    eligible: boolean;
+    reason?: string;
+    quizzesNeedImprovement?: { quizId: string; quizTitle: string; lessonId: string; lessonTitle: string }[];
+    customCertStatus?: 'published' | 'pending' | null;
+    customCertPdfUrl?: string | null;
+  } | null>(null);
   const [claimingCert, setClaimingCert] = useState(false);
   const [certClaimed, setCertClaimed] = useState(false);
+  const [certClaimedId, setCertClaimedId] = useState<string | null>(null);
+  const [customCertUrl, setCustomCertUrl] = useState<string | null>(null);
+  const [customCertStatus, setCustomCertStatus] = useState<'published' | 'pending' | null>(null);
   const [accessibilityCategories, setAccessibilityCategories] = useState<string[]>([]);
   const [courseAchievements, setCourseAchievements] = useState<any[]>([]);
   const { settings } = useAccessibility();
@@ -85,6 +94,19 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
           try {
             const elig = await checkCourseCertificateEligibility(courseId);
             setCertEligible(elig);
+            if (elig.alreadyIssued) {
+              setCertClaimed(true);
+              setCertClaimedId(elig.certificateId || null);
+            }
+            // Set educator custom certificate status
+            if (elig.customCertPdfUrl) {
+              setCustomCertUrl(elig.customCertPdfUrl);
+              setCustomCertStatus('published');
+            } else if (elig.customCertStatus === 'pending') {
+              setCustomCertStatus('pending');
+            } else {
+              setCustomCertStatus(null);
+            }
           } catch {}
         }
         // Fetch accessibility categories
@@ -112,6 +134,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
       const result = await claimCertificate(courseId);
       if (result) {
         setCertClaimed(true);
+        setCertClaimedId(result.id);
         toast.success('Certificate issued!');
       } else {
         toast.error('Not eligible for certificate yet');
@@ -709,7 +732,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                       <p className="font-semibold text-green-900">Certificate Earned!</p>
                       <p className="text-sm text-green-700 mt-1">View and download your certificate from your profile.</p>
                       <Button
-                        onClick={() => router.push('/learner/certificates')}
+                        onClick={() => router.push(certClaimedId ? `/learner/certificates?id=${certClaimedId}` : '/learner/certificates')}
                         variant="outline"
                         className="mt-3 border-green-600 text-green-600"
                       >
@@ -720,13 +743,67 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                 </div>
               )}
 
-              {certEligible && !certEligible.eligible && !certClaimed && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <div className="flex items-start gap-2">
-                    <Award className="w-4 h-4 text-blue-600 mt-0.5" />
+               {/* Educator Custom Certificate section */}
+              {customCertStatus === 'published' && customCertUrl && (
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
+                  <div className="flex items-start gap-3">
+                    <GraduationCap className="w-6 h-6 text-purple-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-purple-900">{t('courseProgress.educatorCert')}</p>
+                      <p className="text-sm text-purple-700 mt-1">{t('courseProgress.educatorCertDesc')}</p>
+                      <Button
+                        onClick={() => window.open(customCertUrl, '_blank')}
+                        variant="outline"
+                        className="mt-3 border-purple-600 text-purple-600 hover:bg-purple-50"
+                      >
+                        <GraduationCap className="w-4 h-4 mr-2" /> {t('courseProgress.viewEducatorCert')}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {customCertStatus === 'pending' && certClaimed && (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-blue-900">Certificate Progress</p>
-                      <p className="text-xs text-blue-700 mt-0.5">{certEligible.reason}</p>
+                      <p className="text-sm font-medium text-gray-700">{t('courseProgress.educatorCert')}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('courseProgress.educatorCertPending')}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {certEligible && !certEligible.eligible && !certClaimed && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                  <div className="flex items-start gap-3">
+                    <Award className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-blue-900">Certificate Progress</p>
+                      <p className="text-sm text-blue-700 mt-1">{certEligible.reason}</p>
+                      {certEligible.quizzesNeedImprovement && certEligible.quizzesNeedImprovement.length > 0 && (
+                        <div className="mt-3 bg-white rounded-xl p-3 border border-blue-100 shadow-sm">
+                          <p className="text-xs font-semibold text-blue-800 mb-2">Quizzes needing improvement:</p>
+                          <div className="space-y-2">
+                            {certEligible.quizzesNeedImprovement.map((q) => (
+                              <div key={q.quizId} className="flex items-center justify-between gap-4 text-xs">
+                                <div>
+                                  <p className="font-semibold text-gray-900">{q.lessonTitle}</p>
+                                  <p className="text-gray-500 text-[10px] mt-0.5">{q.quizTitle}</p>
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  className="h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px]"
+                                  onClick={() => onStartLesson(q.lessonId)}
+                                >
+                                  Start Quiz
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

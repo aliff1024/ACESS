@@ -2,6 +2,41 @@
 
 All tables are in the `public` schema of a Supabase PostgreSQL database.
 
+> **Verified against the live database on 24 August 2026.** Earlier revisions of
+> this file documented tables that do not exist and omitted several that do. If
+> you are adding an analytics metric, check the "Analytics caveats" section at
+> the bottom first — several columns hold defaults rather than measurements.
+
+## Tables that do NOT exist
+
+Previously documented here, but absent from the database. Code referencing them
+will fail silently through PostgREST rather than raising:
+
+| Documented name | Reality |
+|-----------------|---------|
+| `user_accessibility_settings` | Never created. The table `user_accessibility_preferences` exists but holds **0 rows**; the live store is `user_profiles.accessibility_prefs` (jsonb). |
+| `course_tags` | Tags live in the `courses.tags` array column. |
+| `lesson_assets` | Use `media_assets` (has `lesson_id` and `course_id`). |
+| `child_accounts` | Never created. |
+| `user_notification_settings` | Preferences live in `user_profiles.notification_prefs` (jsonb, currently unpopulated). |
+| `user_profiles.age_group` | Not a column — a Postgres **function** over the row, usable as a PostgREST computed column. Returns `'18+'` when `birth_date` is NULL. |
+
+## Tables missing from earlier revisions
+
+| Table | Purpose |
+|-------|---------|
+| `adaptive_interactions` | Accessibility adaptation event log — the only behavioural telemetry in the system. Columns: `user_id`, `lesson_id`, `course_id`, `adaptation_used`, `session_id`, `duration_seconds`, `created_at`. Detail is encoded in the event string (`preset_applied:dyslexia`) because there is no properties column. |
+| `h5p_contents` / `h5p_responses` | Embedded H5P activities and learner responses. |
+| `lesson_comments` | Threaded discussion per lesson. |
+| `lesson_versions` | Content version history. |
+| `lesson_ai_summaries` / `lesson_summaries` | AI-generated summaries and learner-written summaries. |
+| `user_achievements` / `course_achievements` | Achievement definitions and awards. |
+| `certificate_verifications` | Public verification hits against a certificate. |
+| `course_accessibility_categories` | Per-course accessibility categories. Duplicates `courses.accessibility_categories` and the two disagree. |
+| `accessibility_templates` | Reusable accessibility content structures. |
+| `learner_milestones` / `course_milestones` | Milestone definitions and learner attainment. |
+| `certificate_templates` | Certificate layout configurations. |
+
 ## Core Tables
 
 ### `users`
@@ -279,3 +314,36 @@ Links guardian (educator/parent) to child learner for progress monitoring.
 | Bucket | Policy |
 |--------|--------|
 | `course-assets` | Upload-only for educators, no public read/delete |
+
+---
+
+## Analytics caveats
+
+Columns that exist and return values, but do not mean what their names suggest.
+Verified against live data on 24 August 2026. `src/lib/admin-analytics.ts`
+encodes these rules; read it before adding a metric.
+
+| Column | Looks like | Actually is |
+|--------|-----------|-------------|
+| `users.is_active` | An activity signal | An account-enabled flag, true for every account. Derive activity from `last_login_at`, `lesson_progress.last_viewed_at`, `quiz_attempts`, and `adaptive_interactions` instead. |
+| `users.last_login_at` | Always populated | Written only from the login page, added Aug 2026. Rows predating that are NULL. |
+| `lessons.has_transcript` | Transcript coverage | `true` on all 141 lessons while `lessons.transcript` is empty on all 141. Derive coverage from the content. |
+| `lessons.accessibility_score` | An audit result | The literal `100` on every row — a column default. Not reported anywhere. |
+| `user_profiles.disability_type` | Accessibility profile | NULL for all users; the value is sometimes present inside `accessibility_prefs` instead. |
+| `user_profiles.birth_date` | Demographics | Populated for 2 of 25 users, and `age_group()` silently reports the other 23 as `'18+'`. |
+| `enrollments.status = 'completed'` | The course was finished | 14 enrollments carry it; none has completed every published lesson. Report "marked complete" and lesson-derived progress as separate figures. |
+| `courses.accessibility_categories` vs `course_accessibility_categories` | One fact | Two stores that disagree (42 courses vs 27). The array column is treated as authoritative. |
+| `users.role = 'disabled'` | A role | An account state that overwrites the real role when a user is disabled through bulk actions. Use `is_active` instead. |
+
+### Derived definitions used by the admin portal
+
+- **Progress** — completed published lessons ÷ published lessons in the course.
+  Progress rows for unpublished or removed lessons are ignored so a stale row
+  cannot push an enrollment past 100%.
+- **Last active** — the most recent of `users.last_login_at`,
+  `lesson_progress.last_viewed_at`, `quiz_attempts.submitted_at` /
+  `started_at`, `adaptive_interactions.created_at` and
+  `enrollments.enrolled_at`.
+
+Run `npm run verify:admin` to reconcile every displayed figure against
+independent SQL.

@@ -25,6 +25,9 @@ interface CourseItem {
   thumbnail_url?: string | null;
   creator_name?: string;
   creator_email?: string;
+  total_enrollments?: number;
+  completed_enrollments?: number;
+  published_lessons?: number;
 }
 
 export default function CourseManagement() {
@@ -358,6 +361,7 @@ export default function CourseManagement() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thumbnail</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Title</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -389,6 +393,31 @@ export default function CourseManagement() {
                           <BookOpen className="w-3.5 h-3.5 text-blue-500" />
                           {course.creator_name}
                         </span>
+                      </td>
+                      {/* Engagement was previously computed for system courses
+                          only, so educator courses showed no reach at all. */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(course.total_enrollments ?? 0) > 0 ? (
+                          <div className="text-sm">
+                            <p>
+                              <span className="font-semibold text-gray-900 tabular-nums">
+                                {course.total_enrollments}
+                              </span>
+                              <span className="text-gray-500"> enrolled</span>
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {course.completed_enrollments ?? 0} complete ·{' '}
+                              {course.published_lessons ?? 0} lessons
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="text-sm">
+                            <p className="text-gray-400">No enrollments</p>
+                            <p className="text-xs text-gray-400">
+                              {course.published_lessons ?? 0} lessons
+                            </p>
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.color} flex items-center gap-1 w-fit`}>

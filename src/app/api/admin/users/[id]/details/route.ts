@@ -1,60 +1,35 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { createServerSupabase } from '@/lib/supabase-server';
+import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/admin-guard'
+import { buildIndex, computeUserDetail, loadSnapshot } from '@/lib/admin-analytics'
 
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+/**
+ * Full administrative profile for one user.
+ *
+ * Derived from the same snapshot the dashboard uses, so a learner's progress
+ * here always matches the same learner's contribution to the course figures.
+ * Previously this route returned raw enrollment rows and the page rendered
+ * `enrollment.progress_percent` — a column that does not exist, which is why
+ * every progress bar read 0%.
+ */
+export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   try {
-    const { id } = await context.params;
-    const serverSupabase = await createServerSupabase();
-    const { data: { user } } = await serverSupabase.auth.getUser();
+    const { id } = await context.params
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const snap = await loadSnapshot()
+    const index = buildIndex(snap)
+    const detail = computeUserDetail(id, snap, index)
+
+    if (!detail) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const { data: userData } = await serverSupabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userData?.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
-    const { data: enrollments } = await supabaseAdmin
-      .from('enrollments')
-      .select(`
-        *,
-        courses:course_id (title, difficulty_level, status)
-      `)
-      .eq('user_id', id);
-
-    const { data: certificates } = await supabaseAdmin
-      .from('certificates')
-      .select(`
-        *,
-        enrollments (
-          courses (title)
-        )
-      `)
-      .eq('user_id', id);
-
-    const { data: createdCourses } = await supabaseAdmin
-      .from('courses')
-      .select('*')
-      .eq('created_by', id)
-      .is('deleted_at', null);
-
-    return NextResponse.json({ enrollments, certificates, createdCourses });
-  } catch (err) {
-    console.error('Error fetching admin user details:', err);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(detail)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to load user'
+    console.error('Admin user detail error:', error)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

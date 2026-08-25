@@ -49,7 +49,7 @@ export function CertificateGenerationModal({
         }
       })
       .catch((err) => {
-        const msg = err instanceof Error ? err.message : 'Failed to generate certificate';
+        const msg = err instanceof Error ? err.message : (typeof err === 'object' ? JSON.stringify(err) : 'Failed to generate certificate');
         console.error('Certificate generation error:', msg, err);
         setError(msg);
       })

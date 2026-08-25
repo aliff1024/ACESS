@@ -22,10 +22,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1. Check if the certificate already exists
-    const { data: existing, error: findError } = await supabaseAdmin
+    // 1. Check if a certificate already exists for this enrollment (system or custom)
+    const { data: existingCert, error: findError } = await supabaseAdmin
       .from('certificates')
-      .select('id')
+      .select('id, metadata')
       .eq('enrollment_id', enrollmentId)
       .maybeSingle();
 
@@ -33,21 +33,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: findError.message }, { status: 500 });
     }
 
-    if (existing) {
-      // Update existing certificate
+    if (existingCert) {
+      // Update existing certificate row (preserve system cert, add custom cert fields)
+      const existingMeta = existingCert.metadata as Record<string, unknown> | null;
       const { error: updateError } = await supabaseAdmin
         .from('certificates')
         .update({
           status: 'issued',
-          verification_url: customUrl,
+          pdf_url: customUrl,
+          metadata: { ...(existingMeta || {}), is_custom: true },
         })
-        .eq('id', existing.id);
+        .eq('id', existingCert.id);
 
       if (updateError) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
     } else {
-      // Create a new certificate record
+      // Create a NEW certificate record (no certificate exists yet)
       // We need learner name and course title
       const { data: enrollment, error: enrollError } = await supabaseAdmin
         .from('enrollments')
@@ -83,7 +85,9 @@ export async function POST(request: Request) {
           issued_at: new Date().toISOString(),
           completion_date: new Date().toISOString(),
           reference_code: refCode,
+          pdf_url: customUrl,
           verification_url: customUrl,
+          metadata: { is_custom: true },
           status: 'issued'
         });
 

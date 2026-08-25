@@ -11,5 +11,5 @@ export default function AdminUserProfilePage() {
     return <div>User ID is missing</div>;
   }
 
-  return <AdminUserProfile userId={userId} />;
+  return <AdminUserProfile key={userId} userId={userId} />;
 }

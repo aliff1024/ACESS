@@ -1,4 +1,13 @@
 import { supabase } from './supabase'
+import {
+  auditLesson,
+  DEFAULT_COURSE_SUPPORT,
+  type CourseAccessibilitySupport,
+  type FocusProfile,
+  type LessonAuditSubject,
+  type RuleSeverity,
+} from './accessibility-audit'
+import { resolveFocus } from './accessibility-profiles'
 
 export type CourseStatus = 'draft' | 'pending_review' | 'published' | 'archived'
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced'
@@ -17,6 +26,11 @@ export interface CourseFields {
   target_reading_age?: number
   recommended_age_group?: string
   educator_custom_guide?: string
+  supports_tts?: boolean
+  supports_focus_mode?: boolean
+  supports_chunked_learning?: boolean
+  learning_streaks_enabled?: boolean
+  chapter_organization_enabled?: boolean
 }
 
 export interface LessonFields {
@@ -29,8 +43,10 @@ export interface LessonFields {
   status: 'draft' | 'published'
   lesson_type?: 'standard' | 'video' | 'quiz' | 'practice' | 'reading' | 'assessment'
   estimated_duration?: number
-  learning_objectives?: string
-  accessibility_notes?: string
+  learning_objectives?: string | null
+  accessibility_notes?: string | null
+  /** Column exists via migration 20260510000001; typed here so it is settable. */
+  prerequisite_lesson_id?: string | null
   has_video?: boolean
   has_pdf?: boolean
   has_quiz?: boolean
@@ -734,6 +750,8 @@ export interface CourseStudentProgress {
   progressPercent: number;
   hasCertificate?: boolean;
   certificateUrl?: string;
+  hasCustomCertificate?: boolean;
+  customCertificateUrl?: string;
   lastActive?: string;
   timeSpentSeconds: number;
   avgScore: number;
@@ -816,12 +834,21 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
   // Fetch certificates for these enrollments
   const { data: certData } = await supabase
     .from('certificates')
-    .select('enrollment_id, verification_url, pdf_url')
+    .select('enrollment_id, verification_url, pdf_url, metadata')
     .in('enrollment_id', enrollmentIds);
 
-  const certMap = new Map<string, string>();
+  const systemCertMap = new Map<string, string>();
+  const customCertMap = new Map<string, string>();
   for (const c of certData || []) {
-    certMap.set(c.enrollment_id, c.verification_url || c.pdf_url || '');
+    const isSystem = c.verification_url?.includes('/verify/');
+    const isCustom = !!c.pdf_url || (c.metadata as any)?.is_custom === true;
+    
+    if (isSystem) {
+      systemCertMap.set(c.enrollment_id, c.verification_url || '');
+    }
+    if (isCustom) {
+      customCertMap.set(c.enrollment_id, c.pdf_url || '');
+    }
   }
 
   return enrollments.map((raw: Record<string, unknown>) => {
@@ -846,8 +873,10 @@ export async function fetchCourseStudentsProgress(courseId: string): Promise<Cou
       completedLessons: Math.min(completed, totalLessons), // Just in case
       totalLessons,
       progressPercent,
-      hasCertificate: certMap.has(raw.id as string),
-      certificateUrl: certMap.get(raw.id as string) || undefined,
+      hasCertificate: systemCertMap.has(raw.id as string),
+      certificateUrl: systemCertMap.get(raw.id as string) || undefined,
+      hasCustomCertificate: customCertMap.has(raw.id as string),
+      customCertificateUrl: customCertMap.get(raw.id as string) || undefined,
       lastActive,
       timeSpentSeconds: timeSpentMap.get(raw.id as string) || 0,
       avgScore
@@ -1512,7 +1541,7 @@ export async function uploadEducatorCustomCertificate(certId: string, file: File
 
   const pdfUrl = publicUrlData.publicUrl
 
-  // Update the certificate row in the database
+  // Fetch the certificate row in the database
   const { data: certInfo, error: fetchError } = await supabase
     .from('certificates')
     .select('metadata')
@@ -1521,16 +1550,14 @@ export async function uploadEducatorCustomCertificate(certId: string, file: File
     
   if (fetchError) throw fetchError
 
-  const newMetadata = {
-    ...(certInfo?.metadata || {}),
-    is_custom: true
-  }
+  const metadata = certInfo?.metadata as Record<string, unknown> | null;
 
+  // Update the existing certificate row in-place
   const { error: updateError } = await supabase
     .from('certificates')
     .update({
       pdf_url: pdfUrl,
-      metadata: newMetadata
+      metadata: { ...(metadata || {}), is_custom: true }
     })
     .eq('id', certId)
 
@@ -2271,4 +2298,384 @@ export async function fetchLessonSummaries(lessonId: string, courseId: string): 
 
   if (error) throw error;
   return (data as any) as StudentSummarySubmission[];
+}
+
+
+// ─── Accessibility Auditor ─────────────────────────────────────────────
+// The rules themselves live in `@/lib/accessibility-audit` as a pure function.
+// This layer only fetches rows, feeds them through that engine, and rolls the
+// per-lesson results up into a course-level report. Keeping the rules in one
+// place is what makes the lesson editor's live score and this report agree.
+
+export interface CourseAccessibilitySettings extends CourseAccessibilitySupport {
+  primary_disability_focus: string | null
+  educator_custom_guide: string | null
+}
+
+const EMPTY_COURSE_SETTINGS: CourseAccessibilitySettings = {
+  ...DEFAULT_COURSE_SUPPORT,
+  primary_disability_focus: null,
+  educator_custom_guide: null,
+}
+
+/**
+ * Just the accessibility switches for a course.
+ *
+ * Deliberately separate from `fetchCourseById`, which has many callers that do
+ * not need these columns. Returns defaults for a blank courseId so the course
+ * builder wizard (which has no course row yet) can call it unconditionally.
+ */
+export async function fetchCourseAccessibilitySettings(
+  courseId: string,
+): Promise<CourseAccessibilitySettings> {
+  if (!courseId) return { ...EMPTY_COURSE_SETTINGS }
+
+  const { data, error } = await supabase
+    .from('courses')
+    .select(
+      `primary_disability_focus, educator_custom_guide, target_reading_age,
+       supports_tts, supports_focus_mode, supports_chunked_learning,
+       learning_streaks_enabled, chapter_organization_enabled`,
+    )
+    .eq('id', courseId)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return { ...EMPTY_COURSE_SETTINGS }
+
+  return {
+    primary_disability_focus: data.primary_disability_focus ?? null,
+    educator_custom_guide: data.educator_custom_guide ?? null,
+    target_reading_age: data.target_reading_age ?? null,
+    supports_tts: !!data.supports_tts,
+    supports_focus_mode: !!data.supports_focus_mode,
+    supports_chunked_learning: !!data.supports_chunked_learning,
+    learning_streaks_enabled: !!data.learning_streaks_enabled,
+    chapter_organization_enabled: !!data.chapter_organization_enabled,
+  }
+}
+
+export interface AccessibilityAuditItem {
+  id: string
+  title: string
+  description: string
+  weight: number
+  passed: boolean
+  /** 'course' items are settings; 'lessons' items roll up per-lesson rules. */
+  scope: 'course' | 'lessons'
+  severity: RuleSeverity
+  source: string
+  /** For lesson-scoped items, which lessons still fail and why. */
+  affected: { id: string; title: string; detail: string }[]
+  /** Kept for backwards compatibility with earlier single-lesson callers. */
+  lessonId?: string
+  lessonTitle?: string
+}
+
+export interface AccessibilityLessonScore {
+  id: string
+  title: string
+  status: string
+  score: number
+  passed: number
+  applicable: number
+  failures: number
+  requiredFailures: number
+}
+
+export interface AccessibilityAuditReport {
+  score: number
+  focus: FocusProfile
+  passedCount: number
+  totalCount: number
+  /** courseChecks followed by lessonChecks — what the existing UI renders. */
+  checks: AccessibilityAuditItem[]
+  courseChecks: AccessibilityAuditItem[]
+  lessonChecks: AccessibilityAuditItem[]
+  perLesson: AccessibilityLessonScore[]
+  lessonCount: number
+  /** True when the course has no lessons at all, so the score means nothing. */
+  empty: boolean
+}
+
+/** Course-level switches that matter for each focus profile. */
+function courseLevelChecks(
+  settings: CourseAccessibilitySettings,
+  focus: FocusProfile,
+  anyLessonHasNotes: boolean,
+): AccessibilityAuditItem[] {
+  const item = (
+    id: string,
+    title: string,
+    passed: boolean,
+    weight: number,
+    severity: RuleSeverity,
+    source: string,
+    passDescription: string,
+    failDescription: string,
+  ): AccessibilityAuditItem => ({
+    id,
+    title,
+    description: passed ? passDescription : failDescription,
+    weight,
+    passed,
+    scope: 'course',
+    severity,
+    source,
+    affected: [],
+  })
+
+  const tts = item(
+    'tts',
+    'Text-to-speech available',
+    settings.supports_tts,
+    20,
+    'required',
+    'WCAG 2.2 — 1.4.5 Images of Text',
+    'Learners can listen to any lesson in this course instead of reading it.',
+    'Text-to-speech is off, so every lesson in this course is reading-only.',
+  )
+  const focusMode = item(
+    'focus_mode',
+    'Focus mode available',
+    settings.supports_focus_mode,
+    20,
+    'required',
+    'WCAG 2.2 — 2.2.4 Interruptions',
+    'Learners can strip the interface back to just the lesson.',
+    'Focus mode is off at course level, so the per-lesson toggles have no effect.',
+  )
+  const chunked = item(
+    'chunked_content',
+    'Chunked learning available',
+    settings.supports_chunked_learning,
+    15,
+    'required',
+    'W3C COGA — Pattern 4.2: Chunk information',
+    'Lessons can be delivered in segments rather than one long scroll.',
+    'Chunked learning is off at course level, so lessons arrive as a single block.',
+  )
+  const streaks = item(
+    'gamification',
+    'Learning streaks',
+    settings.learning_streaks_enabled,
+    10,
+    'recommended',
+    'W3C COGA — Objective 7: Help users maintain motivation',
+    'Streaks are on, which supports building a consistent study habit.',
+    'Streaks are off. Turning them on helps learners return day to day.',
+  )
+  const chapters = item(
+    'hierarchy',
+    'Chapter organisation',
+    settings.chapter_organization_enabled,
+    15,
+    'recommended',
+    'WCAG 2.2 — 2.4.10 Section Headings',
+    'Lessons are grouped into chapters, so the course shape is visible.',
+    'Chapters are off, so the course reads as a flat list of lessons.',
+  )
+  const guide = item(
+    'custom_guides',
+    'Support guidance recorded',
+    Boolean(settings.educator_custom_guide?.trim()) || anyLessonHasNotes,
+    10,
+    'recommended',
+    'W3C COGA — Objective 8: Support adaptation',
+    'Course or lesson notes record how this material should be supported.',
+    'No support guidance recorded. Anyone else delivering this course has to guess.',
+  )
+
+  switch (focus) {
+    case 'adhd':
+      return [focusMode, chunked, streaks, guide]
+    case 'autism':
+      return [chapters, tts, guide]
+    case 'dyslexia':
+      return [tts, chapters, guide]
+    default:
+      return [tts, focusMode, guide]
+  }
+}
+
+/** Maps a lessons row onto the engine's input shape. */
+function toAuditSubject(row: Record<string, unknown>, activityCount: number): LessonAuditSubject {
+  const str = (value: unknown) => (typeof value === 'string' ? value : '')
+  return {
+    title: str(row.title),
+    content_html: str(row.content_html),
+    video_url: str(row.video_url),
+    transcript: str(row.transcript),
+    estimated_duration: typeof row.estimated_duration === 'number' ? row.estimated_duration : 0,
+    learning_objectives: str(row.learning_objectives),
+    accessibility_notes: str(row.accessibility_notes),
+    simplified_summary: str(row.simplified_summary),
+    focus_mode_enabled: !!row.focus_mode_enabled,
+    chunked_content_enabled: !!row.chunked_content_enabled,
+    has_summary_activity: !!row.has_summary_activity,
+    has_quiz: !!row.has_quiz,
+    interactiveCount: activityCount,
+    videoQuestionCount: 0,
+    // Video length is only known in the browser once the player reports it, so
+    // duration-based video rules resolve to not_applicable in this context.
+    videoSeconds: null,
+  }
+}
+
+/**
+ * Audits a whole course: the course-level switches, plus every lesson run
+ * through the same engine the lesson editor uses.
+ */
+export async function calculateAccessibilityCompliance(
+  courseId: string,
+): Promise<AccessibilityAuditReport> {
+  const settings = await fetchCourseAccessibilitySettings(courseId)
+  const focus = resolveFocus(settings.primary_disability_focus)
+
+  // Every lesson, not just published ones. Filtering to published meant a
+  // course made entirely of drafts reported 100% against zero lessons.
+  const { data: lessonRows, error: lessonError } = await supabase
+    .from('lessons')
+    .select(
+      `id, title, status, content_html, transcript, video_url, estimated_duration,
+       learning_objectives, accessibility_notes, simplified_summary,
+       focus_mode_enabled, chunked_content_enabled, has_video, has_transcript,
+       has_summary_activity, has_h5p, has_quiz`,
+    )
+    .eq('course_id', courseId)
+    .order('sequence_order', { ascending: true })
+
+  if (lessonError) throw lessonError
+  const lessons = lessonRows ?? []
+
+  // Interactive activity counts, so the "something to do" rule can see them.
+  const activityCounts = new Map<string, number>()
+  if (lessons.length > 0) {
+    const { data: activities } = await supabase
+      .from('lesson_interactive_content')
+      .select('lesson_id')
+      .in(
+        'lesson_id',
+        lessons.map((lesson) => lesson.id),
+      )
+    for (const row of activities ?? []) {
+      const key = row.lesson_id as string
+      activityCounts.set(key, (activityCounts.get(key) ?? 0) + 1)
+    }
+  }
+
+  const anyLessonHasNotes = lessons.some((lesson) =>
+    Boolean((lesson.accessibility_notes as string | null)?.trim()),
+  )
+  const courseChecks = courseLevelChecks(settings, focus, anyLessonHasNotes)
+
+  // Run the shared engine once per lesson.
+  const results = lessons.map((lesson) => ({
+    lesson,
+    result: auditLesson(
+      toAuditSubject(lesson as Record<string, unknown>, activityCounts.get(lesson.id) ?? 0),
+      focus,
+      settings,
+    ),
+  }))
+
+  const perLesson: AccessibilityLessonScore[] = results.map(({ lesson, result }) => ({
+    id: lesson.id as string,
+    title: (lesson.title as string) ?? 'Untitled lesson',
+    status: (lesson.status as string) ?? 'draft',
+    score: result.score,
+    passed: result.passed,
+    applicable: result.applicable,
+    failures: result.failures.length,
+    requiredFailures: result.requiredFailures.length,
+  }))
+
+  // Roll each rule up across lessons: one row per rule, listing the lessons
+  // that still fail it. A rule that is not applicable anywhere is dropped.
+  const lessonChecks: AccessibilityAuditItem[] = []
+  const ruleOrder: string[] = []
+  const byRule = new Map<
+    string,
+    {
+      title: string
+      weight: number
+      severity: RuleSeverity
+      source: string
+      requirement: string
+      applicable: number
+      passed: number
+      affected: { id: string; title: string; detail: string }[]
+    }
+  >()
+
+  for (const { lesson, result } of results) {
+    for (const rule of result.rules) {
+      if (rule.status === 'not_applicable') continue
+      if (!byRule.has(rule.id)) {
+        ruleOrder.push(rule.id)
+        byRule.set(rule.id, {
+          title: rule.title,
+          weight: rule.weight,
+          severity: rule.severity,
+          source: rule.source,
+          requirement: rule.requirement,
+          applicable: 0,
+          passed: 0,
+          affected: [],
+        })
+      }
+      const bucket = byRule.get(rule.id)!
+      bucket.applicable += 1
+      if (rule.status === 'pass') bucket.passed += 1
+      else
+        bucket.affected.push({
+          id: lesson.id as string,
+          title: (lesson.title as string) ?? 'Untitled lesson',
+          detail: rule.detail,
+        })
+    }
+  }
+
+  for (const ruleId of ruleOrder) {
+    const bucket = byRule.get(ruleId)!
+    const passed = bucket.passed === bucket.applicable
+    lessonChecks.push({
+      id: `lesson_${ruleId}`,
+      title: bucket.title,
+      description: passed
+        ? `${bucket.requirement} All ${bucket.applicable} applicable lesson${bucket.applicable === 1 ? '' : 's'} meet this.`
+        : `${bucket.passed} of ${bucket.applicable} lessons meet this. Still to fix: ${bucket.affected
+            .slice(0, 3)
+            .map((entry) => entry.title)
+            .join(', ')}${bucket.affected.length > 3 ? ` and ${bucket.affected.length - 3} more` : ''}.`,
+      weight: bucket.weight,
+      passed,
+      scope: 'lessons',
+      severity: bucket.severity,
+      source: bucket.source,
+      affected: bucket.affected,
+    })
+  }
+
+  const checks = [...courseChecks, ...lessonChecks]
+
+  // Weighted over everything that applies. Course settings and lesson rules
+  // share one scale so the headline number reflects both.
+  const totalWeight = checks.reduce((sum, check) => sum + check.weight, 0)
+  const earnedWeight = checks
+    .filter((check) => check.passed)
+    .reduce((sum, check) => sum + check.weight, 0)
+
+  return {
+    score: totalWeight === 0 ? 0 : Math.round((earnedWeight / totalWeight) * 100),
+    focus,
+    passedCount: checks.filter((check) => check.passed).length,
+    totalCount: checks.length,
+    checks,
+    courseChecks,
+    lessonChecks,
+    perLesson,
+    lessonCount: lessons.length,
+    empty: lessons.length === 0,
+  }
 }

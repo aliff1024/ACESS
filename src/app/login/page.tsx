@@ -67,6 +67,18 @@ export default function LoginPage() {
 
       const role = (data.user.user_metadata?.role as Role) || 'learner';
 
+      // Stamp the sign-in so admin analytics has a real activity signal.
+      // The "users can update own profile" RLS policy covers this, so it
+      // runs on the client without a service-role round-trip. Failures are
+      // swallowed — a missed timestamp must never block a login.
+      void supabase
+        .from('users')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', data.user.id)
+        .then(({ error }) => {
+          if (error) console.warn('Could not record last_login_at:', error.message);
+        });
+
       if (role === 'learner' && !redirectTo) {
         try {
           const profile = await fetchFullProfile();

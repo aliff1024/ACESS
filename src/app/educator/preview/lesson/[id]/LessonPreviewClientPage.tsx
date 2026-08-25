@@ -17,7 +17,7 @@ export default function LessonPreviewClientPage({ lessonId }: { lessonId: string
 
   useEffect(() => {
     if (courseId) {
-      fetchLessonIdsInCourse(courseId).then(setLessonIds).catch(() => {});
+      fetchLessonIdsInCourse(courseId, { includeUnpublished: true }).then(setLessonIds).catch(() => {});
     }
   }, [courseId]);
 

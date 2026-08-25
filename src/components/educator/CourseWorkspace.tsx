@@ -8,6 +8,7 @@ import {
   Globe, EyeOff, Eye, ChevronUp, ChevronDown,
   Edit, Trash2, Upload, X,
   CheckCircle, FileType, GripVertical, Copy, AlertTriangle, Award, Shield, Image as ImageIcon, Accessibility,
+  ChevronRight, BarChart3,
 } from 'lucide-react';
 import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { Button } from '@/components/ui/button';
@@ -39,8 +40,9 @@ import {
   fetchLessonInteractiveContent,
   fetchVideoQuestions,
   fetchLessonH5PContent,
+  calculateAccessibilityCompliance,
 } from '@/lib/educator-api';
-import type { LessonWithQuiz, LessonAsset, CourseStatus, LessonFields, InteractiveContent, VideoQuestion, H5PContent } from '@/lib/educator-api';
+import type { LessonWithQuiz, LessonAsset, CourseStatus, CourseFields, LessonFields, InteractiveContent, VideoQuestion, H5PContent, AccessibilityAuditReport } from '@/lib/educator-api';
 import { uploadContentImage } from '@/lib/educator-api';
 import { LessonRenderer } from '@/components/lesson/LessonRenderer';
 import { LessonEditor } from '@/components/educator/LessonEditor';
@@ -54,6 +56,7 @@ import CertificateSettingsPanel from './CertificateSettingsPanel';
 import { AccessibilitySettingsModal } from '../learner/AccessibilitySettingsModal';
 import { CurriculumManager } from '../courses/CurriculumManager';
 import AdminCourseSettingsTab from '../admin/AdminCourseSettingsTab';
+import AdminCoursePerformanceTab from '../admin/AdminCoursePerformanceTab';
 import AchievementBuilder from './AchievementBuilder';
 
 interface CourseWorkspaceProps {
@@ -185,11 +188,12 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   const [course, setCourse] = useState<CourseData | null>(null);
   const [lessons, setLessons] = useState<LessonWithQuiz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'admin'>('lessons');
+  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'performance' | 'admin'>('lessons');
 
   // Lesson editor modal
   const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
   const [lessonEditorLessonId, setLessonEditorLessonId] = useState<string | null>(null);
+  const [lessonEditorInitialTab, setLessonEditorInitialTab] = useState<'basics' | 'accessibility'>('basics');
 
   // Course-level accessibility categories
   const [primaryDisabilityFocus, setPrimaryDisabilityFocus] = useState<string | null>(null);
@@ -248,6 +252,24 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   const [quizSaving, setQuizSaving] = useState(false);
   const [uploadingQuizImage, setUploadingQuizImage] = useState<{ questionId: string; optionIndex?: number } | null>(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [auditReport, setAuditReport] = useState<AccessibilityAuditReport | null>(null);
+  // Collapsed by default — the score in the header is the at-a-glance answer,
+  // and the full checklist is long enough to bury the rest of the settings tab.
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [loadingAudit, setLoadingAudit] = useState(false);
+  const [applyingFixId, setApplyingFixId] = useState<string | null>(null);
+
+  const loadAuditReport = useCallback(async () => {
+    setLoadingAudit(true);
+    try {
+      const report = await calculateAccessibilityCompliance(courseId);
+      setAuditReport(report);
+    } catch (err) {
+      console.error('Failed to load accessibility audit:', err);
+    } finally {
+      setLoadingAudit(false);
+    }
+  }, [courseId]);
   // Overview editing
   const [overviewTitle, setOverviewTitle] = useState('');
   const [overviewDesc, setOverviewDesc] = useState('');
@@ -289,6 +311,12 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   useEffect(() => { load() }, [load]);
 
   useEffect(() => {
+    if (activeTab === 'settings') {
+      loadAuditReport();
+    }
+  }, [activeTab, loadAuditReport, lessons]);
+
+  useEffect(() => {
     if (!selectedLessonId) {
       setSelectedLessonData(null);
       setLessonInteractiveItems([]);
@@ -328,12 +356,56 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
 
   const openNewLesson = () => {
     setLessonEditorLessonId(null);
+    setLessonEditorInitialTab('basics');
     setLessonEditorOpen(true);
   };
 
   const openEditLesson = (lessonId: string) => {
     setLessonEditorLessonId(lessonId);
+    setLessonEditorInitialTab('basics');
     setLessonEditorOpen(true);
+  };
+
+  /** Opens a lesson straight onto its accessibility checklist. */
+  const openLessonAccessibility = (lessonId: string) => {
+    setLessonEditorLessonId(lessonId);
+    setLessonEditorInitialTab('accessibility');
+    setLessonEditorOpen(true);
+  };
+
+  /**
+   * Course-level settings the audit can switch on in one click. Each entry is
+   * the course column to set, plus the lesson column to bring in line where the
+   * setting has a per-lesson counterpart.
+   */
+  const COURSE_QUICK_FIXES: Record<string, { label: string; course: Partial<CourseFields>; lessonColumn?: string; toast: string }> = {
+    tts: { label: 'Enable TTS', course: { supports_tts: true }, toast: 'Text-to-speech enabled' },
+    focus_mode: { label: 'Enable Focus Mode', course: { supports_focus_mode: true }, lessonColumn: 'focus_mode_enabled', toast: 'Focus mode enabled across all lessons' },
+    chunked_content: { label: 'Enable Chunking', course: { supports_chunked_learning: true }, lessonColumn: 'chunked_content_enabled', toast: 'Chunked learning enabled across all lessons' },
+    gamification: { label: 'Enable Streaks', course: { learning_streaks_enabled: true }, toast: 'Learning streaks enabled' },
+    hierarchy: { label: 'Enable Chapters', course: { chapter_organization_enabled: true }, toast: 'Chapter organisation enabled' },
+  };
+
+  const applyCourseQuickFix = async (checkId: string) => {
+    const fix = COURSE_QUICK_FIXES[checkId];
+    if (!fix || applyingFixId) return;
+    setApplyingFixId(checkId);
+    try {
+      await updateCourse(courseId, fix.course);
+      if (fix.lessonColumn) {
+        const { error } = await supabase
+          .from('lessons')
+          .update({ [fix.lessonColumn]: true })
+          .eq('course_id', courseId);
+        if (error) throw error;
+      }
+      toast.success(fix.toast);
+      await Promise.all([loadAuditReport(), load()]);
+    } catch {
+      toast.error('Failed to apply the fix');
+    } finally {
+      setApplyingFixId(null);
+    }
   };
 
   const handleDeleteLesson = async (lessonId: string) => {
@@ -570,7 +642,7 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
     return <div className="p-8 text-center"><p className="text-xl mb-4">Course not found</p><Button onClick={onBack}>Back to Courses</Button></div>;
   }
 
-  const tabs: { id: 'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'admin'; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  const tabs: { id: 'overview' | 'lessons' | 'assets' | 'students' | 'certificates' | 'achievements' | 'settings' | 'performance' | 'admin'; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'overview', label: 'Overview', icon: BookOpen },
     { id: 'lessons', label: 'Lessons', icon: FileText },
     { id: 'assets', label: 'Assets', icon: FileType },
@@ -581,6 +653,8 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   ];
 
   if (mode === 'admin') {
+    // Admins see everything an educator sees, plus reach and outcomes.
+    tabs.push({ id: 'performance', label: 'Performance', icon: BarChart3 });
     tabs.push({ id: 'admin', label: 'Admin Controls', icon: Shield });
   }
 
@@ -889,6 +963,7 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                     try {
                       await updateCourse(courseId, { primary_disability_focus: primaryDisabilityFocus || undefined });
                       toast.success('Primary focus updated');
+                      loadAuditReport();
                     } catch {
                       toast.error('Failed to save primary focus');
                     } finally {
@@ -900,6 +975,196 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                   {savingPrimaryFocus ? 'Saving...' : 'Save Focus'}
                 </Button>
               </div>
+
+              {/* ── Accessibility Compliance Audit ── */}
+              {loadingAudit ? (
+                <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+                  <p className="text-sm text-gray-500 font-medium">Running accessibility audit...</p>
+                </div>
+              ) : auditReport && (
+                <div className="p-6 bg-white border border-gray-200 rounded-lg space-y-6 shadow-sm">
+                  {/* The header doubles as the collapse toggle; the score stays
+                      visible when collapsed so it is still a glanceable status. */}
+                  <div
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${auditOpen ? 'border-b border-gray-100 pb-4' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setAuditOpen((open) => !open)}
+                      aria-expanded={auditOpen}
+                      aria-controls="course-accessibility-audit"
+                      className="flex items-start gap-2 text-left group rounded-lg -m-1 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                    >
+                      <ChevronRight
+                        className={`w-5 h-5 text-gray-400 shrink-0 mt-1 transition-transform group-hover:text-purple-600 ${auditOpen ? 'rotate-90' : ''}`}
+                      />
+                      <span>
+                        <span className="text-lg font-bold text-gray-950 flex items-center gap-2">
+                          <Accessibility className="w-5 h-5 text-purple-600" />
+                          Accessibility Compliance Audit
+                        </span>
+                        <span className="block text-sm text-gray-500 mt-1">
+                          {auditOpen ? (
+                            <>
+                              Course settings plus every lesson, checked against the{' '}
+                              <span className="font-semibold text-purple-700 capitalize">
+                                {auditReport.focus}
+                              </span>{' '}
+                              profile.
+                            </>
+                          ) : (
+                            `${auditReport.passedCount} of ${auditReport.totalCount} standards met — show details`
+                          )}
+                        </span>
+                      </span>
+                    </button>
+                    <div className="flex items-center gap-4 bg-purple-50 px-4 py-3 rounded-2xl border border-purple-100 shrink-0">
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500 font-medium">Compliance Score</p>
+                        <p className="text-2xl font-black text-purple-700 tabular-nums">{auditReport.score}%</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-600 flex items-center justify-center font-bold text-purple-700 text-sm tabular-nums">
+                        {auditReport.passedCount}/{auditReport.totalCount}
+                      </div>
+                    </div>
+                  </div>
+
+                  {auditOpen && (
+                  <div id="course-accessibility-audit" className="space-y-6">
+
+                  {auditReport.empty && (
+                    <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50/50">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        This course has no lessons yet, so only the course-level settings are being
+                        scored. Add lessons to see the full picture.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* ── Per-lesson breakdown ── */}
+                  {auditReport.perLesson.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                        Lesson scores
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {auditReport.perLesson.map((lesson) => {
+                          const tone = lesson.score >= 80
+                            ? 'border-green-200 bg-green-50/40 text-green-700'
+                            : lesson.score >= 50
+                              ? 'border-amber-200 bg-amber-50/40 text-amber-700'
+                              : 'border-rose-200 bg-rose-50/40 text-rose-700';
+                          return (
+                            <button
+                              key={lesson.id}
+                              type="button"
+                              onClick={() => openLessonAccessibility(lesson.id)}
+                              title="Open this lesson's accessibility checklist"
+                              className={`w-full text-left p-3 rounded-xl border flex items-center gap-3 transition-colors hover:brightness-[0.98] ${tone}`}
+                            >
+                              <span className="font-black text-sm tabular-nums w-11 shrink-0">{lesson.score}%</span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-sm font-semibold text-gray-900 truncate">{lesson.title}</span>
+                                <span className="block text-xs text-gray-600">
+                                  {lesson.passed}/{lesson.applicable} standards
+                                  {lesson.requiredFailures > 0 && ` · ${lesson.requiredFailures} required unmet`}
+                                  {lesson.status !== 'published' && ' · draft'}
+                                </span>
+                              </span>
+                              <ChevronRight className="w-4 h-4 shrink-0 text-gray-400" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Course settings and rolled-up lesson standards ── */}
+                  {([
+                    { key: 'course', label: 'Course settings', items: auditReport.courseChecks },
+                    { key: 'lessons', label: 'Lesson standards, across all lessons', items: auditReport.lessonChecks },
+                  ] as const).map((group) => group.items.length > 0 && (
+                    <div key={group.key} className="space-y-3">
+                      <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">{group.label}</h4>
+                      <div className="grid grid-cols-1 gap-3">
+                        {group.items.map((check) => {
+                          const Icon = check.passed ? CheckCircle : AlertTriangle;
+                          return (
+                            <div
+                              key={check.id}
+                              className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
+                                check.passed
+                                  ? 'bg-green-50/30 border-green-100'
+                                  : 'bg-amber-50/30 border-amber-100'
+                              }`}
+                            >
+                              <div className="flex gap-3 min-w-0">
+                                <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${check.passed ? 'text-green-600' : 'text-amber-600'}`} />
+                                <div className="min-w-0">
+                                  <p className="font-bold text-gray-950 text-sm flex flex-wrap items-center gap-2">
+                                    {check.title}
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-wide ${
+                                      check.passed
+                                        ? 'bg-green-100 text-green-700'
+                                        : check.severity === 'required'
+                                          ? 'bg-rose-100 text-rose-700'
+                                          : 'bg-amber-100 text-amber-700'
+                                    }`}>
+                                      {check.passed ? 'Met' : check.severity}
+                                    </span>
+                                  </p>
+                                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">{check.description}</p>
+                                  {!check.passed && check.affected.length > 0 && (
+                                    <ul className="mt-2 space-y-1">
+                                      {check.affected.slice(0, 4).map((entry) => (
+                                        <li key={entry.id} className="text-xs text-gray-600">
+                                          <button
+                                            type="button"
+                                            onClick={() => openLessonAccessibility(entry.id)}
+                                            className="font-semibold text-purple-700 hover:underline"
+                                          >
+                                            {entry.title}
+                                          </button>
+                                          <span className="text-gray-500"> — {entry.detail}</span>
+                                        </li>
+                                      ))}
+                                      {check.affected.length > 4 && (
+                                        <li className="text-xs text-gray-400">
+                                          and {check.affected.length - 4} more lesson{check.affected.length - 4 === 1 ? '' : 's'}
+                                        </li>
+                                      )}
+                                    </ul>
+                                  )}
+                                  <p className="text-[10px] text-gray-400 mt-2">{check.source}</p>
+                                </div>
+                              </div>
+
+                              {/* 1-click fixes for course-level settings only. */}
+                              {!check.passed && check.scope === 'course' && COURSE_QUICK_FIXES[check.id] && (
+                                <div className="shrink-0 flex justify-end">
+                                  <Button
+                                    size="sm"
+                                    disabled={applyingFixId === check.id}
+                                    className="h-8 text-xs font-semibold px-3 bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap"
+                                    onClick={() => applyCourseQuickFix(check.id)}
+                                  >
+                                    {applyingFixId === check.id && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                                    {COURSE_QUICK_FIXES[check.id].label}
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  </div>
+                  )}
+                </div>
+              )}
 
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-2">Course Status</h3>
@@ -937,6 +1202,11 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
           </div>
         )}
 
+        {/* ─── Performance Tab (admin only) ─────────────────────────── */}
+        {activeTab === 'performance' && mode === 'admin' && (
+          <AdminCoursePerformanceTab key={courseId} courseId={courseId} />
+        )}
+
         {/* ─── Admin Tab ────────────────────────────────────────────── */}
         {activeTab === 'admin' && mode === 'admin' && (
           <AdminCourseSettingsTab courseId={courseId} initialCourse={course} onUpdate={load} />
@@ -949,6 +1219,7 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
         onClose={() => setLessonEditorOpen(false)}
         courseId={courseId}
         lessonId={lessonEditorLessonId}
+        initialTab={lessonEditorInitialTab}
         onSaved={load}
         onManageQuiz={() => {
           setLessonEditorOpen(false);

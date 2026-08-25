@@ -215,10 +215,13 @@ export async function fetchStudentsDeepProgress(educatorId: string): Promise<Det
   if (studentUserIds.length > 0) {
     const { data: profiles } = await supabase
       .from('user_profiles')
-      .select('id, accessibility_prefs')
-      .in('id', studentUserIds);
+      // The FK to users is `user_id`; `id` is the profile's own primary key.
+      // Matching on `id` silently returned nothing, so this panel was always
+      // empty.
+      .select('user_id, accessibility_prefs')
+      .in('user_id', studentUserIds);
     for (const p of profiles || []) {
-      userProfilesMap.set(p.id, p.accessibility_prefs);
+      userProfilesMap.set(p.user_id, p.accessibility_prefs);
     }
   }
 

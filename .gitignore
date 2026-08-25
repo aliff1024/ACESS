@@ -46,3 +46,6 @@ schema_utf8.sql
 next-env.d.ts
 
 .vercel
+
+# Generated admin report PDFs
+/report-output

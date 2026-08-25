@@ -127,11 +127,47 @@ export async function GET(request: Request) {
       }
     }
 
+    // Enrollment counts for BOTH tabs. These were previously computed only for
+    // system courses, so the 16 educator courses showed no engagement at all.
+    const educatorCourseIds = (educatorData || []).map(c => c.id)
+    const educatorEnrollCounts = new Map<string, number>()
+    const educatorCompleteCounts = new Map<string, number>()
+
+    if (educatorCourseIds.length > 0) {
+      const { data: educatorEnrollments } = await supabase
+        .from('enrollments')
+        .select('course_id, status')
+        .in('course_id', educatorCourseIds)
+
+      for (const e of educatorEnrollments || []) {
+        educatorEnrollCounts.set(e.course_id, (educatorEnrollCounts.get(e.course_id) || 0) + 1)
+        if (e.status === 'completed') {
+          educatorCompleteCounts.set(e.course_id, (educatorCompleteCounts.get(e.course_id) || 0) + 1)
+        }
+      }
+    }
+
+    const educatorLessonCounts = new Map<string, number>()
+    if (educatorCourseIds.length > 0) {
+      const { data: educatorLessons } = await supabase
+        .from('lessons')
+        .select('course_id')
+        .eq('status', 'published')
+        .in('course_id', educatorCourseIds)
+
+      for (const l of educatorLessons || []) {
+        educatorLessonCounts.set(l.course_id, (educatorLessonCounts.get(l.course_id) || 0) + 1)
+      }
+    }
+
     // Enrich Educator Courses
     const enrichedEducator = (educatorData || []).map(c => ({
       ...c,
       creator_name: userMap.get(c.created_by)?.name || 'Unknown',
       creator_email: userMap.get(c.created_by)?.email || '',
+      total_enrollments: educatorEnrollCounts.get(c.id) || 0,
+      completed_enrollments: educatorCompleteCounts.get(c.id) || 0,
+      published_lessons: educatorLessonCounts.get(c.id) || 0,
     }))
 
     // System Stats & Enrich System Courses

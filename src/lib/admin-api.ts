@@ -148,56 +148,10 @@ export async function duplicateSystemCourse(courseId: string): Promise<string> {
   return newCourse.id
 }
 
-export async function fetchSystemCourseStats(): Promise<SystemCourseStats> {
-  const { count: totalSystemCourses } = await supabase
-    .from('courses')
-    .select('id', { count: 'exact', head: true })
-    .eq('course_type', 'system')
-    .is('deleted_at', null)
-
-  const systemCourseIds: string[] = []
-  const { data: systemCourses } = await supabase
-    .from('courses')
-    .select('id, title')
-    .eq('course_type', 'system')
-    .is('deleted_at', null)
-  for (const c of systemCourses || []) {
-    systemCourseIds.push(c.id)
-  }
-
-  let totalEnrollments = 0
-  let activeLearners = 0
-  const enrollCounts: { title: string; enrollments: number }[] = []
-
-  if (systemCourseIds.length > 0) {
-    const { data: enrollments } = await supabase
-      .from('enrollments')
-      .select('course_id, status')
-      .in('course_id', systemCourseIds)
-
-    const countMap = new Map<string, number>()
-    for (const e of enrollments || []) {
-      countMap.set(e.course_id, (countMap.get(e.course_id) || 0) + 1)
-      if (e.status === 'active') activeLearners++
-    }
-    totalEnrollments = enrollments?.length ?? 0
-
-    for (const c of systemCourses || []) {
-      const cnt = countMap.get(c.id) || 0
-      if (cnt > 0) {
-        enrollCounts.push({ title: c.title, enrollments: cnt })
-      }
-    }
-    enrollCounts.sort((a, b) => b.enrollments - a.enrollments)
-  }
-
-  return {
-    totalSystemCourses: totalSystemCourses ?? 0,
-    totalEnrollments,
-    activeLearners,
-    mostEnrolled: enrollCounts.slice(0, 5),
-  }
-}
+// `fetchSystemCourseStats` was removed: it duplicated, query for query, the
+// aggregation `/api/admin/courses` already performs and returns as
+// `systemStats`. Course statistics now come from that route, or from
+// `computeCoursePerformance` in `admin-analytics.ts` for analytics surfaces.
 
 export async function fetchSystemCourses(): Promise<SystemCourseItem[]> {
   const { data: coursesData, error } = await supabase
@@ -263,44 +217,30 @@ export async function fetchAllAdminCourses() {
   return response.json()
 }
 
-// ─── Dashboard Types ─────────────────────────────────────────────────
+// ─── Admin analytics (client) ────────────────────────────────────────
+//
+// One fetcher replacing fetchAdminDashboardStats, fetchAdminEngagementData,
+// fetchSystemHealthMetrics, fetchRecentActivity and fetchAllAdminAnalytics.
+// All five hit different endpoints with their own arithmetic, which is how the
+// Dashboard and the Analytics page came to disagree. Everything now derives
+// from `admin-analytics.ts` behind `/api/admin/analytics`.
 
-export interface AdminDashboardStats {
-  totalUsers: number
-  totalCourses: number
-  totalCertificates: number
-  activeUsers: number
-  newUsersThisMonth: number
-  coursesPublishedThisMonth: number
-  educatorsCount: number
-  learnersCount: number
-}
+export type {
+  AdminAnalyticsPayload,
+  Kpis,
+  Change,
+  TrendPoint,
+  LabelCount,
+  CoursePerformance,
+  RecentActivityItem,
+  RangeKey,
+} from '@/lib/admin-analytics'
 
-export interface RecentActivity {
-  type: 'user_registration' | 'course_submission' | 'certificate_issued'
-  user_name: string
-  description: string
-  created_at: string
-}
+export { RANGE_KEYS, RANGE_LABELS, formatDuration, formatRelative } from '@/lib/admin-analytics'
 
-// ─── Analytics Types ─────────────────────────────────────────────────
+import type { AdminAnalyticsPayload, RangeKey } from '@/lib/admin-analytics'
 
-export interface AdminAnalytics {
-  totalActiveLearners: number
-  avgCompletionRate: number
-  avgQuizScore: number
-  atRiskLearners: number
-  totalCourses: number
-  totalEducators: number
-  totalInteractiveActivities: number
-  accessibilityMetrics: {
-    keyboardNavigation: number
-    highContrastMode: number
-  }
-}
-
-// ─── Report Types ────────────────────────────────────────────────────
-
+/** Shape returned by the report endpoints. Rebuilt in the reports phase. */
 export interface ReportDefinition {
   title: string
   description: string
@@ -308,166 +248,16 @@ export interface ReportDefinition {
   data: Record<string, unknown>[]
 }
 
-export interface EngagementData {
-  name: string
-  users: number
-  views: number
-  quizzes: number
-}
-
-export async function fetchAdminEngagementData(): Promise<EngagementData[]> {
-  try {
-    const res = await fetch('/api/admin/engagement');
-    if (!res.ok) throw new Error('Failed to fetch engagement data');
-    const data = await res.json();
-    return data.engagementData || [];
-  } catch (error) {
-    console.error('Engagement data error:', error);
-    return [];
+export async function fetchAdminAnalytics(
+  range: RangeKey = 'all',
+  signal?: AbortSignal
+): Promise<AdminAnalyticsPayload> {
+  const res = await fetch(`/api/admin/analytics?range=${range}`, { signal })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || 'Failed to load analytics')
   }
-}
-
-// ─── Dashboard Stats ─────────────────────────────────────────────────
-
-export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
-  const now = new Date()
-  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-
-  const [
-    { count: totalUsers },
-    { count: totalCourses },
-    { count: totalCertificates },
-    { count: activeUsers },
-    { count: newUsersThisMonth },
-    { count: coursesPublishedThisMonth },
-    { count: educatorsCount },
-    { count: learnersCount },
-  ] = await Promise.all([
-    supabase.from('users').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-    supabase.from('courses').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-    supabase.from('certificates').select('id', { count: 'exact', head: true }).eq('status', 'issued'),
-    supabase.from('users').select('id', { count: 'exact', head: true }).eq('is_active', true).is('deleted_at', null),
-    supabase.from('users').select('id', { count: 'exact', head: true }).is('deleted_at', null).gte('created_at', firstOfMonth),
-    supabase.from('courses').select('id', { count: 'exact', head: true }).eq('status', 'published').gte('published_at', firstOfMonth),
-    supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'educator').is('deleted_at', null),
-    supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'learner').is('deleted_at', null),
-  ])
-
-  return {
-    totalUsers: totalUsers ?? 0,
-    totalCourses: totalCourses ?? 0,
-    totalCertificates: totalCertificates ?? 0,
-    activeUsers: activeUsers ?? 0,
-    newUsersThisMonth: newUsersThisMonth ?? 0,
-    coursesPublishedThisMonth: coursesPublishedThisMonth ?? 0,
-    educatorsCount: educatorsCount ?? 0,
-    learnersCount: learnersCount ?? 0,
-  }
-}
-
-// ─── Recent Activity ─────────────────────────────────────────────────
-
-export async function fetchRecentActivity(): Promise<RecentActivity[]> {
-  const activities: RecentActivity[] = []
-
-  const { data: recentUsers } = await supabase
-    .from('users')
-    .select('full_name, created_at')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(5)
-
-  for (const u of recentUsers || []) {
-    activities.push({
-      type: 'user_registration',
-      user_name: u.full_name || 'Unknown',
-      description: 'New user registration',
-      created_at: u.created_at,
-    })
-  }
-
-  const { data: recentCourses } = await supabase
-    .from('courses')
-    .select(`
-      title, created_at,
-      users!courses_created_by_fkey(full_name)
-    `)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(5)
-
-  for (const c of recentCourses || []) {
-    const usersArr = c.users as { full_name: string } | { full_name: string }[] | null
-    const userName = Array.isArray(usersArr) ? usersArr[0]?.full_name : (usersArr as { full_name: string } | null)?.full_name
-    activities.push({
-      type: 'course_submission',
-      user_name: userName || 'Unknown',
-      description: `Course submitted: ${c.title}`,
-      created_at: c.created_at,
-    })
-  }
-
-  const { data: recentCerts } = await supabase
-    .from('certificates')
-    .select(`
-      issued_at,
-      enrollments!inner(
-        users!enrollments_user_id_fkey(full_name)
-      )
-    `)
-    .eq('status', 'issued')
-    .order('issued_at', { ascending: false })
-    .limit(5)
-
-  for (const c of recentCerts || []) {
-    const e = c.enrollments as unknown as { users: { full_name: string } | { full_name: string }[] }
-    const userData = e?.users
-    const userName = Array.isArray(userData) ? userData[0]?.full_name : (userData as { full_name: string } | null)?.full_name
-    activities.push({
-      type: 'certificate_issued',
-      user_name: userName || 'Unknown',
-      description: 'Certificate issued',
-      created_at: c.issued_at,
-    })
-  }
-
-  activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  return activities.slice(0, 10)
-}
-
-// ─── Completion Trends ────────────────────────────────────────────────
-
-export interface CompletionTrend {
-  month: string
-  rate: number
-  total: number
-  completed: number
-}
-
-// CompletionTrends now handled by fetchAllAdminAnalytics
-
-// ─── Enrollment Trends ───────────────────────────────────────────────
-
-export interface EnrollmentTrend {
-  month: string
-  count: number
-}
-
-// EnrollmentTrends now handled by fetchAllAdminAnalytics
-
-// ─── Analytics ───────────────────────────────────────────────────────
-
-export interface DataTrend {
-  label: string
-  count: number
-}
-
-export async function fetchAllAdminAnalytics() {
-  const response = await fetch('/api/admin/analytics');
-  if (!response.ok) {
-    throw new Error('Failed to fetch analytics');
-  }
-  return response.json();
+  return res.json()
 }
 
 // ─── Certificate Management ──────────────────────────────────────────
@@ -921,33 +711,10 @@ export async function generateReferralCode(userId: string): Promise<string> {
   return code
 }
 
-export async function generateReport(reportType: string): Promise<ReportDefinition> {
-  const response = await fetch('/api/admin/reports', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reportType }),
-  })
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Failed to generate report')
-  }
-  return response.json()
-}
-
-export async function generateCustomReport(entity: string, fields: string[]): Promise<ReportDefinition> {
-  const response = await fetch('/api/admin/reports', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ entity, fields }),
-  })
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Failed to generate custom report')
-  }
-  return response.json()
-}
-
-// ─── Course Thumbnails ─────────────────────────────────────────────────
+// The old generateReport / generateCustomReport helpers were removed along
+// with the nine flat report templates they served. Reports are now built by
+// `admin-reports.ts` behind POST /api/admin/reports and rendered by
+// `admin-report-pdf.ts`.
 
 const COURSE_THUMBNAILS = [
   'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=225&fit=crop',

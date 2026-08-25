@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { BookOpen, Loader2, Video, FileText, Plus, Trash2, GripVertical, Layout, FileEdit, Play, Shield, ChevronDown, Clock, Layers, Upload, Image, Link, History, LayoutTemplate, StickyNote, Save, MousePointerClick, Settings, MessageSquare } from 'lucide-react';
+import { BookOpen, Loader2, Video, FileText, Plus, Trash2, GripVertical, Layout, FileEdit, Play, Shield, ChevronDown, Clock, Layers, Upload, Image, Link, History, LayoutTemplate, StickyNote, Save, MousePointerClick, Settings, MessageSquare, Accessibility } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { createLesson, updateLesson, fetchLessonById, getNextSequenceOrder, fetchLessonInteractiveContent, createInteractiveContent, updateInteractiveContent, deleteInteractiveContent, fetchVideoQuestions, createVideoQuestion, deleteVideoQuestion, fetchLessonAssets, createLessonAsset, deleteLessonAsset, uploadCourseFile, saveLessonVersion, fetchLessonSummaries, StudentSummarySubmission } from '@/lib/educator-api';
@@ -26,6 +26,22 @@ import { LessonVersionHistory } from '@/components/educator/LessonVersionHistory
 import { blocksToHtml, htmlToBlocks } from '@/lib/content-blocks';
 import type { ContentBlock } from '@/lib/content-blocks';
 import type { LessonFields, AccessibilityTemplate, InteractiveContent, InteractiveContentType, InteractiveContentFields } from '@/lib/educator-api';
+import { fetchCourseAccessibilitySettings } from '@/lib/educator-api';
+import {
+  auditLesson,
+  scoreBand,
+  objectivesToText,
+  extractImages,
+  setImageAlt,
+  DEFAULT_COURSE_SUPPORT,
+  type AuditRule,
+  type AuditTab,
+  type CourseAccessibilitySupport,
+  type LessonAuditSubject,
+} from '@/lib/accessibility-audit';
+import { getProfileGuide, resolveFocus } from '@/lib/accessibility-profiles';
+import { LessonAccessibilityPanel } from '@/components/educator/LessonAccessibilityPanel';
+import { AccessibilityProfileGuide } from '@/components/educator/AccessibilityProfileGuide';
 
 export type LessonFormData = {
   title: string;
@@ -49,6 +65,8 @@ export type LessonFormData = {
   summary_word_target: number;
   summary_key_points: string[];
   summary_reflection_questions: string[];
+  learning_objectives: string;
+  accessibility_notes: string;
   allow_discussions?: boolean;
   allow_download?: boolean;
 };
@@ -75,6 +93,8 @@ const defaultFormData: LessonFormData = {
   summary_word_target: 100,
   summary_key_points: [],
   summary_reflection_questions: [],
+  learning_objectives: '',
+  accessibility_notes: '',
   allow_discussions: false,
   allow_download: false,
 };
@@ -94,6 +114,13 @@ interface LessonEditorProps {
   onLocalSave?: (data: LessonFormData) => void;
   /** Optional callback to open quiz editor from within lesson editor */
   onManageQuiz?: () => void;
+  /**
+   * Focus profile override. The editor normally reads this off the course, but
+   * the course-builder wizard has no course row yet and passes it directly.
+   */
+  primaryFocus?: string | null;
+  /** Tab to land on when the dialog opens. Defaults to Basics. */
+  initialTab?: 'basics' | 'accessibility';
 }
 
 function getYouTubeId(url: string): string | null {
@@ -118,10 +145,10 @@ function templateToHtml(tmpl: AccessibilityTemplate): string {
 export function LessonEditor({
   open, onClose, courseId, lessonId, onSaved,
   localMode, localData, onLocalChange, onLocalSave,
-  onManageQuiz,
+  onManageQuiz, primaryFocus, initialTab,
 }: LessonEditorProps) {
   const [form, setForm] = useState<LessonFormData>(defaultFormData);
-  const [activeTab, setActiveTab] = useState<'basics' | 'content' | 'media' | 'activities' | 'quiz' | 'assets' | 'settings' | 'discussions' | 'submissions'>('basics');
+  const [activeTab, setActiveTab] = useState<'basics' | 'content' | 'media' | 'activities' | 'quiz' | 'assets' | 'settings' | 'discussions' | 'submissions' | 'accessibility'>('basics');
   const [studentSubmissions, setStudentSubmissions] = useState<StudentSummarySubmission[]>([]);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [discussionCount, setDiscussionCount] = useState(0);
@@ -150,6 +177,10 @@ export function LessonEditor({
   const [coursePrimaryFocus, setCoursePrimaryFocus] = useState<string | null>(null);
   const [educatorCustomGuide, setEducatorCustomGuide] = useState<string>('');
   const [guideOpen, setGuideOpen] = useState(false);
+  const [courseSupport, setCourseSupport] = useState<CourseAccessibilitySupport>(DEFAULT_COURSE_SUPPORT);
+  /** Content lags the editor by a beat so the auditor is not re-parsing on every keypress. */
+  const [auditedContent, setAuditedContent] = useState('');
+  const [busyRuleId, setBusyRuleId] = useState<string | null>(null);
   const [savingGuide, setSavingGuide] = useState(false);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [deletingActivity, setDeletingActivity] = useState(false);
@@ -160,6 +191,10 @@ export function LessonEditor({
 
   const isEditing = !!lessonId;
   const dbItemIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (open) setActiveTab(initialTab ?? 'basics');
+  }, [open, lessonId, initialTab]);
 
   // Keep currentLessonIdRef in sync with prop
   useEffect(() => { currentLessonIdRef.current = lessonId ?? null; }, [lessonId]);
@@ -176,13 +211,21 @@ export function LessonEditor({
 
   useEffect(() => {
     if (!open || !courseId) return;
-    import('@/lib/educator-api').then(({ fetchCourseById }) => {
-      fetchCourseById(courseId).then(c => {
-        setCoursePrimaryFocus(c?.primary_disability_focus || null);
-        setEducatorCustomGuide(c?.educator_custom_guide || '');
-      }).catch(() => {});
-    });
+    fetchCourseAccessibilitySettings(courseId)
+      .then((settings) => {
+        setCoursePrimaryFocus(settings.primary_disability_focus);
+        setEducatorCustomGuide(settings.educator_custom_guide || '');
+        setCourseSupport(settings);
+      })
+      .catch(() => {});
   }, [open, courseId]);
+
+  // Debounce the content the auditor sees. Parsing is fast, but re-running it
+  // inside every rich-text keystroke is wasted work.
+  useEffect(() => {
+    const timer = setTimeout(() => setAuditedContent(form.content_html), 300);
+    return () => clearTimeout(timer);
+  }, [form.content_html]);
 
   useEffect(() => {
     if (!form.video_url || !getYouTubeId(form.video_url)) {
@@ -234,7 +277,6 @@ export function LessonEditor({
       setSelectedActivityTab(null);
       setIsDirty(false);
       dbItemIdsRef.current = new Set();
-      setActiveTab('basics');
       return;
     }
     setLoading(true);
@@ -263,6 +305,10 @@ export function LessonEditor({
           summary_word_target: lesson.summary_word_target ?? 100,
           summary_key_points: Array.isArray(lesson.summary_key_points) ? lesson.summary_key_points : [],
           summary_reflection_questions: Array.isArray(lesson.summary_reflection_questions) ? lesson.summary_reflection_questions : [],
+          // Older rows hold a JSON array in this TEXT column; normalise to one
+          // objective per line so the textarea never shows raw JSON.
+          learning_objectives: objectivesToText(lesson.learning_objectives),
+          accessibility_notes: lesson.accessibility_notes || '',
         });
       })
       .catch(() => toast.error('Failed to load lesson'))
@@ -300,6 +346,92 @@ export function LessonEditor({
     });
     setIsDirty(true);
   }, [localMode, onLocalChange]);
+
+  /** Merges several fields at once, so a quick fix is a single re-render. */
+  const patchForm = useCallback((patch: Record<string, unknown>) => {
+    setForm((prev) => {
+      const next = { ...prev, ...patch };
+      if (localMode && onLocalChange) onLocalChange(next);
+      return next;
+    });
+    setIsDirty(true);
+  }, [localMode, onLocalChange]);
+
+  // ─── Live accessibility audit ─────────────────────────────────────────
+  // The rules are a pure function, so this runs synchronously off form state.
+  // No loading spinner, and it works before the lesson has ever been saved.
+
+  const rawFocus = primaryFocus ?? coursePrimaryFocus;
+  const focusProfile = resolveFocus(rawFocus);
+  const focusIsSet = Boolean(rawFocus?.trim());
+  const profileGuide = getProfileGuide(rawFocus);
+
+  const auditSubject = useMemo<LessonAuditSubject>(() => ({
+    title: form.title,
+    content_html: auditedContent,
+    video_url: form.video_url,
+    transcript: form.transcript,
+    estimated_duration: form.estimated_duration,
+    learning_objectives: form.learning_objectives,
+    accessibility_notes: form.accessibility_notes,
+    simplified_summary: form.simplified_summary,
+    focus_mode_enabled: form.focus_mode_enabled,
+    chunked_content_enabled: form.chunked_content_enabled,
+    has_summary_activity: form.has_summary_activity,
+    has_quiz: form.has_quiz,
+    interactiveCount: interactiveItems.filter((item) => !item.is_draft).length,
+    videoQuestionCount: videoQuestions.length,
+    videoSeconds: videoDuration,
+  }), [
+    form.title, auditedContent, form.video_url, form.transcript, form.estimated_duration,
+    form.learning_objectives, form.accessibility_notes, form.simplified_summary,
+    form.focus_mode_enabled, form.chunked_content_enabled, form.has_summary_activity,
+    form.has_quiz, interactiveItems, videoQuestions.length, videoDuration,
+  ]);
+
+  const audit = useMemo(
+    () => auditLesson(auditSubject, focusProfile, courseSupport),
+    [auditSubject, focusProfile, courseSupport],
+  );
+
+  // Read from live content rather than the debounced copy the audit uses, so
+  // the alt-text inputs echo what the educator is typing without a lag.
+  const lessonImages = useMemo(() => extractImages(form.content_html), [form.content_html]);
+
+  /**
+   * Applies a one-click fix. Lesson fixes only touch form state — the lesson
+   * may not be saved yet, and the educator may still cancel. Course fixes are
+   * a deliberate immediate write, and say so on the button.
+   */
+  const handleApplyFix = useCallback(async (rule: AuditRule) => {
+    const fix = rule.fix;
+    if (!fix) return;
+    if (fix.confirm && !window.confirm(fix.confirm)) return;
+
+    if (fix.scope === 'lesson' && fix.lessonPatch) {
+      patchForm(fix.lessonPatch(auditSubject));
+      toast.success(`${rule.title} — updated`);
+      return;
+    }
+
+    if (fix.scope === 'course' && fix.coursePatch) {
+      if (!courseId) {
+        toast.error('Save the course first to change course-level settings.');
+        return;
+      }
+      setBusyRuleId(rule.id);
+      try {
+        const { updateCourse } = await import('@/lib/educator-api');
+        await updateCourse(courseId, fix.coursePatch);
+        setCourseSupport((prev) => ({ ...prev, ...fix.coursePatch }));
+        toast.success(`${rule.title} — enabled for the whole course`);
+      } catch {
+        toast.error('Failed to update the course setting');
+      } finally {
+        setBusyRuleId(null);
+      }
+    }
+  }, [auditSubject, courseId, patchForm]);
 
   const handleApplyTemplate = useCallback((tmpl: AccessibilityTemplate) => {
     update('title', `${tmpl.name} - ${tmpl.target_disability.replace(/_/g, ' ')}`);
@@ -376,6 +508,18 @@ export function LessonEditor({
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error('Lesson title is required'); return null; }
 
+    // Advisory only — the save always proceeds. This is an assist feature, so
+    // it tells the educator what is still unmet and gets out of the way.
+    if (audit.requiredFailures.length > 0) {
+      toast.warning(
+        `Saved with ${audit.requiredFailures.length} unmet ${profileGuide.label} standard${audit.requiredFailures.length === 1 ? '' : 's'}`,
+        {
+          description: audit.requiredFailures.map((r) => r.title).join(' · '),
+          action: { label: 'Review', onClick: () => setActiveTab('accessibility') },
+        },
+      );
+    }
+
     if (localMode && onLocalSave) {
       onLocalSave(form);
       setIsDirty(false);
@@ -406,6 +550,8 @@ export function LessonEditor({
         adaptive_learning_enabled: form.adaptive_learning_enabled,
         allow_discussions: form.allow_discussions,
         estimated_duration: form.estimated_duration,
+        learning_objectives: form.learning_objectives || null,
+        accessibility_notes: form.accessibility_notes || null,
       };
 
       if (form.has_summary_activity) {
@@ -543,6 +689,8 @@ export function LessonEditor({
         checkpoints_enabled: form.checkpoints_enabled,
         adaptive_learning_enabled: form.adaptive_learning_enabled,
         estimated_duration: form.estimated_duration,
+        learning_objectives: form.learning_objectives || null,
+        accessibility_notes: form.accessibility_notes || null,
       };
       const seq = await getNextSequenceOrder(courseId);
       const created = await createLesson(user.user.id, { ...fields, course_id: courseId, sequence_order: seq } as LessonFields);
@@ -623,15 +771,43 @@ export function LessonEditor({
     finally { setDeletingAssetId(null); }
   };
 
+  // Tabs owning at least one failing standard, so the educator can see where
+  // the problem lives without opening the Accessibility tab at all.
+  const attentionTabs = new Set<AuditTab>(audit.tabsNeedingAttention);
+  const attentionDot = (tab: AuditTab) =>
+    attentionTabs.has(tab) ? (
+      <span
+        className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"
+        title="An accessibility standard on this tab needs attention"
+      />
+    ) : null;
+
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v) attemptClose(); }}>
         <DialogContent className="sm:max-w-7xl w-[98vw] max-h-[95vh] overflow-y-auto">
-          <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogHeader className="flex flex-row items-center justify-between gap-4">
             <div>
               <DialogTitle>{isEditing ? 'Edit Lesson' : 'Add New Lesson'}</DialogTitle>
               <DialogDescription>Create educational content for your course</DialogDescription>
             </div>
+            {/* Live compliance badge — always visible, jumps to the detail. */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('accessibility')}
+              title={`${audit.passed} of ${audit.applicable} ${profileGuide.label} standards met — open the Accessibility tab`}
+              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-colors ${
+                scoreBand(audit.score) === 'good'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                  : scoreBand(audit.score) === 'warning'
+                    ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+                    : 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
+              }`}
+            >
+              <Accessibility className="w-3.5 h-3.5" />
+              <span className="tabular-nums">{audit.score}%</span>
+              <span className="font-medium opacity-70">{profileGuide.label}</span>
+            </button>
           </DialogHeader>
 
           {loading ? (
@@ -642,15 +818,16 @@ export function LessonEditor({
             <div className="flex flex-col lg:flex-row pb-20 min-h-[60vh]">
               {/* Left Sidebar Tabs */}
               <div className="lg:w-56 shrink-0 border-r border-gray-100 pr-4 space-y-1 pt-2">
-                <button type="button" onClick={() => setActiveTab('basics')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'basics' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}><BookOpen className="w-4 h-4" /> Basics</button>
-                <button type="button" onClick={() => setActiveTab('content')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'content' ? 'bg-green-50 text-green-700' : 'text-gray-600 hover:bg-gray-50'}`}><FileText className="w-4 h-4" /> Content</button>
-                <button type="button" onClick={() => setActiveTab('media')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'media' ? 'bg-rose-50 text-rose-700' : 'text-gray-600 hover:bg-gray-50'}`}><Video className="w-4 h-4" /> Media</button>
-                <button type="button" onClick={() => setActiveTab('activities')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'activities' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}><Play className="w-4 h-4" /> Activities</button>
+                <button type="button" onClick={() => setActiveTab('basics')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'basics' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}><BookOpen className="w-4 h-4" /> Basics{attentionDot('basics')}</button>
+                <button type="button" onClick={() => setActiveTab('content')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'content' ? 'bg-green-50 text-green-700' : 'text-gray-600 hover:bg-gray-50'}`}><FileText className="w-4 h-4" /> Content{attentionDot('content')}</button>
+                <button type="button" onClick={() => setActiveTab('media')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'media' ? 'bg-rose-50 text-rose-700' : 'text-gray-600 hover:bg-gray-50'}`}><Video className="w-4 h-4" /> Media{attentionDot('media')}</button>
+                <button type="button" onClick={() => setActiveTab('activities')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'activities' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}><Play className="w-4 h-4" /> Activities{attentionDot('activities')}</button>
                 <button type="button" onClick={() => setActiveTab('quiz')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'quiz' ? 'bg-sky-50 text-sky-700' : 'text-gray-600 hover:bg-gray-50'}`}><FileEdit className="w-4 h-4" /> Quiz</button>
                 <button type="button" onClick={() => setActiveTab('assets')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'assets' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}><FileText className="w-4 h-4" /> Resources {lessonAssets.length > 0 && <span className="ml-auto text-xs bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5">{lessonAssets.length}</span>}</button>
                 <button type="button" onClick={() => setActiveTab('discussions')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'discussions' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}><MessageSquare className="w-4 h-4" /> Discussions {discussionCount > 0 && <span className="ml-auto text-xs bg-orange-100 text-orange-700 rounded-full px-2 py-0.5">{discussionCount}</span>}</button>
                 <button type="button" onClick={() => setActiveTab('submissions')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'submissions' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50'}`}><BookOpen className="w-4 h-4" /> Submissions</button>
-                <button type="button" onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-slate-100 text-slate-800' : 'text-gray-600 hover:bg-gray-50'}`}><Settings className="w-4 h-4" /> Settings</button>
+                <button type="button" onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-slate-100 text-slate-800' : 'text-gray-600 hover:bg-gray-50'}`}><Settings className="w-4 h-4" /> Settings{attentionDot('settings')}</button>
+                <button type="button" onClick={() => setActiveTab('accessibility')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'accessibility' ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50'}`}><Accessibility className="w-4 h-4" /> Accessibility <span className={`ml-auto text-[10px] font-bold tabular-nums rounded-full px-1.5 py-0.5 ${scoreBand(audit.score) === 'good' ? 'bg-emerald-100 text-emerald-700' : scoreBand(audit.score) === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>{audit.score}%</span></button>
               </div>
 
               {/* Main Content Pane */}
@@ -690,6 +867,38 @@ export function LessonEditor({
                             </button>
                           </div>
                         </div>
+                        <div>
+                          <label htmlFor="lesson-objectives" className="block text-sm font-semibold text-gray-900 mb-1">
+                            Learning Objectives
+                          </label>
+                          <p className="text-xs text-gray-500 mb-2">
+                            What will the learner be able to do afterwards? One per line. Learners
+                            see these before the lesson starts.
+                          </p>
+                          <Textarea
+                            id="lesson-objectives"
+                            value={form.learning_objectives}
+                            onChange={(e) => update('learning_objectives', e.target.value)}
+                            placeholder={'Identify the four WCAG principles\nExplain why alt text matters'}
+                            className="min-h-[92px] resize-y text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="lesson-simplified-summary" className="block text-sm font-semibold text-gray-900 mb-1">
+                            Simplified Summary
+                          </label>
+                          <p className="text-xs text-gray-500 mb-2">
+                            The whole lesson in plain language. Sets expectations before a learner
+                            commits to reading it.
+                          </p>
+                          <Textarea
+                            id="lesson-simplified-summary"
+                            value={form.simplified_summary}
+                            onChange={(e) => update('simplified_summary', e.target.value)}
+                            placeholder="This lesson explains what makes a web page usable for someone using a screen reader."
+                            className="min-h-[92px] resize-y text-sm"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -713,8 +922,10 @@ export function LessonEditor({
                         }
                         const loadingToastId = toast.loading('Uploading image...');
                         try {
-                          const url = await uploadCourseFile(file, courseId, lessonId);
-                          await createLessonAsset(lessonId, 'image', file.name, url);
+                          // Use the resolved id, not the prop: on a brand-new
+                          // lesson `lessonId` is still null after auto-saving.
+                          const url = await uploadCourseFile(file, courseId, targetLessonId);
+                          await createLessonAsset(targetLessonId, 'image', file.name, url);
                           toast.success('Image uploaded successfully', { id: loadingToastId });
                           return url;
                         } catch (err) {
@@ -1086,6 +1297,26 @@ export function LessonEditor({
                   </div>
                 )}
 
+                {/* ======================= ACCESSIBILITY TAB ======================= */}
+                {activeTab === 'accessibility' && (
+                  <LessonAccessibilityPanel
+                    result={audit}
+                    guide={profileGuide}
+                    focusIsSet={focusIsSet}
+                    notes={form.accessibility_notes}
+                    onNotesChange={(value) => update('accessibility_notes', value)}
+                    images={lessonImages}
+                    onImageAltChange={(index, alt) =>
+                      update('content_html', setImageAlt(form.content_html, index, alt))
+                    }
+                    onFix={handleApplyFix}
+                    onJump={(tab) => setActiveTab(tab)}
+                    onOpenGuide={() => setGuideOpen(true)}
+                    busyRuleId={busyRuleId}
+                    showNotesField={!localMode}
+                  />
+                )}
+
                 {/* ======================= DISCUSSIONS TAB ======================= */}
                 {activeTab === 'discussions' && (
                   <div className="space-y-6">
@@ -1293,100 +1524,16 @@ export function LessonEditor({
               Accessibility Guide
             </SheetTitle>
             <SheetDescription>
-              Tailored suggestions for your course&apos;s primary focus: <strong className="capitalize text-gray-900">{coursePrimaryFocus}</strong>
+              {focusIsSet ? (
+                <>What learners in the <strong className="text-gray-900">{profileGuide.label}</strong> profile need, and how the automatic checks map onto it.</>
+              ) : (
+                <>No Primary Accessibility Focus is set on this course, so these are the general baseline needs. Set a focus in course settings for targeted guidance.</>
+              )}
             </SheetDescription>
           </SheetHeader>
 
           <div className="space-y-6">
-            {coursePrimaryFocus === 'adhd' && (
-              <div className="relative overflow-hidden rounded-2xl border border-amber-200/60 bg-gradient-to-b from-amber-50/80 to-white shadow-sm p-5">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-                <h4 className="font-bold text-amber-900 text-lg flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-amber-600" />
-                  </div>
-                  ADHD Guide
-                </h4>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3 text-sm text-amber-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-amber-900">Chunk content:</strong> Keep text paragraphs very short (1-3 sentences) to sustain focus.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-amber-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-amber-900">Action-oriented formatting:</strong> Use <strong>bold text</strong> for key terms to make skimming easier.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-amber-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-amber-900">Interactive Checkpoints:</strong> Add frequent, low-stakes activities (like short quizzes) between text blocks.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-amber-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-amber-900">Clear structure:</strong> Start with a brief summary and use clear headers to divide sections logically.</span>
-                  </li>
-                </ul>
-              </div>
-            )}
-            
-            {coursePrimaryFocus === 'autism' && (
-              <div className="relative overflow-hidden rounded-2xl border border-sky-200/60 bg-gradient-to-b from-sky-50/80 to-white shadow-sm p-5">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-sky-200/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-                <h4 className="font-bold text-sky-900 text-lg flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-sky-600" />
-                  </div>
-                  Autism Guide
-                </h4>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3 text-sm text-sky-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-sky-900">Clear & Literal Language:</strong> Use direct, literal phrasing. Avoid idioms or abstract metaphors.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-sky-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-sky-900">Logical Flow:</strong> Write instructions step-by-step with clear expectations for activities.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-sky-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-sky-900">Consistent formatting:</strong> Use consistent heading structures and bullet point styles throughout.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-sky-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-sky-900">Explicit Context:</strong> Clearly state why a topic is important or how it connects to previous lessons.</span>
-                  </li>
-                </ul>
-              </div>
-            )}
-
-            {coursePrimaryFocus === 'dyslexia' && (
-              <div className="relative overflow-hidden rounded-2xl border border-indigo-200/60 bg-gradient-to-b from-indigo-50/80 to-white shadow-sm p-5">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-200/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-                <h4 className="font-bold text-indigo-900 text-lg flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-indigo-600" />
-                  </div>
-                  Dyslexia Guide
-                </h4>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3 text-sm text-indigo-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-indigo-900">Avoid walls of text:</strong> Break down complex explanations into bulleted or numbered lists.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-indigo-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-indigo-900">Provide visual alternatives:</strong> Accompany complex concepts with relevant images or diagrams.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-indigo-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-indigo-900">Left-aligned text:</strong> Don&apos;t center-align or justify long blocks of text to avoid uneven spacing.</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-indigo-900/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                    <span><strong className="text-indigo-900">Simple Vocabulary:</strong> Use plain English and define complex terminology immediately.</span>
-                  </li>
-                </ul>
-              </div>
-            )}
+            <AccessibilityProfileGuide guide={profileGuide} />
 
             <div className="relative mt-8 mb-4 group">
               {/* Decorative tape effect */}

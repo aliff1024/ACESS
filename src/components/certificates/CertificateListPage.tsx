@@ -49,8 +49,8 @@ export function CertificateListPage({
     );
   }
 
-  const systemCerts = certificates.filter(c => c.is_system_course && !c.is_custom_upload);
-  const customCerts = certificates.filter(c => c.is_custom_upload || !c.is_system_course);
+  const systemCerts = certificates.filter(c => c.certificate_code && c.verification_url?.includes('/verify/'));
+  const customCerts = certificates.filter(c => c.is_custom_upload);
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -201,7 +201,9 @@ export function CertificateListPage({
                       <Shield className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <Badge className="bg-indigo-100 text-indigo-700 border-0 mb-1.5">{t('certificates.officialACESS')}</Badge>
+                      <Badge className="bg-indigo-100 text-indigo-700 border-0 mb-1.5">
+                        {cert.is_system_course ? t('certificates.officialACESS') : t('certificates.platformGenerated') || 'Platform Generated'}
+                      </Badge>
                       <h3 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{cert.course_title}</h3>
                     </div>
                   </div>

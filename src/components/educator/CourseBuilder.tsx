@@ -57,6 +57,8 @@ function emptyLessonData(sequence_order: number): LessonFormData {
     summary_word_target: 100,
     summary_key_points: [],
     summary_reflection_questions: [],
+    learning_objectives: '',
+    accessibility_notes: '',
   }
 }
 
@@ -611,6 +613,7 @@ export function CourseBuilder({ role, onComplete, onBack }: CourseBuilderProps) 
                     onClose={handleLocalSave}
                     courseId=""
                     localMode
+                    primaryFocus={courseData.primary_disability_focus}
                     localData={lessons[editingLessonIndex].data}
                     onLocalChange={(data) => {
                       setLessons((prev) => prev.map((l, i) => (i === editingLessonIndex ? { ...l, data } : l)))

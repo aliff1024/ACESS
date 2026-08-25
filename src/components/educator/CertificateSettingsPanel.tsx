@@ -356,7 +356,8 @@ export default function CertificateSettingsPanel({
                   <tr>
                     <th className="px-4 py-3 border-b">Student</th>
                     <th className="px-4 py-3 border-b">Progress</th>
-                    <th className="px-4 py-3 border-b text-right">Upload Certificate</th>
+                    <th className="px-4 py-3 border-b">System Cert</th>
+                    <th className="px-4 py-3 border-b text-right">Upload Custom Cert</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -369,14 +370,25 @@ export default function CertificateSettingsPanel({
                       <td className="px-4 py-3">
                         {student.progressPercent}% ({student.completedLessons}/{student.totalLessons})
                       </td>
+                      <td className="px-4 py-3">
+                        {student.hasCertificate && student.certificateUrl ? (
+                          <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200 border cursor-pointer" onClick={() => window.open(student.certificateUrl, '_blank')}>
+                            Claimed
+                          </Badge>
+                        ) : enabled ? (
+                          <span className="text-xs text-gray-400 font-medium">Not Claimed</span>
+                        ) : (
+                          <span className="text-xs text-gray-400 font-medium">Disabled</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {student.hasCertificate && student.certificateUrl && (
+                          {student.hasCustomCertificate && student.customCertificateUrl && (
                             <Button 
                               variant="outline" 
                               size="sm"
                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                              onClick={() => window.open(student.certificateUrl, '_blank')}
+                              onClick={() => window.open(student.customCertificateUrl, '_blank')}
                             >
                               <Eye className="w-4 h-4 mr-2" />
                               View
@@ -397,9 +409,6 @@ export default function CertificateSettingsPanel({
                                 loadSettings() // Reload to reflect changes
                               } catch (err) {
                                 console.error('Certificate upload failed - full details:', err)
-                                if (err && typeof err === 'object') {
-                                  try { console.error('Stringified:', JSON.stringify(err, Object.getOwnPropertyNames(err))) } catch {}
-                                }
                                 toast.error('Failed to upload certificate')
                               } finally {
                                 setUploadingFor(null)
@@ -418,7 +427,7 @@ export default function CertificateSettingsPanel({
                             >
                               <span>
                                 {uploadingFor === student.enrollmentId ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-                                {student.hasCertificate ? 'Re-upload' : 'Upload'}
+                                {student.hasCustomCertificate ? 'Re-upload' : 'Upload'}
                               </span>
                             </Button>
                           </label>
