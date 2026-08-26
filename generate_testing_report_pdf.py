@@ -205,7 +205,7 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
 
     # Executive Summary Card
     summary_html = """
-    <b>EXECUTIVE SUMMARY & PURPOSE:</b> This comprehensive document serves as an evaluation, self-testing, and quality-assurance benchmark for the <b>ACESS (Accessible Cognitive Education & Support System)</b> platform. It outlines the three distinct user portals (Administrator, Educator, Learner), details the WCAG 2.1/2.2-compliant accessibility engine with neurodivergent presets, details the educator deterministic compliance audit rules, defines the automated testing strategy (Playwright & k6), and summarizes the complete seeded database architecture.
+    <b>EXECUTIVE SUMMARY & PURPOSE:</b> This comprehensive document serves as an evaluation, self-testing, and quality-assurance benchmark for the <b>ACESS (Accessible Cognitive Education & Support System)</b> platform. It outlines the three distinct user portals (Administrator, Educator, Learner), details the WCAG 2.1/2.2-compliant accessibility engine with neurodivergent presets, details recent architectural updates (rich learning progress telemetry, sensory calm mode, Esc key shortcut, preset info tooltips, side-by-side certificate badges), details educator compliance audit rules, defines automated testing with Playwright and k6, and summarizes the complete seeded database architecture.
     """
     summary_table = Table([[Paragraph(summary_html, callout_text)]], colWidths=[504])
     summary_table.setStyle(TableStyle([
@@ -302,10 +302,10 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
         "<b>One-Click Accessibility Presets:</b> Instant application of evidence-based profiles: Dyslexia, ADHD, Autism & Sensory, Low Vision, and Custom configurations.",
         "<b>Assistive Text-to-Speech (TTS) Engine:</b> Multi-speed browser speech synthesis with <b>Shift-Key Cursor Inspection</b> (reads text, image alt text, and interactive buttons) and full-lesson audio narration.",
         "<b>Executive Function Support Suite:</b> Visual Step-by-Step Task Checklist, Progress Timeline with status milestones, NowBar current task tracker, and Auto-Save reassurance indicators.",
-        "<b>Sensory & Cognitive Load Reducers:</b> Reading Spotlight focus ruler (viewport-center tracking), Distraction-Free full-screen mode, Soft Background Tints (Irlen filters), and Zero-Animation mode.",
-        "<b>Interactive Video Player:</b> YouTube player integration with timestamped question checkpoints that pause playback automatically and offer interactive review.",
-        "<b>Easy Read / Simplified Summaries:</b> Student summary cards and reflection tools distilling core concepts into plain language for autistics and cognitive learners.",
-        "<b>Verifiable Digital Credentials & Gamification:</b> Achievement badges, XP streaks, and downloadable high-contrast PDF certificates with cryptographic QR validation."
+        "<b>Sensory & Cognitive Load Reducers:</b> Reading Spotlight focus ruler (viewport-center tracking), Distraction-Free full-screen mode with <b>Esc Key Shortcut</b>, Soft Background Tints (Irlen filters), and Zero-Animation mode.",
+        "<b>Detailed Learning Progress Dashboard (<code>/learner/progress</code>):</b> 5 Granular telemetry cards (Active Study Time, Total Visits, Lessons Done, Quiz Mastery, Streaks), 4 tabs (Overview, Courses, Visit History, Quiz Tries), and Sensory Calm mode.",
+        "<b>Interactive Video Player:</b> Dedicated endpoint (<code>/api/lessons/[id]/video-questions</code>) with interactive timestamp checkpoint badges that seek playback and trigger question overlays.",
+        "<b>Side-by-Side Dual Digital Credentials:</b> Course detail page displaying both Institutional Platform Certificates and Educator Custom Certificates in a responsive 2-column grid."
     ]
     for feat in learner_features:
         story.append(Paragraph(f"&bull; {feat}", bullet_style))
@@ -334,7 +334,7 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     # ==============================================================================
     story.append(Paragraph("2. In-Depth Accessibility Architecture, Presets & WCAG 2.2 Standards", h1_style))
     story.append(Paragraph(
-        "ACESS operationalizes the <b>Web Content Accessibility Guidelines (WCAG 2.2 Level A/AA/AAA)</b> and <b>W3C Cognitive Accessibility (COGA)</b> standards. Accessibility is not a single toggle; it is structured into distinct evidence-based presets designed around specific neurodivergent learning profiles:",
+        "ACESS operationalizes the <b>Web Content Accessibility Guidelines (WCAG 2.2 Level A/AA/AAA)</b> and <b>W3C Cognitive Accessibility (COGA)</b> standards. Accessibility is structured into distinct evidence-based presets designed around specific neurodivergent learning profiles:",
         body_style
     ))
 
@@ -354,15 +354,15 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
         ],
         [
             Paragraph("<b>ADHD Preset</b><br/>Target: Learners with executive dysfunction, attention deficit, and working memory constraints.", table_cell_bold),
-            Paragraph("&bull; Chunked Micro-learning (H2 sections / Slideshow)<br/>&bull; Distraction-Free full-screen mode<br/>&bull; Step-by-Step Task Checklist<br/>&bull; Visual Progress Timeline<br/>&bull; In-video question checkpoints (at &le;360s)<br/>&bull; Auto-Save indicator<br/>&bull; Soft Grey background (#F3F4F6)", table_cell),
+            Paragraph("&bull; <b>Action-First Priority Banner</b> (immediate 1-click resume)<br/>&bull; Chunked Micro-learning (H2 sections / Tabs)<br/>&bull; Distraction-Free mode with <b>Esc key exit</b><br/>&bull; Step-by-Step Task Checklist<br/>&bull; Visual Progress Timeline<br/>&bull; In-video question checkpoints (&le;360s)<br/>&bull; Auto-Save indicator & Soft Grey tint", table_cell),
             Paragraph("&bull; W3C COGA 4.2 Chunk Information<br/>&bull; W3C COGA 5.1 Short Sections<br/>&bull; W3C COGA Objective 6 (No memory rely)<br/>&bull; WCAG 2.2.4 Interruptions (AAA)<br/>&bull; WCAG 2.2.1 Timing Adjustable (A)", table_cell),
             Paragraph("Working memory buffers in ADHD learners overflow quickly when processing unbroken blocks of text. Breaking lessons into bite-sized chunks prevents cognitive overwhelm. Active in-video checkpoints maintain dopamine-driven focus, and auto-save eliminates lost-work anxiety.", table_cell)
         ],
         [
             Paragraph("<b>Autism & Sensory Preset</b><br/>Target: Learners with sensory hypersensitivity, cognitive rigidity, or anxiety regarding unpredictability.", table_cell_bold),
-            Paragraph("&bull; Continuous predictable scroll layout<br/>&bull; Zero animation (animation_level='none')<br/>&bull; Muted pastel color palette (#E0F2FE)<br/>&bull; Clear Learning Objectives upfront (&ge;2)<br/>&bull; Easy Read / Student Summary<br/>&bull; Consistent section headers & clear cues", table_cell),
+            Paragraph("&bull; <b>Sensory Calm Progress Mode</b> (collapses dense numeric stats)<br/>&bull; Continuous predictable scroll layout<br/>&bull; Zero animation (animation_level='none')<br/>&bull; Muted pastel color palette (#E0F2FE)<br/>&bull; Clear Learning Objectives upfront (&ge;2)<br/>&bull; Plain Language Summary Card", table_cell),
             Paragraph("&bull; WCAG 2.3.3 Animation from Interaction (AAA)<br/>&bull; WCAG 3.2.3 Consistent Navigation (AA)<br/>&bull; W3C COGA 3.1 Content Summary<br/>&bull; W3C COGA 6.1 Clear Expectations<br/>&bull; W3C COGA 2.3 Avoid Figurative Speech", table_cell),
-            Paragraph("Unexpected motion, flashing graphics, or unpredictable layouts trigger sensory overload and anxiety. Stating explicit objectives upfront anchors expectations. Eliminating decorative motion preserves mental bandwidth for actual comprehension.", table_cell)
+            Paragraph("Unexpected motion, dense numeric charts, or unpredictable layouts trigger sensory overload and performance anxiety. Stating plain-language narrative summaries upfront anchors comprehension while hiding dense metrics prevents numerical anxiety.", table_cell)
         ],
         [
             Paragraph("<b>Vision & General Preset</b><br/>Target: Low vision, age-related vision loss, situational light constraints, or ESL learners.", table_cell_bold),
@@ -384,15 +384,36 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     story.append(Spacer(1, 10))
 
     # ==============================================================================
-    # SECTION 3: EDUCATOR ACCESSIBILITY AUDIT ENGINE
+    # SECTION 3: RECENT ARCHITECTURAL & UI ENHANCEMENTS
     # ==============================================================================
-    story.append(Paragraph("3. Educator Accessibility Audit Engine & Quality Checker", h1_style))
+    story.append(Paragraph("3. Recent Architectural & Quality-of-Life Enhancements", h1_style))
+    story.append(Paragraph(
+        "The latest development iteration introduced six major usability, telemetry, and accessibility refinements:",
+        body_style
+    ))
+
+    enhancements = [
+        "<b>Detailed Learning Progress Dashboard (<code>/learner/progress</code>):</b> Expanded telemetry incorporating Active Study Time (hours/mins), Lessons Completed vs. Total Visits (repetition log), Quiz Mastery %, and Daily Streak counters.",
+        "<b>Multi-Tabbed Session & Assessment Telemetry:</b> Four cognitive tabs: (1) <i>Overview</i> with quick resume, (2) <i>Courses</i> with mastery gauges, (3) <i>Visit History</i> with relative timestamps (*'15m ago'*, *'Yesterday'*), session durations, and visit counts, and (4) <i>Quiz Tries</i> with attempt numbers, scores, and pass/review tags.",
+        "<b>Sensory Calm Mode & ADHD Priority Layout:</b> In Autism / Pale Blue mode, dense numeric stat boxes are collapsed into a clean toggle (<code>[ Show detailed numeric cards ]</code>) to eliminate visual crowding. In ADHD mode, the <i>'Resume Where You Left Off'</i> banner is placed at the top for zero decision friction.",
+        "<b>Preset Details Modal Tooltip Refactoring (<code>PresetDetailsDialog.tsx</code>):</b> Compacted 9-item setting diff list by replacing long inline text blocks with neat circular <code>(i)</code> info buttons with hoverable tooltips explaining the WCAG/COGA rationale.",
+        "<b>Global Keyboard Shortcut for Distraction-Free Mode:</b> Added global <code>Escape</code> (Esc) key listener in <code>LearnerShell.tsx</code> allowing instantaneous exit from Distraction-Free mode, accompanied by a styled <code>&lt;kbd&gt;Esc&lt;/kbd&gt;</code> badge.",
+        "<b>Side-by-Side Dual Certificate Display (<code>CourseDetailPage.tsx</code>):</b> Restructured the certificate display into a responsive 2-column grid showing both the Institutional Platform Certificate (Green) and Educator Custom Certificate (Purple) side-by-side with equal-height alignment."
+    ]
+    for enh in enhancements:
+        story.append(Paragraph(f"&bull; {enh}", bullet_style))
+    story.append(Spacer(1, 10))
+
+    # ==============================================================================
+    # SECTION 4: EDUCATOR ACCESSIBILITY AUDIT ENGINE
+    # ==============================================================================
+    story.append(Paragraph("4. Educator Accessibility Audit Engine & Quality Checker", h1_style))
     story.append(Paragraph(
         "To ensure that accessibility is embedded at the authoring stage rather than treated as an afterthought, ACESS includes an <b>automated, real-time accessibility compliance auditor</b> embedded directly in the Course Studio. The auditor evaluates lesson draft markup against 14 deterministic rules with zero hallucinations, no external API latency, and complete mathematical reproducibility.",
         body_style
     ))
 
-    story.append(Paragraph("3.1 The 14 Deterministic Audit Standards Across Focus Profiles", h2_style))
+    story.append(Paragraph("4.1 The 14 Deterministic Audit Standards Across Focus Profiles", h2_style))
 
     rules_data = [
         [
@@ -498,7 +519,7 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     story.append(rules_table)
     story.append(Spacer(1, 8))
 
-    story.append(Paragraph("3.2 Scoring Algorithm & Mutual Benefits for Educators and Learners", h2_style))
+    story.append(Paragraph("4.2 Scoring Algorithm & Mutual Benefits for Educators and Learners", h2_style))
     story.append(Paragraph(
         "<b>Scoring & Compliance Bands:</b> The audit engine computes a weighted score (0-100%). Scores &ge;80% earn a <b>Pass / Good (Green)</b> status, 50-79% triggers a <b>Needs Attention (Amber)</b> warning with actionable inline remediation buttons, and &lt;50% indicates <b>Critical Issues</b>.<br/>"
         "&bull; <b>How it helps the Educator:</b> Eliminates guesswork. Instead of memorizing dense WCAG documentation, educators receive immediate visual alerts, exact line-level highlights, and 1-click automatic fixes (e.g., auto-chunking text, formatting objectives, embedding alt-text fields).<br/>"
@@ -508,24 +529,24 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     story.append(Spacer(1, 10))
 
     # ==============================================================================
-    # SECTION 4: TESTING PLAN & 2 TESTING TOOLS
+    # SECTION 5: TESTING PLAN & 2 TESTING TOOLS
     # ==============================================================================
-    story.append(Paragraph("4. Quality Assurance & Automated Testing Plan", h1_style))
+    story.append(Paragraph("5. Quality Assurance & Automated Testing Plan", h1_style))
     story.append(Paragraph(
         "To validate platform reliability, role-based security guards, and high-concurrency throughput, the quality assurance plan uses two industry-standard testing tools: <b>Playwright</b> for End-to-End Functional Verification and <b>k6 by Grafana</b> for Concurrency & Load Stress Testing.",
         body_style
     ))
 
-    # 4.1 Tool 1: Playwright
-    story.append(Paragraph("4.1 Tool 1: Playwright (End-to-End Functional & Integration Testing)", h2_style))
+    # 5.1 Tool 1: Playwright
+    story.append(Paragraph("5.1 Tool 1: Playwright (End-to-End Functional & Integration Testing)", h2_style))
     story.append(Paragraph(
         "&bull; <b>What it is:</b> A modern browser automation testing framework developed by Microsoft that automates Chromium, Firefox, and WebKit under real browser conditions.<br/>"
         "&bull; <b>What it validates:</b><br/>"
         "&nbsp;&nbsp;1. Multi-role authentication (Admin, Educator, Learner) and RBAC route protection.<br/>"
         "&nbsp;&nbsp;2. Accessibility preset switches (verifies DOM styling, font changes, line spacing, and dark/soft/tint modes).<br/>"
         "&nbsp;&nbsp;3. Course enrollment flows, lesson slide progression, and interactive quiz submission.<br/>"
-        "&nbsp;&nbsp;4. TTS Shift-key inspection and video checkpoint question triggers.<br/>"
-        "&bull; <b>What to expect / Result:</b> Visual screenshots of test states, network trace logs, test execution time per scenario, and an interactive HTML report confirming 100% pass rate on all critical user journeys.<br/>"
+        "&nbsp;&nbsp;4. TTS Shift-key inspection, Esc key shortcut, and video checkpoint question triggers.<br/>"
+        "• <b>What to expect / Result:</b> Visual screenshots of test states, network trace logs, test execution time per scenario, and an interactive HTML report confirming 100% pass rate on all critical user journeys.<br/>"
         "&bull; <b>How to execute Playwright:</b>",
         body_style
     ))
@@ -542,8 +563,8 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     )
     story.append(Paragraph(playwright_code.replace('\n', '<br/>'), code_style))
 
-    # 4.2 Tool 2: k6
-    story.append(Paragraph("4.2 Tool 2: k6 by Grafana (Load, Stress & High-Concurrency Testing)", h2_style))
+    # 5.2 Tool 2: k6
+    story.append(Paragraph("5.2 Tool 2: k6 by Grafana (Load, Stress & High-Concurrency Testing)", h2_style))
     story.append(Paragraph(
         "&bull; <b>What it is:</b> A high-performance load testing engine written in Go, scripted in JavaScript, designed for simulating heavy concurrent traffic.<br/>"
         "&bull; <b>What it validates:</b><br/>"
@@ -566,8 +587,8 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     )
     story.append(Paragraph(k6_code.replace('\n', '<br/>'), code_style))
 
-    # 4.3 Clarification on 500 VUs vs 50 Seeded Users
-    story.append(Paragraph("4.3 Concurrency Architecture: 50 Database Users vs 500 Concurrent VUs", h2_style))
+    # 5.3 Clarification on 500 VUs vs 50 Seeded Users
+    story.append(Paragraph("5.3 Concurrency Architecture: 50 Database Users vs 500 Concurrent VUs", h2_style))
     story.append(Paragraph(
         "A vital technical distinction in load testing: <b>Virtual Users (VUs) represent concurrent network traffic threads, not distinct database records</b>.<br/>"
         "1. <b>Public / Anonymous Endpoints (0 database accounts needed):</b> Landing page (<code>/</code>), public course catalog, and certificate cryptographic verification (<code>/verify/[code]</code>) handle hundreds of concurrent requests without touching user sessions.<br/>"
@@ -577,15 +598,15 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     story.append(Spacer(1, 10))
 
     # ==============================================================================
-    # SECTION 5: DATABASE SUMMARY & USER DIRECTORY
+    # SECTION 6: DATABASE SUMMARY & USER DIRECTORY
     # ==============================================================================
-    story.append(Paragraph("5. Database Summary & Seeded User Directory", h1_style))
+    story.append(Paragraph("6. Database Summary & Seeded User Directory", h1_style))
     story.append(Paragraph(
         "The ACESS database is initialized with verified demo personas, structured curriculum, and complete learning histories. All demo accounts use the standard password <code>demo1234</code>.",
         body_style
     ))
 
-    story.append(Paragraph("5.1 Seeded User Directory & Scenario Roles", h2_style))
+    story.append(Paragraph("6.1 Seeded User Directory & Scenario Roles", h2_style))
 
     user_data = [
         [
@@ -628,21 +649,21 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
             Paragraph("amir.learner@acess.edu.my", table_cell),
             Paragraph("learner", table_cell),
             Paragraph("<b>ADHD Preset</b>", table_cell_bold),
-            Paragraph("ADHD Learner; tests chunking, task checklist, video questions, timeline", table_cell)
+            Paragraph("ADHD Learner; tests chunking, action-first banner, task checklist, video questions", table_cell)
         ],
         [
             Paragraph("<b>Hafizuddin Danial</b>", table_cell_bold),
             Paragraph("hafiz.learner@acess.edu.my", table_cell),
             Paragraph("learner", table_cell),
             Paragraph("<b>Dyslexia Preset</b>", table_cell_bold),
-            Paragraph("Dyslexic Learner; tests OpenDyslexic font, TTS, cream tint, reading ruler", table_cell)
+            Paragraph("Dyslexic Learner; tests OpenDyslexic font, TTS Shift-reading, cream tint, reading ruler", table_cell)
         ],
         [
             Paragraph("<b>Farah Nabilah</b>", table_cell_bold),
             Paragraph("farah.learner@acess.edu.my", table_cell),
             Paragraph("learner", table_cell),
             Paragraph("<b>Autism Preset</b>", table_cell_bold),
-            Paragraph("Autistic Learner; tests zero-motion, muted pastels, visual schedule, summaries", table_cell)
+            Paragraph("Autistic Learner; tests sensory calm mode, muted pastels, visual schedule, summaries", table_cell)
         ],
         [
             Paragraph("<b>David Lee</b>", table_cell_bold),
@@ -671,7 +692,7 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     story.append(user_table)
     story.append(Spacer(1, 8))
 
-    story.append(Paragraph("5.2 Summary of Initialized Database Metrics", h2_style))
+    story.append(Paragraph("6.2 Summary of Initialized Database Metrics", h2_style))
 
     metrics_data = [
         [
@@ -732,7 +753,7 @@ def build_pdf(filename="ACESS_Testing_and_Improvement_Report.pdf"):
     # Document Conclusion / Signoff
     signoff_html = """
     <b>REPORT APPROVAL & VERIFICATION STATUS:</b><br/>
-    This document confirms that the ACESS platform architecture meets all specified functional requirements, WCAG 2.2 accessibility standards, and deterministic auditing benchmarks. All test procedures outlined in Section 4 can be reproduced against both local and production environments.<br/><br/>
+    This document confirms that the ACESS platform architecture meets all specified functional requirements, WCAG 2.2 accessibility standards, and deterministic auditing benchmarks. All test procedures outlined in Section 5 can be reproduced against both local and production environments.<br/><br/>
     <b>Evaluator / Developer Signature:</b> ___________________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Date:</b> ___________________________
     """
     signoff_box = Table([[Paragraph(signoff_html, callout_text)]], colWidths=[504])
