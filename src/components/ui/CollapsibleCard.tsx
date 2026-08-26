@@ -12,13 +12,14 @@ interface CollapsibleCardProps {
   badge?: string;
   action?: React.ReactNode;
   keepMounted?: boolean;
+  className?: string;
   children: React.ReactNode;
 }
 
-export function CollapsibleCard({ icon, title, defaultOpen, badge, action, keepMounted, children }: CollapsibleCardProps) {
+export function CollapsibleCard({ icon, title, defaultOpen, badge, action, keepMounted, className, children }: CollapsibleCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+    <div className={`border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm ${className || ''}`}>
       <div className="flex items-center gap-3 px-5 py-4">
         <button
           type="button"

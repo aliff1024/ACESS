@@ -1301,84 +1301,87 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                       );
                     }
 
-                    return filteredItems.length > 0 && (
-                    <div key={group.key} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">{group.label} ({filteredItems.length})</h4>
-                      </div>
-                      <div className="grid grid-cols-1 gap-3">
-                        {filteredItems.map((check) => {
-                          const Icon = check.passed ? CheckCircle : AlertTriangle;
-                          return (
-                            <div
-                              key={check.id}
-                              className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
-                                check.passed
-                                  ? 'bg-green-50/30 border-green-100'
-                                  : 'bg-amber-50/30 border-amber-100'
-                              }`}
-                            >
-                              <div className="flex gap-3 min-w-0">
-                                <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${check.passed ? 'text-green-600' : 'text-amber-600'}`} />
-                                <div className="min-w-0">
-                                  <p className="font-bold text-gray-950 text-sm flex flex-wrap items-center gap-2">
-                                    {check.title}
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-wide ${
-                                      check.passed
-                                        ? 'bg-green-100 text-green-700'
-                                        : check.severity === 'required'
-                                          ? 'bg-rose-100 text-rose-700'
-                                          : 'bg-amber-100 text-amber-700'
-                                    }`}>
-                                      {check.passed ? 'Met' : check.severity}
-                                    </span>
-                                  </p>
-                                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">{check.description}</p>
-                                  {!check.passed && check.affected.length > 0 && (
-                                    <ul className="mt-2 space-y-1.5">
-                                      {check.affected.slice(0, 4).map((entry) => (
-                                        <li key={entry.id} className="text-xs text-gray-600">
-                                          <button
-                                            type="button"
-                                            onClick={() => openLessonAccessibility(entry.id)}
-                                            className="font-semibold text-purple-700 hover:underline"
-                                          >
-                                            {entry.title}
-                                          </button>
-                                          <span className="text-gray-500"> — {entry.detail}</span>
-                                        </li>
-                                      ))}
-                                      {check.affected.length > 4 && (
-                                        <li className="text-xs text-gray-400">
-                                          and {check.affected.length - 4} more lesson{check.affected.length - 4 === 1 ? '' : 's'}
-                                        </li>
-                                      )}
-                                    </ul>
-                                  )}
-                                  <p className="text-[10px] text-gray-400 mt-2">{check.source}</p>
-                                </div>
-                              </div>
+                    if (filteredItems.length === 0) return null;
 
-                              {/* 1-click fixes for course-level settings only. */}
-                              {!check.passed && check.scope === 'course' && COURSE_QUICK_FIXES[check.id] && (
-                                <div className="shrink-0 flex justify-end">
-                                  <Button
-                                    size="sm"
-                                    disabled={applyingFixId === check.id}
-                                    className="h-8 text-xs font-semibold px-3 bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap"
-                                    onClick={() => applyCourseQuickFix(check.id)}
-                                  >
-                                    {applyingFixId === check.id && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-                                    {COURSE_QUICK_FIXES[check.id].label}
-                                  </Button>
+                    return (
+                      <div key={group.key} className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">{group.label} ({filteredItems.length})</h4>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
+                          {filteredItems.map((check) => {
+                            const Icon = check.passed ? CheckCircle : AlertTriangle;
+                            return (
+                              <div
+                                key={check.id}
+                                className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
+                                  check.passed
+                                    ? 'bg-green-50/30 border-green-100'
+                                    : 'bg-amber-50/30 border-amber-100'
+                                }`}
+                              >
+                                <div className="flex gap-3 min-w-0">
+                                  <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${check.passed ? 'text-green-600' : 'text-amber-600'}`} />
+                                  <div className="min-w-0">
+                                    <p className="font-bold text-gray-950 text-sm flex flex-wrap items-center gap-2">
+                                      {check.title}
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-wide ${
+                                        check.passed
+                                          ? 'bg-green-100 text-green-700'
+                                          : check.severity === 'required'
+                                            ? 'bg-rose-100 text-rose-700'
+                                            : 'bg-amber-100 text-amber-700'
+                                      }`}>
+                                        {check.passed ? 'Met' : check.severity}
+                                      </span>
+                                    </p>
+                                    <p className="text-xs text-gray-600 mt-1 leading-relaxed">{check.description}</p>
+                                    {!check.passed && check.affected.length > 0 && (
+                                      <ul className="mt-2 space-y-1.5">
+                                        {check.affected.slice(0, 4).map((entry) => (
+                                          <li key={entry.id} className="text-xs text-gray-600">
+                                            <button
+                                              type="button"
+                                              onClick={() => openLessonAccessibility(entry.id)}
+                                              className="font-semibold text-purple-700 hover:underline"
+                                            >
+                                              {entry.title}
+                                            </button>
+                                            <span className="text-gray-500"> — {entry.detail}</span>
+                                          </li>
+                                        ))}
+                                        {check.affected.length > 4 && (
+                                          <li className="text-xs text-gray-400">
+                                            and {check.affected.length - 4} more lesson{check.affected.length - 4 === 1 ? '' : 's'}
+                                          </li>
+                                        )}
+                                      </ul>
+                                    )}
+                                    <p className="text-[10px] text-gray-400 mt-2">{check.source}</p>
+                                  </div>
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
+
+                                {/* 1-click fixes for course-level settings only. */}
+                                {!check.passed && check.scope === 'course' && COURSE_QUICK_FIXES[check.id] && (
+                                  <div className="shrink-0 flex justify-end">
+                                    <Button
+                                      size="sm"
+                                      disabled={applyingFixId === check.id}
+                                      className="h-8 text-xs font-semibold px-3 bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap"
+                                      onClick={() => applyCourseQuickFix(check.id)}
+                                    >
+                                      {applyingFixId === check.id && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
+                                      {COURSE_QUICK_FIXES[check.id].label}
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   </div>
                   )}
                 </div>
