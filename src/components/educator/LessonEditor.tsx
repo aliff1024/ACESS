@@ -989,6 +989,32 @@ export function LessonEditor({
                       <label className="block text-sm font-semibold text-gray-900 mb-2">Video URL (YouTube)</label>
                       <Input type="url" value={form.video_url} onChange={(e) => update('video_url', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
                     </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                          <FileText className="w-4 h-4 text-purple-600" />
+                          Video Transcript
+                          <span className="text-xs font-normal text-gray-500">(WCAG 1.2.1 Audio/Video Alternative)</span>
+                        </label>
+                        {form.transcript && (
+                          <span className="text-xs text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full font-medium">
+                            {form.transcript.split(/\s+/).filter(Boolean).length} words
+                          </span>
+                        )}
+                      </div>
+                      <Textarea
+                        value={form.transcript}
+                        onChange={(e) => update('transcript', e.target.value)}
+                        placeholder="Paste or type the full text transcript of this video here for learners who cannot listen to audio..."
+                        rows={6}
+                        className="text-sm font-sans leading-relaxed"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Providing a transcript ensures deaf, hard-of-hearing, and reading-preferred students have full access to all video explanations.
+                      </p>
+                    </div>
+
                     {form.video_url && getYouTubeId(form.video_url) && (
                       <div className="w-full aspect-video rounded-lg overflow-hidden bg-black shadow-sm relative">
                         <iframe id="yt-hidden-player" src={`https://www.youtube.com/embed/${getYouTubeId(form.video_url)}?enablejsapi=1`} title="Video Preview" className="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />

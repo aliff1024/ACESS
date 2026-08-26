@@ -2025,6 +2025,39 @@ export function LessonViewPage({
                 })()}
               </CollapsibleCard>
             )}
+
+            {/* ── Video Transcript (Accessible Reading Alternative) ── */}
+            {lesson.transcript && (!effectiveFocusMode || currentFocusId === 'video' || currentFocusId === 'content') && (
+              <CollapsibleCard
+                icon={<FileText className="w-4 h-4 text-purple-600" />}
+                title="Video Transcript"
+                defaultOpen={false}
+                badge="Available"
+                className="border-purple-100 bg-purple-50/20"
+              >
+                <div className="p-4 bg-white rounded-xl border border-purple-100 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Audio &amp; Video Transcript ({lesson.transcript.split(/\s+/).filter(Boolean).length} words)
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-[11px] px-2 text-purple-700 border-purple-200 hover:bg-purple-50"
+                      onClick={() => {
+                        navigator.clipboard.writeText(lesson.transcript || '');
+                        toast.success('Transcript copied to clipboard');
+                      }}
+                    >
+                      Copy Transcript
+                    </Button>
+                  </div>
+                  <div className="text-sm text-gray-800 leading-relaxed max-h-80 overflow-y-auto whitespace-pre-line font-sans">
+                    {lesson.transcript}
+                  </div>
+                </div>
+              </CollapsibleCard>
+            )}
             </div>
 
             {/* ── Lesson Content ── */}
