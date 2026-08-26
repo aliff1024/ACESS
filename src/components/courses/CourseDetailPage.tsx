@@ -790,54 +790,63 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                 </div>
               )}
 
-              {certClaimed && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-5">
-                  <div className="flex items-start gap-3">
-                    <Award className="w-6 h-6 text-green-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-green-900">Certificate Earned!</p>
-                      <p className="text-sm text-green-700 mt-1">View and download your certificate from your profile.</p>
-                      <Button
-                        onClick={() => router.push(certClaimedId ? `/learner/certificates?id=${certClaimedId}` : '/learner/achievements?tab=certificates')}
-                        variant="outline"
-                        className="mt-3 border-green-600 text-green-600"
-                      >
-                        <Award className="w-4 h-4 mr-2" /> View Certificate
-                      </Button>
+              {/* Certificate Cards (Side-by-Side Grid when both exist) */}
+              {(certClaimed || (customCertStatus === 'published' && customCertUrl) || (customCertStatus === 'pending' && certClaimed)) && (
+                <div className={`grid gap-4 ${certClaimed && ((customCertStatus === 'published' && customCertUrl) || (customCertStatus === 'pending')) ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                  {certClaimed && (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-5 flex flex-col justify-between h-full">
+                      <div className="flex items-start gap-3">
+                        <Award className="w-6 h-6 text-green-600 mt-0.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-green-900">Certificate Earned!</p>
+                          <p className="text-sm text-green-700 mt-1">View and download your certificate from your profile.</p>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Button
+                          onClick={() => router.push(certClaimedId ? `/learner/certificates?id=${certClaimedId}` : '/learner/achievements?tab=certificates')}
+                          variant="outline"
+                          className="border-green-600 text-green-600 hover:bg-green-100/50"
+                        >
+                          <Award className="w-4 h-4 mr-2" /> View Certificate
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  )}
 
-               {/* Educator Custom Certificate section */}
-              {customCertStatus === 'published' && customCertUrl && (
-                <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
-                  <div className="flex items-start gap-3">
-                    <GraduationCap className="w-6 h-6 text-purple-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-purple-900">{t('courseProgress.educatorCert')}</p>
-                      <p className="text-sm text-purple-700 mt-1">{t('courseProgress.educatorCertDesc')}</p>
-                      <Button
-                        onClick={() => window.open(customCertUrl, '_blank')}
-                        variant="outline"
-                        className="mt-3 border-purple-600 text-purple-600 hover:bg-purple-50"
-                      >
-                        <GraduationCap className="w-4 h-4 mr-2" /> {t('courseProgress.viewEducatorCert')}
-                      </Button>
+                  {/* Educator Custom Certificate section */}
+                  {customCertStatus === 'published' && customCertUrl && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 flex flex-col justify-between h-full">
+                      <div className="flex items-start gap-3">
+                        <GraduationCap className="w-6 h-6 text-purple-600 mt-0.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-purple-900">{t('courseProgress.educatorCert')}</p>
+                          <p className="text-sm text-purple-700 mt-1">{t('courseProgress.educatorCertDesc')}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Button
+                          onClick={() => window.open(customCertUrl, '_blank')}
+                          variant="outline"
+                          className="border-purple-600 text-purple-600 hover:bg-purple-100/50"
+                        >
+                          <GraduationCap className="w-4 h-4 mr-2" /> {t('courseProgress.viewEducatorCert')}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {customCertStatus === 'pending' && certClaimed && (
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">{t('courseProgress.educatorCert')}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{t('courseProgress.educatorCertPending')}</p>
+                  {customCertStatus === 'pending' && certClaimed && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col justify-between h-full">
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">{t('courseProgress.educatorCert')}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{t('courseProgress.educatorCertPending')}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 
