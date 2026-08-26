@@ -7,7 +7,7 @@ import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
-import { Loader2, Type, Target, Eye, ListChecks, Volume2, Globe, FileText, BookOpen } from 'lucide-react';
+import { Loader2, Type, Target, Eye, ListChecks, Volume2, Globe, FileText, BookOpen, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { useTranslation } from '@/lib/useTranslation';
@@ -16,6 +16,7 @@ import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, getAllPresets, trackSet
 import { SliderSetting } from '@/components/accessibility/SliderSetting';
 import { TintPicker } from '@/components/accessibility/TintPicker';
 import { PresetDetailsDialog } from '@/components/accessibility/PresetDetailsDialog';
+import { AccessibilityRecommendationsDialog } from '@/components/accessibility/AccessibilityRecommendationsDialog';
 import { shouldAutoEnableEasyRead } from '@/lib/accessibility-utils';
 import { fetchFullProfile, saveUserProfile } from '@/lib/learner-api';
 import type { AccessibilitySettingsData } from '@/lib/learner-api';
@@ -39,6 +40,7 @@ export function AccessibilitySettingsModal({
   // shows what would change, and only its own "Apply preset" button
   // actually calls handleApplyPreset.
   const [pendingPresetId, setPendingPresetId] = useState<string | null>(null);
+  const [showRecommendations, setShowRecommendations] = useState<boolean>(false);
   // What the config is still "based on" even after a manual tweak sets
   // activePreset to 'custom' — kept separate so preset-driven behavior
   // doesn't silently vanish after one slider adjustment.
@@ -337,8 +339,20 @@ export function AccessibilitySettingsModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
-          <Label className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 block">Quick Apply Preset</Label>
+        <div className="px-6 py-3.5 border-b border-gray-100 bg-gray-50/70 shrink-0">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-gray-500 block">Quick Apply Preset</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowRecommendations(true)}
+              className="h-7 text-xs font-bold px-2.5 text-purple-700 bg-purple-50/80 border-purple-200 hover:bg-purple-100 hover:text-purple-800 flex items-center gap-1.5 shadow-2xs"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+              Recommendations &amp; Specs
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Button
               variant={activePreset === 'none' ? 'default' : 'outline'}
@@ -689,6 +703,12 @@ export function AccessibilitySettingsModal({
         }}
       />
     )}
+    <AccessibilityRecommendationsDialog
+      open={showRecommendations}
+      onOpenChange={setShowRecommendations}
+      onApplyPreset={(presetId) => handleApplyPreset(presetId)}
+      activePreset={activePreset}
+    />
     </>
   );
 }
