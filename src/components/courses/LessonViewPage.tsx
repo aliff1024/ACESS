@@ -751,9 +751,14 @@ export function LessonViewPage({
       ? (currentChunk === 0 ? lessonChunks[0] : slideshowActive ? lessonChunks[currentChunk] : `<h2>${lessonChunks[currentChunk]}`)
       : contentHtml;
     // Kept up to date for the manual Listen button (handlePlayTTS/speak),
-    // but deliberately never auto-starts speech here — see below.
-    ttsTextRef.current = chunkHtml.replace(/<[^>]*>/g, '').trim();
-  }, [lesson, currentChunk]);
+    // including image alt descriptions so non-visual listeners hear what images show.
+    const isMalay = settings.preferred_language === 'ms';
+    const htmlWithAltAnnouncements = chunkHtml.replace(/<img\b[^>]*\balt=(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>/gi, (_match, a1, a2, a3) => {
+      const alt = (a1 ?? a2 ?? a3 ?? '').trim();
+      return alt ? ` ${isMalay ? 'Imej:' : 'Image:'} ${alt}. ` : ' ';
+    });
+    ttsTextRef.current = htmlWithAltAnnouncements.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }, [lesson, currentChunk, settings.preferred_language]);
 
   // TTS never starts on its own — WCAG 3.2.5 (Change on Request), and the
   // Dyslexia preset enables tts_enabled by default, which used to mean
@@ -1971,17 +1976,23 @@ export function LessonViewPage({
                       {videoQuestions.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mb-2">
                           {videoQuestions.map((q) => (
-                            <span
+                            <button
                               key={q.id}
-                              className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                              type="button"
+                              onClick={() => {
+                                playerRef.current?.seekTo(Math.max(0, q.timestamp_seconds), true);
+                                playerRef.current?.playVideo();
+                              }}
+                              title={`Jump to ${q.timestamp_seconds}s: ${q.title}`}
+                              className={`text-[10px] px-2 py-0.5 rounded-full border cursor-pointer transition-all hover:scale-105 ${
                                 answeredQuestionIds.has(q.id)
-                                  ? 'bg-green-50 text-green-700 border-green-200'
-                                  : 'bg-amber-50 text-amber-600 border-amber-200'
+                                  ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                  : 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'
                               }`}
                             >
                               {answeredQuestionIds.has(q.id) ? '✓ ' : '○ '}
                               {q.timestamp_seconds}s — {q.title}
-                            </span>
+                            </button>
                           ))}
                         </div>
                       )}

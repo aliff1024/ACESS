@@ -798,13 +798,25 @@ export interface LearnerVideoQuestion {
 }
 
 export async function fetchLessonVideoQuestions(lessonId: string): Promise<LearnerVideoQuestion[]> {
-  const { data, error } = await supabase
+  try {
+    const res = await fetch(`/api/lessons/${encodeURIComponent(lessonId)}/video-questions`, { cache: 'no-store' });
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json.questions)) {
+        return json.questions;
+      }
+    }
+  } catch (err) {
+    console.warn('API fetch video questions failed, falling back to direct query:', err);
+  }
+
+  const { data } = await supabase
     .from('video_questions')
     .select('*')
     .eq('lesson_id', lessonId)
-    .order('timestamp_seconds', { ascending: true })
-  if (error) throw error
-  return data || []
+    .order('timestamp_seconds', { ascending: true });
+
+  return data || [];
 }
 
 // ─── Mark Lesson Progress ──────────────────────────────────────────────
