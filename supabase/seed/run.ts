@@ -55,7 +55,10 @@ const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-const db = new Client({ connectionString: DB_URL });
+const db = new Client({
+  connectionString: DB_URL,
+  ssl: DB_URL.includes('supabase.co') || DB_URL.includes('pooler.supabase.com') ? { rejectUnauthorized: false } : undefined,
+});
 
 // ── tiny helpers ──────────────────────────────────────────────────────────
 const q = async (sql: string, params: unknown[] = []) => (await db.query(sql, params)).rows;
@@ -120,6 +123,38 @@ async function wipe() {
   log(`  removed ${del.length} auth users`);
   // storage.objects rejects direct SQL deletes; the seed uploads no files, so
   // there is nothing to clear there.
+
+  // Ensure the auth trigger is up to date and doesn't reference dropped columns
+  await q(`
+    CREATE OR REPLACE FUNCTION public.handle_new_auth_user()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+    BEGIN
+      INSERT INTO public.users (id, email, full_name, role)
+      VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+        'learner'
+      )
+      ON CONFLICT (id) DO NOTHING;
+
+      INSERT INTO public.user_profiles (user_id, accessibility_prefs, notification_prefs)
+      VALUES (NEW.id, '{}'::jsonb, '{}'::jsonb)
+      ON CONFLICT (user_id) DO NOTHING;
+
+      RETURN NEW;
+    END;
+    $$;
+
+    DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+    CREATE TRIGGER on_auth_user_created
+      AFTER INSERT ON auth.users
+      FOR EACH ROW EXECUTE FUNCTION public.handle_new_auth_user();
+  `);
 }
 
 // ══════════════════════════════════════════════════════════════════════════

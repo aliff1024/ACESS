@@ -281,6 +281,7 @@ export function applyPreset(presetName: string, currentSettings?: Partial<Access
       ...currentSettings,
       active_preset: 'none',
       base_preset: 'none',
+      disability_type: null,
     } as AccessibilitySettingsData
   }
 
@@ -290,6 +291,7 @@ export function applyPreset(presetName: string, currentSettings?: Partial<Access
     ...currentSettings,
     active_preset: presetName,
     base_preset: presetName,
+    disability_type: presetName === 'none' ? null : (presetName === 'asd' ? 'autism' : presetName),
     font_family: s.font_family,
     font_size_px: s.font_size_px,
     line_spacing_multiplier: s.line_spacing_multiplier,

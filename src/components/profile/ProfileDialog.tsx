@@ -106,7 +106,8 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         }
         const a = data.accessibility;
         if (a) {
-          setDisabilityType(a.disability_type || 'none');
+          const resolvedDisability = a.disability_type || (a.base_preset && a.base_preset !== 'none' && a.base_preset !== 'custom' ? a.base_preset : (a.active_preset && a.active_preset !== 'none' && a.active_preset !== 'custom' ? a.active_preset : 'none'));
+          setDisabilityType(resolvedDisability === 'asd' ? 'autism' : resolvedDisability);
           setPreferredFontSize(a.preferred_font_size || 'medium');
           setPreferredTheme(a.preferred_theme || 'system');
           setLineSpacing(a.line_spacing || 'normal');
@@ -226,8 +227,11 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const saveAccessibility = async () => {
     setSaving('accessibility');
     try {
+      const resolvedPreset = disabilityType === 'none' ? 'none' : disabilityType;
       const data: AccessibilitySettingsData = {
-        disability_type: disabilityType || null,
+        disability_type: disabilityType === 'none' ? null : disabilityType,
+        active_preset: resolvedPreset,
+        base_preset: resolvedPreset,
         preferred_font_size: preferredFontSize,
         preferred_theme: preferredTheme,
         line_spacing: lineSpacing,

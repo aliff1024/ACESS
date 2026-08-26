@@ -2193,7 +2193,7 @@ export async function fetchFullProfile(): Promise<FullProfile> {
       preferred_language: p.preferred_language,
     } : null,
     accessibility: a ? {
-      disability_type: a.disability_type,
+      disability_type: p?.disability_type || a.disability_type || (a.base_preset && a.base_preset !== 'none' && a.base_preset !== 'custom' ? a.base_preset : (a.active_preset && a.active_preset !== 'none' && a.active_preset !== 'custom' ? a.active_preset : null)),
       custom_notes: a.custom_notes ?? null,
       preferred_font_size: a.preferred_font_size,
       preferred_theme: a.preferred_theme,
@@ -2274,12 +2274,23 @@ export async function saveUserProfile(data: UserProfileData, fullName?: string):
 
 export async function saveAccessibilitySettings(data: AccessibilitySettingsData): Promise<void> {
   const userId = await ensureUserId()
-  const { data: profile } = await supabase.from('user_profiles').select('accessibility_prefs').eq('user_id', userId).maybeSingle()
+  const { data: profile } = await supabase.from('user_profiles').select('disability_type, accessibility_prefs').eq('user_id', userId).maybeSingle()
   const currentPrefs = typeof profile?.accessibility_prefs === 'object' && profile.accessibility_prefs !== null ? profile.accessibility_prefs : {}
   const mergedPrefs = { ...currentPrefs, ...data }
 
+  const payload: { user_id: string; accessibility_prefs: any; disability_type?: string | null } = {
+    user_id: userId,
+    accessibility_prefs: mergedPrefs,
+  }
+
+  if (data.disability_type !== undefined) {
+    payload.disability_type = data.disability_type === 'none' ? null : data.disability_type
+  } else if (data.active_preset !== undefined && data.active_preset !== 'custom') {
+    payload.disability_type = data.active_preset === 'none' ? null : (data.active_preset === 'asd' ? 'autism' : data.active_preset)
+  }
+
   const { error } = await supabase.from('user_profiles').upsert(
-    { user_id: userId, accessibility_prefs: mergedPrefs },
+    payload,
     { onConflict: 'user_id' }
   )
   if (error) throw error

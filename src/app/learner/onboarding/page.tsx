@@ -183,6 +183,8 @@ export default function OnboardingPage() {
 
       const data: AccessibilitySettingsData = {
         active_preset: activePreset,
+        base_preset: activePreset,
+        disability_type: activePreset === 'none' ? null : (activePreset === 'asd' ? 'autism' : activePreset),
         // Granular settings
         font_family: fontFamily,
         font_size_px: fontSizePx,

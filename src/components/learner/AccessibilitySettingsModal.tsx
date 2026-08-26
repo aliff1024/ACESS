@@ -147,6 +147,12 @@ export function AccessibilitySettingsModal({
     setAiAssistantEnabled(settings.ai_assistant_enabled ?? true);
   }, [isOpen]); // Only sync when modal opens
 
+  const mapPresetToDisability = (preset: string | null | undefined): string | null => {
+    if (!preset || preset === 'none' || preset === 'custom') return null;
+    if (preset === 'asd') return 'autism';
+    return preset;
+  };
+
   // The modal's local state as a settings-shaped snapshot — memoized so
   // both the live-preview effect below and PresetDetailsDialog (which
   // needs "what would change from here" before any preset is applied)
@@ -157,6 +163,11 @@ export function AccessibilitySettingsModal({
     ...settings,
     active_preset: activePreset,
     base_preset: basePreset,
+    disability_type: activePreset && activePreset !== 'custom'
+      ? mapPresetToDisability(activePreset)
+      : (basePreset && basePreset !== 'custom' && basePreset !== 'none'
+          ? mapPresetToDisability(basePreset)
+          : (settings.disability_type || null)),
     font_family: fontFamily,
     font_size_px: fontSizePx,
     line_spacing_multiplier: lineSpacingMultiplier,
@@ -257,10 +268,12 @@ export function AccessibilitySettingsModal({
       // state above, because those state updates are async and wouldn't
       // be visible yet within this same function call.
       try {
+        const mappedDisability = mapPresetToDisability(presetId);
         await updateSettings({
           ...currentLocalSettings,
           active_preset: presetId,
           base_preset: presetId,
+          disability_type: mappedDisability,
           font_family: s.font_family,
           font_size_px: s.font_size_px,
           line_spacing_multiplier: s.line_spacing_multiplier,
