@@ -951,7 +951,7 @@ export function LessonViewPage({
         const progress = await fetchSystemCourseProgress(courseId);
         if (progress && progress.progress_pct === 100) {
           toast.success('Congratulations! You have completed the entire course.');
-          router.push('/learner/certificates?earned=true');
+          router.push('/learner/achievements?tab=certificates');
         }
       } catch (e) {
         console.error('Failed to check course completion', e);
@@ -1008,7 +1008,7 @@ export function LessonViewPage({
         const progress = await fetchSystemCourseProgress(courseId);
         if (progress && progress.progress_pct === 100) {
           toast.success('Congratulations! You have completed the entire course.');
-          router.push('/learner/certificates?earned=true');
+          router.push('/learner/achievements?tab=certificates');
         }
       }
     } catch (err: any) {

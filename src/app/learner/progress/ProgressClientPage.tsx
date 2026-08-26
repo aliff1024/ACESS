@@ -20,17 +20,17 @@ export default function ProgressClientPage({ selectedCourse }: { selectedCourse?
           onStartLesson={(lessonId) => router.push(`/learner/lesson/${lessonId}?courseId=${selectedCourse}`)}
         />
 
+        {/* The modal reads the issued certificate back from the database. It
+            used to be handed the literal strings "Course" and "Learner",
+            which is what the learner then saw printed on their certificate. */}
         <CertificateGenerationModal
           isOpen={showCertificateModal}
           courseId={selectedCourse}
-          courseTitle="Course"
-          learnerName="Learner"
           onClose={() => setShowCertificateModal(false)}
           onViewCertificate={(certId) => {
             setShowCertificateModal(false);
             router.push(`/learner/certificates?id=${certId}`);
           }}
-          onDownload={() => setShowCertificateModal(false)}
         />
       </>
     );

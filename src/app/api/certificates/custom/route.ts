@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     }
 
     const { enrollmentId, courseId, userId, customUrl } = await request.json();
+    const origin = request.headers.get('origin') || new URL(request.url).origin;
 
     if (!enrollmentId || !courseId || !userId || !customUrl) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -80,13 +81,20 @@ export async function POST(request: Request) {
           enrollment_id: enrollmentId,
           course_id: courseId,
           user_id: userId,
-          learner_name: (enrollment as any)?.users?.full_name || 'Unknown Learner',
-          course_title: (enrollment as any)?.course?.title || 'Unknown Course',
+          // Left NULL rather than filled with 'Unknown ...' when the join
+          // comes back empty: the reader falls back to the live course and
+          // user rows, which is the real answer, and a placeholder here would
+          // be permanently baked into the record.
+          learner_name: (enrollment as any)?.users?.full_name || null,
+          course_title: (enrollment as any)?.course?.title || null,
           issued_at: new Date().toISOString(),
           completion_date: new Date().toISOString(),
           reference_code: refCode,
           pdf_url: customUrl,
-          verification_url: customUrl,
+          // Verification goes through the platform, which looks the row up by
+          // reference_code, so a shared certificate can be checked rather than
+          // just downloaded. This used to point at the PDF itself.
+          verification_url: `${origin}/verify/${refCode}`,
           metadata: { is_custom: true },
           status: 'issued'
         });
@@ -102,16 +110,17 @@ export async function POST(request: Request) {
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('id', enrollmentId);
 
-    // 2. Create notification for the student
-    const message = `Your educator has uploaded a custom certificate for your course completion!`;
+    // 2. Create notification for the student. The columns are `body` and
+    // `is_read`; this used to post `message` and `read`, which PostgREST
+    // rejects, so the learner was never told their certificate had arrived.
     const { error: notifError } = await supabaseAdmin
       .from('notifications')
       .insert({
         user_id: userId,
-        title: 'Custom Certificate Uploaded',
-        message: message,
+        title: 'Certificate Uploaded',
+        body: 'Your educator has uploaded your certificate for this course.',
         type: 'course_update',
-        read: false
+        is_read: false
       });
 
     if (notifError) {

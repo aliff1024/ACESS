@@ -90,6 +90,16 @@ export async function POST(request: Request) {
         .eq('id', userId)
     }
 
+    // Routing reads the role from the auth token, not from public.users:
+    // src/proxy.ts gates /educator on user_metadata.role and
+    // src/providers/AuthProvider.tsx builds the client-side role from the same
+    // place. Promoting an *existing* learner only updated public.users, so the
+    // new educator was still routed to /access-denied until an admin edited
+    // their auth record by hand. Keep the token in step with the table.
+    await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { full_name: app.full_name, role: 'educator' },
+    })
+
     const { error: updateError } = await supabase
       .from('instructor_applications')
       .update({

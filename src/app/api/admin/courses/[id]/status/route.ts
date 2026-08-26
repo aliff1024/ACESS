@@ -51,15 +51,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     if (updateError) throw updateError;
 
-    // 3. Side effects
-    if (status === 'published') {
-      await supabase
-        .from('certificate_templates')
-        .update({ is_active: true })
-        .eq('course_id', courseId);
-    }
-
-    // 4. Send notification
+    // 3. Send notification
     if (course.created_by) {
       if (status === 'published') {
         await supabase.from('notifications').insert({

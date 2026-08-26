@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     // Check if certificate row already exists for this enrollment
     const { data: existingCert, error: findError } = await supabaseAdmin
       .from('certificates')
-      .select('id, reference_code, verification_url, pdf_url')
+      .select('id, reference_code, verification_url, pdf_url, metadata')
       .eq('enrollment_id', enrollment.id)
       .maybeSingle();
 
@@ -140,7 +140,56 @@ export async function POST(request: Request) {
       .single();
 
     const settings = course.certificate_settings as Record<string, unknown> | null || {};
-    
+
+    // ── The certificate's factual content ──
+    //
+    // This block is the fix for "the certificate does not show course
+    // information". Every field below was previously written on the INSERT
+    // path only. The UPDATE path — taken whenever a certificate row already
+    // existed for the enrollment, which is the case for every learner whose
+    // educator allows custom certificates, and for every re-claim — set only
+    // the code, URL, skills and status. `learner_name`, `course_title` and
+    // `educator_name` were left at whatever they were, usually NULL, and
+    // fetchCertificateDetail then rendered its placeholders: a certificate
+    // that said the learner had completed a course called "Course".
+    //
+    // The two paths now write the same fields from the same values.
+    const learnerName = userData.full_name || null;
+    const courseTitle = (settings.course_title as string) || course.title;
+    const educatorName = (settings.educator_name as string) || educator?.full_name || null;
+    const institutionName = (settings.institution_name as string) || 'ACESS Platform';
+    const educatorRole = (settings.educator_role as string) || 'Course Educator';
+
+    // Duration: the educator's own figure when they set one, otherwise the
+    // real sum of the course's published lesson durations. Defaulting to the
+    // settings value alone produced 0 for every course that has never had its
+    // certificate panel filled in, i.e. almost all of them.
+    let courseDurationHours = Number(settings.course_duration_hours ?? 0);
+    if (!courseDurationHours) {
+      const { data: durationRows } = await supabaseAdmin
+        .from('lessons')
+        .select('estimated_duration')
+        .eq('course_id', courseId)
+        .eq('status', 'published')
+        .or('visibility_status.eq.visible,visibility_status.is.null');
+      const minutes = (durationRows || []).reduce(
+        (sum, l) => sum + (Number(l.estimated_duration) || 0),
+        0,
+      );
+      courseDurationHours = minutes > 0 ? Math.round((minutes / 60) * 10) / 10 : 0;
+    }
+
+    // Completion date is when the learner actually finished, not when they got
+    // round to pressing the button. `completed_at` is set by the database's
+    // own derivation, so it is the trustworthy answer when present.
+    const { data: enrollmentRow } = await supabaseAdmin
+      .from('enrollments')
+      .select('completed_at')
+      .eq('id', enrollment.id)
+      .maybeSingle();
+    const issuedAt = new Date().toISOString();
+    const completionDate = enrollmentRow?.completed_at || issuedAt;
+
     // Generate a reference code
     const refCode = await (async function genCode(): Promise<string> {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -156,7 +205,9 @@ export async function POST(request: Request) {
     })();
 
     // Verification URL pointing to the Next.js app host (origin)
-    const origin = request.headers.get('origin') || '';
+    // Origin is present on a browser fetch, but not on every caller, and an
+    // empty origin produced the relative "/verify/CODE" that nobody can open.
+    const origin = request.headers.get('origin') || new URL(request.url).origin;
     const verificationUrl = `${origin}/verify/${refCode}`;
 
     // Create signed token
@@ -170,19 +221,39 @@ export async function POST(request: Request) {
     let certId = '';
     let finalRefCode = refCode;
 
+    // The full record, written identically whether the row is new or being
+    // re-issued. `metadata.is_custom: false` is what tells the learner UI this
+    // is a platform-generated certificate; it used to be inferred from the
+    // presence of a pdf_url, which misfiled every generated certificate as an
+    // educator's own upload.
+    // An educator may already have uploaded their own PDF against this same
+    // row (see /api/certificates/custom). Re-issuing must not demote it to a
+    // generated certificate, so the custom flag and the uploaded file survive.
+    const existingMeta = (existingCert?.metadata as Record<string, unknown> | null) || {};
+    const isCustom = existingMeta.is_custom === true;
+
+    const certificateRecord = {
+      course_id: courseId,
+      user_id: user.id,
+      learner_name: learnerName,
+      course_title: courseTitle,
+      educator_name: educatorName,
+      institution_name: institutionName,
+      reference_code: refCode,
+      status: 'issued',
+      issued_at: issuedAt,
+      completion_date: completionDate,
+      verification_url: verificationUrl,
+      skills_earned: skills,
+      course_duration_hours: courseDurationHours,
+      signed_token: signedToken,
+      metadata: { ...existingMeta, is_custom: isCustom, educator_role: educatorRole },
+    };
+
     if (existingCert) {
-      // Update existing row
       const { data: updatedCert, error: updateError } = await supabaseAdmin
         .from('certificates')
-        .update({
-          reference_code: refCode,
-          verification_url: verificationUrl,
-          signed_token: signedToken,
-          skills_earned: skills,
-          course_duration_hours: (settings.course_duration_hours as number) || 0,
-          completion_date: new Date().toISOString(),
-          status: 'issued'
-        })
+        .update(certificateRecord)
         .eq('id', existingCert.id)
         .select('id, reference_code')
         .single();
@@ -193,25 +264,9 @@ export async function POST(request: Request) {
       certId = updatedCert.id;
       finalRefCode = updatedCert.reference_code;
     } else {
-      // Insert new row
       const { data: newCert, error: insertError } = await supabaseAdmin
         .from('certificates')
-        .insert({
-          enrollment_id: enrollment.id,
-          course_id: courseId,
-          user_id: user.id,
-          learner_name: userData.full_name || 'Learner',
-          course_title: course.title,
-          educator_name: educator?.full_name || 'Educator',
-          reference_code: refCode,
-          status: 'issued',
-          issued_at: new Date().toISOString(),
-          completion_date: new Date().toISOString(),
-          verification_url: verificationUrl,
-          skills_earned: skills,
-          course_duration_hours: (settings.course_duration_hours as number) || 0,
-          signed_token: signedToken,
-        })
+        .insert({ enrollment_id: enrollment.id, ...certificateRecord })
         .select('id, reference_code')
         .single();
 

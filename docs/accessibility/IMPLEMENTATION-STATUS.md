@@ -5,6 +5,7 @@
 
 - **As of:** 2026-08-23 (Phases 1–3), updated same day for Phase 4, again for Phase 5, again for Phase 6, again for Phase 7, again for Phase 8, again for Phase 9, again for the interactive-activity keyboard addendum to Phase 6
 - **Verified by:** TypeScript (`npx tsc --noEmit`) and ESLint on every file touched — both clean, zero new issues introduced at any point
+- **⚠️ LIVE VERIFICATION NOW EXISTS — SEE [§10](#10-live-verification--2026-08-25).** Everything below was written before any of it had been seen running. §10 records what live testing on 2026-08-25 actually found, including eight accessibility defects that static analysis could not have caught, three of them in features marked ✅ here. Read §10 before trusting any ✅ in this document.
 - **Live browser verification:** unavailable for Phases 1–3 (port 3000 was held by another session throughout). Became available during Phase 4 — but both login (documented seed credentials, `docs/SEED_CREDENTIALS.md`) and self-registration (`/signup`, "Database error saving new user") failed for reasons unrelated to this work. **Nothing in this document has actually been seen rendered with real data.** Treat every ✅ as "correct by static analysis and code reading," not "confirmed working on screen." **This document exists so you can close that gap** — you likely have working credentials or can fix the signup/DB issue faster than guessing at it blind. **Phases 5 through 9 could not even attempt live verification** — port 3000 was held by another chat session's `next dev` throughout all five, and Next.js refuses to run a second dev server against the same project directory at all (not just the same port — it detects the existing instance via `.next\dev\logs` and exits with code 1), so there was no way to get a second, independent server up in this working directory without stopping the other session's process, which was out of scope to do unilaterally. Re-checked immediately before starting each of Phases 6, 7, 8, and 9 — still blocked the same way every time. See the Phase 5 (§4b), Phase 6 (§4c), Phase 7 (§4d), Phase 8 (§4e), and Phase 9 (§4f) status notes for what this means for confidence level. **Phase 8 is different in kind, not just in verification confidence** — it is not a coding phase at all (real learner testing, an independent expert reviewer, AT hardware), and its baseline requirement can no longer be met regardless of live access, because Phase 0 never ran before Phases 1–7 shipped. **Phase 9's new public route (`/accessibility-statement`) is the first phase where "not seen live" specifically means a real page has never been loaded in a browser at all**, not just "seen with fallback/default data" like most of what came before.
 
 ---
@@ -998,3 +999,81 @@ Real defects/gaps discovered while implementing, left alone on purpose — with 
 | `docs/accessibility/10-GOVERNANCE-RUNBOOK.md` | 9 | Status note, §12 acceptance criteria annotated |
 
 **Not part of this session's changes** (pre-existing, uncommitted before this conversation started): `docs/README.md`, `src/components/interactive/InteractiveActivityViewer.tsx`, `src/lib/learner-api.ts` all show as modified in `git status` from before this session began — unrelated prior work, not touched further here. (`src/components/learner/Sidebar.tsx` was on this list before Phase 5, and `src/components/interactive/MemoryGameViewer.tsx` before the Phase 6 keyboard-operability addendum; each got one small, isolated edit — see the rows above — the rest of each file's pre-existing diff is still unrelated prior work.)
+
+---
+
+# 10. LIVE VERIFICATION — 2026-08-25
+
+**This section supersedes every ✅ above.**
+
+Everything in sections 2 through 4f was, by this document's own admission,
+"correct by static analysis and code reading," not "confirmed working on
+screen" — no live server was reachable at any point during Phases 1-9. That gap
+is now closed. A learner portal audit and a follow-up hardening pass ran the
+application against the live Supabase project, signed in as
+`learner@acess.demo`, and exercised these features on real data.
+
+Evidence: [`docs/learner-audit/01-FINDINGS.md`](../learner-audit/01-FINDINGS.md),
+[`docs/learner-audit/02-REPORT.md`](../learner-audit/02-REPORT.md),
+[`docs/learner-audit/03-REMEDIATION.md`](../learner-audit/03-REMEDIATION.md).
+
+**Method note:** the browser pane never composited frames in this environment,
+so no screenshots exist. Verification was done through the accessibility tree,
+`getComputedStyle`, console, network and direct database reads — stricter than
+visual inspection for everything except pure appearance. Nothing below is
+marked verified on the strength of a screenshot.
+
+| Feature | Previous claim | Live status | Evidence |
+|---|---|---|---|
+| **Preset: Dyslexia** | ✅ static | ✅ **Verified** | Applied live. `data-preset=dyslexia`, Atkinson Hyperlegible, 19px, line spacing 1.7, word spacing 0.16em, cream tint, reading spotlight on, TTS on — each checked against `ACCESSIBILITY_PRESETS.dyslexia` |
+| **Preset: ADHD** | ⚠️ NowBar only | ✅ **Verified** | Applied live. Arial 18px, 1.6, 0.08em, grey tint, `structure-mode=minimal`, distraction-free genuinely removes sidebar **and** top bar, simplified 4-item menu confirmed present |
+| **Preset: Autism** | ⚠️ reduced scope | ✅ **Verified** | Applied live. Pale blue tint, `animation-level=none`, muted colours, `structure-mode=checklist`, plain-language menu (Dashboard / Courses / Progress / Badges / Certificates / Settings) |
+| **Preset preview dialog** | ✅ static | ✅ **Verified** | Lists all 11 changes with a rationale for each before applying. Works as designed |
+| **Word spacing** | ✅ Phase 1 item 2 | ✅ **Fixed, then verified** | Was **broken in practice**: `html[data-font-type="dyslexia"] body` hard-coded `word-spacing: 0.12em !important`, overriding the learner's own slider — the exact failure mode Phase 1 item 1 claimed to have removed. Now 0.16em on dashboard, catalogue, progress, achievements and lesson |
+| **Line spacing** | ✅ Phase 1 | ⚠️→✅ **Fixed** | Body-scoped rule alone never reached Tailwind-styled text. Content containers now listed explicitly; 1.7 confirmed |
+| **Font size** | ✅ Phase 1 | ✅ **Verified** | Root scales to 19px and all rem-based text scales with it |
+| **Background tints** | ✅ | ⚠️ **Partially verified** | Light tints reach cards and inner surfaces. The full-viewport shell (`div.flex.h-screen.bg-gray-50` in `LearnerShell`) does not pick them up |
+| **TTS** | ✅ Phase 1 item 5 | ⚠️→✅ **Fixed** | Autoplay removal confirmed. But TTS **kept speaking after leaving the lesson**, with no stop control on the destination page — `speechSynthesis` is a global service not torn down on unmount. Fixed and verified. Still has no pause/resume, only play and stop |
+| **Reading spotlight** | ✅ | ⚠️ **Partially verified** | `data-reading-spotlight=true` set and `.reading-spotlight-container` present on the lesson page. The visual dimming itself was not verifiable without screenshots |
+| **Chunked content** | ✅ | ✅ **Verified** | `data-chunked=true` drives real pagination (Favourites paginates at 3/page under it). Note `layout_mode: 'scroll'` in the Autism preset is dead configuration — `handleApplyPreset` forces `chunked` whenever `chunked_content_mode` is true |
+| **Focus / distraction-free** | ✅ | ✅ **Verified** | Genuinely removes sidebar and top bar; escapable via a labelled floating button. A real bug was found and fixed: the session override was **sticky**, so a learner who exited once and later chose ADHD or Autism got `distraction_free_mode: true` written to the database while the interface stayed in the old state |
+| **Easy Read** | ✅ shipped | ❌→✅ **Was unreachable; now works** | The feature was implemented but **had never run**: it keys off `preferred_reading_level`, which only the profile dialog could set and no preset sets. Added a toggle to the accessibility panel. Testing then exposed a second bug — Exit cleared `simplified_ui` but not the reading level, so `applyReadingLevelDefaults()` turned Easy Read back on after a refresh. Both fixed and verified across a reload |
+| **Settings persistence** | ✅ | ✅ **Verified** | Stored in `user_profiles.accessibility_prefs` (JSONB), mirrored to localStorage. Change → navigate → refresh → still applied, and written to the database |
+| **Per-learner isolation** | ✅ | ✅ **Verified** | RLS confines `user_profiles` to the owner; a probe signed in as one learner read 0 rows of another's profile |
+| **`SETTING_CATALOG` completeness** | ✅ 234/234 | ✅ **Still passes** | `npm run test:a11y-catalog` |
+| **Keyboard operability of activities** | ✅ Phase 6 addendum | ❓ **Not verified** | Requires real keyboard/AT interaction the harness could not perform |
+| **Screen-reader behaviour** | — | ❓ **Not verified** | No AT available in this environment |
+
+## 10.1 Accessibility defects found by live testing that static analysis missed
+
+1. **Word and letter spacing were overridden by a legacy `!important` rule** —
+   the learner's own slider had no effect on `<body>`. Phase 1 item 1 removed
+   one such override; this one survived in the `data-font-type` block.
+2. **TTS survived navigation** with no way to stop it.
+3. **The distraction-free override was sticky**, so presets that enable it
+   silently did not.
+4. **Easy Read had never been reachable at all.**
+5. **Easy Read's Exit did not persist.**
+6. **Navigation was not navigable** — every sidebar item was a `<button>` with
+   no `href`, so a screen reader announced site navigation as "button" and no
+   browser affordance (middle-click, open in new tab, copy link) worked. Now
+   real links with `aria-current="page"`.
+7. **The favourite toggle had no accessible name or state** — an icon-only
+   button whose on/off state was carried purely by a fill colour. WCAG 4.1.2.
+8. **The video requirement had no alternative path** — only the YouTube
+   `ENDED` event could satisfy it, so a blocked or unplayable embed made the
+   lesson permanently uncompletable.
+
+## 10.2 What this means for the programme
+
+Phase 1 was titled "Truthfulness — stop the product from lying: several
+settings looked like they did something and didn't." Live testing found that
+this was still true of **word spacing, line spacing and Easy Read** after
+Phase 1 was marked complete. The lesson is not that the work was wrong; it is
+that "correct by code reading" could not have caught any of the eight defects
+above, because every one of them is a cascade, lifecycle or reachability
+problem that only exists at runtime.
+
+**Phase 0's baseline was never captured and still has not been.** Nothing here
+is a measurement against real learners; it is verification that the controls do
+what they claim. Phase 8's evaluation remains un-run.

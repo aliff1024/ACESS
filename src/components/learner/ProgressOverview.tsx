@@ -2,10 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { CheckCircle2, BookOpen, TrendingUp, Award, Loader2, Target, Zap } from 'lucide-react';
+import { CheckCircle2, BookOpen, Target, Award, Loader2 } from 'lucide-react';
 import { fetchLearnerStats } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
 
+/**
+ * Learning stats, as a compact strip rather than four full-height cards.
+ *
+ * This used to be the tallest thing on the Dashboard — four `p-6` cards with
+ * 56px icon tiles and 4xl numbers, well below the fold on a typical laptop
+ * screen, competing for attention with Continue Learning and Recommendations
+ * above it. The Dashboard's job is "what should I do next"; these numbers
+ * are useful confirmation, not the main event, so they're now one thin row.
+ * The full picture with real dates and detail lives on
+ * /learner/achievements, which this doesn't try to duplicate.
+ */
 export function ProgressOverview() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<{
@@ -28,85 +39,54 @@ export function ProgressOverview() {
       label: t('progress.coursesCompleted'),
       value: stats?.courses_completed ?? '--',
       icon: CheckCircle2,
-      color: 'from-green-400 to-emerald-600',
       bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
+      textColor: 'text-green-700',
     },
     {
       label: t('stats.lessonsMastered'),
       value: stats?.lessons_completed ?? '--',
       icon: BookOpen,
-      color: 'from-blue-400 to-indigo-600',
       bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600',
+      textColor: 'text-blue-700',
     },
     {
       label: t('progress.avgScore'),
       value: stats?.avg_score != null ? `${stats.avg_score}%` : '--',
       icon: Target,
-      color: 'from-purple-400 to-fuchsia-600',
       bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600',
+      textColor: 'text-purple-700',
     },
     {
       label: t('certificates.earned'),
       value: stats?.certificates_count ?? '--',
       icon: Award,
-      color: 'from-orange-400 to-rose-500',
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600',
+      bgColor: 'bg-amber-50',
+      textColor: 'text-amber-700',
     },
   ];
 
   return (
-    <div className="py-2">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-            <Zap className="w-6 h-6 text-yellow-500" /> {t('stats.title')}
-          </h2>
-          <p className="text-gray-500 font-medium">{t('stats.description')}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <Card className="p-4 border-border bg-card">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-border">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card
-              key={index}
-              className="relative overflow-hidden p-6 rounded-3xl border-0 shadow-sm ring-1 ring-gray-100 bg-white hover:shadow-lg transition-all duration-300 group hover:-translate-y-1"
-            >
-              {/* Subtle top gradient bar */}
-              <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${stat.color} opacity-80`} />
-              
-              <div className="flex items-start justify-between mb-5">
-                <div className={`w-14 h-14 ${stat.bgColor} rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300`}>
-                  <Icon className={`w-7 h-7 ${stat.iconColor}`} />
-                </div>
+            <div key={index} className={`flex items-center gap-3 px-3 first:pl-1 sm:first:pl-3`}>
+              <div className={`w-9 h-9 rounded-lg ${stat.bgColor} flex items-center justify-center shrink-0`}>
+                <Icon className={`w-4 h-4 ${stat.textColor}`} aria-hidden="true" />
               </div>
-              
-              {loading ? (
-                <div className="h-16 flex items-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
-                </div>
-              ) : (
-                <div className="relative z-10">
-                  <p className="text-4xl font-extrabold text-gray-900 mb-1 tracking-tight">
-                    {stat.value}
-                  </p>
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                    {stat.label}
-                  </p>
-                </div>
-              )}
-              
-              {/* Decorative background blur */}
-              <div className={`absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br ${stat.color} opacity-5 blur-2xl group-hover:opacity-10 transition-opacity duration-300 pointer-events-none`} />
-            </Card>
+              <div className="min-w-0">
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" aria-hidden="true" />
+                ) : (
+                  <p className="text-xl font-bold text-foreground leading-tight tabular-nums">{stat.value}</p>
+                )}
+                <p className="text-xs text-muted-foreground truncate">{stat.label}</p>
+              </div>
+            </div>
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }

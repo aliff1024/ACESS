@@ -48,7 +48,11 @@ function buildRecsForCourse(input: RecInput): GeneratedRec[] {
     })
   }
 
-  if (progress >= 80 && lessons.length > 0) {
+  // Guarded to `< 100`: this used to fire at any progress >= 80, including a
+  // fully finished course, recommending the learner "review the final
+  // lesson" of something they had already completed — a real but pointless
+  // recommendation, not a personalized one.
+  if (progress >= 80 && progress < 100 && lessons.length > 0) {
     recs.push({
       enrollment_id,
       recommended_lesson_id: lessons[lessons.length - 1].id,
@@ -70,7 +74,7 @@ export async function generateRecommendations(userId: string): Promise<void> {
   // 1. Get user's active enrollments
   const { data: enrollments } = await admin
     .from('enrollments')
-    .select('id, course_id')
+    .select('id, course_id, status')
     .eq('user_id', userId)
     .neq('status', 'dropped')
 
@@ -83,7 +87,7 @@ export async function generateRecommendations(userId: string): Promise<void> {
   const { data: courses } = await admin
     .from('courses')
     .select(`
-      id, title, category, tags,
+      id, title, category, tags, difficulty_level,
       lessons(id, title, sequence_order)
     `)
     .in('id', enrolledCourseIds)
@@ -143,15 +147,53 @@ export async function generateRecommendations(userId: string): Promise<void> {
     failedQuizMap.set(a.enrollment_id, map)
   }
 
-  // 5. Collect user's tag/category profile
-  const allUserTags = new Set<string>()
-  const userCategories = new Set<string>()
-  for (const c of courses || []) {
-    for (const tag of c.tags || []) {
-      allUserTags.add(tag)
-    }
-    if (c.category) userCategories.add(c.category)
+  // 5. Collect the learner's tag/category/difficulty profile.
+  //
+  // This used to be built only from active enrollments. A learner who has
+  // favourited courses but not yet enrolled in any of them got no profile at
+  // all — their expressed interest was invisible to the engine that is
+  // supposed to be reading it. Favourites are now folded in, and courses the
+  // learner has actually COMPLETED count for more than ones merely enrolled
+  // in: finishing a course is a stronger signal of "more like this, please"
+  // than starting one.
+  const { data: favourites } = await admin
+    .from('course_favorites')
+    .select('course_id')
+    .eq('user_id', userId)
+  const favouriteIds = new Set((favourites || []).map((f: { course_id: string }) => f.course_id))
+
+  const { data: favouriteCourses } = favouriteIds.size
+    ? await admin.from('courses').select('id, category, tags, difficulty_level').in('id', [...favouriteIds])
+    : { data: [] as { id: string; category: string | null; tags: string[] | null; difficulty_level: string | null }[] }
+
+  // `status` is derived server-side by sync_learner_course_state() and never
+  // asserted by the client, so it is trustworthy to read directly here.
+  const completedCourseIds = new Set(
+    (enrollments || [])
+      .filter((e: { status: string }) => e.status === 'completed')
+      .map((e: { course_id: string }) => e.course_id),
+  )
+
+  const tagWeight = new Map<string, number>()
+  const categoryWeight = new Map<string, number>()
+  const difficultyWeight = new Map<string, number>()
+
+  const addProfile = (c: { category: string | null; tags: string[] | null; difficulty_level?: string | null }, weight: number) => {
+    for (const tag of c.tags || []) tagWeight.set(tag, (tagWeight.get(tag) ?? 0) + weight)
+    if (c.category) categoryWeight.set(c.category, (categoryWeight.get(c.category) ?? 0) + weight)
+    if (c.difficulty_level) difficultyWeight.set(c.difficulty_level, (difficultyWeight.get(c.difficulty_level) ?? 0) + weight)
   }
+
+  for (const c of courses || []) {
+    addProfile(c, completedCourseIds.has(c.id) ? 3 : 1)
+  }
+  for (const c of favouriteCourses || []) {
+    addProfile(c, 2)
+  }
+
+  const allUserTags = new Set(tagWeight.keys())
+  const userCategories = new Set(categoryWeight.keys())
+  const preferredDifficulty = [...difficultyWeight.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
 
   // 6. Generate per-enrollment recommendations
   const allRecs: GeneratedRec[] = []
@@ -195,30 +237,39 @@ export async function generateRecommendations(userId: string): Promise<void> {
   const allPublishedIds = (allCourseIds || []).map((c: { id: string }) => c.id)
   const unenrolledIds = allPublishedIds.filter((id: string) => !enrolledCourseIds.includes(id))
 
-  if (unenrolledIds.length > 0 && (allUserTags.size > 0 || userCategories.size > 0)) {
+  if (unenrolledIds.length > 0 && (allUserTags.size > 0 || userCategories.size > 0 || favouriteIds.size > 0)) {
     const { data: unenrolled } = await admin
       .from('courses')
       .select(`
-        id, title, category, tags,
+        id, title, category, tags, difficulty_level,
         lessons(id, title, sequence_order)
       `)
       .in('id', unenrolledIds)
 
-    const scored: { course: typeof unenrolled[0]; score: number }[] = []
+    const scored: { course: typeof unenrolled[0]; score: number; isFavourite: boolean; matchedDifficulty: boolean }[] = []
 
     for (const c of unenrolled || []) {
       let score = 0
-      const courseTags = c.tags || []
-      for (const tag of courseTags) {
-        if (allUserTags.has(tag)) score += 2
+      for (const tag of c.tags || []) {
+        score += tagWeight.get(tag) ?? 0
       }
-      if (c.category && userCategories.has(c.category)) score += 1
-      if (score > 0) scored.push({ course: c, score })
+      if (c.category) score += categoryWeight.get(c.category) ?? 0
+      // A course the learner has already favourited is the strongest signal
+      // available short of having enrolled in it — they picked it out
+      // themselves. Outweighs tag/category overlap on its own.
+      const isFavourite = favouriteIds.has(c.id)
+      if (isFavourite) score += 5
+      // Same difficulty as the courses they gravitate towards, a gentle
+      // nudge rather than a hard filter — a learner with no established
+      // difficulty preference (preferredDifficulty undefined) is unaffected.
+      const matchedDifficulty = !!preferredDifficulty && c.difficulty_level === preferredDifficulty
+      if (matchedDifficulty) score += 1
+      if (score > 0) scored.push({ course: c, score, isFavourite, matchedDifficulty })
     }
 
     scored.sort((a, b) => b.score - a.score)
 
-    for (const { course } of scored.slice(0, 2)) {
+    for (const { course, isFavourite, matchedDifficulty } of scored.slice(0, 2)) {
       const xLessons = (course.lessons || [])
         .filter((l: { sequence_order: number }) => l.sequence_order != null)
         .sort((a: { sequence_order: number }, b: { sequence_order: number }) => a.sequence_order - b.sequence_order)
@@ -228,9 +279,17 @@ export async function generateRecommendations(userId: string): Promise<void> {
       const matchTags = (course.tags || [])
         .filter((t: string) => allUserTags.has(t))
 
-      const reason = matchTags.length > 0
-        ? `Based on your interest in "${matchTags[0]}", check out "${course.title}"`
-        : `You might enjoy "${course.title}" — it covers similar topics to your current courses`
+      // Whichever reason is most specifically true about THIS course wins,
+      // in order of how strong a signal it is — a learner told "because you
+      // favourited this" understands the recommendation far better than a
+      // generic "similar topics" line when both happen to be true.
+      const reason = isFavourite
+        ? `You saved "${course.title}" earlier — now's a good time to start it.`
+        : matchTags.length > 0
+          ? `Based on your interest in "${matchTags[0]}", check out "${course.title}"`
+          : matchedDifficulty
+            ? `"${course.title}" matches the level you've been learning at.`
+            : `You might enjoy "${course.title}" — it covers similar topics to your current courses`
 
       allRecs.push({
         enrollment_id: enrollmentIds[0],

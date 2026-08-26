@@ -58,7 +58,7 @@ export function WelcomeSection() {
           </Button>
           
           <Button 
-            onClick={() => router.push('/learner/certificates')}
+            onClick={() => router.push('/learner/achievements?tab=certificates')}
             variant="outline"
             className="h-14 px-6 bg-white/10 hover:bg-white/20 border border-white/30 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-full justify-start text-base font-medium backdrop-blur-md"
           >

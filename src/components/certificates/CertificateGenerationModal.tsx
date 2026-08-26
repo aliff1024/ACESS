@@ -5,142 +5,186 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '../ui/button';
 import { Download, Eye, Award, Loader2 } from 'lucide-react';
 import { Logo } from '../ui/Logo';
-import { claimCertificate } from '@/lib/learner-api';
+import {
+  claimCertificate,
+  fetchCertificateDetail,
+  certificateVerificationUrl,
+  type FullCertificate,
+} from '@/lib/learner-api';
+import { buildCertificateRenderData, generatePDFCertificate, formatDate } from '@/lib/certificate-utils';
 import { toast } from 'sonner';
 
 interface CertificateGenerationModalProps {
   isOpen: boolean;
   courseId: string;
-  courseTitle: string;
-  learnerName: string;
   onClose: () => void;
   onViewCertificate: (certificateId: string) => void;
-  onDownload: () => void;
 }
 
+/**
+ * Claims a certificate and shows the learner what they just earned.
+ *
+ * WHAT WAS WRONG
+ *
+ * This took `courseTitle` and `learnerName` as props, and its only live caller
+ * passed the literal strings `"Course"` and `"Learner"`. So the moment of
+ * earning a certificate — the one screen that should feel like something —
+ * read "This certifies that **Learner** has successfully completed **Course**".
+ * Its Download button was wired to a handler that raised a success toast
+ * without producing a file.
+ *
+ * It now reads the certificate back from the database after claiming it, so
+ * every value on screen is the value that was actually recorded, and the
+ * download produces the same PDF as the detail page.
+ */
 export function CertificateGenerationModal({
   isOpen,
   courseId,
-  courseTitle,
-  learnerName,
   onClose,
   onViewCertificate,
-  onDownload,
 }: CertificateGenerationModalProps) {
   const [generating, setGenerating] = useState(false);
-  const [certificateId, setCertificateId] = useState<string | null>(null);
-  const [referenceCode, setReferenceCode] = useState<string>('');
-  const [completionDate, setCompletionDate] = useState('');
+  const [cert, setCert] = useState<FullCertificate | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
+    let cancelled = false;
     setGenerating(true);
     setError(null);
+    setCert(null);
+
     claimCertificate(courseId)
-      .then((result) => {
-        if (result) {
-          setCertificateId(result.id);
-          setReferenceCode(result.referenceCode);
-          setCompletionDate(new Date().toLocaleDateString('en-US', {
-            year: 'numeric', month: 'long', day: 'numeric',
-          }));
-          toast.success('Certificate issued!');
-        }
+      .then(async (result) => {
+        if (!result || cancelled) return;
+        // Read back rather than assume: the endpoint is what decides the
+        // reference code, the completion date and the snapshot fields.
+        const detail = await fetchCertificateDetail(result.id);
+        if (!cancelled) setCert(detail);
       })
       .catch((err) => {
-        const msg = err instanceof Error ? err.message : (typeof err === 'object' ? JSON.stringify(err) : 'Failed to generate certificate');
+        const msg = err instanceof Error ? err.message : 'Could not issue your certificate';
         console.error('Certificate generation error:', msg, err);
-        setError(msg);
+        if (!cancelled) setError(msg);
       })
-      .finally(() => setGenerating(false));
+      .finally(() => { if (!cancelled) setGenerating(false); });
+
+    return () => { cancelled = true; };
   }, [isOpen, courseId]);
+
+  const handleDownload = async () => {
+    if (!cert) return;
+    setDownloading(true);
+    try {
+      const data = await buildCertificateRenderData({
+        learner_name: cert.learner_name,
+        course_title: cert.course_title,
+        course_category: cert.course_category,
+        educator_name: cert.educator_name,
+        educator_role: cert.educator_role,
+        institution_name: cert.institution_name,
+        completion_date: cert.completion_date,
+        certificate_code: cert.reference_code,
+        verification_url: certificateVerificationUrl(cert),
+        skills_earned: cert.skills_earned,
+        course_duration_hours: cert.course_duration_hours,
+        lesson_count: cert.lesson_count,
+      });
+      await generatePDFCertificate(data, 'download');
+      toast.success('Certificate downloaded');
+    } catch (err) {
+      console.error('Certificate PDF failed:', err);
+      toast.error('Could not generate the PDF. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-3xl text-center mb-2 flex items-center justify-center gap-3">
-            <Award className="w-8 h-8 text-green-600" />
-            {generating ? 'Generating Certificate...' : error ? 'Certificate Generation Failed' : 'Your Certificate is Ready!'}
+          <DialogTitle className="text-2xl text-center flex items-center justify-center gap-3">
+            <Award className="w-7 h-7 text-primary shrink-0 simplifiable" aria-hidden="true" />
+            {generating
+              ? 'Issuing your certificate…'
+              : error
+                ? 'Certificate not issued'
+                : 'Your certificate is ready'}
           </DialogTitle>
-          <DialogDescription className="text-center text-gray-600 text-lg">
-            {generating ? 'Please wait while we generate your certificate' : error || 'Congratulations on completing the course'}
+          <DialogDescription className="text-center text-base">
+            {generating
+              ? 'Checking your completion and recording the certificate.'
+              : error || 'Congratulations on completing the course.'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-6">
+        <div className="py-4">
           {generating ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
-              <p className="text-gray-600">Generating your certificate...</p>
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" aria-hidden="true" />
+              <p className="text-muted-foreground" role="status">One moment…</p>
             </div>
           ) : error ? (
-            <div className="text-center py-8">
-              <p className="text-red-600 mb-4">{error}</p>
-              <Button onClick={onClose} variant="outline" className="px-6">Close</Button>
+            <div className="text-center py-6">
+              <Button onClick={onClose} variant="outline">Close</Button>
             </div>
-          ) : (
+          ) : cert ? (
             <>
-              <div className="bg-white p-8 rounded-2xl border-2 border-blue-200 mb-6">
-                <div className="bg-white p-8 rounded-xl border-4 border-double border-blue-600 shadow-lg">
-                  <div className="text-center">
-                    <div className="mb-6">
-                      <Logo size="lg" className="mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 uppercase tracking-wider">
-                        Certificate of Completion
-                      </p>
-                    </div>
+              <div className="bg-card rounded-2xl border-4 border-double border-primary p-8 mb-6">
+                <div className="text-center">
+                  <Logo size="md" className="mx-auto mb-2" />
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-6">
+                    Certificate of Completion
+                  </p>
 
-                    <div className="border-t-2 border-b-2 border-blue-300 py-6 my-6">
-                      <p className="text-gray-700 mb-4 text-lg">This certifies that</p>
-                      <p className="text-3xl font-bold text-gray-900 mb-4">{learnerName}</p>
-                      <p className="text-gray-700 mb-2">has successfully completed</p>
-                      <p className="text-2xl font-semibold text-blue-700">{courseTitle}</p>
-                    </div>
-
-                    <div className="flex justify-between items-center text-sm text-gray-600">
-                      <div>
-                        <p className="font-semibold text-gray-900">Completion Date</p>
-                        <p>{completionDate}</p>
-                      </div>
-                      <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-                        <Award className="w-8 h-8 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Certificate Code</p>
-                        <p className="font-mono">{referenceCode}</p>
-                      </div>
-                    </div>
+                  <div className="border-y-2 border-border py-6">
+                    <p className="text-muted-foreground mb-3">This is to certify that</p>
+                    <p className="text-2xl font-bold text-foreground mb-4 break-words">
+                      {cert.learner_name}
+                    </p>
+                    <p className="text-muted-foreground mb-2">has successfully completed</p>
+                    <p className="text-xl font-semibold text-primary break-words">
+                      {cert.course_title}
+                    </p>
                   </div>
+
+                  <dl className="flex justify-between items-start gap-4 mt-6 text-sm text-left">
+                    <div>
+                      <dt className="font-semibold text-foreground">Completion date</dt>
+                      <dd className="text-muted-foreground">{formatDate(cert.completion_date)}</dd>
+                    </div>
+                    <div className="text-right">
+                      <dt className="font-semibold text-foreground">Certificate ID</dt>
+                      <dd className="text-muted-foreground font-mono break-all">
+                        {cert.reference_code}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
               </div>
 
-              <div className="flex gap-4 justify-center">
-                <Button
-                  onClick={onDownload}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
-                >
-                  <Download className="w-5 h-5 mr-2" />
-                  Download PDF
+              <div className="flex gap-3 justify-center flex-wrap">
+                <Button onClick={handleDownload} disabled={downloading}>
+                  {downloading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" aria-hidden="true" />
+                  )}
+                  {downloading ? 'Preparing PDF…' : 'Download PDF'}
                 </Button>
-                <Button
-                  onClick={() => certificateId && onViewCertificate(certificateId)}
-                  variant="outline"
-                  className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-6 text-lg"
-                >
-                  <Eye className="w-5 h-5 mr-2" />
-                  View Certificate
+                <Button variant="outline" onClick={() => onViewCertificate(cert.id)}>
+                  <Eye className="w-4 h-4 mr-2" aria-hidden="true" />
+                  View certificate
                 </Button>
               </div>
             </>
-          )}
+          ) : null}
         </div>
 
-        <div className="text-center pt-4 border-t">
-          <Button variant="ghost" onClick={onClose} className="text-gray-600">
-            Close
-          </Button>
+        <div className="text-center pt-3 border-t border-border">
+          <Button variant="ghost" onClick={onClose}>Close</Button>
         </div>
       </DialogContent>
     </Dialog>

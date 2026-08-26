@@ -2,6 +2,16 @@ import { supabase } from './supabase'
 import { requireCurrentUserId } from './current-user'
 import { v4 as uuidv4 } from 'uuid'
 import { createNotification } from './notifications'
+import {
+  resolveAchievements,
+  computeXP,
+  getLevelInfo,
+  type LearnerMetrics,
+  type MetricTimeline,
+  type ResolvedAchievement,
+  type XPBreakdown,
+  type LevelInfo,
+} from './gamification'
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -194,8 +204,13 @@ export interface Certificate {
   id: string
   course_id?: string
   course_title: string
+  course_category?: string
+  course_description?: string
+  /** ISO timestamp. Formatting is the view's job — see fetchCertificates. */
   completion_date: string
+  issued_at: string
   certificate_code: string
+  status: string
   score: number
   pdf_url?: string
   verification_url?: string
@@ -566,7 +581,16 @@ export async function fetchCourseDetail(courseId: string): Promise<CourseDetail 
     } else {
       status = 'locked'
     }
-    return { id: l.id, title: l.title, sequence_order: l.sequence_order, status }
+    // estimated_duration is selected above and already feeds the course total,
+    // but it was dropped here — so the roadmap rendered "Estimated time: N/A"
+    // on every lesson while the header showed a correct combined duration.
+    return {
+      id: l.id,
+      title: l.title,
+      sequence_order: l.sequence_order,
+      estimated_duration: l.estimated_duration,
+      status,
+    }
   })
 
   return {
@@ -880,20 +904,36 @@ export async function completeLesson(lessonId: string, courseId: string): Promis
 
   const { data: existing } = await supabase
     .from('lesson_progress')
-    .select('id')
+    .select('id, is_completed, progress_meta')
     .eq('enrollment_id', enrollment.id)
     .eq('lesson_id', lessonId)
     .maybeSingle()
+
+  const now = new Date().toISOString()
 
   // `is_completed` is the canonical completion flag — it is what admin and
   // educator analytics read, and what every learner-side percentage, course
   // completion check and certificate eligibility check now reads too. This
   // used to write only `is_viewed`, so lessons a learner genuinely finished
   // were counted as "skipped" on the educator's dashboard.
+  //
+  // `progress_meta.completed_at` records WHEN, which nothing else in the row
+  // does: `last_viewed_at` is overwritten every time the lesson is re-opened,
+  // so without this an achievement's earned date would move whenever a
+  // learner revisited old material. It is only ever stamped once — re-running
+  // completeLesson on an already-completed lesson leaves the original date
+  // alone, which is what keeps the milestone dates stable.
   if (existing) {
+    const meta = (existing.progress_meta as Record<string, unknown> | null) ?? {}
     await supabase
       .from('lesson_progress')
-      .update({ is_completed: true, is_viewed: true, summary_completed: true, last_viewed_at: new Date().toISOString() })
+      .update({
+        is_completed: true,
+        is_viewed: true,
+        summary_completed: true,
+        last_viewed_at: now,
+        progress_meta: { ...meta, completed_at: (meta.completed_at as string) || now },
+      })
       .eq('id', existing.id)
   } else {
     await supabase.from('lesson_progress').insert({
@@ -903,8 +943,9 @@ export async function completeLesson(lessonId: string, courseId: string): Promis
       is_viewed: true,
       summary_completed: true,
       view_count: 1,
-      first_viewed_at: new Date().toISOString(),
-      last_viewed_at: new Date().toISOString(),
+      first_viewed_at: now,
+      last_viewed_at: now,
+      progress_meta: { completed_at: now },
     })
   }
 
@@ -1370,50 +1411,219 @@ export async function fetchQuizAttemptHistory(lessonId: string, courseId: string
   }
 }
 
-// ─── Learner Stats ─────────────────────────────────────────────────────
+// ─── Learner Stats & Gamification ──────────────────────────────────────
 
-export async function fetchLearnerStats(): Promise<LearnerStats> {
+/**
+ * Everything the Achievements & Certificates surface needs, measured once.
+ *
+ * This is the single place the learner's counts are taken. `fetchLearnerStats`
+ * now delegates to it, so the Dashboard tiles, the level card, achievement
+ * progress and the Progress page can no longer drift apart — which they had:
+ * `fetchLearnerStats` counted every `is_completed` progress row on the
+ * enrollment, including rows left behind by lessons that had since been
+ * unpublished, while `sync_learner_course_state()` and the certificate gate
+ * counted only published, visible ones. The same learner could therefore read
+ * "12 lessons completed" on the Dashboard and 10/11 on a course.
+ */
+export interface LearnerGamification {
+  metrics: LearnerMetrics
+  timeline: MetricTimeline
+  achievements: ResolvedAchievement[]
+  xp: XPBreakdown
+  level: LevelInfo
+}
+
+/** A calendar day key in a locale-independent ISO form. */
+function dayKey(iso: string): string {
+  return new Date(iso).toISOString().slice(0, 10)
+}
+
+export async function fetchLearnerGamification(): Promise<LearnerGamification> {
   const userId = await ensureUserId()
 
   const { data: enrollments } = await supabase
     .from('enrollments')
-    .select('id, status')
+    .select('id, course_id, status, enrolled_at, completed_at')
     .eq('user_id', userId)
     .neq('status', 'dropped')
 
   const enrollmentIds = (enrollments || []).map((e) => e.id)
-  const completedEnrollments = (enrollments || []).filter((e) => e.status === 'completed').length
+  const courseIds = [...new Set((enrollments || []).map((e) => e.course_id))]
 
-  let totalViewed = 0
-
-  if (enrollmentIds.length > 0) {
-    const { data: lp } = await supabase
-      .from('lesson_progress')
-      .select('id')
-      .in('enrollment_id', enrollmentIds)
-      .eq('is_completed', true)
-    totalViewed = lp?.length ?? 0
-  }
-
-  const { data: attempts } = await supabase
-    .from('quiz_attempts')
-    .select('score_pct')
-    .in('enrollment_id', enrollmentIds)
-
-  const scores = (attempts || []).map((a) => a.score_pct)
-  const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
-
-  const { count: certCount } = await supabase
+  // Certificates hang off the learner, not off a completed enrollment: one can
+  // legitimately exist while the enrollment is still active (an educator
+  // issued it, or the course gained a lesson afterwards). Reading them through
+  // `enrollments.status = 'completed'` hid real certificates from the learner
+  // who held them — confirmed against the live database.
+  const certificatesQuery = supabase
     .from('certificates')
-    .select('id', { count: 'exact', head: true })
-    .in('enrollment_id', enrollmentIds)
+    .select('id, issued_at, completion_date, status')
+    .eq('user_id', userId)
     .eq('status', 'issued')
 
+  const badgesQuery = supabase
+    .from('user_achievements')
+    .select('achievement_id, earned_at')
+    .eq('user_id', userId)
+
+  if (enrollmentIds.length === 0) {
+    const [{ data: certs }, { data: badges }] = await Promise.all([certificatesQuery, badgesQuery])
+    return buildGamification({
+      enrollments: enrollments || [],
+      publishedLessonIds: new Set<string>(),
+      progress: [],
+      attempts: [],
+      certificates: certs || [],
+      badges: badges || [],
+    })
+  }
+
+  const [{ data: lessons }, { data: progress }, { data: attempts }, { data: certs }, { data: badges }] =
+    await Promise.all([
+      supabase
+        .from('lessons')
+        .select('id')
+        .in('course_id', courseIds)
+        .eq('status', 'published')
+        .or('visibility_status.eq.visible,visibility_status.is.null'),
+      supabase
+        .from('lesson_progress')
+        .select('lesson_id, is_completed, first_viewed_at, last_viewed_at, progress_meta')
+        .in('enrollment_id', enrollmentIds),
+      supabase
+        .from('quiz_attempts')
+        .select('quiz_id, score_pct, result, submitted_at, started_at')
+        .in('enrollment_id', enrollmentIds),
+      certificatesQuery,
+      badgesQuery,
+    ])
+
+  return buildGamification({
+    enrollments: enrollments || [],
+    publishedLessonIds: new Set((lessons || []).map((l) => l.id)),
+    progress: progress || [],
+    attempts: attempts || [],
+    certificates: certs || [],
+    badges: badges || [],
+  })
+}
+
+export interface GamificationSource {
+  enrollments: { id: string; course_id: string; status: string; enrolled_at: string | null; completed_at: string | null }[]
+  publishedLessonIds: Set<string>
+  progress: { lesson_id: string; is_completed: boolean | null; first_viewed_at: string | null; last_viewed_at: string | null; progress_meta: Record<string, unknown> | null }[]
+  attempts: { quiz_id: string; score_pct: number; result: string | null; submitted_at: string | null; started_at: string | null }[]
+  certificates: { id: string; issued_at: string; completion_date: string | null; status: string }[]
+  badges: { achievement_id: string | null; earned_at: string }[]
+}
+
+/**
+ * Pure derivation, separated from the queries so the audit script can feed it
+ * service-role rows and assert the UI would show the same numbers.
+ */
+export function buildGamification(src: GamificationSource): LearnerGamification {
+  const activeDays = new Set<string>()
+
+  // Lessons. Scoped to published+visible so this count matches the course
+  // percentage everywhere else. `progress_meta.completed_at` is stamped by
+  // completeLesson going forward; rows written before that fall back to
+  // first_viewed_at, which — unlike last_viewed_at — is never overwritten, so
+  // an achievement's date cannot move because a lesson was re-opened.
+  const lessonStamps: string[] = []
+  for (const p of src.progress) {
+    if (!src.publishedLessonIds.has(p.lesson_id)) continue
+    const meta = p.progress_meta as { completed_at?: string } | null
+    const stamp = meta?.completed_at || p.first_viewed_at || p.last_viewed_at
+    if (p.first_viewed_at) activeDays.add(dayKey(p.first_viewed_at))
+    if (p.last_viewed_at) activeDays.add(dayKey(p.last_viewed_at))
+    if (p.is_completed && stamp) lessonStamps.push(stamp)
+  }
+  lessonStamps.sort()
+
+  // Courses. `status` is derived by sync_learner_course_state(), never
+  // asserted by the client, so it is safe to count here.
+  const courseStamps = src.enrollments
+    .filter((e) => e.status === 'completed')
+    .map((e) => e.completed_at)
+    .filter((d): d is string => !!d)
+    .sort()
+
+  const certStamps = src.certificates
+    .map((c) => c.completion_date || c.issued_at)
+    .filter((d): d is string => !!d)
+    .sort()
+
+  // Quizzes are counted per DISTINCT quiz, so retaking one already passed adds
+  // neither a count nor XP — the difference between rewarding learning and
+  // rewarding repetition.
+  const firstPass = new Map<string, string>()
+  const firstHigh = new Map<string, string>()
+  let scoreSum = 0
+  for (const a of src.attempts) {
+    const when = a.submitted_at || a.started_at
+    if (when) activeDays.add(dayKey(when))
+    scoreSum += a.score_pct ?? 0
+    if (a.result === 'pass' && when) {
+      const existing = firstPass.get(a.quiz_id)
+      if (!existing || when < existing) firstPass.set(a.quiz_id, when)
+    }
+    if ((a.score_pct ?? 0) >= 90 && when) {
+      const existing = firstHigh.get(a.quiz_id)
+      if (!existing || when < existing) firstHigh.set(a.quiz_id, when)
+    }
+  }
+  const quizStamps = [...firstPass.values()].sort()
+  const highStamps = [...firstHigh.values()].sort()
+
+  const badgeStamps = src.badges.map((b) => b.earned_at).filter(Boolean).sort()
+
+  for (const e of src.enrollments) {
+    if (e.enrolled_at) activeDays.add(dayKey(e.enrolled_at))
+  }
+  for (const d of certStamps) activeDays.add(dayKey(d))
+
+  // A learning day is represented by the first moment of that day, so the
+  // "Nth learning day" achievement is dated to the day it was reached.
+  const dayStamps = [...activeDays].sort().map((d) => `${d}T00:00:00.000Z`)
+
+  const metrics: LearnerMetrics = {
+    lessons_completed: lessonStamps.length,
+    courses_completed: courseStamps.length,
+    certificates_earned: certStamps.length,
+    quizzes_passed: quizStamps.length,
+    high_scores: highStamps.length,
+    active_days: dayStamps.length,
+    course_badges: badgeStamps.length,
+    avg_quiz_score: src.attempts.length > 0 ? Math.round(scoreSum / src.attempts.length) : 0,
+  }
+
+  const timeline: MetricTimeline = {
+    lessons_completed: lessonStamps,
+    courses_completed: courseStamps,
+    certificates_earned: certStamps,
+    quizzes_passed: quizStamps,
+    high_scores: highStamps,
+    active_days: dayStamps,
+    course_badges: badgeStamps,
+  }
+
+  const achievements = resolveAchievements(metrics, timeline)
+  const xp = computeXP(metrics, achievements)
+
+  return { metrics, timeline, achievements, xp, level: getLevelInfo(xp.total) }
+}
+
+/**
+ * The four headline numbers. Kept as a thin projection of the measurement
+ * above so the Dashboard and this page can never report different totals.
+ */
+export async function fetchLearnerStats(): Promise<LearnerStats> {
+  const { metrics } = await fetchLearnerGamification()
   return {
-    courses_completed: completedEnrollments,
-    lessons_completed: totalViewed,
-    avg_score: avgScore,
-    certificates_count: certCount ?? 0,
+    courses_completed: metrics.courses_completed,
+    lessons_completed: metrics.lessons_completed,
+    avg_score: metrics.avg_quiz_score,
+    certificates_count: metrics.certificates_earned,
   }
 }
 
@@ -1564,51 +1774,71 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
 
 // ─── Certificates ──────────────────────────────────────────────────────
 
+/**
+ * The learner's certificates, with real course information attached.
+ *
+ * WHAT WAS WRONG
+ *
+ * 1. The list was reached through `enrollments.status = 'completed'`. A
+ *    certificate whose enrollment was still `active` — because the course
+ *    gained a lesson after issuance, or an educator issued it directly — was
+ *    invisible to the learner who held it. Confirmed on live data: a learner
+ *    holding two issued certificates was shown one.
+ * 2. `is_custom_upload` was inferred from `!!pdf_url`. Every certificate
+ *    rendered to storage therefore claimed to be an educator's own upload,
+ *    routing the learner to a raw PDF link instead of their certificate.
+ *    The metadata flag the issuing endpoints actually write was ignored.
+ * 3. `completion_date` was returned pre-formatted as `"6 May 2026"` and then
+ *    fed back through `new Date(...)` by the PDF generator — a round-trip
+ *    that is locale-dependent and produces `Invalid Date` outside en-US.
+ * 4. Missing course titles fell back to the literal string `'Unknown Course'`.
+ *
+ * Certificates now hang off `certificates.user_id` (which RLS scopes to the
+ * signed-in learner), and course information is joined live so a certificate
+ * can always name its course even if the snapshot column was never filled in.
+ */
 export async function fetchCertificates(): Promise<Certificate[]> {
   const userId = await ensureUserId()
 
-  const { data: enrollments, error: enrollErr } = await supabase
-    .from('enrollments')
-    .select('id, course_id')
-    .eq('user_id', userId)
-    .eq('status', 'completed')
-
-  if (enrollErr) {
-    console.error('fetchCertificates enrollments error:', enrollErr)
-    return []
-  }
-
-  const enrollmentIds = (enrollments || []).map((e) => e.id)
-
-  if (enrollmentIds.length === 0) return []
-
   const { data: certs, error: certErr } = await supabase
     .from('certificates')
-    .select('id, enrollment_id, reference_code, issued_at, pdf_url, verification_url, metadata, educator_name, institution_name, skills_earned, course_duration_hours, learner_name')
-    .in('enrollment_id', enrollmentIds)
+    .select(
+      'id, enrollment_id, course_id, reference_code, issued_at, completion_date, status, pdf_url, verification_url, metadata, learner_name, course_title, educator_name, institution_name, skills_earned, course_duration_hours',
+    )
+    .eq('user_id', userId)
     .eq('status', 'issued')
+    .order('issued_at', { ascending: false })
 
   if (certErr) {
-    console.error('fetchCertificates certs error:', certErr)
+    console.error('fetchCertificates error:', certErr)
     return []
   }
   if (!certs || certs.length === 0) return []
 
-  const courseMap = new Map((enrollments || []).map((e) => [e.id, e.course_id]))
+  const courseIds = [...new Set(certs.map((c) => c.course_id).filter(Boolean))] as string[]
+  const enrollmentIds = certs.map((c) => c.enrollment_id).filter(Boolean) as string[]
 
-  const { data: courses, error: courseErr } = await supabase
-    .from('courses')
-    .select('id, title, system_course')
-    .in('id', [...new Set((enrollments || []).map((e) => e.course_id))])
+  const [{ data: courses }, { data: enrollments }, { data: attempts }] = await Promise.all([
+    courseIds.length
+      ? supabase
+          .from('courses')
+          .select('id, title, description, category, difficulty_level, system_course, created_by')
+          .in('id', courseIds)
+      : Promise.resolve({ data: [] as CertificateCourseRow[] }),
+    enrollmentIds.length
+      ? supabase.from('enrollments').select('id, course_id, completed_at').in('id', enrollmentIds)
+      : Promise.resolve({ data: [] as { id: string; course_id: string; completed_at: string | null }[] }),
+    enrollmentIds.length
+      ? supabase.from('quiz_attempts').select('enrollment_id, score_pct').in('enrollment_id', enrollmentIds)
+      : Promise.resolve({ data: [] as { enrollment_id: string; score_pct: number }[] }),
+  ])
 
-  if (courseErr) console.error('fetchCertificates courses error:', courseErr)
-
-  const courseInfoMap = new Map((courses || []).map((c) => [c.id, c]))
-
-  const { data: attempts } = await supabase
-    .from('quiz_attempts')
-    .select('enrollment_id, score_pct')
-    .in('enrollment_id', enrollmentIds)
+  const courseMap = new Map<string, CertificateCourseRow>(
+    ((courses || []) as CertificateCourseRow[]).map((c) => [c.id, c]),
+  )
+  const enrollmentMap = new Map<string, { id: string; course_id: string; completed_at: string | null }>(
+    ((enrollments || []) as { id: string; course_id: string; completed_at: string | null }[]).map((e) => [e.id, e]),
+  )
 
   const bestScores = new Map<string, number>()
   for (const a of attempts || []) {
@@ -1617,108 +1847,48 @@ export async function fetchCertificates(): Promise<Certificate[]> {
   }
 
   return certs.map((c) => {
-    const courseId = courseMap.get(c.enrollment_id)
-    const courseInfo = courseInfoMap.get(courseId!)
-    
-    // Determine if custom upload
-    const isCustomUpload = c.metadata?.is_custom === true || 
-                           (c.verification_url && !c.verification_url.includes('/verify/')) ||
-                           !!c.pdf_url;
+    const course = c.course_id ? courseMap.get(c.course_id) : undefined
+    const enrollment = c.enrollment_id ? enrollmentMap.get(c.enrollment_id) : undefined
+    const metadata = (c.metadata as Record<string, unknown> | null) ?? {}
 
     return {
       id: c.id,
-      course_id: courseId,
-      course_title: (courseInfo as any)?.title || 'Unknown Course',
-      completion_date: new Date(c.issued_at).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric',
-      }),
+      course_id: c.course_id ?? undefined,
+      // The snapshot is the record of what was awarded; the live course is the
+      // fallback so a certificate can always name its course. Only when both
+      // are absent — a course deleted outright — does the UI say so plainly.
+      course_title: c.course_title || course?.title || 'Course no longer available',
+      course_category: course?.category ?? undefined,
+      course_description: course?.description ?? undefined,
+      completion_date: c.completion_date || enrollment?.completed_at || c.issued_at,
+      issued_at: c.issued_at,
       certificate_code: c.reference_code,
+      status: c.status,
       score: bestScores.get(c.enrollment_id) ?? 0,
-      pdf_url: c.pdf_url || c.verification_url,
-      verification_url: c.verification_url,
-      is_system_course: (courseInfo as any)?.system_course || false,
-      is_custom_upload: !!isCustomUpload,
-      educator_name: c.educator_name || undefined,
-      institution_name: c.institution_name || undefined,
-      skills_earned: c.skills_earned || undefined,
+      pdf_url: c.pdf_url ?? undefined,
+      verification_url: c.verification_url ?? undefined,
+      is_system_course: course?.system_course === true || metadata.is_custom !== true,
+      // The issuing endpoints record what kind of certificate this is. Only a
+      // certificate explicitly marked custom, or one carrying a stored PDF it
+      // did not generate itself, is an educator upload.
+      is_custom_upload: metadata.is_custom === true,
+      educator_name: c.educator_name ?? undefined,
+      institution_name: c.institution_name ?? undefined,
+      skills_earned: c.skills_earned ?? undefined,
       course_duration_hours: c.course_duration_hours ? Number(c.course_duration_hours) : undefined,
-      learner_name: c.learner_name || undefined
+      learner_name: c.learner_name ?? undefined,
     }
   })
 }
 
-export interface LearnerBadge {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  earnedAt?: string;
-  unlocked: boolean;
-}
-
-export async function fetchLearnerBadges(): Promise<LearnerBadge[]> {
-  const stats = await fetchLearnerStats();
-  const badges: LearnerBadge[] = [
-    {
-      id: 'first_steps',
-      title: 'First Steps',
-      description: 'Completed your first lesson.',
-      icon: 'Footprints',
-      unlocked: stats.lessons_completed >= 1,
-      earnedAt: new Date().toISOString()
-    },
-    {
-      id: 'quick_learner',
-      title: 'Quick Learner',
-      description: 'Completed 10 lessons.',
-      icon: 'Zap',
-      unlocked: stats.lessons_completed >= 10,
-    },
-    {
-      id: 'dedicated_learner',
-      title: 'Dedicated Learner',
-      description: 'Completed 25 lessons.',
-      icon: 'BookOpen',
-      unlocked: stats.lessons_completed >= 25,
-    },
-    {
-      id: 'course_master',
-      title: 'Course Master',
-      description: 'Completed your first full course.',
-      icon: 'GraduationCap',
-      unlocked: stats.courses_completed >= 1,
-      earnedAt: new Date().toISOString()
-    },
-    {
-      id: 'veteran_student',
-      title: 'Veteran',
-      description: 'Completed 5 full courses.',
-      icon: 'Shield',
-      unlocked: stats.courses_completed >= 5,
-    },
-    {
-      id: 'high_achiever',
-      title: 'High Achiever',
-      description: 'Maintained an average score of 80% or higher.',
-      icon: 'Star',
-      unlocked: stats.avg_score >= 80 && stats.lessons_completed > 0,
-    },
-    {
-      id: 'multi_course',
-      title: 'Scholar',
-      description: 'Earned 3 or more certificates.',
-      icon: 'Award',
-      unlocked: stats.certificates_count >= 3,
-    },
-    {
-      id: 'consistency',
-      title: 'Consistent Explorer',
-      description: 'Stayed active and engaged across multiple courses.',
-      icon: 'Flame',
-      unlocked: stats.courses_completed >= 2 && stats.lessons_completed >= 15,
-    }
-  ];
-  return badges;
+interface CertificateCourseRow {
+  id: string
+  title: string
+  description: string | null
+  category: string | null
+  difficulty_level: string | null
+  system_course: boolean | null
+  created_by: string | null
 }
 
 // ─── Lesson Summaries ─────────────────────────────────────────────────
@@ -2288,75 +2458,198 @@ export async function fetchLessonIdsInCourse(
 export interface FullCertificate {
   id: string
   learner_name: string
+  course_id: string | null
   course_title: string
+  course_category: string | null
+  course_description: string | null
+  course_difficulty: string | null
   educator_name: string
   institution_name: string
+  /** ISO timestamp of when the course was finished. */
   completion_date: string
+  /** ISO timestamp of when this certificate was issued. */
+  issued_at: string
   reference_code: string
   verification_url: string
   skills_earned: string[]
+  /** Real hours, derived from the course's lessons when not set explicitly. */
   course_duration_hours: number
+  /** Published, visible lessons in the course at the time of reading. */
+  lesson_count: number
   status: string
-  issued_at: string
+  revoked_at: string | null
+  revoke_reason: string | null
+  /** An educator's own uploaded PDF, when this certificate is one. */
+  pdf_url: string | null
+  is_custom_upload: boolean
+  is_system_course: boolean
+  educator_role: string
   template_id: string
   enrollment_id: string
   metadata?: Record<string, any>
 }
 
+/**
+ * One certificate, with every field the learner sees resolved from real data.
+ *
+ * WHAT WAS WRONG
+ *
+ * This read only the snapshot columns on `certificates` and, when one was
+ * empty, substituted the literal strings `'Course'`, `'Learner'` and
+ * `'Educator'`. Those are not fallbacks, they are placeholders presented as
+ * fact — a learner opening such a certificate was told they had completed a
+ * course called "Course". The learner-side claim endpoint made this reachable
+ * because its UPDATE branch (taken whenever a certificate row already existed
+ * for the enrollment) never wrote the snapshot at all.
+ *
+ * STALE SNAPSHOT vs LIVE RELATIONSHIP
+ *
+ * Both, deliberately, in that order. The snapshot is what was awarded and must
+ * win — renaming a course should not silently rewrite certificates already
+ * issued against its old name, and a learner who has since changed their
+ * display name still holds a certificate in the name it was awarded in. But
+ * where a snapshot column is empty there is nothing to preserve, so the live
+ * row is read instead of inventing a placeholder. Fields that are not part of
+ * the award at all (category, description, lesson count) are always live.
+ *
+ * Access is enforced by RLS on `certificates` — a learner can only select rows
+ * where `user_id` is their own, or where they are the course's educator, or
+ * they are an admin. The checks below decide what to *show*, not what may be
+ * read; substituting another learner's certificate id returns no row at all.
+ */
 export async function fetchCertificateDetail(certId: string): Promise<FullCertificate | null> {
   const userId = await ensureUserId()
   const { data, error } = await supabase
     .from('certificates')
     .select('*')
     .eq('id', certId)
-    .single()
+    .maybeSingle()
 
   if (error || !data) return null
 
-  // Security: only the owner or educator/admin can view
-  const { data: enrollment } = await supabase
-    .from('enrollments')
-    .select('user_id, course_id')
-    .eq('id', data.enrollment_id)
-    .single()
+  const [{ data: enrollment }, { data: learner }] = await Promise.all([
+    supabase.from('enrollments').select('user_id, course_id, completed_at').eq('id', data.enrollment_id).maybeSingle(),
+    supabase.from('users').select('full_name').eq('id', data.user_id ?? userId).maybeSingle(),
+  ])
 
-  if (!enrollment) return null
+  const courseId = data.course_id || enrollment?.course_id || null
 
-  const { data: course } = await supabase
-    .from('courses')
-    .select('created_by')
-    .eq('id', enrollment.course_id)
-    .single()
+  const [{ data: course }, { count: lessonCount }] = await Promise.all([
+    courseId
+      ? supabase
+          .from('courses')
+          .select('id, title, description, category, difficulty_level, system_course, created_by, certificate_settings')
+          .eq('id', courseId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    courseId
+      ? supabase
+          .from('lessons')
+          .select('id', { count: 'exact', head: true })
+          .eq('course_id', courseId)
+          .eq('status', 'published')
+          .or('visibility_status.eq.visible,visibility_status.is.null')
+      : Promise.resolve({ count: 0 }),
+  ])
 
-  const isOwner = enrollment.user_id === userId
-  const isEducator = course?.created_by === userId
+  const isOwner = (data.user_id ?? enrollment?.user_id) === userId
+  const isEducator = !!course?.created_by && course.created_by === userId
   if (!isOwner && !isEducator) {
-    // Check admin
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single()
+    const { data: userData } = await supabase.from('users').select('role').eq('id', userId).maybeSingle()
     if (!userData || userData.role !== 'admin') return null
   }
 
+  let educatorName = data.educator_name as string | null
+  if (!educatorName && course?.created_by) {
+    const { data: educator } = await supabase
+      .from('users')
+      .select('full_name')
+      .eq('id', course.created_by)
+      .maybeSingle()
+    educatorName = educator?.full_name ?? null
+  }
+
+  const settings = (course?.certificate_settings as Record<string, unknown> | null) ?? {}
+  const metadata = (data.metadata as Record<string, unknown> | null) ?? {}
+
+  // Duration: the educator's own figure if they set one, otherwise the real
+  // sum of the course's published lesson durations. It used to be whatever
+  // `certificate_settings.course_duration_hours` said, which is `0` for every
+  // course on the platform that has not filled that panel in — and a
+  // certificate reading "Course Duration: 0 hours" is worse than one that
+  // omits the line, so an unresolvable duration stays 0 and is not rendered.
+  let durationHours = Number(data.course_duration_hours ?? 0)
+  if (!durationHours) durationHours = Number(settings.course_duration_hours ?? 0)
+  if (!durationHours && courseId) durationHours = await courseDurationHours(courseId)
+
   return {
     id: data.id,
-    learner_name: data.learner_name || 'Learner',
-    course_title: data.course_title || 'Course',
-    educator_name: data.educator_name || 'Educator',
-    institution_name: data.institution_name || 'ACESS Platform',
-    completion_date: data.completion_date || data.issued_at,
+    learner_name: (data.learner_name as string) || learner?.full_name || 'Learner',
+    course_id: courseId,
+    course_title: (data.course_title as string) || course?.title || 'Course no longer available',
+    course_category: course?.category ?? null,
+    course_description: course?.description ?? null,
+    course_difficulty: course?.difficulty_level ?? null,
+    educator_name: educatorName || '',
+    institution_name: (data.institution_name as string) || (settings.institution_name as string) || 'ACESS Platform',
+    completion_date: data.completion_date || enrollment?.completed_at || data.issued_at,
+    issued_at: data.issued_at,
     reference_code: data.reference_code,
     verification_url: data.verification_url || '',
-    skills_earned: data.skills_earned || [],
-    course_duration_hours: data.course_duration_hours || 0,
+    skills_earned: (data.skills_earned as string[]) || [],
+    course_duration_hours: durationHours,
+    lesson_count: lessonCount ?? 0,
     status: data.status,
-    issued_at: data.issued_at,
+    revoked_at: data.revoked_at ?? null,
+    revoke_reason: data.revoke_reason ?? null,
+    pdf_url: data.pdf_url ?? null,
+    is_custom_upload: metadata.is_custom === true,
+    is_system_course: course?.system_course ?? false,
+    educator_role: (metadata.educator_role as string) || (settings.educator_role as string) || 'Course Educator',
     template_id: data.template_id || 'default',
     enrollment_id: data.enrollment_id,
-    metadata: data.metadata || undefined,
+    metadata: (data.metadata as Record<string, any>) || undefined,
   }
+}
+
+/**
+ * Real study hours for a course, summed from its published, visible lessons.
+ *
+ * `lessons.estimated_duration` is in minutes and is populated for every lesson
+ * on the platform, so this is a measured figure rather than the 0 that
+ * `certificate_settings` supplies by default. Rounded to one decimal because
+ * a 97-minute course is 1.6 hours, not 2.
+ */
+export async function courseDurationHours(courseId: string): Promise<number> {
+  const { data: lessons } = await supabase
+    .from('lessons')
+    .select('estimated_duration')
+    .eq('course_id', courseId)
+    .eq('status', 'published')
+    .or('visibility_status.eq.visible,visibility_status.is.null')
+
+  const minutes = (lessons || []).reduce((sum, l) => sum + (Number(l.estimated_duration) || 0), 0)
+  return minutes > 0 ? Math.round((minutes / 60) * 10) / 10 : 0
+}
+
+/**
+ * The URL a certificate's code should be verified at.
+ *
+ * Stored `verification_url` values are not trustworthy for display: seeded and
+ * historically-claimed rows point at the Supabase project host
+ * (`<ref>.supabase.co/verify/...`) or at `http://localhost:3000`, because the
+ * issuing endpoints build the URL from the request's `Origin` header. Neither
+ * resolves for anyone the learner shares the certificate with. When the stored
+ * value does not point at the app the page is being served from, the code —
+ * which is the durable part — is re-pointed at the current origin.
+ */
+export function certificateVerificationUrl(cert: { verification_url?: string | null; certificate_code?: string; reference_code?: string }): string {
+  const code = cert.reference_code || cert.certificate_code || ''
+  if (typeof window === 'undefined') return cert.verification_url || ''
+  const origin = window.location.origin
+  const stored = cert.verification_url || ''
+  if (stored.startsWith(origin)) return stored
+  return code ? `${origin}/verify/${code}` : stored
 }
 
 export async function checkCourseCertificateEligibility(courseId: string): Promise<{

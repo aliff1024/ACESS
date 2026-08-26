@@ -41,7 +41,10 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
     }
     if (pathname.startsWith('/learner/courses')) return 'courses';
     if (pathname.startsWith('/learner/progress')) return 'progress';
-    if (pathname.startsWith('/learner/certificates')) return 'certificates';
+    // A single certificate still lives at /learner/certificates?id=…; it is
+    // part of the Achievements & Certificates destination, so it highlights
+    // the same nav entry rather than a second one that no longer exists.
+    if (pathname.startsWith('/learner/certificates')) return 'achievements';
     if (pathname.startsWith('/learner/achievements')) return 'achievements';
     return 'dashboard';
   })();
@@ -139,7 +142,6 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
     if (view === 'courses_enrolled') router.push('/learner/courses?filter=enrolled');
     if (view === 'courses_favorites') router.push('/learner/favorites');
     if (view === 'progress') router.push('/learner/progress');
-    if (view === 'certificates') router.push('/learner/certificates');
     if (view === 'achievements') router.push('/learner/achievements');
   };
 

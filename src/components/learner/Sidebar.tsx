@@ -47,8 +47,10 @@ const VIEW_HREF: Record<string, string> = {
   courses_enrolled: '/learner/courses?filter=enrolled',
   courses_favorites: '/learner/favorites',
   progress: '/learner/progress',
+  // Achievements and Certificates were two entries pointing at two pages that
+  // were both titled "My Achievements" and both showed a level, badges and
+  // certificates. One destination, with tabs inside it, is the honest shape.
   achievements: '/learner/achievements',
-  certificates: '/learner/certificates',
 };
 
 function isCoursesView(view: string): boolean {
@@ -83,7 +85,6 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
           subItems: [
             { id: 'progress', key: 'nav.progress', icon: TrendingUp },
             { id: 'achievements', key: 'nav.achievements', icon: Trophy },
-            { id: 'certificates', key: 'nav.certificates', icon: Award },
           ],
         },
         { id: 'accessibility', key: 'nav.accessibility', icon: Settings },
@@ -115,8 +116,9 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
           ],
         },
         { id: 'progress', key: 'nav.progress', icon: TrendingUp, labelOverride: 'Progress' },
-        { id: 'achievements', key: 'nav.achievements', icon: Trophy, labelOverride: 'Badges' },
-        { id: 'certificates', key: 'nav.certificates', icon: Award, labelOverride: 'Certificates' },
+        // Plain, concrete label: this preset avoids category words like
+        // "Achievements" in favour of naming the thing the learner will see.
+        { id: 'achievements', key: 'nav.achievements', icon: Trophy, labelOverride: 'My Badges and Certificates' },
         { id: 'accessibility', key: 'nav.accessibility', icon: Settings, labelOverride: 'Settings' },
       ];
     }
@@ -138,7 +140,6 @@ export function Sidebar({ activeView, onNavigate, onAccessibilityClick, classNam
       },
       { id: 'progress', key: 'nav.progress', icon: TrendingUp },
       { id: 'achievements', key: 'nav.achievements', icon: Trophy },
-      { id: 'certificates', key: 'nav.certificates', icon: Award },
       { id: 'accessibility', key: 'nav.accessibility', icon: Settings },
     ];
   }, [activePreset]);

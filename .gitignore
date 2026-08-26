@@ -49,3 +49,4 @@ next-env.d.ts
 
 # Generated admin report PDFs
 /report-output
+scripts/audit/out/

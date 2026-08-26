@@ -39,6 +39,11 @@ const env = loadEnv();
 const LEARNER_EMAIL = process.env.PROBE_EMAIL || 'learner@acess.demo';
 const LEARNER_PASSWORD = process.env.PROBE_PASSWORD || 'AcessDemo2026!';
 
+// Unique per run, and used identically for insert and cleanup so a probe that
+// succeeds can never leave a row behind.
+const PROBE_SLUG = `acess-audit-probe-${Date.now()}`;
+const PROBE_TITLE = PROBE_SLUG;
+
 const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
@@ -166,9 +171,13 @@ async function main() {
   // ─────────────────────────────────────────────────────────────────────
   console.log('\n--- D. Authoring surfaces (learner must not author) ---');
   const authorProbes: Array<[string, () => PromiseLike<any>, () => Promise<void>]> = [
-    ['courses INSERT (become an author)', () => anon.from('courses').insert({ title: 'probe', created_by: uid, status: 'published', slug: 'probe-' + Date.now() }).select(), async () => { await admin.from('courses').delete().eq('slug', 'probe'); }],
+    // NOTE: the cleanup must match the slug actually inserted. An earlier
+    // version deleted eq('slug','probe') while inserting 'probe-<timestamp>',
+    // so when this probe still succeeded it left a real published course
+    // behind in the database.
+    ['courses INSERT (become an author)', () => anon.from('courses').insert({ title: PROBE_TITLE, created_by: uid, status: 'published', slug: PROBE_SLUG }).select(), async () => { await admin.from('courses').delete().eq('slug', PROBE_SLUG); }],
     ['courses UPDATE others (publish)', () => anon.from('courses').update({ status: 'published' }).eq('id', anyCourse.id).select(), async () => {}],
-    ['lessons INSERT', () => anon.from('lessons').insert({ course_id: anyCourse.id, title: 'probe', sequence_order: 999, status: 'published' }).select(), async () => { await admin.from('lessons').delete().eq('title', 'probe'); }],
+    ['lessons INSERT', () => anon.from('lessons').insert({ course_id: anyCourse.id, title: PROBE_TITLE, sequence_order: 999, status: 'published' }).select(), async () => { await admin.from('lessons').delete().eq('title', PROBE_TITLE); }],
     ['lessons UPDATE (unpublish a lesson)', () => anon.from('lessons').update({ status: 'draft' }).eq('course_id', anyCourse.id).select(), async () => {}],
     ['quizzes INSERT', () => anon.from('quizzes').insert({ lesson_id: null, title: 'probe' }).select(), async () => {}],
     ['quiz_answers read (answer key)', () => anon.from('quiz_answers').select('id, is_correct').limit(20), async () => {}],
@@ -248,6 +257,40 @@ async function main() {
   const leakedViaView = (viewRows || []).filter((o: any) => o.is_correct !== null && unattemptedQuestionIds.includes(o.question_id));
   rec('quiz_options_scoped', 'view withholds key pre-attempt', leakedViaView.length ? 'FAIL' : 'PASS',
     `${leakedViaView.length} leaked via the learner view`);
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Functions in learner-api.ts that take an id from the caller instead of
+  // deriving it from the session: completeLearnerCheckpoint(checkpointId,
+  // enrollmentId) and submitH5PResponse. If RLS did not scope these, a learner
+  // could write against another learner's enrollment by passing its id.
+  console.log('\n--- G. Writes that trust a caller-supplied id ---');
+  const { data: otherLearner } = await admin.from('users').select('id').eq('role', 'learner').neq('id', uid).limit(1).single();
+  const victimId = otherLearner.id;
+  const { data: victimEnr } = await admin.from('enrollments').select('id').eq('user_id', victimId).limit(1).maybeSingle();
+  if (victimEnr) {
+    const { data: anyCp } = await admin.from('lesson_checkpoints').select('id').limit(1).maybeSingle();
+    if (anyCp) {
+      const { data: cpIns, error: cpErr } = await anon.from('learner_checkpoints')
+        .upsert({ enrollment_id: victimEnr.id, checkpoint_id: anyCp.id, completed: true, completed_at: new Date().toISOString() })
+        .select();
+      if (cpErr) rec('learner_checkpoints', "write against B's enrollment", 'PASS', `blocked ${cpErr.code}`);
+      else {
+        rec('learner_checkpoints', "write against B's enrollment", (cpIns || []).length ? 'FAIL' : 'PASS', (cpIns || []).length ? 'ACCEPTED — cleaning up' : 'no-op');
+        if ((cpIns || []).length) await admin.from('learner_checkpoints').delete().eq('id', cpIns[0].id);
+      }
+    }
+    const { data: anyH5p } = await admin.from('h5p_contents').select('id').limit(1).maybeSingle();
+    if (anyH5p) {
+      const { data: hIns, error: hErr } = await anon.from('h5p_responses')
+        .insert({ h5p_content_id: anyH5p.id, enrollment_id: victimEnr.id, score: 100, max_score: 100 })
+        .select();
+      if (hErr) rec('h5p_responses', "write against B's enrollment", 'PASS', `blocked ${hErr.code}`);
+      else {
+        rec('h5p_responses', "write against B's enrollment", (hIns || []).length ? 'FAIL' : 'PASS', (hIns || []).length ? 'ACCEPTED — cleaning up' : 'no-op');
+        if ((hIns || []).length) await admin.from('h5p_responses').delete().eq('id', hIns[0].id);
+      }
+    }
+  }
 
   const fails = results.filter((r) => r.verdict === 'FAIL');
   console.log(`\n=== SUMMARY: ${results.length} probes, ${fails.length} FAILURES ===`);

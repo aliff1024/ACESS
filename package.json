@@ -7,10 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed.ts",
+    "seed": "tsx supabase/seed/run.ts",
     "test:a11y-resolver": "tsx scripts/test-accessibility-resolver.ts",
     "test:a11y-catalog": "tsx scripts/check-setting-catalog.ts",
-    "verify:admin": "tsx scripts/verify-admin-analytics.mts"
+    "verify:admin": "tsx scripts/verify-admin-analytics.mts",
+    "db:reset": "supabase db reset",
+    "db:rebuild": "supabase db reset && npm run seed",
+    "verify:rls": "tsx scripts/verify-rls.ts",
+    "verify:scenarios": "tsx scripts/verify-scenarios.ts",
+    "verify:data": "npm run verify:rls && npm run verify:scenarios"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -87,32 +87,41 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  /* This was shadcn's unmodified grayscale scaffold (0 chroma) — no learner
+     preset overrides it, so "no preset selected" was the one combination in
+     the whole app with no colour in it at all: every button, active nav item,
+     progress bar and badge rendered in shades of grey. Every other preset
+     (dyslexia's muted blue, ADHD's bright blue, autism's soft blue) and both
+     alternate themes (soft, high-contrast) already carry real hue; this was
+     the odd one out, not a deliberate accessibility choice. Indigo at this
+     lightness/chroma keeps body text at the same near-black foreground and
+     white background — nothing about contrast changes, only the accent. */
+  --primary: oklch(0.53 0.19 265);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: oklch(0.94 0.03 265);
+  --accent-foreground: oklch(0.32 0.14 265);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --ring: oklch(0.53 0.19 265);
+  --chart-1: oklch(0.6 0.2 265);
+  --chart-2: oklch(0.65 0.18 155);
+  --chart-3: oklch(0.6 0.2 320);
+  --chart-4: oklch(0.7 0.16 70);
+  --chart-5: oklch(0.6 0.2 25);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.53 0.19 265);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-accent: oklch(0.94 0.03 265);
+  --sidebar-accent-foreground: oklch(0.32 0.14 265);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.53 0.19 265);
 }
 
 .dark {
@@ -772,8 +781,9 @@ html[data-theme="high_contrast"] .text-green-700 { color: oklch(0.7 0.18 150) !i
 html[data-theme="high_contrast"] .text-red-600,
 html[data-theme="high_contrast"] .text-red-700   { color: oklch(0.7 0.18 30) !important; }
 
-.dark .text-purple-600,
-html[data-theme="high_contrast"] .text-purple-600 { color: oklch(0.7 0.18 280) !important; }
+.dark .text-purple-600, .dark .text-purple-700,
+html[data-theme="high_contrast"] .text-purple-600,
+html[data-theme="high_contrast"] .text-purple-700 { color: oklch(0.7 0.18 280) !important; }
 
 .dark .text-yellow-600,
 html[data-theme="high_contrast"] .text-yellow-600 { color: oklch(0.7 0.15 80) !important; }
@@ -811,6 +821,12 @@ html[data-theme="high_contrast"] .border-purple-200 { border-color: oklch(0.35 0
 
 .dark .border-yellow-200,
 html[data-theme="high_contrast"] .border-yellow-200 { border-color: oklch(0.35 0.06 80) !important; }
+
+.dark .border-amber-200,
+html[data-theme="high_contrast"] .border-amber-200 { border-color: oklch(0.35 0.06 70) !important; }
+
+.dark .border-emerald-200,
+html[data-theme="high_contrast"] .border-emerald-200 { border-color: oklch(0.35 0.06 155) !important; }
 
 .dark .border-red-300,
 html[data-theme="high_contrast"] .border-red-300    { border-color: oklch(0.5 0.15 30) !important; }

@@ -732,7 +732,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
                       <p className="font-semibold text-green-900">Certificate Earned!</p>
                       <p className="text-sm text-green-700 mt-1">View and download your certificate from your profile.</p>
                       <Button
-                        onClick={() => router.push(certClaimedId ? `/learner/certificates?id=${certClaimedId}` : '/learner/certificates')}
+                        onClick={() => router.push(certClaimedId ? `/learner/certificates?id=${certClaimedId}` : '/learner/achievements?tab=certificates')}
                         variant="outline"
                         className="mt-3 border-green-600 text-green-600"
                       >
