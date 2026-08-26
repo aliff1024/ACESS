@@ -7,7 +7,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { BookOpen, Check, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, Zap, ChevronRight, ListChecks, AlertTriangle, Award, User, Clock, Users, Star, Medal, Footprints, GraduationCap, Flame } from 'lucide-react';
+import { BookOpen, Check, CheckCircle, Lock, Play, Loader2, Heart, LogOut, Shield, Trophy, Target, Zap, ChevronRight, ListChecks, AlertTriangle, Award, User, Clock, Users, Star, Medal, Footprints, GraduationCap, Flame } from 'lucide-react';
 import { ConfirmAction } from '../ui/ConfirmAction';
 import { fetchCourseDetail, enrollInCourse, unenrollFromCourse, toggleFavorite, checkIsFavorited, fetchSystemCourseProgress, checkCourseCertificateEligibility, claimCertificate, fetchCourseAccessibilityCategoriesForLearner } from '@/lib/learner-api';
 import type { CourseDetail, SystemCourseProgress } from '@/lib/learner-api';
@@ -67,6 +67,7 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
   const [customCertStatus, setCustomCertStatus] = useState<'published' | 'pending' | null>(null);
   const [accessibilityCategories, setAccessibilityCategories] = useState<string[]>([]);
   const [courseAchievements, setCourseAchievements] = useState<any[]>([]);
+  const [userEarnedAchievements, setUserEarnedAchievements] = useState<Map<string, string>>(new Map());
   const { settings } = useAccessibility();
 
   const isSystem = course?.system_course === true;
@@ -115,13 +116,25 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
           setAccessibilityCategories(cats);
         } catch {}
 
-        // Fetch course achievements
+        // Fetch course achievements and user's earned badges
         try {
-          const { data: achData } = await supabase
-            .from('course_achievements')
-            .select('*')
-            .eq('course_id', courseId);
+          const [{ data: achData }, { data: authData }] = await Promise.all([
+            supabase.from('course_achievements').select('*').eq('course_id', courseId),
+            supabase.auth.getUser(),
+          ]);
           if (achData) setCourseAchievements(achData);
+
+          if (authData.user) {
+            const { data: userAchs } = await supabase
+              .from('user_achievements')
+              .select('achievement_id, earned_at')
+              .eq('user_id', authData.user.id);
+            if (userAchs) {
+              const map = new Map<string, string>();
+              userAchs.forEach((ua: any) => map.set(ua.achievement_id, ua.earned_at));
+              setUserEarnedAchievements(map);
+            }
+          }
         } catch {}
       })
       .catch((err) => { console.error('CourseDetailPage load error:', err); })
@@ -664,24 +677,77 @@ export function CourseDetailPage({ courseId, onBack, onStartLesson, isPreview = 
               </div>
 
               {courseAchievements.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
-                  <h3 className="text-lg font-bold text-yellow-800 mb-4 flex items-center gap-2">
-                    <Trophy className="w-5 h-5" /> Earnable Badges
-                  </h3>
-                  <div className="flex flex-wrap gap-4">
+                <div className="bg-gradient-to-r from-amber-50/80 via-yellow-50/80 to-amber-50/80 border border-amber-200/80 rounded-2xl p-6 mb-6 shadow-2xs">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 bg-amber-100 rounded-xl">
+                        <Trophy className="w-5 h-5 text-amber-700" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-amber-950">
+                          Course Badges &amp; Achievements
+                        </h3>
+                        <p className="text-xs text-amber-800/80">
+                          Complete lessons, pass quizzes, and maintain streaks to earn and collect badges.
+                        </p>
+                      </div>
+                    </div>
+                    {courseAchievements.some(ach => userEarnedAchievements.has(ach.id)) && (
+                      <span className="text-xs font-semibold px-2.5 py-1 bg-green-100 text-green-800 rounded-full border border-green-200 flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                        {courseAchievements.filter(ach => userEarnedAchievements.has(ach.id)).length} of {courseAchievements.length} Earned
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                     {courseAchievements.map(ach => {
                       const badge = BADGE_ICONS.find(b => b.id === ach.icon_url) || { icon: Award };
                       const Icon = badge.icon;
+                      const isEarned = userEarnedAchievements.has(ach.id);
+                      const earnedAt = userEarnedAchievements.get(ach.id);
+
                       return (
-                      <div key={ach.id} className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm border border-yellow-100 min-w-[200px]">
-                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                          <Icon className="w-5 h-5" />
+                        <div
+                          key={ach.id}
+                          className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all ${
+                            isEarned
+                              ? 'bg-white border-amber-300 ring-2 ring-amber-200/60 shadow-xs'
+                              : 'bg-white/60 border-gray-200/80 opacity-80'
+                          }`}
+                        >
+                          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+                            isEarned
+                              ? 'bg-gradient-to-br from-amber-400 to-yellow-500 text-white shadow-xs ring-2 ring-yellow-200'
+                              : 'bg-gray-100 text-gray-400'
+                          }`}>
+                            <Icon className="w-6 h-6" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <p className={`font-bold text-xs truncate ${isEarned ? 'text-gray-950' : 'text-gray-700'}`}>
+                                {ach.name}
+                              </p>
+                              {isEarned ? (
+                                <span className="text-[10px] bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shrink-0">
+                                  <CheckCircle className="w-3 h-3 text-green-600" /> Earned
+                                </span>
+                              ) : (
+                                <span className="text-[10px] bg-gray-100 text-gray-500 font-medium px-1.5 py-0.5 rounded-full shrink-0">
+                                  Locked
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-gray-500 mt-0.5 leading-snug line-clamp-2">
+                              {ach.description || `${ach.requirement_type}: ${ach.requirement_threshold}`}
+                            </p>
+                            {isEarned && earnedAt && (
+                              <p className="text-[10px] text-amber-700 font-medium mt-1">
+                                Unlocked {new Date(earnedAt).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-sm text-gray-900">{ach.name}</p>
-                          <p className="text-xs text-gray-500">{ach.requirement_type} {ach.requirement_threshold}</p>
-                        </div>
-                      </div>
                       );
                     })}
                   </div>
