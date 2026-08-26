@@ -8,7 +8,7 @@ import {
   Globe, EyeOff, Eye, ChevronUp, ChevronDown,
   Edit, Trash2, Upload, X,
   CheckCircle, FileType, GripVertical, Copy, AlertTriangle, Award, Shield, Image as ImageIcon, Accessibility,
-  ChevronRight, BarChart3,
+  ChevronRight, BarChart3, Info, HelpCircle,
 } from 'lucide-react';
 import { ConfirmAction } from '@/components/ui/ConfirmAction';
 import { Button } from '@/components/ui/button';
@@ -1056,12 +1056,23 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                         </span>
                       </span>
                     </button>
-                    <div className="flex items-center gap-4 bg-purple-50 px-4 py-3 rounded-2xl border border-purple-100 shrink-0">
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 bg-purple-50 px-4 py-3 rounded-2xl border border-purple-100 shrink-0">
                       <div className="text-right">
                         <p className="text-xs text-gray-500 font-medium">Compliance Score</p>
-                        <p className="text-2xl font-black text-purple-700 tabular-nums">{auditReport.score}%</p>
+                        <div className="flex items-baseline gap-1.5 justify-end">
+                          <span className="text-2xl font-black text-purple-700 tabular-nums">{auditReport.score}%</span>
+                          <span className="text-xs font-semibold text-purple-600">({auditReport.passedCount}/{auditReport.totalCount} standards)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-gray-500 justify-end">
+                          <span className="bg-purple-100 px-1.5 py-0.5 rounded text-purple-800 font-semibold">
+                            Course: {auditReport.courseChecks.filter(c => c.passed).length}/{auditReport.courseChecks.length}
+                          </span>
+                          <span className="bg-purple-100 px-1.5 py-0.5 rounded text-purple-800 font-semibold">
+                            Lessons: {auditReport.lessonChecks.filter(c => c.passed).length}/{auditReport.lessonChecks.length}
+                          </span>
+                        </div>
                       </div>
-                      <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-600 flex items-center justify-center font-bold text-purple-700 text-sm tabular-nums">
+                      <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-600 flex items-center justify-center font-bold text-purple-700 text-sm tabular-nums shrink-0">
                         {auditReport.passedCount}/{auditReport.totalCount}
                       </div>
                     </div>
@@ -1069,6 +1080,68 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
 
                   {auditOpen && (
                   <div id="course-accessibility-audit" className="space-y-6">
+
+                  {/* ── 1st-Time User Guide Explainer Banner ── */}
+                  <div className="p-3.5 bg-blue-50/80 border border-blue-200/60 rounded-xl flex items-start gap-2.5 text-xs text-blue-900 leading-relaxed shadow-sm">
+                    <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold text-blue-950">How this audit is calculated: </span>
+                      Evaluates <strong>{auditReport.courseChecks.length} course-level settings</strong> + <strong>{auditReport.lessonChecks.length} lesson standards</strong> tailored to the <strong>{auditReport.focus}</strong> profile. Rules that don't apply to a lesson (e.g. video transcripts for text-only lessons) are automatically skipped so scores remain fair and accurate.
+                    </div>
+                  </div>
+
+                  {/* ── Action Items to Reach 100% ── */}
+                  {([...auditReport.courseChecks, ...auditReport.lessonChecks].filter(c => !c.passed && c.severity === 'required')).length > 0 && (
+                    <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 space-y-2.5 shadow-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                          <h4 className="text-sm font-bold text-rose-950">
+                            {([...auditReport.courseChecks, ...auditReport.lessonChecks].filter(c => !c.passed && c.severity === 'required')).length} Required Action{([...auditReport.courseChecks, ...auditReport.lessonChecks].filter(c => !c.passed && c.severity === 'required')).length === 1 ? '' : 's'} to Reach 100%
+                          </h4>
+                        </div>
+                        <span className="text-[11px] font-medium text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
+                          Click any item to fix
+                        </span>
+                      </div>
+                      <div className="space-y-1.5 pt-1">
+                        {([...auditReport.courseChecks, ...auditReport.lessonChecks].filter(c => !c.passed && c.severity === 'required')).slice(0, 5).map((item) => (
+                          <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 text-xs bg-white/90 p-2.5 rounded-lg border border-rose-100">
+                            <span className="font-medium text-gray-800 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                              <strong className="text-gray-900">{item.title}:</strong>
+                              {item.affected.length > 0 ? (
+                                <span className="text-purple-700 font-semibold">
+                                  {item.affected.map(a => a.title).join(', ')}
+                                </span>
+                              ) : (
+                                <span className="text-gray-600">Course setting</span>
+                              )}
+                            </span>
+                            {item.scope === 'course' && COURSE_QUICK_FIXES[item.id] ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-[11px] px-2.5 border-purple-300 text-purple-700 hover:bg-purple-50"
+                                onClick={() => applyCourseQuickFix(item.id)}
+                              >
+                                Quick Fix
+                              </Button>
+                            ) : item.affected.length > 0 ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-[11px] px-2.5 border-purple-300 text-purple-700 hover:bg-purple-50"
+                                onClick={() => openLessonAccessibility(item.affected[0].id)}
+                              >
+                                Edit Lesson
+                              </Button>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {auditReport.empty && (
                     <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50/50">
@@ -1083,34 +1156,45 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                   {/* ── Per-lesson breakdown ── */}
                   {auditReport.perLesson.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                        Lesson scores
-                      </h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                          Lesson scores
+                        </h4>
+                        <span className="text-xs text-gray-400">Click any card to edit that lesson</span>
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {auditReport.perLesson.map((lesson) => {
                           const tone = lesson.score >= 80
-                            ? 'border-green-200 bg-green-50/40 text-green-700'
+                            ? 'border-green-200 bg-green-50/40 text-green-700 hover:bg-green-50'
                             : lesson.score >= 50
-                              ? 'border-amber-200 bg-amber-50/40 text-amber-700'
-                              : 'border-rose-200 bg-rose-50/40 text-rose-700';
+                              ? 'border-amber-200 bg-amber-50/40 text-amber-700 hover:bg-amber-50'
+                              : 'border-rose-200 bg-rose-50/40 text-rose-700 hover:bg-rose-50';
                           return (
                             <button
                               key={lesson.id}
                               type="button"
                               onClick={() => openLessonAccessibility(lesson.id)}
                               title="Open this lesson's accessibility checklist"
-                              className={`w-full text-left p-3 rounded-xl border flex items-center gap-3 transition-colors hover:brightness-[0.98] ${tone}`}
+                              className={`w-full text-left p-3 rounded-xl border flex items-center gap-3 transition-all hover:shadow-sm group ${tone}`}
                             >
                               <span className="font-black text-sm tabular-nums w-11 shrink-0">{lesson.score}%</span>
                               <span className="min-w-0 flex-1">
-                                <span className="block text-sm font-semibold text-gray-900 truncate">{lesson.title}</span>
+                                <span className="block text-sm font-semibold text-gray-900 truncate group-hover:text-purple-700 transition-colors">{lesson.title}</span>
                                 <span className="block text-xs text-gray-600">
                                   {lesson.passed}/{lesson.applicable} standards
+                                  {lesson.applicable < auditReport.lessonChecks.length && (
+                                    <span className="text-gray-400 ml-1">
+                                      ({auditReport.lessonChecks.length - lesson.applicable} skipped: no video)
+                                    </span>
+                                  )}
                                   {lesson.requiredFailures > 0 && ` · ${lesson.requiredFailures} required unmet`}
                                   {lesson.status !== 'published' && ' · draft'}
                                 </span>
                               </span>
-                              <ChevronRight className="w-4 h-4 shrink-0 text-gray-400" />
+                              <span className="text-[11px] font-medium text-purple-700 bg-white border border-purple-200 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                Edit
+                              </span>
+                              <ChevronRight className="w-4 h-4 shrink-0 text-gray-400 group-hover:text-purple-600 transition-colors" />
                             </button>
                           );
                         })}
@@ -1154,7 +1238,7 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                                   </p>
                                   <p className="text-xs text-gray-600 mt-1 leading-relaxed">{check.description}</p>
                                   {!check.passed && check.affected.length > 0 && (
-                                    <ul className="mt-2 space-y-1">
+                                    <ul className="mt-2 space-y-1.5">
                                       {check.affected.slice(0, 4).map((entry) => (
                                         <li key={entry.id} className="text-xs text-gray-600">
                                           <button
