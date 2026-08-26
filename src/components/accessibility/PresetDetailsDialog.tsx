@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ACCESSIBILITY_PRESETS, DEFAULT_PRESET_SETTINGS, getPresetDiff } from '@/lib/adaptive-engine';
 import { FONT_FAMILIES, BACKGROUND_TINTS, ANIMATION_LEVELS } from '@/lib/accessibility-utils';
 import { SETTING_CATALOG } from '@/lib/accessibility-catalog';
@@ -124,25 +125,33 @@ export function PresetDetailsDialog({ presetId, currentSettings, onCancel, onApp
             {diffs.length > 0 && (
               <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
                 {diffs.map((d) => (
-                  <div key={d.key} className="px-3 py-2 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-600">{SETTING_CATALOG[d.key]?.label ?? EXTRA_LABELS[d.key] ?? d.key}</span>
-                      <span className="text-gray-900 font-medium text-right shrink-0">
-                        {formatValue(d.key, d.from)} <span className="text-gray-400">→</span> {formatValue(d.key, d.to)}
+                  <div key={d.key} className="px-3 py-2 text-sm flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-gray-700 font-medium">
+                        {SETTING_CATALOG[d.key]?.label ?? EXTRA_LABELS[d.key] ?? d.key}
                       </span>
+                      {SETTING_CATALOG[d.key]?.why && (
+                        <TooltipProvider delayDuration={50}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className="text-gray-400 hover:text-blue-600 focus:text-blue-600 transition-colors p-0.5 rounded-full hover:bg-gray-100 shrink-0"
+                                aria-label={`Why ${SETTING_CATALOG[d.key]?.label ?? d.key}`}
+                              >
+                                <Info className="w-3.5 h-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" align="start" className="max-w-xs text-xs p-2.5 bg-gray-900 text-white shadow-xl z-50 rounded-lg">
+                              {SETTING_CATALOG[d.key].why}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
-                    {/* SETTING_CATALOG's `why` field (docs/accessibility/00
-                        §4 Phase 9) already carries a specific, sourced
-                        explanation for almost every field a preset diff
-                        can touch — this is the "make a simple description
-                        why each one being done" request, using text that
-                        already existed rather than writing a second copy
-                        of it. A couple of derived fields (chunked_content_mode,
-                        high_contrast) aren't in the catalog and simply
-                        don't get a line here. */}
-                    {SETTING_CATALOG[d.key]?.why && (
-                      <p className="text-xs text-gray-500 mt-1">{SETTING_CATALOG[d.key].why}</p>
-                    )}
+                    <span className="text-gray-900 font-medium text-right shrink-0 text-xs">
+                      {formatValue(d.key, d.from)} <span className="text-gray-400">→</span> {formatValue(d.key, d.to)}
+                    </span>
                   </div>
                 ))}
               </div>

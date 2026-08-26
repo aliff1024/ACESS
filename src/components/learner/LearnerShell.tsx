@@ -52,6 +52,20 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
   const { settings, updateSettings, distractionFreeOverride, setDistractionFreeOverride } = useAccessibility();
   const isDistractionFree = distractionFreeOverride ?? settings.distraction_free_mode;
 
+  useEffect(() => {
+    if (!isDistractionFree) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        const hasOpenDialog = document.querySelector('[role="dialog"], [data-state="open"]');
+        if (!hasOpenDialog) {
+          setDistractionFreeOverride(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDistractionFree, setDistractionFreeOverride]);
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -78,11 +92,16 @@ function ShellInner({ children, onNavigate, showAccessibilitySettings, setShowAc
             <div className="fixed bottom-6 right-6 z-50">
               <Button 
                 variant="outline" 
-                className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50 shadow-lg rounded-full px-4 py-2 flex items-center gap-2"
+                className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50 shadow-lg rounded-full px-4 py-2 flex items-center gap-2 text-xs font-semibold"
                 onClick={() => setDistractionFreeOverride(isDistractionFree ? false : true)}
+                title="Press Esc to exit Distraction Free Mode"
               >
                 {isDistractionFree ? (
-                  <><Minimize2 className="w-4 h-4" /> Exit Distraction Free Mode</>
+                  <>
+                    <Minimize2 className="w-4 h-4" />
+                    <span>Exit Distraction Free Mode</span>
+                    <kbd className="ml-1 px-1.5 py-0.5 text-[10px] bg-blue-100/80 text-blue-800 rounded border border-blue-200 font-mono">Esc</kbd>
+                  </>
                 ) : (
                   <><Maximize2 className="w-4 h-4" /> Enter Distraction Free Mode</>
                 )}

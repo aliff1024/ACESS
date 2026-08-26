@@ -111,6 +111,25 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses, onStartLes
       .finally(() => setLoading(false));
   }, []);
 
+  const isSensoryCalmMode =
+    settings.background_tint === 'pale_blue' ||
+    settings.animation_level === 'none' ||
+    settings.muted_colors === true;
+
+  const isADHDMode =
+    settings.background_tint === 'grey' ||
+    (settings.task_checklist_enabled && settings.structure_mode === 'minimal');
+
+  const [showDetailedStats, setShowDetailedStats] = useState(!isSensoryCalmMode);
+
+  useEffect(() => {
+    if (isSensoryCalmMode) {
+      setShowDetailedStats(false);
+    } else {
+      setShowDetailedStats(true);
+    }
+  }, [isSensoryCalmMode]);
+
   // Compute metrics
   const enrolledCourses = courses.length;
   const completedCourses = stats?.courses_completed ?? 0;
@@ -179,7 +198,7 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses, onStartLes
     : visitHistory.filter((v) => !v.is_completed);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 readable-content">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-7 readable-content">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -195,102 +214,64 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses, onStartLes
           <Button
             onClick={handleReadSummary}
             variant="outline"
-            className="flex items-center gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm"
+            className="flex items-center gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm text-xs font-semibold"
           >
             <Volume2 className="w-4 h-4 text-indigo-600" /> Listen to Summary
           </Button>
           <Button
             onClick={onBrowseCourses}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-2 text-xs font-semibold"
           >
             <Compass className="w-4 h-4" /> Browse Catalog
           </Button>
         </div>
       </div>
 
-      {/* Top 5 Granular Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Total Study Time */}
-        <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-              <Clock className="w-5 h-5" />
+      {/* For ADHD Mode: Action-First Priority Banner at top */}
+      {isADHDMode && nextLessonAction && (
+        <Card className="p-5 rounded-2xl border-2 border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-md">
+              <PlayCircle className="w-6 h-6" />
             </div>
-            <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 font-medium text-[11px]">
-              Active Time
-            </Badge>
-          </div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Study Time</p>
-          <p className="text-2xl font-extrabold text-gray-900">{formatDuration(totalStudyTimeSeconds)}</p>
-        </Card>
-
-        {/* Enrolled Courses */}
-        <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-              <BookOpen className="w-5 h-5" />
+            <div>
+              <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">Focus Action: Resume Where You Left Off</p>
+              <h3 className="text-base sm:text-lg font-extrabold text-gray-900">{nextLessonAction.lessonTitle}</h3>
+              <p className="text-xs text-gray-600">{nextLessonAction.courseTitle}</p>
             </div>
-            <Badge variant="secondary" className="bg-blue-50 text-blue-700 font-medium text-[11px]">
-              {completedCourses} Finished
-            </Badge>
           </div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Courses</p>
-          <p className="text-2xl font-extrabold text-gray-900">
-            {enrolledCourses} <span className="text-xs text-gray-400 font-normal">enrolled</span>
-          </p>
+          <Button
+            onClick={() => {
+              if (nextLessonAction.lessonId && onStartLesson) {
+                onStartLesson(nextLessonAction.lessonId);
+              } else if (nextLessonAction.courseId) {
+                onViewCourseProgress(nextLessonAction.courseId);
+              }
+            }}
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md px-6 py-5 text-sm"
+          >
+            Resume Learning <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </Card>
+      )}
 
-        {/* Lessons Completed & Visits */}
-        <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 font-medium text-[11px]">
-              {totalLessonViews} Visits
-            </Badge>
-          </div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Lessons Done</p>
-          <p className="text-2xl font-extrabold text-gray-900">{completedLessons}</p>
-        </Card>
-
-        {/* Average Quiz Mastery */}
-        <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <Badge variant="secondary" className="bg-purple-50 text-purple-700 font-medium text-[11px]">
-              {passedQuizzesCount} Passed
-            </Badge>
-          </div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quiz Mastery</p>
-          <p className="text-2xl font-extrabold text-gray-900">{averageScore}%</p>
-        </Card>
-
-        {/* Learning Streak & XP */}
-        <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
-              <Flame className="w-5 h-5" />
-            </div>
-            <Badge variant="secondary" className="bg-amber-50 text-amber-700 font-medium text-[11px]">
-              {totalXP} XP
-            </Badge>
-          </div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Daily Streak</p>
-          <p className="text-2xl font-extrabold text-gray-900">
-            {streakDays} <span className="text-xs text-gray-400 font-normal">days</span>
-          </p>
-        </Card>
-      </div>
-
-      {/* Plain Language Summary Card (Sensory & Cognitive Accessibility) */}
+      {/* Plain Language Summary Card (Calm & Predictable for Autism & Sensory) */}
       <Card className="p-5 rounded-2xl border border-indigo-100 bg-indigo-50/40 shadow-sm">
         <div className="flex items-start gap-3">
           <Sparkles className="w-5 h-5 text-indigo-600 mt-0.5 shrink-0" />
-          <div className="text-sm text-indigo-950 leading-relaxed">
-            <p className="font-semibold text-indigo-900 mb-0.5">Plain-Language Learning Summary</p>
+          <div className="flex-1 text-sm text-indigo-950 leading-relaxed">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <p className="font-semibold text-indigo-900">Learning Summary</p>
+              {isSensoryCalmMode && (
+                <button
+                  type="button"
+                  onClick={() => setShowDetailedStats(!showDetailedStats)}
+                  className="text-xs font-semibold text-indigo-700 hover:text-indigo-900 hover:underline flex items-center gap-1"
+                >
+                  {showDetailedStats ? '▲ Hide numeric cards' : '📊 Show detailed numeric cards'}
+                </button>
+              )}
+            </div>
             <p>
               You are enrolled in <strong>{enrolledCourses} courses</strong> and have completed{' '}
               <strong>{completedLessons} lessons</strong> across all subjects. You have spent a total of{' '}
@@ -302,8 +283,87 @@ export function ProgressPage({ onViewCourseProgress, onBrowseCourses, onStartLes
         </div>
       </Card>
 
-      {/* Next Recommended Action Banner (ADHD & Executive Function Support) */}
-      {nextLessonAction && (
+      {/* Top 5 Granular Stat Cards (Toggled/Shown) */}
+      {showDetailedStats && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Total Study Time */}
+          <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                <Clock className="w-5 h-5" />
+              </div>
+              <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 font-medium text-[11px]">
+                Active Time
+              </Badge>
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Study Time</p>
+            <p className="text-2xl font-extrabold text-gray-900">{formatDuration(totalStudyTimeSeconds)}</p>
+          </Card>
+
+          {/* Enrolled Courses */}
+          <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <Badge variant="secondary" className="bg-blue-50 text-blue-700 font-medium text-[11px]">
+                {completedCourses} Finished
+              </Badge>
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Courses</p>
+            <p className="text-2xl font-extrabold text-gray-900">
+              {enrolledCourses} <span className="text-xs text-gray-400 font-normal">enrolled</span>
+            </p>
+          </Card>
+
+          {/* Lessons Completed & Visits */}
+          <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 font-medium text-[11px]">
+                {totalLessonViews} Visits
+              </Badge>
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Lessons Done</p>
+            <p className="text-2xl font-extrabold text-gray-900">{completedLessons}</p>
+          </Card>
+
+          {/* Average Quiz Mastery */}
+          <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <Badge variant="secondary" className="bg-purple-50 text-purple-700 font-medium text-[11px]">
+                {passedQuizzesCount} Passed
+              </Badge>
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quiz Mastery</p>
+            <p className="text-2xl font-extrabold text-gray-900">{averageScore}%</p>
+          </Card>
+
+          {/* Learning Streak & XP */}
+          <Card className="p-5 rounded-2xl border-0 shadow-sm ring-1 ring-gray-200 bg-white hover:shadow-md transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                <Flame className="w-5 h-5" />
+              </div>
+              <Badge variant="secondary" className="bg-amber-50 text-amber-700 font-medium text-[11px]">
+                {totalXP} XP
+              </Badge>
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Daily Streak</p>
+            <p className="text-2xl font-extrabold text-gray-900">
+              {streakDays} <span className="text-xs text-gray-400 font-normal">days</span>
+            </p>
+          </Card>
+        </div>
+      )}
+
+      {/* For Standard / non-ADHD mode: Recommended Step Banner below stats */}
+      {!isADHDMode && nextLessonAction && (
         <Card className="p-5 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
