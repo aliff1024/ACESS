@@ -269,6 +269,50 @@ export default function AnalyticsDashboard() {
                 valueLabel="users"
               />
             </Panel>
+
+            <Panel
+              className="lg:col-span-2"
+              title="Age group distribution"
+              question="What is the age demographic of registered learners?"
+              isEmpty={(data?.learners?.ageDistribution ?? []).every((a) => a.count === 0)}
+              emptyMessage="No learner age data available."
+            >
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data?.learners?.ageDistribution ?? []} margin={{ top: 12, right: 16, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="label"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      label={{ value: 'Age Bracket', position: 'insideBottom', offset: -14, fill: '#6b7280', fontSize: 12 }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      label={{ value: 'Learners', angle: -90, position: 'insideLeft', offset: -10, fill: '#6b7280', fontSize: 12 }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: '#f3f4f6' }}
+                      contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }}
+                      formatter={(v: number) => [`${v} learners`, 'Count']}
+                    />
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                      {(data?.learners?.ageDistribution ?? []).map((entry, index) => {
+                        const AGE_COLORS = ['#6366f1', '#3b82f6', '#0d9488', '#f59e0b', '#8b5cf6', '#9ca3af'];
+                        return <Cell key={`age-cell-${index}`} fill={AGE_COLORS[index % AGE_COLORS.length]} />;
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <DataNote>
+                Calculated dynamically from learner birth dates stored in user profiles.
+              </DataNote>
+            </Panel>
           </div>
         )}
 

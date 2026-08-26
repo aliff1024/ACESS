@@ -1168,6 +1168,51 @@ export function computeAccessibilityCoverage(snap: AnalyticsSnapshot): Accessibi
 
 // ─── Formatting helpers shared by UI and PDF ─────────────────────────────
 
+// ─── Formatting helpers shared by UI and PDF ─────────────────────────────
+
+export function computeAgeDistribution(snap: AnalyticsSnapshot): LabelCount[] {
+  const profileByUserId = new Map(snap.profiles.map((p) => [p.user_id, p]))
+  const now = new Date()
+
+  const bands: Record<string, number> = {
+    'Under 13': 0,
+    '13–17': 0,
+    '18–24': 0,
+    '25–34': 0,
+    '35+': 0,
+    'Unspecified': 0,
+  }
+
+  for (const u of snap.users) {
+    if (u.role !== 'learner') continue
+    const prof = profileByUserId.get(u.id)
+    if (!prof?.birth_date) {
+      bands['Unspecified']++
+      continue
+    }
+
+    const birthDate = new Date(prof.birth_date)
+    if (Number.isNaN(birthDate.getTime())) {
+      bands['Unspecified']++
+      continue
+    }
+
+    let age = now.getFullYear() - birthDate.getFullYear()
+    const m = now.getMonth() - birthDate.getMonth()
+    if (m < 0 || (m === 0 && now.getDate() < birthDate.getDate())) {
+      age--
+    }
+
+    if (age < 13) bands['Under 13']++
+    else if (age <= 17) bands['13–17']++
+    else if (age <= 24) bands['18–24']++
+    else if (age <= 34) bands['25–34']++
+    else bands['35+']++
+  }
+
+  return Object.entries(bands).map(([label, count]) => ({ label, count }))
+}
+
 export function formatDuration(seconds: number): string {
   if (!seconds) return '0m'
   const hours = Math.floor(seconds / 3600)
@@ -1241,10 +1286,12 @@ export interface AdminAnalyticsPayload {
     courseStatus: LabelCount[]
     difficulty: LabelCount[]
     categories: LabelCount[]
+    ageDistribution: LabelCount[]
   }
   learners: {
     bands: { band: ActivityBand; label: string; count: number }[]
     progressDistribution: LabelCount[]
+    ageDistribution: LabelCount[]
     totalLearners: number
   }
   courses: {

@@ -11,6 +11,7 @@ import {
   computePresetAdoption,
   computeSettingsAdoption,
   computeAccessibilityCoverage,
+  computeAgeDistribution,
   buildBuckets,
   bucketCounts,
   earliestStamp,
@@ -203,7 +204,9 @@ export async function GET(request: Request) {
       .sort((a, b) => +new Date(b.at) - +new Date(a.at))
       .slice(0, 10)
 
-    return NextResponse.json({
+      const ageDistribution = computeAgeDistribution(snap)
+
+      return NextResponse.json({
       range: {
         key: range.key,
         label: range.label,
@@ -235,6 +238,7 @@ export async function GET(request: Request) {
         categories: Array.from(categoryCounts, ([label, count]) => ({ label, count }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 10),
+        ageDistribution,
       },
       learners: {
         bands: (Object.keys(bandCounts) as ActivityBand[]).map((band) => ({
@@ -243,6 +247,7 @@ export async function GET(request: Request) {
           count: bandCounts[band],
         })),
         progressDistribution: progressBands.map(({ label, count }) => ({ label, count })),
+        ageDistribution,
         totalLearners: learnerTotal,
       },
       courses: {
