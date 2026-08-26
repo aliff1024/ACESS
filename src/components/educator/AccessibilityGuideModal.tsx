@@ -34,17 +34,17 @@ export function AccessibilityGuideModal({
 }: AccessibilityGuideModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6 sm:p-8">
-        <DialogHeader className="border-b border-gray-100 pb-4">
-          <div className="flex items-center gap-2.5 text-purple-700 mb-1">
-            <div className="p-2 bg-purple-100 rounded-xl">
-              <Accessibility className="w-6 h-6 text-purple-700" />
+      <DialogContent className="max-w-5xl w-[96vw] max-h-[92vh] overflow-y-auto p-6 sm:p-10">
+        <DialogHeader className="border-b border-gray-100 pb-5">
+          <div className="flex items-center gap-3 text-purple-700 mb-1">
+            <div className="p-2.5 bg-purple-100 rounded-2xl">
+              <Accessibility className="w-7 h-7 text-purple-700" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-gray-950">
+              <DialogTitle className="text-2xl font-black text-gray-950">
                 Accessibility Compliance Engine Guide
               </DialogTitle>
-              <DialogDescription className="text-xs text-gray-500">
+              <DialogDescription className="text-sm text-gray-500 mt-0.5">
                 Learn how the automated audit evaluates your courses and guides you to 100% WCAG compliance.
               </DialogDescription>
             </div>
