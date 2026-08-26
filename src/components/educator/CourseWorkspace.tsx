@@ -58,6 +58,7 @@ import { CurriculumManager } from '../courses/CurriculumManager';
 import AdminCourseSettingsTab from '../admin/AdminCourseSettingsTab';
 import AdminCoursePerformanceTab from '../admin/AdminCoursePerformanceTab';
 import AchievementBuilder from './AchievementBuilder';
+import { AccessibilityGuideModal } from './AccessibilityGuideModal';
 
 interface CourseWorkspaceProps {
   courseId: string;
@@ -265,6 +266,7 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   // and the full checklist is long enough to bury the rest of the settings tab.
   const [auditOpen, setAuditOpen] = useState(false);
   const [standardsFilter, setStandardsFilter] = useState<'unmet' | 'all' | 'met'>('unmet');
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const [loadingAudit, setLoadingAudit] = useState(false);
   const [applyingFixId, setApplyingFixId] = useState<string | null>(null);
 
@@ -1057,24 +1059,39 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                         </span>
                       </span>
                     </button>
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 bg-purple-50 px-4 py-3 rounded-2xl border border-purple-100 shrink-0">
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500 font-medium">Compliance Score</p>
-                        <div className="flex items-baseline gap-1.5 justify-end">
-                          <span className="text-2xl font-black text-purple-700 tabular-nums">{auditReport.score}%</span>
-                          <span className="text-xs font-semibold text-purple-600">({auditReport.passedCount}/{auditReport.totalCount} standards)</span>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowGuideModal(true);
+                        }}
+                        className="h-9 px-3 text-xs font-semibold text-purple-700 border-purple-200 hover:bg-purple-50 hover:border-purple-300 gap-1.5 shadow-2xs bg-white"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-purple-600" />
+                        Guidelines
+                      </Button>
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 bg-purple-50 px-4 py-3 rounded-2xl border border-purple-100 shrink-0">
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500 font-medium">Compliance Score</p>
+                          <div className="flex items-baseline gap-1.5 justify-end">
+                            <span className="text-2xl font-black text-purple-700 tabular-nums">{auditReport.score}%</span>
+                            <span className="text-xs font-semibold text-purple-600">({auditReport.passedCount}/{auditReport.totalCount} standards)</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1 text-[10px] text-gray-500 justify-end">
+                            <span className="bg-purple-100 px-1.5 py-0.5 rounded text-purple-800 font-semibold">
+                              Course: {auditReport.courseChecks.filter(c => c.passed).length}/{auditReport.courseChecks.length}
+                            </span>
+                            <span className="bg-purple-100 px-1.5 py-0.5 rounded text-purple-800 font-semibold">
+                              Lessons: {auditReport.lessonChecks.filter(c => c.passed).length}/{auditReport.lessonChecks.length}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-gray-500 justify-end">
-                          <span className="bg-purple-100 px-1.5 py-0.5 rounded text-purple-800 font-semibold">
-                            Course: {auditReport.courseChecks.filter(c => c.passed).length}/{auditReport.courseChecks.length}
-                          </span>
-                          <span className="bg-purple-100 px-1.5 py-0.5 rounded text-purple-800 font-semibold">
-                            Lessons: {auditReport.lessonChecks.filter(c => c.passed).length}/{auditReport.lessonChecks.length}
-                          </span>
+                        <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-600 flex items-center justify-center font-bold text-purple-700 text-sm tabular-nums shrink-0">
+                          {auditReport.passedCount}/{auditReport.totalCount}
                         </div>
-                      </div>
-                      <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-600 flex items-center justify-center font-bold text-purple-700 text-sm tabular-nums shrink-0">
-                        {auditReport.passedCount}/{auditReport.totalCount}
                       </div>
                     </div>
                   </div>
@@ -1084,9 +1101,18 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
 
                   {/* ── Simple 1st-Time User Explainer ── */}
                   <div className="p-4 bg-blue-50/90 border border-blue-200/70 rounded-xl space-y-2 text-xs text-blue-950 shadow-xs">
-                    <div className="flex items-center gap-2 font-bold text-blue-900 text-sm">
-                      <Info className="w-4 h-4 text-blue-600 shrink-0" />
-                      How the 14 Standards are Tested:
+                    <div className="flex items-center justify-between gap-2 font-bold text-blue-900 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                        How the 14 Standards are Tested:
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowGuideModal(true)}
+                        className="text-xs text-purple-700 font-semibold hover:underline inline-flex items-center gap-1"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" /> Open Guide
+                      </button>
                     </div>
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-blue-900/90">
                       <li className="flex items-start gap-1.5 bg-white/70 p-2 rounded-lg border border-blue-100">
@@ -1615,6 +1641,13 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
         onConfirm={() => { if (confirmDeleteQuizLessonId) { handleDeleteQuiz(confirmDeleteQuizLessonId); } }}
         open={!!confirmDeleteQuizLessonId}
         onOpenChange={(o) => { if (!o && !deletingQuiz) setConfirmDeleteQuizLessonId(null); }}
+      />
+
+      {/* Accessibility Engine Guidelines Modal */}
+      <AccessibilityGuideModal
+        open={showGuideModal}
+        onOpenChange={setShowGuideModal}
+        currentFocus={auditReport?.focus ?? 'adhd'}
       />
     </div>
   );
