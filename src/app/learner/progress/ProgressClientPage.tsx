@@ -40,6 +40,7 @@ export default function ProgressClientPage({ selectedCourse }: { selectedCourse?
     <ProgressPage
       onViewCourseProgress={(courseId) => router.push(`/learner/progress?courseId=${courseId}`)}
       onBrowseCourses={() => router.push('/learner/courses')}
+      onStartLesson={(lessonId) => router.push(`/learner/lesson/${lessonId}`)}
     />
   );
 }

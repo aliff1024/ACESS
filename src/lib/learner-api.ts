@@ -172,6 +172,40 @@ export interface LearnerStats {
   lessons_completed: number
   avg_score: number
   certificates_count: number
+  total_study_time_seconds?: number
+  total_lesson_views?: number
+  streak_days?: number
+  total_xp?: number
+}
+
+export interface LearnerVisitHistoryItem {
+  id: string
+  lesson_id: string
+  lesson_title: string
+  course_id: string
+  course_title: string
+  is_viewed: boolean
+  view_count: number
+  first_viewed_at: string | null
+  last_viewed_at: string | null
+  time_spent_seconds: number
+  is_completed: boolean
+  summary_completed?: boolean
+}
+
+export interface LearnerQuizAttemptItem {
+  id: string
+  quiz_id: string
+  quiz_title: string
+  lesson_id: string
+  lesson_title: string
+  course_id: string
+  course_title: string
+  attempt_number: number
+  score_pct: number
+  result: 'pass' | 'fail' | 'in_progress'
+  started_at: string
+  submitted_at: string | null
 }
 
 export interface CourseProgress {
@@ -198,6 +232,10 @@ export interface LessonProgress {
   sequence_order: number
   status: 'completed' | 'inProgress' | 'locked'
   score: number | null
+  view_count?: number
+  time_spent_seconds?: number
+  last_viewed_at?: string | null
+  is_viewed?: boolean
 }
 
 export interface Certificate {
@@ -1629,14 +1667,187 @@ export function buildGamification(src: GamificationSource): LearnerGamification 
  * The four headline numbers. Kept as a thin projection of the measurement
  * above so the Dashboard and this page can never report different totals.
  */
+/**
+ * Headline numbers + detailed telemetry. Kept as a thin projection of the measurement
+ * above so the Dashboard and this page can never report different totals.
+ */
 export async function fetchLearnerStats(): Promise<LearnerStats> {
-  const { metrics } = await fetchLearnerGamification()
+  const userId = await ensureUserId()
+  const { metrics, xp } = await fetchLearnerGamification()
+
+  // Query total study time and views from lesson_progress
+  const { data: enrollments } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('user_id', userId)
+    .neq('status', 'dropped')
+
+  let totalStudyTime = 0
+  let totalViews = 0
+  if (enrollments && enrollments.length > 0) {
+    const enrIds = enrollments.map(e => e.id)
+    const { data: lpData } = await supabase
+      .from('lesson_progress')
+      .select('time_spent_learning, view_count, is_viewed')
+      .in('enrollment_id', enrIds)
+
+    for (const r of lpData || []) {
+      totalStudyTime += r.time_spent_learning || 0
+      totalViews += r.view_count || (r.is_viewed ? 1 : 0)
+    }
+  }
+
+  // Query streak from user_daily_streaks or fallback to active_days
+  const { data: streakData } = await supabase
+    .from('user_daily_streaks')
+    .select('streak_days')
+    .eq('user_id', userId)
+    .maybeSingle()
+
   return {
     courses_completed: metrics.courses_completed,
     lessons_completed: metrics.lessons_completed,
     avg_score: metrics.avg_quiz_score,
     certificates_count: metrics.certificates_earned,
+    total_study_time_seconds: totalStudyTime,
+    total_lesson_views: Math.max(totalViews, metrics.lessons_completed),
+    streak_days: streakData?.streak_days || metrics.active_days || 0,
+    total_xp: xp.total || 0,
   }
+}
+
+export async function fetchLearnerVisitHistory(): Promise<LearnerVisitHistoryItem[]> {
+  const userId = await ensureUserId()
+
+  const { data: enrollments } = await supabase
+    .from('enrollments')
+    .select('id, course_id, courses(id, title)')
+    .eq('user_id', userId)
+    .neq('status', 'dropped')
+
+  if (!enrollments || enrollments.length === 0) return []
+
+  const enrollmentIds = enrollments.map(e => e.id)
+  const enrollmentMap = new Map<string, { course_id: string; course_title: string }>()
+  for (const e of enrollments) {
+    const c = e.courses as any
+    enrollmentMap.set(e.id, {
+      course_id: e.course_id,
+      course_title: Array.isArray(c) ? c[0]?.title : c?.title || 'Course',
+    })
+  }
+
+  const { data: progressRows, error } = await supabase
+    .from('lesson_progress')
+    .select(`
+      id,
+      enrollment_id,
+      lesson_id,
+      is_viewed,
+      view_count,
+      first_viewed_at,
+      last_viewed_at,
+      time_spent_learning,
+      is_completed,
+      summary_completed,
+      lessons(id, title)
+    `)
+    .in('enrollment_id', enrollmentIds)
+    .order('last_viewed_at', { ascending: false, nullsFirst: false })
+
+  if (error || !progressRows) {
+    console.warn('fetchLearnerVisitHistory error:', error)
+    return []
+  }
+
+  return progressRows
+    .filter((row: any) => row.is_viewed || row.view_count > 0 || row.is_completed || row.time_spent_learning > 0)
+    .map((row: any) => {
+      const courseInfo = enrollmentMap.get(row.enrollment_id) || { course_id: '', course_title: 'Course' }
+      const lesson = Array.isArray(row.lessons) ? row.lessons[0] : row.lessons
+      return {
+        id: row.id,
+        lesson_id: row.lesson_id,
+        lesson_title: lesson?.title || 'Lesson',
+        course_id: courseInfo.course_id,
+        course_title: courseInfo.course_title,
+        is_viewed: !!row.is_viewed,
+        view_count: row.view_count || (row.is_viewed ? 1 : 0),
+        first_viewed_at: row.first_viewed_at,
+        last_viewed_at: row.last_viewed_at || row.first_viewed_at,
+        time_spent_seconds: row.time_spent_learning || 0,
+        is_completed: !!row.is_completed,
+        summary_completed: !!row.summary_completed,
+      }
+    })
+}
+
+export async function fetchLearnerAllQuizAttempts(): Promise<LearnerQuizAttemptItem[]> {
+  const userId = await ensureUserId()
+
+  const { data: enrollments } = await supabase
+    .from('enrollments')
+    .select('id, course_id, courses(id, title)')
+    .eq('user_id', userId)
+    .neq('status', 'dropped')
+
+  if (!enrollments || enrollments.length === 0) return []
+
+  const enrollmentIds = enrollments.map(e => e.id)
+  const enrollmentMap = new Map<string, { course_id: string; course_title: string }>()
+  for (const e of enrollments) {
+    const c = e.courses as any
+    enrollmentMap.set(e.id, {
+      course_id: e.course_id,
+      course_title: Array.isArray(c) ? c[0]?.title : c?.title || 'Course',
+    })
+  }
+
+  const { data: attempts, error } = await supabase
+    .from('quiz_attempts')
+    .select(`
+      id,
+      enrollment_id,
+      quiz_id,
+      attempt_number,
+      score_pct,
+      result,
+      started_at,
+      submitted_at,
+      quizzes(
+        id,
+        title,
+        lesson_id,
+        lessons(id, title)
+      )
+    `)
+    .in('enrollment_id', enrollmentIds)
+    .order('submitted_at', { ascending: false, nullsFirst: false })
+
+  if (error || !attempts) {
+    console.warn('fetchLearnerAllQuizAttempts error:', error)
+    return []
+  }
+
+  return attempts.map((att: any) => {
+    const courseInfo = enrollmentMap.get(att.enrollment_id) || { course_id: '', course_title: 'Course' }
+    const quiz = Array.isArray(att.quizzes) ? att.quizzes[0] : att.quizzes
+    const lesson = quiz?.lessons ? (Array.isArray(quiz.lessons) ? quiz.lessons[0] : quiz.lessons) : null
+    return {
+      id: att.id,
+      quiz_id: att.quiz_id,
+      quiz_title: quiz?.title || 'Quiz Assessment',
+      lesson_id: quiz?.lesson_id || '',
+      lesson_title: lesson?.title || 'Lesson',
+      course_id: courseInfo.course_id,
+      course_title: courseInfo.course_title,
+      attempt_number: att.attempt_number,
+      score_pct: att.score_pct ?? 0,
+      result: (att.result || 'pass') as 'pass' | 'fail' | 'in_progress',
+      started_at: att.started_at,
+      submitted_at: att.submitted_at || att.started_at,
+    }
+  })
 }
 
 // ─── Course Progress ───────────────────────────────────────────────────
@@ -1672,19 +1883,26 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
 
   const completedSet = new Set<string>()
   const lessonScores = new Map<string, number>()
+  const lpMetaMap = new Map<string, { view_count: number; time_spent_seconds: number; last_viewed_at: string | null; is_viewed: boolean }>()
   const totalLessons = lessons?.length ?? 0
   let completedCount = 0
 
   if (enrollment) {
     const { data: lp } = await supabase
       .from('lesson_progress')
-      .select('lesson_id, is_completed')
+      .select('lesson_id, is_completed, is_viewed, view_count, time_spent_learning, last_viewed_at')
       .eq('enrollment_id', enrollment.id)
 
     for (const p of lp || []) {
       if (p.is_completed) {
         completedSet.add(p.lesson_id)
       }
+      lpMetaMap.set(p.lesson_id, {
+        is_viewed: !!p.is_viewed,
+        view_count: p.view_count || (p.is_viewed ? 1 : 0),
+        time_spent_seconds: p.time_spent_learning || 0,
+        last_viewed_at: p.last_viewed_at || null,
+      })
     }
     completedCount = (lessons || []).filter(l => completedSet.has(l.id)).length
 
@@ -1717,12 +1935,17 @@ export async function fetchCourseProgress(courseId: string): Promise<CourseProgr
     } else {
       status = 'locked'
     }
+    const meta = lpMetaMap.get(l.id)
     return {
       id: l.id,
       title: l.title,
       sequence_order: l.sequence_order,
       status,
       score: lessonScores.get(l.id) ?? null,
+      view_count: meta?.view_count,
+      time_spent_seconds: meta?.time_spent_seconds,
+      last_viewed_at: meta?.last_viewed_at,
+      is_viewed: meta?.is_viewed,
     }
   })
 

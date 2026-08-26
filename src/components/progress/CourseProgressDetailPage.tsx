@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, PlayCircle, Lock, Trophy, TrendingUp, Loader2, ArrowLeft, Star, Clock, BookOpen, GraduationCap } from 'lucide-react';
+import { CheckCircle, PlayCircle, Lock, Trophy, TrendingUp, Loader2, ArrowLeft, Star, Clock, BookOpen, GraduationCap, RotateCcw } from 'lucide-react';
 import { fetchCourseProgress } from '@/lib/learner-api';
 import type { CourseProgress } from '@/lib/learner-api';
 import { useTranslation } from '@/lib/useTranslation';
@@ -260,12 +260,26 @@ export function CourseProgressDetailPage({
                           </span>
                         )}
                       </div>
-                      <h3 className={`text-lg font-bold ${isLocked ? 'text-gray-500' : 'text-gray-900'} mb-2`}>{lesson.title}</h3>
-                      {lesson.score !== undefined && lesson.score > 0 && (
-                        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 bg-white px-2.5 py-1 rounded-lg border border-gray-100 inline-flex">
-                          <Trophy className="w-3.5 h-3.5 text-yellow-500" /> {t('courseProgress.score', { score: lesson.score })}
-                        </div>
-                      )}
+                      <h3 className={`text-lg font-bold ${isLocked ? 'text-gray-500' : 'text-gray-900'} mb-1`}>{lesson.title}</h3>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {lesson.score !== undefined && lesson.score !== null && lesson.score > 0 && (
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 bg-white px-2.5 py-1 rounded-lg border border-gray-100 shadow-2xs">
+                            <Trophy className="w-3.5 h-3.5 text-yellow-500" /> {t('courseProgress.score', { score: lesson.score })}
+                          </div>
+                        )}
+                        {lesson.view_count !== undefined && lesson.view_count > 0 && (
+                          <div className="flex items-center gap-1 text-xs text-gray-600 bg-white px-2.5 py-1 rounded-lg border border-gray-100 shadow-2xs">
+                            <RotateCcw className="w-3 h-3 text-indigo-500" />
+                            <span>{lesson.view_count}× visited</span>
+                          </div>
+                        )}
+                        {lesson.time_spent_seconds !== undefined && lesson.time_spent_seconds > 0 && (
+                          <div className="flex items-center gap-1 text-xs text-gray-600 bg-white px-2.5 py-1 rounded-lg border border-gray-100 shadow-2xs">
+                            <Clock className="w-3 h-3 text-blue-500" />
+                            <span>{Math.round(lesson.time_spent_seconds / 60)}m spent</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {!isLocked && (
