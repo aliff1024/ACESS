@@ -264,6 +264,7 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
   // Collapsed by default — the score in the header is the at-a-glance answer,
   // and the full checklist is long enough to bury the rest of the settings tab.
   const [auditOpen, setAuditOpen] = useState(false);
+  const [standardsFilter, setStandardsFilter] = useState<'unmet' | 'all' | 'met'>('unmet');
   const [loadingAudit, setLoadingAudit] = useState(false);
   const [applyingFixId, setApplyingFixId] = useState<string | null>(null);
 
@@ -1081,13 +1082,23 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                   {auditOpen && (
                   <div id="course-accessibility-audit" className="space-y-6">
 
-                  {/* ── 1st-Time User Guide Explainer Banner ── */}
-                  <div className="p-3.5 bg-blue-50/80 border border-blue-200/60 rounded-xl flex items-start gap-2.5 text-xs text-blue-900 leading-relaxed shadow-sm">
-                    <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold text-blue-950">How this audit is calculated: </span>
-                      Evaluates <strong>{auditReport.courseChecks.length} course-level settings</strong> + <strong>{auditReport.lessonChecks.length} lesson standards</strong> tailored to the <strong>{auditReport.focus}</strong> profile. Rules that don't apply to a lesson (e.g. video transcripts for text-only lessons) are automatically skipped so scores remain fair and accurate.
+                  {/* ── Simple 1st-Time User Explainer ── */}
+                  <div className="p-4 bg-blue-50/90 border border-blue-200/70 rounded-xl space-y-2 text-xs text-blue-950 shadow-xs">
+                    <div className="flex items-center gap-2 font-bold text-blue-900 text-sm">
+                      <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                      How the 14 Standards are Tested:
                     </div>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-blue-900/90">
+                      <li className="flex items-start gap-1.5 bg-white/70 p-2 rounded-lg border border-blue-100">
+                        <span className="font-bold text-blue-700">1. Course Level (4 rules):</span> Checks global settings (e.g. Focus Mode & Chunking enabled for ADHD).
+                      </li>
+                      <li className="flex items-start gap-1.5 bg-white/70 p-2 rounded-lg border border-blue-100">
+                        <span className="font-bold text-blue-700">2. Lesson Content (10 rules):</span> Checks lesson text, headings, and video transcripts.
+                      </li>
+                    </ul>
+                    <p className="text-[11px] text-blue-800/80 italic pt-0.5">
+                      💡 <strong>Note on skipped rules:</strong> If a lesson has no video, the &ldquo;Video Transcript&rdquo; rule is automatically skipped so you are not penalized unfairly.
+                    </p>
                   </div>
 
                   {/* ── Action Items to Reach 100% ── */}
@@ -1202,15 +1213,75 @@ export default function CourseWorkspace({ courseId, onBack, mode = 'educator' }:
                     </div>
                   )}
 
-                  {/* ── Course settings and rolled-up lesson standards ── */}
+                  {/* ── Filter Tabs to reduce long scroll ── */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-b border-gray-100 py-3 mt-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Standards Checklist:</span>
+                    </div>
+                    <div className="inline-flex rounded-lg bg-gray-100 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setStandardsFilter('unmet')}
+                        className={`text-xs font-semibold px-3 py-1 rounded-md transition-all ${
+                          standardsFilter === 'unmet'
+                            ? 'bg-white text-rose-700 shadow-xs'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Needs Fixes ({[...auditReport.courseChecks, ...auditReport.lessonChecks].filter(c => !c.passed).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStandardsFilter('met')}
+                        className={`text-xs font-semibold px-3 py-1 rounded-md transition-all ${
+                          standardsFilter === 'met'
+                            ? 'bg-white text-green-700 shadow-xs'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Passed ({auditReport.passedCount})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStandardsFilter('all')}
+                        className={`text-xs font-semibold px-3 py-1 rounded-md transition-all ${
+                          standardsFilter === 'all'
+                            ? 'bg-white text-purple-700 shadow-xs'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        All ({auditReport.totalCount})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ── Course settings and rolled-up lesson standards (Filtered) ── */}
                   {([
                     { key: 'course', label: 'Course settings', items: auditReport.courseChecks },
-                    { key: 'lessons', label: 'Lesson standards, across all lessons', items: auditReport.lessonChecks },
-                  ] as const).map((group) => group.items.length > 0 && (
+                    { key: 'lessons', label: 'Lesson standards', items: auditReport.lessonChecks },
+                  ] as const).map((group) => {
+                    const filteredItems = group.items.filter((check) => {
+                      if (standardsFilter === 'unmet') return !check.passed;
+                      if (standardsFilter === 'met') return check.passed;
+                      return true;
+                    });
+
+                    if (filteredItems.length === 0 && standardsFilter === 'unmet') {
+                      return (
+                        <div key={group.key} className="p-3 bg-green-50/50 border border-green-100 rounded-xl text-xs text-green-800 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
+                          <span>All <strong>{group.label.toLowerCase()}</strong> have been satisfied!</span>
+                        </div>
+                      );
+                    }
+
+                    return filteredItems.length > 0 && (
                     <div key={group.key} className="space-y-3">
-                      <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">{group.label}</h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">{group.label} ({filteredItems.length})</h4>
+                      </div>
                       <div className="grid grid-cols-1 gap-3">
-                        {group.items.map((check) => {
+                        {filteredItems.map((check) => {
                           const Icon = check.passed ? CheckCircle : AlertTriangle;
                           return (
                             <div
