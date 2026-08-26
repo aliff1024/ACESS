@@ -34,7 +34,7 @@ export function AccessibilityGuideModal({
 }: AccessibilityGuideModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-[96vw] max-h-[92vh] overflow-y-auto p-6 sm:p-10">
+      <DialogContent className="sm:max-w-5xl md:max-w-5xl lg:max-w-5xl w-[96vw] max-h-[92vh] overflow-y-auto p-6 sm:p-10">
         <DialogHeader className="border-b border-gray-100 pb-5">
           <div className="flex items-center gap-3 text-purple-700 mb-1">
             <div className="p-2.5 bg-purple-100 rounded-2xl">
