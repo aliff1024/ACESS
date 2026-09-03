@@ -281,13 +281,20 @@ export function LessonAccessibilityPanel({
               <span className="font-semibold text-purple-700">{guide.label}</span> profile.
             </p>
             <p className="text-xs text-gray-500 mt-1.5 italic">&ldquo;{guide.principle}&rdquo;</p>
+            <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
+              Every lesson is checked against a shared baseline (content, images, headings,
+              transcripts, links, duration, spacing). The {guide.label} profile adds{' '}
+              {guide.needs.reduce((n, need) => n + need.enforcedBy.length, 0)} extra checks
+              specific to how {guide.label === 'General accessibility' ? 'all learners' : `${guide.label} learners`} experience a lesson,
+              which is why the total differs between profiles.
+            </p>
             <button
               type="button"
               onClick={onOpenGuide}
               className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 hover:text-purple-900 hover:underline"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              What does the {guide.label} profile need?
+              See what&apos;s checked for ADHD, Autism &amp; Dyslexia
             </button>
           </div>
         </div>

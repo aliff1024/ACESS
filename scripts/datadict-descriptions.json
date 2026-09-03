@@ -1,0 +1,39 @@
+{
+  "lessons": {
+    "has_h5p": "Flag indicating that the lesson carries at least one embedded H5P interactive object."
+  },
+  "h5p_contents": {
+    "id": "Unique identifier (UUID v4).",
+    "lesson_id": "Foreign key referencing the lesson the interactive object is embedded in.",
+    "title": "Display title shown above the embedded object.",
+    "embed_url": "URL of the externally hosted H5P object, rendered inside a sandboxed frame.",
+    "source_url": "Canonical page for the object on its host, retained for attribution and re-editing.",
+    "description": "Optional explanatory text shown to the learner before the object loads.",
+    "width": "CSS width applied to the embed frame, defaults to full container width.",
+    "height": "CSS height applied to the embed frame.",
+    "sequence_order": "Position of this object among the lesson's embedded objects.",
+    "created_at": "Timestamp when the record was created.",
+    "updated_at": "Timestamp of the last modification.",
+    "thumbnail_url": "Optional preview image shown before the object is loaded."
+  },
+  "h5p_responses": {
+    "id": "Unique identifier (UUID v4).",
+    "user_id": "Foreign key referencing the learner who produced the response.",
+    "h5p_content_id": "Foreign key referencing the embedded object the response belongs to.",
+    "score": "Score reported by the object, where the object reports one.",
+    "max_score": "Maximum attainable score reported by the object.",
+    "completed": "Whether the object reported the interaction as completed.",
+    "raw_statement": "The unmodified statement emitted by the object, retained so that the record can be re-interpreted without replaying the interaction.",
+    "created_at": "Timestamp when the response was recorded."
+  },
+  "lesson_ai_summaries": {
+    "id": "Unique identifier (UUID v4).",
+    "lesson_id": "Foreign key referencing the lesson the summary describes.",
+    "summary": "Cached plain-language summary of the lesson, generated on first request and reused thereafter.",
+    "suggested_questions": "Generated prompts offered to the learner as starting points for the lesson assistant.",
+    "source_content_hash": "Digest of the lesson content the summary was generated from, so a change to the lesson invalidates the cache rather than serving a stale summary.",
+    "model": "Identifier of the generative model that produced the summary, recorded so that output can be attributed and regenerated deliberately.",
+    "created_at": "Timestamp when the summary was first generated.",
+    "updated_at": "Timestamp of the last regeneration."
+  }
+}

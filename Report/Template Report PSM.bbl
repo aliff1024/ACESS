@@ -3,11 +3,20 @@
 \bibitem[{Anthology Inc.}, 2023]{blackboard_learn}
 {Anthology Inc.} (2023).
 \newblock Blackboard learn.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.blackboard.com/}\textgreater.
 
-\bibitem[Atkinson, 2021]{atkinson2021atkinson}
-Atkinson, J.~B. (2021).
-\newblock Atkinson hyperlegible font.
-\newblock {\em {Braille Institute of America}}.
+\bibitem[{Anthology Inc.}, 2024a]{blackboard_ally}
+{Anthology Inc.} (2024a).
+\newblock Anthology ally: Accessibility reporting and alternative formats.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://help.blackboard.com/Ally}\textgreater.
+
+\bibitem[{Anthology Inc.}, 2024b]{blackboard_achievements}
+{Anthology Inc.} (2024b).
+\newblock Blackboard learn: Achievements.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://help.blackboard.com/Learn/Instructor/Ultra/Performance/Achievements}\textgreater.
 
 \bibitem[Barkley, 1997]{barkley1997adhd}
 Barkley, R.~A. (1997).
@@ -20,9 +29,43 @@ Batanero, C., Boticario, J.~G., et~al. (2014).
 \newblock Accessibility of learning management systems: A review.
 \newblock {\em Journal of Universal Computer Science}, 20(9):1253--1272.
 
+\bibitem[{Bernier, Claudéric}, 2025]{dndkit}
+{Bernier, Claudéric} (2025).
+\newblock dnd kit --- a modern drag and drop toolkit for react.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://dndkit.com/}\textgreater.
+
+\bibitem[{Braille Institute of America}, 2021]{atkinson2021atkinson}
+{Braille Institute of America} (2021).
+\newblock Atkinson hyperlegible font.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://brailleinstitute.org/freefont}\textgreater.
+
 \bibitem[{Brainhub}, 2024]{tiptap_docs}
 {Brainhub} (2024).
 \newblock Tiptap: The headless rich text editor framework.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://tiptap.dev/}\textgreater.
+
+\bibitem[{Brickfield Education Labs}, 2024]{moodle_accessibility_toolkit}
+{Brickfield Education Labs} (2024).
+\newblock Accessibility toolkit for moodle (brickfield) --- plugin directory
+  entry.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://moodle.org/plugins/tool_brickfield}\textgreater.
+
+\bibitem[{British Dyslexia Association}, 2023]{bda_style_guide}
+{British Dyslexia Association} (2023).
+\newblock Dyslexia style guide 2023: Creating dyslexia friendly content.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.bdadyslexia.org.uk/advice/employers/creating-a-dyslexia-friendly-workplace/dyslexia-friendly-style-guide}\textgreater.
+
+\bibitem[Brooke, 1996]{brooke1996sus}
+Brooke, J. (1996).
+\newblock Sus: A ``quick and dirty'' usability scale.
+\newblock In Jordan, P.~W., Thomas, B., Weerdmeester, B.~A., and McClelland,
+  I.~L., editors, {\em Usability evaluation in industry}, pages 189--194.
+  Taylor \& Francis.
 
 \bibitem[Burl and O'Brien, 2024]{burl2024neurodiversent}
 Burl, M. and O'Brien, K. (2024).
@@ -30,13 +73,23 @@ Burl, M. and O'Brien, K. (2024).
   neurodivergent students.
 \newblock {\em Computers \& Education}, 198:104--118.
 
+\bibitem[{Docker, Inc.}, 2025]{docker_docs}
+{Docker, Inc.} (2025).
+\newblock Docker desktop documentation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://docs.docker.com/desktop/}\textgreater.
+
 \bibitem[{Figma}, 2023]{figma_software}
 {Figma} (2023).
 \newblock Figma: The collaborative interface design tool.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.figma.com/}\textgreater.
 
 \bibitem[{Framer}, 2024]{framer_motion_docs}
 {Framer} (2024).
 \newblock Framer motion: Production-ready motion library for react.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.framer.com/motion/}\textgreater.
 
 \bibitem[Franceschini et~al., 2013]{franceschini_dyslexia}
 Franceschini, S., Gori, S., Ruffino, M., Viola, S., Molteni, M., and Facoetti,
@@ -44,44 +97,148 @@ Franceschini, S., Gori, S., Ruffino, M., Viola, S., Molteni, M., and Facoetti,
 \newblock Action video games make dyslexic children read better.
 \newblock {\em Current Biology}, 23(6):462--466.
 
+\bibitem[{Gonzalez, Abelardo}, 2024]{opendyslexic}
+{Gonzalez, Abelardo} (2024).
+\newblock Opendyslexic: A typeface for dyslexia.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://opendyslexic.org/}\textgreater.
+
+\bibitem[{Google DeepMind}, 2025]{gemini_api}
+{Google DeepMind} (2025).
+\newblock Gemini api documentation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://ai.google.dev/gemini-api/docs}\textgreater.
+
 \bibitem[{Google LLC}, 2023]{google_classroom}
 {Google LLC} (2023).
 \newblock Google classroom.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://classroom.google.com/}\textgreater.
+
+\bibitem[{Google LLC}, 2024]{google_classroom_accessibility}
+{Google LLC} (2024).
+\newblock Use google classroom with a screen reader and accessibility tools.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://support.google.com/edu/classroom/answer/6272747}\textgreater.
+
+\bibitem[{Google LLC}, 2025]{youtube_iframe_api}
+{Google LLC} (2025).
+\newblock Youtube iframe player api reference.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://developers.google.com/youtube/iframe_api_reference}\textgreater.
+
+\bibitem[{Heiderich, Mario and Cure53}, 2025]{dompurify}
+{Heiderich, Mario and Cure53} (2025).
+\newblock Dompurify: A dom-only xss sanitizer for html.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://github.com/cure53/DOMPurify}\textgreater.
 
 \bibitem[{Instructure, Inc.}, 2023]{canvas_lms}
 {Instructure, Inc.} (2023).
 \newblock Canvas learning management system.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.instructure.com/canvas}\textgreater.
+
+\bibitem[{Instructure, Inc.}, 2024a]{canvas_accessibility}
+{Instructure, Inc.} (2024a).
+\newblock Canvas accessibility standards and voluntary product accessibility
+  template.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.instructure.com/canvas/accessibility}\textgreater.
+
+\bibitem[{Instructure, Inc.}, 2024b]{canvas_immersive_reader}
+{Instructure, Inc.} (2024b).
+\newblock How do i use microsoft immersive reader in a canvas course?
+\newblock Accessed 2 September 2026,
+  \textless\url{https://community.canvaslms.com/t5/Instructor-Guide/tkb-p/Instructor}\textgreater.
+
+\bibitem[{Instructure, Inc.}, 2024c]{canvas_a11y_checker}
+{Instructure, Inc.} (2024c).
+\newblock How do i use the accessibility checker in the rich content editor?
+\newblock Accessed 2 September 2026,
+  \textless\url{https://community.canvaslms.com/t5/Instructor-Guide/tkb-p/Instructor}\textgreater.
+
+\bibitem[Kincaid et~al., 1975]{kincaid1975derivation}
+Kincaid, J.~P., Fishburne, R.~P., Rogers, R.~L., and Chissom, B.~S. (1975).
+\newblock Derivation of new readability formulas (automated readability index,
+  fog count and flesch reading ease formula) for navy enlisted personnel.
+\newblock Technical Report Research Branch Report 8-75, Naval Technical
+  Training Command, Millington TN Research Branch.
 
 \bibitem[Lawson, 2011]{lawson2011autism}
 Lawson, W. (2011).
 \newblock {\em The Passionate Mind: How People with Autism Learn}.
-\newblock Jessica Kingsley Publishers.
+\newblock London: Jessica Kingsley Publishers.
 
 \bibitem[{Meta Platforms, Inc.}, 2023]{react_docs}
 {Meta Platforms, Inc.} (2023).
 \newblock React: The library for web and native user interfaces.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://react.dev/}\textgreater.
 
 \bibitem[Meyer et~al., 2014]{udl_guidelines}
 Meyer, A., Rose, D.~H., and Gordon, D. (2014).
 \newblock {\em Universal Design for Learning: Theory and Practice}.
-\newblock CAST Professional Publishing.
+\newblock Wakefield, MA: CAST Professional Publishing.
 
 \bibitem[{Microsoft}, 2023]{typescript_docs}
 {Microsoft} (2023).
 \newblock Typescript: Javascript with syntax for types.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.typescriptlang.org/docs/}\textgreater.
 
 \bibitem[{MoodleHQ}, 2023a]{moodle_architecture}
 {MoodleHQ} (2023a).
 \newblock Moodle architecture: Technical overview.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://docs.moodle.org/dev/Architecture}\textgreater.
 
 \bibitem[{MoodleHQ}, 2023b]{moodle_software}
 {MoodleHQ} (2023b).
 \newblock Moodle: Open-source learning platform.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://moodle.org/}\textgreater.
+
+\bibitem[{MoodleHQ}, 2024a]{moodle_atto_a11y}
+{MoodleHQ} (2024a).
+\newblock Moodle accessibility checker (atto and tinymce editor plugins).
+\newblock Accessed 2 September 2026,
+  \textless\url{https://docs.moodle.org/en/Accessibility_checker}\textgreater.
+
+\bibitem[{MoodleHQ}, 2024b]{moodle_accessibility}
+{MoodleHQ} (2024b).
+\newblock Moodle accessibility documentation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://docs.moodle.org/en/Accessibility}\textgreater.
+
+\bibitem[{Mozilla Developer Network}, 2025]{webspeech_api}
+{Mozilla Developer Network} (2025).
+\newblock Web speech api --- speech synthesis.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API}\textgreater.
 
 \bibitem[Munoz et~al., 2003]{munoz2003saccadic}
 Munoz, D.~P., Armstrong, I.~T., Hampton, K.~A., and Moore, K.~D. (2003).
 \newblock Saccadic eye movements in attention deficit hyperactivity disorder.
 \newblock {\em Clinical Neurophysiology}, 114(9):1667--1674.
+
+\bibitem[{Parallax Agency Ltd.}, 2025]{jspdf_docs}
+{Parallax Agency Ltd.} (2025).
+\newblock jspdf: Client-side javascript pdf generation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://github.com/parallax/jsPDF}\textgreater.
+
+\bibitem[{PostgreSQL Global Development Group}, 2025]{postgresql_docs}
+{PostgreSQL Global Development Group} (2025).
+\newblock Postgresql 17 documentation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.postgresql.org/docs/17/}\textgreater.
+
+\bibitem[{PostgREST Contributors}, 2025]{postgrest_docs}
+{PostgREST Contributors} (2025).
+\newblock Postgrest: Rest api for any postgresql database.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://postgrest.org/}\textgreater.
 
 \bibitem[Prensky, 2001]{prensky2001digital}
 Prensky, M. (2001).
@@ -91,6 +248,8 @@ Prensky, M. (2001).
 \bibitem[{Recharts Team}, 2024]{recharts_docs}
 {Recharts Team} (2024).
 \newblock Recharts: A composable charting library built on react components.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://recharts.org/}\textgreater.
 
 \bibitem[Rello and Baeza-Yates, 2013]{rello2013effect}
 Rello, L. and Baeza-Yates, R. (2013).
@@ -113,10 +272,26 @@ Spencer, M. and Podesta, F. (2022).
 \bibitem[{Supabase}, 2023]{supabase_docs}
 {Supabase} (2023).
 \newblock Supabase documentation: The open source firebase alternative.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://supabase.com/docs}\textgreater.
 
 \bibitem[{Supabase}, 2024]{supabase_rls}
 {Supabase} (2024).
 \newblock Supabase row level security documentation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://supabase.com/docs/guides/auth/row-level-security}\textgreater.
+
+\bibitem[{Supabase Inc.}, 2025a]{supabase_auth}
+{Supabase Inc.} (2025a).
+\newblock Supabase auth documentation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://supabase.com/docs/guides/auth}\textgreater.
+
+\bibitem[{Supabase Inc.}, 2025b]{supabase_cli}
+{Supabase Inc.} (2025b).
+\newblock Supabase cli and local development.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://supabase.com/docs/guides/local-development}\textgreater.
 
 \bibitem[Sweller, 1988]{sweller1988cognitive}
 Sweller, J. (1988).
@@ -126,18 +301,39 @@ Sweller, J. (1988).
 \bibitem[{Tailwind Labs}, 2023]{tailwind_docs}
 {Tailwind Labs} (2023).
 \newblock Tailwind css documentation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://tailwindcss.com/docs}\textgreater.
 
 \bibitem[{Vercel Inc.}, 2023a]{nextjs_ssr}
 {Vercel Inc.} (2023a).
 \newblock Next.js documentation: Server-side rendering (ssr).
+\newblock Accessed 2 September 2026,
+  \textless\url{https://nextjs.org/docs}\textgreater.
 
 \bibitem[{Vercel Inc.}, 2023b]{vercel_docs}
 {Vercel Inc.} (2023b).
 \newblock Vercel documentation: The platform for frontend developers.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://vercel.com/docs}\textgreater.
+
+\bibitem[{Vercel Inc.}, 2024]{nextjs_middleware}
+{Vercel Inc.} (2024).
+\newblock Next.js middleware documentation.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://nextjs.org/docs/app/building-your-application/routing/middleware}\textgreater.
+
+\bibitem[{W3C Web Accessibility Initiative}, 2021]{wcag_cognitive}
+{W3C Web Accessibility Initiative} (2021).
+\newblock Making content usable for people with cognitive and learning
+  disabilities.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.w3.org/TR/coga-usable/}\textgreater.
 
 \bibitem[{W3C Web Accessibility Initiative}, 2023]{wcag22}
 {W3C Web Accessibility Initiative} (2023).
 \newblock Web content accessibility guidelines (wcag) 2.2.
+\newblock Accessed 2 September 2026,
+  \textless\url{https://www.w3.org/TR/WCAG22/}\textgreater.
 
 \bibitem[Zelazo et~al., 2003]{zelazo2003executive}
 Zelazo, P.~D., Muller, U., Frye, D., and Marcovitch, S. (2003).

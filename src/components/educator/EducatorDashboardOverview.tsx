@@ -7,14 +7,15 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { 
-  BookOpen, Users, TrendingUp, AlertTriangle, Plus, 
+  BookOpen, Users, TrendingUp, Plus, 
   ArrowRight, Loader2, Award, Mail, Clock, ShieldAlert,
-  GraduationCap, Activity
+  GraduationCap, Activity, Trophy, ChevronRight
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { fetchCourses, fetchEducatorCertStats, fetchRecentActivity } from '@/lib/educator-api';
 import { formatDistanceToNow } from 'date-fns';
 import { fetchStudentsDeepProgress, DetailedStudentProgress } from '@/lib/educator-analytics-api';
+import { fetchEducatorLeaderboard, type EducatorRankingEntry } from '@/lib/educator-ranking-api';
 import type { CourseSummary, ActivityItem } from '@/lib/educator-api';
 
 interface EducatorDashboardOverviewProps {
@@ -37,6 +38,7 @@ export function EducatorDashboardOverview({
   const [students, setStudents] = useState<DetailedStudentProgress[]>([]);
   const [certStats, setCertStats] = useState({ totalIssued: 0, thisMonth: 0 });
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [rankingData, setRankingData] = useState<EducatorRankingEntry | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,12 +48,13 @@ export function EducatorDashboardOverview({
         if (!user.user) return;
         const educatorId = user.user.id;
 
-        const [profileData, coursesData, studentsData, certData, activityData] = await Promise.all([
+        const [profileData, coursesData, studentsData, certData, activityData, leaderboardRes] = await Promise.all([
           supabase.from('users').select('full_name').eq('id', educatorId).single().then((r) => r.data),
           fetchCourses(educatorId),
           fetchStudentsDeepProgress(educatorId),
           fetchEducatorCertStats(educatorId),
-          fetchRecentActivity(educatorId)
+          fetchRecentActivity(educatorId),
+          fetchEducatorLeaderboard(educatorId).catch(() => null),
         ]);
 
         if (profileData) setProfile(profileData);
@@ -59,6 +62,9 @@ export function EducatorDashboardOverview({
         setStudents(studentsData);
         setCertStats(certData);
         setActivity(activityData);
+        if (leaderboardRes?.currentEducator) {
+          setRankingData(leaderboardRes.currentEducator);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -102,6 +108,9 @@ export function EducatorDashboardOverview({
           <Button onClick={onCreateCourse} className="bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition-all hover:scale-105">
             <Plus className="w-4 h-4 mr-2" /> New Course
           </Button>
+          <Button onClick={() => router.push('/educator/ranking')} variant="outline" className="border-purple-200 bg-purple-50/50 hover:bg-purple-100/70 text-purple-900 shadow-sm transition-all hover:scale-105">
+            <Trophy className="w-4 h-4 mr-2 text-amber-500" /> Educator Ranking
+          </Button>
           <Button onClick={onViewStudents} variant="outline" className="border-gray-200 hover:bg-gray-50 shadow-sm transition-all hover:scale-105">
             <Mail className="w-4 h-4 mr-2 text-blue-600" /> Message Learners
           </Button>
@@ -112,6 +121,39 @@ export function EducatorDashboardOverview({
           )}
         </div>
       </div>
+
+      {/* Educator Ranking & Motivation Banner */}
+      {rankingData && (
+        <div 
+          onClick={() => router.push('/educator/ranking')}
+          className="bg-gradient-to-r from-gray-900 via-purple-950 to-indigo-950 rounded-2xl p-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:shadow-lg transition-all group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300 shrink-0">
+              <Trophy className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Educator Standing</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-purple-200 uppercase">
+                  {rankingData.tier} Tier
+                </span>
+              </div>
+              <p className="text-base font-bold text-white mt-0.5">
+                Current Rank: #{rankingData.rank || 1} &bull; Overall Score: {rankingData.overallScore} / 100
+              </p>
+              <p className="text-xs text-gray-300 mt-0.5">
+                {rankingData.completionRate}% avg student completion rate &bull; {rankingData.scoreBreakdown.positiveProgressRate}% positive progress
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-bold text-purple-300 group-hover:text-white transition-colors shrink-0">
+            <span>View Full Leaderboard & Insights</span>
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
+      )}
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

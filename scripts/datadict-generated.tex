@@ -1,0 +1,960 @@
+\subsubsection{Core Identity and Configuration}
+
+Tables~\ref{tab:dd_users} to~\ref{tab:dd_adaptive_interactions} define the 8 entities of the core identity and configuration domain.
+
+\textbf{1. Table: users}
+
+\begin{table}[H]
+\caption{Users Data Dictionary}
+\label{tab:dd_users}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+email & character varying & UNIQUE, NOT NULL & User email address, used for login and notifications. \\ \hline
+role & character varying & NOT NULL & User role: learner, educator, or admin. \\ \hline
+is\_active & boolean DEFAULT true & NOT NULL & Soft-ban flag; inactive users cannot log in. \\ \hline
+email\_verified\_at & timestamp & - & Timestamp when user confirmed email via verification link; NULL if unverified. \\ \hline
+last\_login\_at & timestamp & - & Timestamp of last successful login. \\ \hline
+created\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamp DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+deleted\_at & timestamp & - & Soft-delete timestamp; null if not deleted. \\ \hline
+full\_name & text & - & User's display name shown across the platform. \\ \hline
+instructor\_application\_status & text & - & Status of educator application. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{2. Table: user\_profiles}
+
+\begin{table}[H]
+\caption{User Profiles Data Dictionary}
+\label{tab:dd_user_profiles}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, UNIQUE, NOT NULL & Foreign key referencing users.id. \\ \hline
+username & text & UNIQUE & Public-facing username handle. \\ \hline
+avatar\_url & text & - & URL to the user's profile image. \\ \hline
+phone\_number & text & - & Contact phone number for account recovery and notifications. \\ \hline
+birth\_date & date & - & User's date of birth for age verification and age-group analytics. \\ \hline
+bio & text & - & Short biographical text for educator profiles. \\ \hline
+country & text & - & ISO 3166-1 country code for regional content localisation. \\ \hline
+preferred\_language & text DEFAULT 'en' & - & UI language code (en, ms). \\ \hline
+created\_at & timestamptz DEFAULT now() & - & Timestamp when the record was created. \\ \hline
+updated\_at & timestamptz DEFAULT now() & - & Timestamp of the last modification. \\ \hline
+disability\_type & character varying & - & Disability classification for adaptive engine. \\ \hline
+accessibility\_prefs & jsonb DEFAULT '{}' & - & JSON object storing active accessibility settings (font size, colour scheme, TTS rate, dyslexia font toggle). \\ \hline
+notification\_prefs & jsonb DEFAULT '{}' & - & JSON object storing notification delivery preferences (email, in-app, frequency). \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{3. Table: referral\_codes}
+
+\begin{table}[H]
+\caption{Referral Codes Data Dictionary}
+\label{tab:dd_referral_codes}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+code & text & UNIQUE, NOT NULL & Unique alphanumeric code assigned to a user for referral tracking. \\ \hline
+user\_id & uuid & FK $\rightarrow$ users & Foreign key referencing users.id. \\ \hline
+usage\_count & integer DEFAULT 0 & - & Number of times used. \\ \hline
+max\_uses & integer DEFAULT 50 & - & Maximum number of times this referral code can be redeemed. \\ \hline
+is\_active & boolean DEFAULT true & - & Soft-ban flag; inactive users cannot log in. \\ \hline
+created\_at & timestamptz DEFAULT now() & - & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{4. Table: instructor\_applications}
+
+\begin{table}[H]
+\caption{Instructor Applications Data Dictionary}
+\label{tab:dd_instructor_applications}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users & Foreign key referencing users.id. \\ \hline
+full\_name & text & NOT NULL & User's display name shown across the platform. \\ \hline
+email & text & NOT NULL & User email address, used for login and notifications. \\ \hline
+experience & text & - & Free-text description of applicant's teaching or subject-matter experience. \\ \hline
+reason & text & - & Applicant's motivation statement for wanting to become an educator on the platform. \\ \hline
+portfolio\_links & text & - & Comma-separated URLs to the applicant's teaching portfolio or work samples. \\ \hline
+referral\_code & text & - & Unique referral token string. \\ \hline
+status & text DEFAULT 'pending' & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
+admin\_notes & text & - & Internal reviewer notes regarding the application decision. \\ \hline
+reviewed\_by & uuid & FK $\rightarrow$ users & UUID of the administrator who reviewed the application. \\ \hline
+reviewed\_at & timestamptz & - & Timestamp of the review decision. \\ \hline
+created\_at & timestamptz DEFAULT now() & - & Timestamp when the record was created. \\ \hline
+updated\_at & timestamptz DEFAULT now() & - & Timestamp of the last modification. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{5. Table: contact\_messages}
+
+\begin{table}[H]
+\caption{Contact Messages Data Dictionary}
+\label{tab:dd_contact_messages}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+name & text & NOT NULL & Display name of the record. \\ \hline
+email & text & NOT NULL & User email address, used for login and notifications. \\ \hline
+category & text & NOT NULL & Content category classification. \\ \hline
+subject & text & NOT NULL & Message subject line. \\ \hline
+message & text & NOT NULL & Full body text of the contact form submission. \\ \hline
+status & text DEFAULT 'unread' & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
+created\_at & timestamptz DEFAULT now() & - & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{6. Table: notifications}
+
+\begin{table}[H]
+\caption{Notifications Data Dictionary}
+\label{tab:dd_notifications}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, NOT NULL & Foreign key referencing users.id. \\ \hline
+type & text & NOT NULL & Classification type of the record. \\ \hline
+title & text & NOT NULL & Display title of the record. \\ \hline
+body & text & - & Message body text content. \\ \hline
+metadata & jsonb DEFAULT '{}' & - & JSONB field for extensible metadata. \\ \hline
+is\_read & boolean DEFAULT false & - & Whether the message has been read. \\ \hline
+created\_at & timestamptz DEFAULT now() & - & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{7. Table: accessibility\_templates}
+
+\begin{table}[H]
+\caption{Accessibility Templates Data Dictionary}
+\label{tab:dd_accessibility_templates}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+name & text & NOT NULL & Display name of the record. \\ \hline
+description & text & - & Free-text description or summary. \\ \hline
+target\_disability & text & NOT NULL & Disability category the template targets (e.g. 'dyslexia', 'adhd', 'asd'). \\ \hline
+content\_structure & jsonb & NOT NULL & JSON definition of template layout rules and component arrangement. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{8. Table: adaptive\_interactions}
+
+\begin{table}[H]
+\caption{Adaptive Interactions Data Dictionary}
+\label{tab:dd_adaptive_interactions}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, NOT NULL & Foreign key referencing users.id. \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons & Foreign key referencing lessons.id. \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses & Foreign key referencing courses.id. \\ \hline
+adaptation\_used & text & NOT NULL & Identifier of the adaptive preset applied (e.g. 'dyslexia\_standard', 'adhd\_focus'). \\ \hline
+session\_id & text & - & Unique identifier linking interactions within a single browsing session. \\ \hline
+duration\_seconds & integer & - & Duration in seconds. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{Curriculum Structure}
+
+Tables~\ref{tab:dd_courses} to~\ref{tab:dd_media_assets} define the 9 entities of the curriculum structure domain.
+
+\textbf{9. Table: courses}
+
+\begin{table}[H]
+\caption{Courses Data Dictionary}
+\label{tab:dd_courses}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+created\_by & uuid & FK $\rightarrow$ users, NOT NULL & Foreign key referencing the creating user. \\ \hline
+title & character varying & NOT NULL & Display title of the record. \\ \hline
+slug & character varying & UNIQUE, NOT NULL & URL-safe identifier string. \\ \hline
+description & text & - & Free-text description or summary. \\ \hline
+status & character varying DEFAULT 'draft' & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
+difficulty\_level & character varying & - & Course difficulty classification ('beginner', 'intermediate', 'advanced') for learner filtering. \\ \hline
+thumbnail\_url & character varying & - & URL to the thumbnail image. \\ \hline
+published\_at & timestamp & - & Timestamp when published. \\ \hline
+created\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamp DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+deleted\_at & timestamp & - & Soft-delete timestamp; null if not deleted. \\ \hline
+category & text & - & Content category classification. \\ \hline
+course\_type & text DEFAULT 'educator' & NOT NULL & Origin of course creation ('educator' or 'system') determining edit permissions. \\ \hline
+system\_course & boolean DEFAULT false & NOT NULL & Boolean flag indicating the course was created by administrators, not educators. \\ \hline
+built\_in\_course & boolean DEFAULT false & NOT NULL & Boolean flag marking pre-seeded platform courses that cannot be deleted. \\ \hline
+created\_by\_role & text DEFAULT 'educator' & NOT NULL & Role of the user who created the course ('educator' or 'admin') for permission checks. \\ \hline
+guided\_learning\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle enabling step-by-step guided lesson progression. \\ \hline
+official\_course\_order & integer & - & Integer display priority for system-created courses in the catalog. \\ \hline
+managed\_by\_admin & boolean DEFAULT false & NOT NULL & Boolean flag indicating administrative oversight of educator-created course. \\ \hline
+recommended\_age\_group & text & - & Suggested learner age range for age-appropriate content filtering. \\ \hline
+learning\_streaks\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle activating daily learning streak tracking and rewards. \\ \hline
+milestone\_tracking\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle enabling course milestone progress indicators. \\ \hline
+course\_layout\_type & text DEFAULT 'standard' & NOT NULL & Visual layout template ('standard', 'simplified') for course pages. \\ \hline
+chapter\_organization\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle enabling hierarchical chapter-based lesson grouping. \\ \hline
+certificate\_enabled & boolean DEFAULT false & - & Boolean toggle allowing certificate generation upon course completion. \\ \hline
+certificate\_settings & jsonb DEFAULT '{}' & - & JSON object storing certificate configuration (template, signature, expiry). \\ \hline
+certification\_locked & boolean DEFAULT false & - & Boolean flag preventing certificate issuance until all criteria are met. \\ \hline
+supports\_tts & boolean DEFAULT false & - & Boolean flag indicating whether course lessons support text-to-speech playback. \\ \hline
+supports\_transcripts & boolean DEFAULT false & - & Boolean flag indicating whether video lessons include text transcripts. \\ \hline
+supports\_focus\_mode & boolean DEFAULT false & - & Boolean flag indicating whether Focus Mode is available for this course. \\ \hline
+supports\_chunked\_learning & boolean DEFAULT false & - & Boolean flag enabling content to be broken into smaller learning chunks. \\ \hline
+tags & text[] DEFAULT '{}' & - & JSONB array of tag strings. \\ \hline
+accessibility\_categories & text[] DEFAULT '{}' & - & Array of disability categories this course is designed to support. \\ \hline
+primary\_disability\_focus & text & - & Main disability category the course content is optimised for. \\ \hline
+secondary\_disability\_focuses & text[] DEFAULT '{}' & - & Array of additional disability categories the course partially supports. \\ \hline
+target\_reading\_age & integer DEFAULT 13 & - & Minimum reading level the course content is written at for age-appropriate filtering. \\ \hline
+educator\_custom\_guide & text & - & Free-text educator instructions for how to use or navigate this course. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{10. Table: course\_chapters}
+
+\begin{table}[H]
+\caption{Course Chapters Data Dictionary}
+\label{tab:dd_course_chapters}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses, UNIQUE, NOT NULL & Foreign key referencing courses.id. \\ \hline
+title & text & NOT NULL & Display title of the record. \\ \hline
+description & text & - & Free-text description or summary. \\ \hline
+sequence\_order & integer DEFAULT 0 & UNIQUE, NOT NULL & Integer determining the display order of this chapter within the course. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{11. Table: lessons}
+
+\begin{table}[H]
+\caption{Lessons Data Dictionary}
+\label{tab:dd_lessons}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses, UNIQUE, NOT NULL & Foreign key referencing courses.id. \\ \hline
+title & character varying & NOT NULL & Display title of the record. \\ \hline
+content\_html & text & - & Rich-text HTML body of the lesson rendered via Tiptap editor. \\ \hline
+video\_url & character varying & - & URL of the embedded video asset for this lesson. \\ \hline
+transcript & text & - & Full text transcript of the lesson content for accessibility compliance. \\ \hline
+sequence\_order & integer & UNIQUE, NOT NULL & Integer determining the display order of this lesson within its course. \\ \hline
+status & character varying DEFAULT 'draft' & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
+created\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamp DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+estimated\_duration & integer & - & Approximate lesson completion time in minutes for progress estimation. \\ \hline
+prerequisite\_lesson\_id & uuid & FK $\rightarrow$ lessons & UUID of the lesson that must be completed before this one unlocks. \\ \hline
+simplified\_summary & text & - & Plain-text summary of lesson content for simplified reading mode. \\ \hline
+accessibility\_notes & text & - & Accessibility improvement notes. \\ \hline
+focus\_mode\_enabled & boolean DEFAULT false & NOT NULL & Boolean flag allowing Focus Mode override for this specific lesson. \\ \hline
+chunked\_content\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle enabling lesson content to be split into digestible segments. \\ \hline
+lesson\_type & text DEFAULT 'standard' & NOT NULL & Lesson classification ('standard', 'video', 'interactive') determining content rendering. \\ \hline
+chapter\_id & uuid & - & Foreign key referencing course\_chapters.id. \\ \hline
+learning\_objectives & text & - & Semicolon-separated list of learning outcomes displayed before lesson content. \\ \hline
+visibility\_status & text DEFAULT 'visible' & NOT NULL & Content visibility state ('visible', 'hidden', 'draft') controlling catalog display. \\ \hline
+checkpoints\_enabled & boolean DEFAULT false & NOT NULL & Boolean toggle requiring milestone checkmarks before lesson progression. \\ \hline
+adaptive\_learning\_enabled & boolean DEFAULT false & NOT NULL & Boolean flag activating adaptive content delivery for this lesson. \\ \hline
+has\_video & boolean DEFAULT true & - & Boolean flag indicating whether this lesson contains an embedded video. \\ \hline
+has\_pdf & boolean DEFAULT true & - & Boolean flag indicating whether this lesson has a downloadable PDF resource. \\ \hline
+has\_quiz & boolean DEFAULT true & - & Boolean flag indicating whether this lesson has an associated quiz. \\ \hline
+has\_transcript & boolean DEFAULT true & - & Boolean flag indicating whether this lesson includes a text transcript. \\ \hline
+has\_summary\_activity & boolean DEFAULT false & - & Boolean flag enabling the learner summary submission activity. \\ \hline
+summary\_source & text DEFAULT 'entire\_lesson' & - & Content scope for summary generation ('entire\_lesson', 'current\_section'). \\ \hline
+summary\_word\_target & integer DEFAULT 100 & - & Target word count for learner summary submissions. \\ \hline
+summary\_key\_points & jsonb DEFAULT '[]' & - & JSON array of expected key points for summary evaluation. \\ \hline
+summary\_reflection\_questions & jsonb DEFAULT '[]' & - & JSON array of reflection prompts shown after summary submission. \\ \hline
+summary\_ai\_feedback\_enabled & boolean DEFAULT false & - & Boolean toggle enabling AI-generated feedback on summaries. \\ \hline
+lesson\_layout & text DEFAULT 'standard' & - & Visual template ('standard', 'focus', 'minimal') for lesson page rendering. \\ \hline
+has\_h5p & boolean DEFAULT false & - & Flag indicating that the lesson carries at least one embedded H5P interactive object. \\ \hline
+accessibility\_score & integer DEFAULT 100 & - & Accessibility compliance score. \\ \hline
+allow\_discussions & boolean DEFAULT false & - & Boolean toggle enabling threaded comments on this lesson. \\ \hline
+allow\_download & boolean DEFAULT false & - & Boolean toggle enabling resource file downloads for this lesson. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{12. Table: course\_accessibility\_categories}
+
+\begin{table}[H]
+\caption{Course Accessibility Categories Data Dictionary}
+\label{tab:dd_course_accessibility_categories}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses, NOT NULL & Foreign key referencing courses.id. \\ \hline
+accessibility\_category & text & NOT NULL & Disability category label (e.g. 'dyslexia', 'adhd', 'asd') linked to this course. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{13. Table: course\_milestones}
+
+\begin{table}[H]
+\caption{Course Milestones Data Dictionary}
+\label{tab:dd_course_milestones}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses, NOT NULL & Foreign key referencing courses.id. \\ \hline
+title & text & NOT NULL & Display title of the record. \\ \hline
+description & text & - & Free-text description or summary. \\ \hline
+required\_completion\_pct & integer DEFAULT 100 & NOT NULL & Minimum percentage of lessons that must be completed to achieve this milestone. \\ \hline
+icon & text & - & Emoji or icon identifier displayed alongside the milestone label. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this milestone in the progress tracker. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{14. Table: course\_achievements}
+
+\begin{table}[H]
+\caption{Course Achievements Data Dictionary}
+\label{tab:dd_course_achievements}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses, NOT NULL & Foreign key referencing courses.id. \\ \hline
+name & character varying & NOT NULL & Display name of the record. \\ \hline
+description & text & NOT NULL & Free-text description or summary. \\ \hline
+icon\_url & character varying & - & URL of the achievement badge image displayed in the learner's profile. \\ \hline
+requirement\_type & character varying & NOT NULL & Achievement criterion type (e.g. 'quiz\_score', 'course\_complete', 'streak'). \\ \hline
+requirement\_threshold & integer DEFAULT 1 & NOT NULL & Numeric threshold value that must be met to unlock this achievement. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{15. Table: lesson\_templates}
+
+\begin{table}[H]
+\caption{Lesson Templates Data Dictionary}
+\label{tab:dd_lesson_templates}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+created\_by & uuid & FK $\rightarrow$ users, NOT NULL & Foreign key referencing the creating user. \\ \hline
+title & text & NOT NULL & Display title of the record. \\ \hline
+description & text & - & Free-text description or summary. \\ \hline
+lesson\_type & text DEFAULT 'standard' & NOT NULL & Template classification ('standard', 'video', 'interactive') for the template. \\ \hline
+content\_html & text & - & Default HTML content body pre-filled in the template for educator customisation. \\ \hline
+estimated\_duration & integer & - & Default approximate completion time in minutes suggested by the template. \\ \hline
+is\_public & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether this template is available to all educators. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{16. Table: lesson\_versions}
+
+\begin{table}[H]
+\caption{Lesson Versions Data Dictionary}
+\label{tab:dd_lesson_versions}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, NOT NULL & Foreign key referencing lessons.id. \\ \hline
+content\_html & text & NOT NULL & Snapshot of the lesson HTML content at the time this version was saved. \\ \hline
+version\_name & text & NOT NULL & Human-readable label identifying this version (e.g. 'v1', 'draft-2024-03'). \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+created\_by & uuid & FK $\rightarrow$ users, NOT NULL & Foreign key referencing the creating user. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{17. Table: media\_assets}
+
+\begin{table}[H]
+\caption{Media Assets Data Dictionary}
+\label{tab:dd_media_assets}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, NOT NULL & Foreign key referencing users.id. \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses & Foreign key referencing courses.id. \\ \hline
+file\_name & character varying & NOT NULL & Original uploaded file name including extension (e.g. 'lecture\_slides.pdf'). \\ \hline
+file\_type & character varying & NOT NULL & MIME type of the file. \\ \hline
+url & character varying & NOT NULL & External resource URL. \\ \hline
+size\_bytes & bigint & - & File size in bytes for storage quota enforcement. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons & Foreign key referencing lessons.id. \\ \hline
+title & character varying & - & Display title of the record. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{Lesson Content and Interaction}
+
+Tables~\ref{tab:dd_lesson_interactive_content} to~\ref{tab:dd_lesson_comments} define the 6 entities of the lesson content and interaction domain.
+
+\textbf{18. Table: lesson\_interactive\_content}
+
+\begin{table}[H]
+\caption{Lesson Interactive Content Data Dictionary}
+\label{tab:dd_lesson_interactive_content}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, NOT NULL & Foreign key referencing lessons.id. \\ \hline
+content\_type & text & NOT NULL & MIME type of the content. \\ \hline
+title & text & NOT NULL & Display title of the record. \\ \hline
+content\_data & jsonb DEFAULT '{}' & NOT NULL & JSONB payload containing the H5P interactive activity configuration and state. \\ \hline
+accessibility\_settings & jsonb DEFAULT '{}' & - & JSON object storing accessibility overrides specific to this interactive activity. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this activity within the lesson. \\ \hline
+created\_by & uuid & FK $\rightarrow$ users & Foreign key referencing the creating user. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+is\_draft & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether this interactive content is unpublished. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{19. Table: video\_questions}
+
+\begin{table}[H]
+\caption{Video Questions Data Dictionary}
+\label{tab:dd_video_questions}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, NOT NULL & Foreign key referencing lessons.id. \\ \hline
+title & text & NOT NULL & Display title of the record. \\ \hline
+timestamp\_seconds & numeric & NOT NULL & Video playback position in seconds where the question is displayed. \\ \hline
+question\_text & text & NOT NULL & Display text of the question. \\ \hline
+options & jsonb DEFAULT '[]' & NOT NULL & JSONB array of answer options. \\ \hline
+correct\_option\_index & integer DEFAULT 0 & NOT NULL & Zero-based index of the correct answer in the options array. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this question within the video. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{20. Table: h5p\_contents}
+
+\begin{table}[H]
+\caption{H5P Contents Data Dictionary}
+\label{tab:dd_h5p_contents}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, NOT NULL & Foreign key referencing the lesson the interactive object is embedded in. \\ \hline
+title & text & NOT NULL & Display title shown above the embedded object. \\ \hline
+embed\_url & text & NOT NULL & URL of the externally hosted H5P object, rendered inside a sandboxed frame. \\ \hline
+source\_url & text & - & Canonical page for the object on its host, retained for attribution and re-editing. \\ \hline
+description & text & - & Optional explanatory text shown to the learner before the object loads. \\ \hline
+width & text DEFAULT '100\%' & - & CSS width applied to the embed frame; defaults to full container width. \\ \hline
+height & text DEFAULT '500px' & - & CSS height applied to the embed frame. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Position of this object among the lesson's embedded objects. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+thumbnail\_url & text & - & Optional preview image shown before the object is loaded. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{21. Table: lesson\_checkpoints}
+
+\begin{table}[H]
+\caption{Lesson Checkpoints Data Dictionary}
+\label{tab:dd_lesson_checkpoints}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, NOT NULL & Foreign key referencing lessons.id. \\ \hline
+title & text & NOT NULL & Display title of the record. \\ \hline
+description & text & - & Free-text description or summary. \\ \hline
+checkpoint\_type & text DEFAULT 'reflection' & NOT NULL & Checkpoint category ('reflection', 'quiz', 'activity') determining interaction format. \\ \hline
+sequence\_order & integer DEFAULT 0 & NOT NULL & Integer determining the display order of this checkpoint within the lesson. \\ \hline
+required & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether this checkpoint must be passed to proceed. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{22. Table: lesson\_ai\_summaries}
+
+\begin{table}[H]
+\caption{Lesson Ai Summaries Data Dictionary}
+\label{tab:dd_lesson_ai_summaries}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, UNIQUE, NOT NULL & Foreign key referencing the lesson the summary describes. \\ \hline
+summary & text & NOT NULL & Cached plain-language summary of the lesson, generated on first request and reused thereafter. \\ \hline
+suggested\_questions & text[] DEFAULT '{}' & - & Generated prompts offered to the learner as starting points for the lesson assistant. \\ \hline
+source\_content\_hash & text & NOT NULL & Digest of the lesson content the summary was generated from; a change to the lesson invalidates the cache rather than serving a stale summary. \\ \hline
+model & text & NOT NULL & Identifier of the generative model that produced the summary, recorded so that output can be attributed and regenerated deliberately. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the summary was first generated. \\ \hline
+updated\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp of the last regeneration. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{23. Table: lesson\_comments}
+
+\begin{table}[H]
+\caption{Lesson Comments Data Dictionary}
+\label{tab:dd_lesson_comments}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, NOT NULL & Foreign key referencing lessons.id. \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, NOT NULL & Foreign key referencing users.id. \\ \hline
+content & text & NOT NULL & Rich-text HTML or JSON content body. \\ \hline
+parent\_id & uuid & FK $\rightarrow$ lesson\_comments & UUID of the parent comment for threaded reply nesting; NULL for top-level comments. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{Assessment}
+
+Tables~\ref{tab:dd_quizzes} to~\ref{tab:dd_quiz_answers} define the 5 entities of the assessment domain.
+
+\textbf{24. Table: quizzes}
+
+\begin{table}[H]
+\caption{Quizzes Data Dictionary}
+\label{tab:dd_quizzes}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, UNIQUE, NOT NULL & Foreign key referencing lessons.id. \\ \hline
+title & character varying & NOT NULL & Display title of the record. \\ \hline
+time\_limit\_seconds & integer DEFAULT 0 & NOT NULL & Maximum allowed quiz completion time in seconds; 0 = unlimited. \\ \hline
+max\_attempts & integer DEFAULT 0 & NOT NULL & Maximum number of allowed attempts. \\ \hline
+pass\_threshold\_pct & integer DEFAULT 60 & NOT NULL & Minimum percentage required to pass. \\ \hline
+created\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+updated\_at & timestamp DEFAULT now() & NOT NULL & Timestamp of the last modification. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{25. Table: quiz\_questions}
+
+\begin{table}[H]
+\caption{Quiz Questions Data Dictionary}
+\label{tab:dd_quiz_questions}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+quiz\_id & uuid & FK $\rightarrow$ quizzes, UNIQUE, NOT NULL & Foreign key referencing quizzes.id. \\ \hline
+question\_text & text & NOT NULL & Display text of the question. \\ \hline
+question\_type & character varying & NOT NULL & Question format (multiple-choice, etc.). \\ \hline
+sequence\_order & integer & UNIQUE, NOT NULL & Integer determining the display order of this question within the quiz. \\ \hline
+created\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+image\_url & text & - & URL of an optional image asset displayed alongside the question text. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{26. Table: quiz\_options}
+
+\begin{table}[H]
+\caption{Quiz Options Data Dictionary}
+\label{tab:dd_quiz_options}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+question\_id & uuid & FK $\rightarrow$ quiz\_questions, UNIQUE, NOT NULL & Foreign key referencing quiz\_questions.id. \\ \hline
+option\_text & text & NOT NULL & Display text of the quiz option. \\ \hline
+is\_correct & boolean DEFAULT false & NOT NULL & Whether this is the correct answer. \\ \hline
+sequence\_order & integer & UNIQUE, NOT NULL & Integer determining the display order of this answer option. \\ \hline
+image\_url & text & - & URL of an optional image asset displayed as this answer option. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{27. Table: quiz\_attempts}
+
+\begin{table}[H]
+\caption{Quiz Attempts Data Dictionary}
+\label{tab:dd_quiz_attempts}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+enrollment\_id & uuid & FK $\rightarrow$ enrollments, UNIQUE, NOT NULL & Foreign key referencing enrollments.id. \\ \hline
+quiz\_id & uuid & FK $\rightarrow$ quizzes, UNIQUE, NOT NULL & Foreign key referencing quizzes.id. \\ \hline
+attempt\_number & integer & UNIQUE, NOT NULL & Sequential counter for quiz attempts. \\ \hline
+score\_pct & integer & - & Quiz score as a percentage (0-100). \\ \hline
+result & character varying DEFAULT 'in\_progress' & NOT NULL & Outcome of the quiz attempt ('in\_progress', 'passed', 'failed'). \\ \hline
+started\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the quiz attempt was initiated. \\ \hline
+submitted\_at & timestamp & - & Timestamp of response submission. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{28. Table: quiz\_answers}
+
+\begin{table}[H]
+\caption{Quiz Answers Data Dictionary}
+\label{tab:dd_quiz_answers}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+attempt\_id & uuid & FK $\rightarrow$ quiz\_attempts, UNIQUE, NOT NULL & Foreign key referencing quiz\_attempts.id. \\ \hline
+question\_id & uuid & FK $\rightarrow$ quiz\_questions, UNIQUE, NOT NULL & Foreign key referencing quiz\_questions.id. \\ \hline
+selected\_option\_id & uuid & FK $\rightarrow$ quiz\_options & Foreign key referencing the chosen quiz option. \\ \hline
+is\_correct & boolean & - & Whether this is the correct answer. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{Learner Progress, Recognition and Recommendation}
+
+Tables~\ref{tab:dd_enrollments} to~\ref{tab:dd_certificates} define the 8 entities of the learner progress, recognition and recommendation domain.
+
+\textbf{29. Table: enrollments}
+
+\begin{table}[H]
+\caption{Enrollments Data Dictionary}
+\label{tab:dd_enrollments}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, UNIQUE, NOT NULL & Foreign key referencing users.id. \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses, UNIQUE, NOT NULL & Foreign key referencing courses.id. \\ \hline
+enrolled\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the enrollment was created. \\ \hline
+completed\_at & timestamp & - & Timestamp when the record was completed. \\ \hline
+status & character varying DEFAULT 'active' & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{30. Table: lesson\_progress}
+
+\begin{table}[H]
+\caption{Lesson Progress Data Dictionary}
+\label{tab:dd_lesson_progress}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+enrollment\_id & uuid & FK $\rightarrow$ enrollments, UNIQUE, NOT NULL & Foreign key referencing enrollments.id. \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons, UNIQUE, NOT NULL & Foreign key referencing lessons.id. \\ \hline
+is\_viewed & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether the learner has opened this lesson. \\ \hline
+view\_count & integer DEFAULT 0 & NOT NULL & Total number of times the learner has viewed this lesson. \\ \hline
+first\_viewed\_at & timestamp & - & Timestamp of the learner's first access to this lesson. \\ \hline
+last\_viewed\_at & timestamp & - & Timestamp of the learner's most recent access to this lesson. \\ \hline
+time\_spent\_learning & integer DEFAULT 0 & NOT NULL & Cumulative time in seconds the learner has spent on this lesson. \\ \hline
+summary\_completed & boolean DEFAULT false & - & Boolean flag indicating whether the learner submitted a lesson summary. \\ \hline
+is\_completed & boolean DEFAULT false & - & Boolean flag indicating whether the learner has fully completed this lesson. \\ \hline
+progress\_meta & jsonb DEFAULT '{}' & NOT NULL & JSONB object storing supplementary progress metrics and adaptive engine data. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{31. Table: learner\_checkpoints}
+
+\begin{table}[H]
+\caption{Learner Checkpoints Data Dictionary}
+\label{tab:dd_learner_checkpoints}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+enrollment\_id & uuid & FK $\rightarrow$ enrollments, UNIQUE, NOT NULL & Foreign key referencing enrollments.id. \\ \hline
+checkpoint\_id & uuid & FK $\rightarrow$ lesson\_checkpoints, UNIQUE & Foreign key referencing lesson\_checkpoints.id. \\ \hline
+completed & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether the learner has completed this checkpoint. \\ \hline
+completed\_at & timestamptz & - & Timestamp when the record was completed. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+response\_data & jsonb & - & JSONB payload of the learner's response. \\ \hline
+lesson\_id & uuid & FK $\rightarrow$ lessons & Foreign key referencing lessons.id. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{32. Table: h5p\_responses}
+
+\begin{table}[H]
+\caption{H5P Responses Data Dictionary}
+\label{tab:dd_h5p_responses}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, NOT NULL & Foreign key referencing the learner who produced the response. \\ \hline
+h5p\_content\_id & uuid & FK $\rightarrow$ h5p\_contents, NOT NULL & Foreign key referencing the embedded object the response belongs to. \\ \hline
+score & integer & - & Score reported by the object, where the object reports one. \\ \hline
+max\_score & integer & - & Maximum attainable score reported by the object. \\ \hline
+completed & boolean DEFAULT false & NOT NULL & Whether the object reported the interaction as completed. \\ \hline
+raw\_statement & jsonb & - & The unmodified statement emitted by the object, retained so that the record can be re-interpreted without replaying the interaction. \\ \hline
+created\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the response was recorded. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{33. Table: recommendations}
+
+\begin{table}[H]
+\caption{Recommendations Data Dictionary}
+\label{tab:dd_recommendations}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+enrollment\_id & uuid & FK $\rightarrow$ enrollments, NOT NULL & Foreign key referencing enrollments.id. \\ \hline
+recommended\_lesson\_id & uuid & FK $\rightarrow$ lessons, NOT NULL & UUID of the lesson recommended to the learner by the adaptive engine. \\ \hline
+difficulty\_tier & character varying & NOT NULL & Difficulty classification of the recommended lesson relative to learner performance. \\ \hline
+trigger\_reason & text & - & Explanation of why the adaptive engine generated this recommendation. \\ \hline
+is\_acknowledged & boolean DEFAULT false & NOT NULL & Boolean flag indicating whether the learner has viewed this recommendation. \\ \hline
+created\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{34. Table: course\_favorites}
+
+\begin{table}[H]
+\caption{Course Favorites Data Dictionary}
+\label{tab:dd_course_favorites}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, UNIQUE, NOT NULL & Foreign key referencing users.id. \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses, UNIQUE, NOT NULL & Foreign key referencing courses.id. \\ \hline
+created\_at & timestamptz DEFAULT now() & - & Timestamp when the record was created. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{35. Table: user\_achievements}
+
+\begin{table}[H]
+\caption{User Achievements Data Dictionary}
+\label{tab:dd_user_achievements}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+user\_id & uuid & FK $\rightarrow$ users, UNIQUE, NOT NULL & Foreign key referencing users.id. \\ \hline
+achievement\_id & uuid & FK $\rightarrow$ course\_achievements, UNIQUE, NOT NULL & Foreign key referencing course\_achievements.id. \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses, NOT NULL & Foreign key referencing courses.id. \\ \hline
+earned\_at & timestamptz DEFAULT now() & NOT NULL & Timestamp when the achievement was earned. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\textbf{36. Table: certificates}
+
+\begin{table}[H]
+\caption{Certificates Data Dictionary}
+\label{tab:dd_certificates}
+\vspace{-4mm}
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{3.35cm}|>{\raggedright\arraybackslash}p{3.05cm}|>{\raggedright\arraybackslash}p{5.15cm}|}
+\hline
+\textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
+id & uuid DEFAULT gen\_random\_uuid() & PRIMARY KEY & Unique identifier (UUID v4). \\ \hline
+enrollment\_id & uuid & FK $\rightarrow$ enrollments, UNIQUE, NOT NULL & Foreign key referencing enrollments.id. \\ \hline
+reference\_code & character varying & UNIQUE, NOT NULL & Unique alphanumeric identifier for external certificate verification. \\ \hline
+pdf\_url & character varying & - & URL to the generated PDF certificate file stored in cloud storage. \\ \hline
+status & character varying DEFAULT 'issued' & NOT NULL & Record status (e.g., active, completed, dropped). \\ \hline
+issued\_at & timestamp DEFAULT now() & NOT NULL & Timestamp when the certificate was issued. \\ \hline
+revoked\_at & timestamp & - & Timestamp when the certificate was revoked; NULL if still valid. \\ \hline
+revoke\_reason & text & - & Free-text explanation for why the certificate was revoked. \\ \hline
+course\_id & uuid & FK $\rightarrow$ courses & Foreign key referencing courses.id. \\ \hline
+user\_id & uuid & FK $\rightarrow$ users & Foreign key referencing users.id. \\ \hline
+learner\_name & text & - & Full name of the learner as displayed on the certificate. \\ \hline
+course\_title & text & - & Title of the completed course as displayed on the certificate. \\ \hline
+educator\_name & text & - & Name of the course educator as displayed on the certificate. \\ \hline
+institution\_name & text DEFAULT 'ACESS Platform' & - & Name of the issuing institution displayed on the certificate. \\ \hline
+completion\_date & timestamptz & - & Timestamp when the learner completed all course requirements. \\ \hline
+verification\_url & text & - & Public URL for third-party verification of certificate authenticity. \\ \hline
+skills\_earned & text[] DEFAULT '{}' & - & Array of skill labels or competencies acquired through course completion. \\ \hline
+course\_duration\_hours & numeric DEFAULT 0 & - & Total duration of the course in hours as displayed on the certificate. \\ \hline
+signed\_token & text & - & Cryptographic signature token for tamper-proof certificate verification. \\ \hline
+template\_id & text DEFAULT 'default' & - & Identifier of the certificate template used for this certificate. \\ \hline
+metadata & jsonb DEFAULT '{}' & - & JSONB field for extensible metadata. \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+

@@ -41,7 +41,8 @@ import {
 } from '@/lib/accessibility-audit';
 import { getProfileGuide, resolveFocus } from '@/lib/accessibility-profiles';
 import { LessonAccessibilityPanel } from '@/components/educator/LessonAccessibilityPanel';
-import { AccessibilityProfileGuide } from '@/components/educator/AccessibilityProfileGuide';
+import { AllProfilesGuide } from '@/components/educator/AllProfilesGuide';
+import { TabAuditStrip } from '@/components/educator/TabAuditStrip';
 
 export type LessonFormData = {
   title: string;
@@ -773,7 +774,7 @@ export function LessonEditor({
 
   // Tabs owning at least one failing standard, so the educator can see where
   // the problem lives without opening the Accessibility tab at all.
-  const attentionTabs = new Set<AuditTab>(audit.tabsNeedingAttention);
+  const attentionTabs = new Set<AuditTab>(focusIsSet ? audit.tabsNeedingAttention : []);
   const attentionDot = (tab: AuditTab) =>
     attentionTabs.has(tab) ? (
       <span
@@ -785,39 +786,51 @@ export function LessonEditor({
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v) attemptClose(); }}>
-        <DialogContent className="sm:max-w-7xl w-[98vw] max-h-[95vh] overflow-y-auto">
-          <DialogHeader className="flex flex-row items-center justify-between gap-4">
+        <DialogContent className="sm:max-w-7xl w-[98vw] h-[92vh] max-h-[92vh] flex flex-col p-0 overflow-hidden gap-0">
+          <DialogHeader className="px-6 py-4 border-b flex flex-row items-center justify-between gap-4 shrink-0 bg-white">
             <div>
               <DialogTitle>{isEditing ? 'Edit Lesson' : 'Add New Lesson'}</DialogTitle>
               <DialogDescription>Create educational content for your course</DialogDescription>
             </div>
             {/* Live compliance badge — always visible, jumps to the detail. */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('accessibility')}
-              title={`${audit.passed} of ${audit.applicable} ${profileGuide.label} standards met — open the Accessibility tab`}
-              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-colors ${
-                scoreBand(audit.score) === 'good'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                  : scoreBand(audit.score) === 'warning'
-                    ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
-                    : 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
-              }`}
-            >
-              <Accessibility className="w-3.5 h-3.5" />
-              <span className="tabular-nums">{audit.score}%</span>
-              <span className="font-medium opacity-70">{profileGuide.label}</span>
-            </button>
+            {focusIsSet ? (
+              <button
+                type="button"
+                onClick={() => setActiveTab('accessibility')}
+                title={`${audit.passed} of ${audit.applicable} ${profileGuide.label} standards met — open the Accessibility tab`}
+                className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-colors ${
+                  scoreBand(audit.score) === 'good'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                    : scoreBand(audit.score) === 'warning'
+                      ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+                      : 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
+                }`}
+              >
+                <Accessibility className="w-3.5 h-3.5" />
+                <span className="tabular-nums">{audit.score}%</span>
+                <span className="font-medium opacity-70">{profileGuide.label}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setGuideOpen(true)}
+                title="No Primary Accessibility Focus set — click to see what each profile checks"
+                className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-500 text-xs font-semibold hover:bg-gray-100 transition-colors"
+              >
+                <Accessibility className="w-3.5 h-3.5" />
+                <span>Accessibility off</span>
+              </button>
+            )}
           </DialogHeader>
 
           {loading ? (
-            <div className="flex items-center justify-center py-16">
+            <div className="flex-1 flex items-center justify-center py-16">
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
           ) : (
-            <div className="flex flex-col lg:flex-row pb-20 min-h-[60vh]">
+            <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
               {/* Left Sidebar Tabs */}
-              <div className="lg:w-56 shrink-0 border-r border-gray-100 pr-4 space-y-1 pt-2">
+              <div className="lg:w-56 shrink-0 border-r border-gray-100 p-4 space-y-1 overflow-y-auto bg-gray-50/40">
                 <button type="button" onClick={() => setActiveTab('basics')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'basics' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}><BookOpen className="w-4 h-4" /> Basics{attentionDot('basics')}</button>
                 <button type="button" onClick={() => setActiveTab('content')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'content' ? 'bg-green-50 text-green-700' : 'text-gray-600 hover:bg-gray-50'}`}><FileText className="w-4 h-4" /> Content{attentionDot('content')}</button>
                 <button type="button" onClick={() => setActiveTab('media')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'media' ? 'bg-rose-50 text-rose-700' : 'text-gray-600 hover:bg-gray-50'}`}><Video className="w-4 h-4" /> Media{attentionDot('media')}</button>
@@ -827,14 +840,42 @@ export function LessonEditor({
                 <button type="button" onClick={() => setActiveTab('discussions')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'discussions' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}><MessageSquare className="w-4 h-4" /> Discussions {discussionCount > 0 && <span className="ml-auto text-xs bg-orange-100 text-orange-700 rounded-full px-2 py-0.5">{discussionCount}</span>}</button>
                 <button type="button" onClick={() => setActiveTab('submissions')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'submissions' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50'}`}><BookOpen className="w-4 h-4" /> Submissions</button>
                 <button type="button" onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-slate-100 text-slate-800' : 'text-gray-600 hover:bg-gray-50'}`}><Settings className="w-4 h-4" /> Settings{attentionDot('settings')}</button>
-                <button type="button" onClick={() => setActiveTab('accessibility')} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === 'accessibility' ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50'}`}><Accessibility className="w-4 h-4" /> Accessibility <span className={`ml-auto text-[10px] font-bold tabular-nums rounded-full px-1.5 py-0.5 ${scoreBand(audit.score) === 'good' ? 'bg-emerald-100 text-emerald-700' : scoreBand(audit.score) === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>{audit.score}%</span></button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('accessibility')}
+                  disabled={!focusIsSet}
+                  title={focusIsSet ? undefined : 'Choose a Primary Accessibility Focus in course settings to enable targeted checks for this course.'}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                    !focusIsSet
+                      ? 'text-gray-400 cursor-not-allowed opacity-60'
+                      : activeTab === 'accessibility'
+                        ? 'bg-purple-50 text-purple-700'
+                        : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <Accessibility className="w-4 h-4" /> Accessibility
+                  {focusIsSet ? (
+                    <span className={`ml-auto text-[10px] font-bold tabular-nums rounded-full px-1.5 py-0.5 ${scoreBand(audit.score) === 'good' ? 'bg-emerald-100 text-emerald-700' : scoreBand(audit.score) === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>{audit.score}%</span>
+                  ) : (
+                    <span className="ml-auto text-[10px] font-semibold tracking-wide uppercase text-gray-400">Off</span>
+                  )}
+                </button>
               </div>
 
               {/* Main Content Pane */}
-              <div className="flex-1 min-w-0 px-0 lg:px-6 pt-4 lg:pt-0">
+              <div className="flex-1 min-w-0 p-6 overflow-y-auto relative">
                 {/* ── BASICS TAB ── */}
                 {activeTab === 'basics' && (
                   <div className="space-y-6 animate-in fade-in duration-300">
+                    {focusIsSet && (
+                      <TabAuditStrip
+                        tab="basics"
+                        result={audit}
+                        onFix={handleApplyFix}
+                        onOpenAccessibility={() => setActiveTab('accessibility')}
+                        busyRuleId={busyRuleId}
+                      />
+                    )}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Lesson Basics</h3>
                       <div className="space-y-4">
@@ -907,6 +948,15 @@ export function LessonEditor({
                 {/* ── CONTENT TAB ── */}
                 {activeTab === 'content' && (
                   <div className="space-y-4 animate-in fade-in duration-300">
+                    {focusIsSet && (
+                      <TabAuditStrip
+                        tab="content"
+                        result={audit}
+                        onFix={handleApplyFix}
+                        onOpenAccessibility={() => setActiveTab('accessibility')}
+                        busyRuleId={busyRuleId}
+                      />
+                    )}
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">Lesson Content</h3>
                     </div>
@@ -984,6 +1034,15 @@ export function LessonEditor({
                 {/* ── MEDIA TAB ── */}
                 {activeTab === 'media' && (
                   <div className="space-y-6 animate-in fade-in duration-300">
+                    {focusIsSet && (
+                      <TabAuditStrip
+                        tab="media"
+                        result={audit}
+                        onFix={handleApplyFix}
+                        onOpenAccessibility={() => setActiveTab('accessibility')}
+                        busyRuleId={busyRuleId}
+                      />
+                    )}
                     <h3 className="text-lg font-semibold text-gray-900">Media & Video</h3>
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">Video URL (YouTube)</label>
@@ -1276,6 +1335,15 @@ export function LessonEditor({
                 {/* ======================= SETTINGS TAB ======================= */}
                 {activeTab === 'settings' && (
                   <div className="space-y-6 animate-in fade-in duration-300">
+                    {focusIsSet && (
+                      <TabAuditStrip
+                        tab="settings"
+                        result={audit}
+                        onFix={handleApplyFix}
+                        onOpenAccessibility={() => setActiveTab('accessibility')}
+                        busyRuleId={busyRuleId}
+                      />
+                    )}
                     <h3 className="text-lg font-semibold text-gray-900">Lesson Settings</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1286,13 +1354,13 @@ export function LessonEditor({
                         </div>
                         <p className="text-xs text-gray-500">How long should this lesson take to complete?</p>
                         <div className="flex items-center gap-2">
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             min="1"
-                            value={form.estimated_duration || ''} 
+                            value={form.estimated_duration || ''}
                             onChange={(e) => update('estimated_duration', parseInt(e.target.value) || 0)}
-                            placeholder="e.g. 15" 
-                            className="w-20 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                            placeholder="e.g. 15"
+                            className="w-20 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                           />
                           <span className="text-sm text-gray-500">minutes</span>
                         </div>
@@ -1304,8 +1372,8 @@ export function LessonEditor({
                             <label className="text-sm font-medium text-gray-900 block mb-1">Student Discussions</label>
                             <p className="text-xs text-gray-500">Allow students to ask questions and discuss this lesson on a dedicated tab.</p>
                           </div>
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => update('allow_discussions', !form.allow_discussions)}
                             className={`w-10 h-5 rounded-full flex items-center p-1 transition-colors ${form.allow_discussions ? 'bg-blue-600' : 'bg-gray-200'}`}
                           >
@@ -1314,6 +1382,81 @@ export function LessonEditor({
                         </div>
                       </div>
 
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100">
+                      <h4 className="text-base font-semibold text-gray-900 mb-1">Recommended viewing modes for this lesson</h4>
+                      <p className="text-xs text-gray-600 mb-2 leading-relaxed">
+                        Learners already control focus mode and chunked view from their own accessibility
+                        settings (and ADHD / Autism presets enable them automatically). These lesson-level
+                        switches are <span className="font-semibold">hints</span>: turning one on tells the
+                        viewer to prompt the learner to try that mode when they open this lesson, and lets
+                        the accessibility check recognise you&apos;ve made the recommendation.
+                      </p>
+                      <p className="text-[11px] text-gray-500 mb-4">
+                        Off here does <span className="font-semibold">not</span> disable the feature for a learner who already prefers it.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className={`p-4 border rounded-xl space-y-3 ${form.focus_mode_enabled ? 'border-blue-200 bg-blue-50/40' : 'border-gray-200'}`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <label className="text-sm font-medium text-gray-900 block mb-1">Suggest distraction-free focus mode</label>
+                              <p className="text-xs text-gray-600 leading-relaxed">
+                                Focus mode hides the sidebar, course header and other pull-aways so only
+                                the lesson body remains. Learners toggle it in their own settings, or press
+                                <kbd className="mx-1 px-1 py-0.5 border border-gray-300 rounded bg-white text-[10px]">Esc</kbd>
+                                to exit.
+                              </p>
+                              <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
+                                Turn this on to prompt learners to try focus mode when opening this
+                                lesson. Recommended for ADHD and Dyslexia profiles.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => update('focus_mode_enabled', !form.focus_mode_enabled)}
+                              className={`shrink-0 w-10 h-5 rounded-full flex items-center p-1 transition-colors ${form.focus_mode_enabled ? 'bg-blue-600' : 'bg-gray-200'}`}
+                              aria-pressed={form.focus_mode_enabled}
+                              aria-label="Suggest distraction-free focus mode"
+                            >
+                              <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transition-transform ${form.focus_mode_enabled ? 'translate-x-4' : ''}`} />
+                            </button>
+                          </div>
+                          {form.focus_mode_enabled && !courseSupport.supports_focus_mode && (
+                            <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5 leading-relaxed">
+                              Course-level focus-mode support is off. Enable it in course settings so the prompt reaches learners who don&apos;t already have focus mode on.
+                            </p>
+                          )}
+                        </div>
+
+                        <div className={`p-4 border rounded-xl space-y-3 ${form.chunked_content_enabled ? 'border-blue-200 bg-blue-50/40' : 'border-gray-200'}`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <label className="text-sm font-medium text-gray-900 block mb-1">Serve this lesson in chunks by default</label>
+                              <p className="text-xs text-gray-600 leading-relaxed">
+                                When on, the lesson opens in chunked view (one section at a time with
+                                Previous / Next) even for learners who haven&apos;t enabled it themselves.
+                                Section boundaries follow your headings (H1&nbsp;/&nbsp;H2) and horizontal
+                                rules. Learners can exit chunked view at any time.
+                              </p>
+                              <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
+                                Recommended when this lesson is long or dense. Add more headings to
+                                create more chunks.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => update('chunked_content_enabled', !form.chunked_content_enabled)}
+                              className={`shrink-0 w-10 h-5 rounded-full flex items-center p-1 transition-colors ${form.chunked_content_enabled ? 'bg-blue-600' : 'bg-gray-200'}`}
+                              aria-pressed={form.chunked_content_enabled}
+                              aria-label="Serve this lesson in chunks by default"
+                            >
+                              <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transition-transform ${form.chunked_content_enabled ? 'translate-x-4' : ''}`} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="pt-4 border-t border-gray-100">
@@ -1324,7 +1467,25 @@ export function LessonEditor({
                 )}
 
                 {/* ======================= ACCESSIBILITY TAB ======================= */}
-                {activeTab === 'accessibility' && (
+                {activeTab === 'accessibility' && !focusIsSet && (
+                  <div className="p-6 rounded-2xl border border-gray-200 bg-gray-50/60 text-center animate-in fade-in duration-300">
+                    <Accessibility className="w-10 h-10 mx-auto text-gray-400 mb-3" />
+                    <h3 className="text-base font-bold text-gray-900">Accessibility check is off for this course</h3>
+                    <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto leading-relaxed">
+                      This course has no Primary Accessibility Focus set, so there is no targeted profile
+                      to check lessons against. Open the course Settings and choose ADHD, Autism or Dyslexia
+                      to enable the checks.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setGuideOpen(true)}
+                      className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-purple-700 hover:text-purple-900 hover:underline"
+                    >
+                      See what each profile checks →
+                    </button>
+                  </div>
+                )}
+                {activeTab === 'accessibility' && focusIsSet && (
                   <LessonAccessibilityPanel
                     result={audit}
                     guide={profileGuide}
@@ -1432,7 +1593,7 @@ export function LessonEditor({
               </div>
             </div>
           )}
-          <div className="flex gap-3 pt-4 border-t sticky bottom-0 bg-white">
+          <div className="flex gap-3 px-6 py-3.5 border-t bg-white shrink-0">
             <Button onClick={attemptClose} variant="outline">Cancel</Button>
             <Button onClick={handleSave} disabled={saving || !form.title.trim() || (isEditing && !isDirty)} className="bg-blue-600 hover:bg-blue-700 text-white ml-auto">
               {saving ? 'Saving...' : isEditing ? 'Update Lesson' : 'Save Lesson'}
@@ -1541,26 +1702,38 @@ export function LessonEditor({
         </DialogContent>
       </Dialog>
 
-      {/* Accessibility Guide Sheet */}
-      <Sheet open={guideOpen} onOpenChange={setGuideOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
-          <SheetHeader className="mb-6">
-            <SheetTitle className="flex items-center gap-2 text-purple-700">
+      {/* Accessibility Guide Dialog */}
+      <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
+        <DialogContent
+          className="max-w-4xl w-[min(95vw,960px)] max-h-[90vh] p-0 overflow-hidden flex flex-col"
+        >
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200 shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-purple-700 text-lg">
               <Shield className="w-5 h-5" />
               Accessibility Guide
-            </SheetTitle>
-            <SheetDescription>
-              {focusIsSet ? (
-                <>What learners in the <strong className="text-gray-900">{profileGuide.label}</strong> profile need, and how the automatic checks map onto it.</>
-              ) : (
-                <>No Primary Accessibility Focus is set on this course, so these are the general baseline needs. Set a focus in course settings for targeted guidance.</>
-              )}
-            </SheetDescription>
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              Every profile is checked against a shared baseline plus its own extra rules. Switch tabs to
+              compare exactly what the automatic checker enforces for each focus profile.
+              {focusIsSet
+                ? ` This course is currently set to ${profileGuide.label}.`
+                : ' This course has no Primary Accessibility Focus, so the general baseline is shown by default.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <AllProfilesGuide initialProfile={focusProfile} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Course Notebook Sheet (kept, but decoupled from the guide) */}
+      <Sheet open={false} onOpenChange={() => { /* unused legacy sheet */ }}>
+        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle>Notebook</SheetTitle>
+            <SheetDescription>Legacy container — no longer opened.</SheetDescription>
           </SheetHeader>
-
           <div className="space-y-6">
-            <AccessibilityProfileGuide guide={profileGuide} />
-
             <div className="relative mt-8 mb-4 group">
               {/* Decorative tape effect */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-amber-200/50 shadow-sm rotate-[-3deg] z-10 backdrop-blur-sm border border-amber-200/30" />

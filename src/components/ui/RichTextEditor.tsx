@@ -70,26 +70,39 @@ function MenuBar({ editor, showSource, onToggleSource, onImageUpload, onOpenMedi
     setShowLinkInput(false)
   }, [editor, linkUrl])
 
+  const promptForAlt = useCallback((suggested = '') => {
+    return window.prompt(
+      'Describe this image for learners who cannot see it. Leave blank only if the image is purely decorative.',
+      suggested,
+    ) ?? ''
+  }, [])
+
   const addImage = useCallback(async () => {
     if (onImageUpload) {
       imageInputRef.current?.click()
       return
     }
     const url = window.prompt('Image URL:')
-    if (url) editor.chain().focus().setImage({ src: url }).run()
-  }, [editor, onImageUpload])
+    if (!url) return
+    const alt = promptForAlt()
+    editor.chain().focus().setImage({ src: url, alt }).run()
+  }, [editor, onImageUpload, promptForAlt])
 
   const handleImageFile = useCallback(async (file: File) => {
     if (!onImageUpload || !file.type.startsWith('image/')) return
     setUploadingImage(true)
     try {
       const url = await onImageUpload(file)
-      if (url) editor.chain().focus().setImage({ src: url }).run()
+      if (url) {
+        const suggestedAlt = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ')
+        const alt = promptForAlt(suggestedAlt)
+        editor.chain().focus().setImage({ src: url, alt }).run()
+      }
     } finally {
       setUploadingImage(false)
       if (imageInputRef.current) imageInputRef.current.value = ''
     }
-  }, [editor, onImageUpload])
+  }, [editor, onImageUpload, promptForAlt])
 
   const addTable = useCallback(() => {
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
@@ -289,7 +302,8 @@ function MenuBar({ editor, showSource, onToggleSource, onImageUpload, onOpenMedi
             if (onOpenMediaPicker) {
               onOpenMediaPicker((url, kind, title) => {
                 if (kind === 'image') {
-                  editor.chain().focus().setImage({ src: url }).run();
+                  const alt = promptForAlt(title ?? '');
+                  editor.chain().focus().setImage({ src: url, alt }).run();
                 } else if (kind === 'video' || kind === 'pdf' || kind === 'link') {
                   editor.chain().focus().setLink({ href: url }).insertContent(title || url).run();
                 }
@@ -419,7 +433,12 @@ export function RichTextEditor({ content: initialContent, onChange, placeholder 
                       // Insert a placeholder or wait for upload
                       onImageUpload(file).then(url => {
                          if (url) {
-                            view.dispatch(view.state.tr.insert(coordinates.pos, view.state.schema.nodes.image.create({ src: url })));
+                            const suggested = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+                            const alt = window.prompt(
+                              'Describe this image for learners who cannot see it. Leave blank only if the image is purely decorative.',
+                              suggested,
+                            ) ?? '';
+                            view.dispatch(view.state.tr.insert(coordinates.pos, view.state.schema.nodes.image.create({ src: url, alt })));
                          }
                       });
                       return true;

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Plus, BarChart3, Users, LogOut, Award, ChevronDown, ChevronRight, Globe, Home, Menu, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Plus, BarChart3, Users, LogOut, Award, Trophy, ChevronDown, ChevronRight, Globe, Home, Menu, ChevronLeft } from 'lucide-react';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { Logo } from '@/components/ui/Logo';
 
@@ -39,6 +39,7 @@ export function EducatorSidebar({ activeView, activeSubView, onNavigate, classNa
         { id: 'courses-create', label: 'Add Course', icon: Plus },
       ],
     },
+    { id: 'ranking', label: 'Educator Ranking', icon: Trophy },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'students', label: 'Students Progress', icon: Users },
     { id: 'certificates', label: 'Certificates', icon: Award },

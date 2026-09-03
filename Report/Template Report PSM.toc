@@ -6,180 +6,286 @@
 \contentsline {section}{ABSTRAK}{vi}{}%
 \contentsline {section}{TABLE OF CONTENTS}{vii}{}%
 \addvspace {-10mm}
-\contentsline {section}{LIST OF TABLES}{x}{}%
+\contentsline {section}{LIST OF TABLES}{xii}{}%
 \addvspace {-10mm}
-\contentsline {section}{LIST OF FIGURES}{xii}{}%
+\contentsline {section}{LIST OF FIGURES}{xv}{}%
 \addvspace {-10mm}
-\contentsline {section}{LIST OF ABBREVIATIONS}{xiii}{}%
+\contentsline {section}{LIST OF ABBREVIATIONS}{xvii}{}%
 \addvspace {-10mm}
 \contentsline {section}{\numberline {CHAPTER 1:}INTRODUCTION}{1}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.1}Background of Study}{1}{}%
+\contentsline {subsection}{\numberline {1.1}Background of Study}{1}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.2}Problem Statement}{2}{}%
+\contentsline {subsection}{\numberline {1.2}Problem Statement}{2}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.3}Objectives}{3}{}%
+\contentsline {subsection}{\numberline {1.3}Objectives}{3}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.4}Scope}{3}{}%
+\contentsline {subsection}{\numberline {1.4}Scope}{3}{}%
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {1.4.1}Target Users}{3}{}%
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {1.4.2}Core System Modules}{4}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.5}Significance of Project}{5}{}%
+\contentsline {subsection}{\numberline {1.5}Significance of Project}{6}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.6}Expected Output}{6}{}%
+\contentsline {subsection}{\numberline {1.6}Expected Output}{6}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 1.7}Conclusion}{7}{}%
+\contentsline {subsection}{\numberline {1.7}Conclusion}{7}{}%
 \addvspace {-10mm}
-\contentsline {section}{\numberline {CHAPTER 2:}LITERATURE REVIEW AND PROJECT METHODOLOGY}{8}{}%
+\contentsline {section}{\numberline {CHAPTER 2:}LITERATURE REVIEW AND PROJECT METHODOLOGY}{9}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.1}Introduction}{8}{}%
+\contentsline {subsection}{\numberline {2.1}Introduction}{9}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.2}Theoretical Frameworks for Cognitive Accessibility}{8}{}%
+\contentsline {subsection}{\numberline {2.2}Theoretical Frameworks for Cognitive Accessibility}{9}{}%
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {2.2.1}Universal Design for Learning (UDL)}{9}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.2.2}Web Content Accessibility Guidelines (WCAG) 2.2}{9}{}%
+\contentsline {subsubsection}{\numberline {2.2.2}Web Content Accessibility Guidelines (WCAG) 2.2}{10}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.3}Neurodivergent Profiles and Interface Interventions}{10}{}%
+\contentsline {subsection}{\numberline {2.3}Neurodivergent Profiles and Interface Interventions}{12}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.3.1}Attention Deficit Hyperactivity Disorder (ADHD)}{10}{}%
+\contentsline {subsubsection}{\numberline {2.3.1}Attention Deficit Hyperactivity Disorder (ADHD)}{12}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.3.2}Dyslexia}{11}{}%
+\contentsline {subsubsection}{\numberline {2.3.2}Dyslexia}{12}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.3.3}Autism Spectrum Disorder (ASD)}{11}{}%
+\contentsline {subsubsection}{\numberline {2.3.3}Autism Spectrum Disorder (ASD)}{13}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.4}Comparative Analysis of Existing LMS Platforms}{12}{}%
+\contentsline {subsection}{\numberline {2.4}Comparative Analysis of Existing LMS Platforms}{14}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.4.1}Moodle}{12}{}%
+\contentsline {subsubsection}{\numberline {2.4.1}Moodle}{14}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.4.2}Canvas LMS}{12}{}%
+\contentsline {subsubsection}{\numberline {2.4.2}Canvas LMS}{15}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.4.3}Blackboard Learn}{13}{}%
+\contentsline {subsubsection}{\numberline {2.4.3}Blackboard Learn}{16}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.4.4}Google Classroom}{13}{}%
+\contentsline {subsubsection}{\numberline {2.4.4}Google Classroom}{16}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.5}Comparison Matrix}{13}{}%
+\contentsline {subsection}{\numberline {2.5}Comparison Matrix}{16}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.5.1}Alternative Approaches and Justification}{14}{}%
+\contentsline {subsubsection}{\numberline {2.5.1}Alternative Approaches and Justification}{19}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.6}Project Methodology}{15}{}%
+\contentsline {subsection}{\numberline {2.6}Project Methodology}{20}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.7}Project Requirements}{16}{}%
+\contentsline {subsection}{\numberline {2.7}Project Requirements}{21}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.7.1}Software Requirements}{16}{}%
+\contentsline {subsubsection}{\numberline {2.7.1}Software Requirements}{21}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.7.2}Hardware Requirements}{18}{}%
+\contentsline {subsubsection}{\numberline {2.7.2}Hardware Requirements}{23}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {2.7.3}Other Requirements}{18}{}%
+\contentsline {subsubsection}{\numberline {2.7.3}Other Requirements}{24}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.8}Project Schedule and Milestones}{19}{}%
+\contentsline {subsection}{\numberline {2.8}Project Schedule and Milestones}{24}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 2.9}Summary}{20}{}%
+\contentsline {subsection}{\numberline {2.9}Summary}{25}{}%
 \addvspace {-10mm}
-\contentsline {section}{\numberline {CHAPTER 3:}SYSTEM ANALYSIS}{21}{}%
+\contentsline {section}{\numberline {CHAPTER 3:}SYSTEM ANALYSIS}{27}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 3.1}Introduction}{21}{}%
+\contentsline {subsection}{\numberline {3.1}Introduction}{27}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 3.2}Problem Analysis}{21}{}%
+\contentsline {subsection}{\numberline {3.2}Problem Analysis}{27}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {3.2.1}Current System Scenario}{21}{}%
+\contentsline {subsubsection}{\numberline {3.2.1}Current System Scenario}{27}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {3.2.2}Detailed Problem Breakdown}{22}{}%
+\contentsline {subsubsection}{\numberline {3.2.2}Detailed Problem Breakdown}{28}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 3.3}Requirement Analysis}{23}{}%
+\contentsline {subsection}{\numberline {3.3}Requirement Analysis}{29}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {3.3.1}Data Requirement}{23}{}%
+\contentsline {subsubsection}{\numberline {3.3.1}Data Requirement}{29}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {3.3.2}Functional Requirement}{24}{}%
-\contentsline {paragraph}{Use Case Diagram}{25}{}%
-\contentsline {paragraph}{Student Functions}{26}{}%
-\contentsline {paragraph}{Educator Functions}{27}{}%
+\contentsline {subsubsection}{\numberline {3.3.2}Functional Requirement}{30}{}%
+\contentsline {paragraph}{Use Case Diagram}{31}{}%
+\contentsline {paragraph}{Learner Functions}{31}{}%
+\contentsline {paragraph}{Educator Functions}{34}{}%
+\contentsline {paragraph}{Administrator Functions}{37}{}%
 \addvspace {0mm}
-\contentsline {paragraph}{Admin Functions}{28}{}%
-\contentsline {subsubsection}{\numberline {3.3.3}Non-Functional Requirement}{28}{}%
-\contentsline {paragraph}{Performance}{28}{}%
-\contentsline {paragraph}{Security}{28}{}%
-\contentsline {paragraph}{Accessibility}{29}{}%
-\contentsline {paragraph}{Usability}{29}{}%
-\contentsline {paragraph}{Reliability}{30}{}%
-\contentsline {paragraph}{Maintainability and Scalability}{30}{}%
+\contentsline {subsubsection}{\numberline {3.3.3}Non-Functional Requirement}{38}{}%
+\contentsline {paragraph}{Performance}{39}{}%
+\contentsline {paragraph}{Security}{39}{}%
+\contentsline {paragraph}{Accessibility}{40}{}%
+\contentsline {paragraph}{Usability}{41}{}%
+\contentsline {paragraph}{Reliability}{41}{}%
+\contentsline {paragraph}{Maintainability and Scalability}{42}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {3.3.4}Others Requirement}{30}{}%
+\contentsline {subsubsection}{\numberline {3.3.4}Others Requirement}{42}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 3.4}System Architecture}{31}{}%
+\contentsline {subsection}{\numberline {3.4}System Architecture}{43}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {3.4.1}Context Diagram}{31}{}%
+\contentsline {subsubsection}{\numberline {3.4.1}Context Diagram}{43}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {3.4.2}System Architecture Diagram}{33}{}%
+\contentsline {subsubsection}{\numberline {3.4.2}System Architecture Diagram}{45}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {3.4.3}Deployment Diagram}{35}{}%
+\contentsline {subsubsection}{\numberline {3.4.3}Deployment Diagram}{47}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 3.5}Module Design}{36}{}%
+\contentsline {subsection}{\numberline {3.5}Module Design}{48}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 3.6}Summary}{36}{}%
+\contentsline {subsection}{\numberline {3.6}Summary}{49}{}%
 \addvspace {-10mm}
-\contentsline {section}{\numberline {CHAPTER 4:}SYSTEM DESIGN}{38}{}%
+\contentsline {section}{\numberline {CHAPTER 4:}SYSTEM DESIGN}{50}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.1}Introduction}{38}{}%
+\contentsline {subsection}{\numberline {4.1}Introduction}{50}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.2}High-Level Design}{38}{}%
+\contentsline {subsection}{\numberline {4.2}High-Level Design}{51}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.2.1}Behavioral Design (Activity Diagrams)}{38}{}%
-\contentsline {paragraph}{Student Activity Diagram}{38}{}%
-\contentsline {paragraph}{Educator Activity Diagram}{41}{}%
-\contentsline {paragraph}{Administrator Activity Diagram}{44}{}%
+\contentsline {subsubsection}{\numberline {4.2.1}Behavioral Design (Activity Diagrams)}{51}{}%
+\contentsline {paragraph}{Student Activity Diagram}{53}{}%
+\contentsline {paragraph}{Educator Activity Diagram}{55}{}%
+\contentsline {paragraph}{Administrator Activity Diagram}{55}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.2.2}Interaction Design (Sequence Diagrams)}{45}{}%
-\contentsline {paragraph}{Sequence: Course Enrollment}{45}{}%
-\contentsline {paragraph}{Sequence: Lesson Learning \& Telemetry}{46}{}%
-\contentsline {paragraph}{Sequence: Quiz Attempt \& Adaptive Recommendation}{47}{}%
-\contentsline {paragraph}{Sequence: Course Creation \& Media Upload}{48}{}%
+\contentsline {subsubsection}{\numberline {4.2.2}Interaction Design (Sequence Diagrams)}{56}{}%
+\contentsline {paragraph}{Sequence: Course Enrollment}{56}{}%
+\contentsline {paragraph}{Sequence: Lesson Learning \& Telemetry}{57}{}%
+\contentsline {paragraph}{Sequence: Quiz Attempt \& Adaptive Recommendation}{58}{}%
+\contentsline {paragraph}{Sequence: Course Creation \& Media Upload}{60}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.2.3}User Interface Design}{49}{}%
-\contentsline {paragraph}{Navigation Design}{50}{}%
-\contentsline {paragraph}{Input Design}{50}{}%
-\contentsline {paragraph}{Output Design}{51}{}%
+\contentsline {subsubsection}{\numberline {4.2.3}User Interface Design}{61}{}%
+\contentsline {subsubsection}{\numberline {4.2.3.1}Navigation Design}{61}{}%
+\contentsline {subsubsection}{\numberline {4.2.3.2}Input Design}{63}{}%
+\contentsline {subsubsection}{\numberline {4.2.3.3}Output Design}{67}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.2.4}Database Design \& Entity Relationship}{52}{}%
+\contentsline {subsubsection}{\numberline {4.2.4}Conceptual and Logical Database Design}{70}{}%
+\contentsline {paragraph}{Business rules governing the relationships}{71}{}%
+\contentsline {paragraph}{Domain 1: Identity, Access and Platform}{72}{}%
+\contentsline {paragraph}{Domain 2: Curriculum and Content}{73}{}%
+\contentsline {paragraph}{Domain 3: Assessment, Learning Record and Recognition}{75}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.3}Comprehensive Data Dictionary}{55}{}%
+\contentsline {subsection}{\numberline {4.3}Accessibility Design}{78}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.1}Core Identity and Configuration}{55}{}%
+\contentsline {subsubsection}{\numberline {4.3.1}Design approach and standards baseline}{78}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.2}Curriculum Structure}{60}{}%
+\contentsline {subsubsection}{\numberline {4.3.2}Mapping of standards to implementation}{79}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.3}Telemetry and Assessment}{67}{}%
+\contentsline {subsubsection}{\numberline {4.3.3}The three learner profiles}{81}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.4}Learner Progress and Checkpoints}{70}{}%
+\contentsline {subsubsection}{\numberline {4.3.4}Preset composition}{83}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.3.5}Content and Media}{71}{}%
+\contentsline {subsubsection}{\numberline {4.3.5}Effect of the presets on the lesson interface}{85}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.4}Detailed Design}{77}{}%
+\contentsline {subsubsection}{\numberline {4.3.6}Authoring-side compliance auditing}{89}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.4.1}Software Design}{77}{}%
-\contentsline {paragraph}{Provider Components (Global State)}{78}{}%
-\contentsline {paragraph}{Learner Components}{78}{}%
-\contentsline {paragraph}{Educator Components}{79}{}%
-\contentsline {paragraph}{Administrator Components}{80}{}%
-\contentsline {paragraph}{Core API Routes and Server Logic}{80}{}%
-\contentsline {paragraph}{Recommendation Engine Pseudocode}{81}{}%
-\contentsline {paragraph}{Data Access Layer}{82}{}%
+\contentsline {subsubsection}{\numberline {4.3.7}Known accessibility gaps}{91}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.4.2}Physical Database Design}{83}{}%
-\contentsline {paragraph}{Table Definitions (DDL)}{83}{}%
-\contentsline {paragraph}{Indexes}{83}{}%
-\contentsline {paragraph}{Row-Level Security Policies}{84}{}%
-\contentsline {paragraph}{Database Triggers}{84}{}%
+\contentsline {subsection}{\numberline {4.4}Data Dictionary and Normalisation}{92}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.4.3}Systemic Implementation Details}{84}{}%
-\contentsline {paragraph}{Interactive Video Questions}{84}{}%
-\contentsline {paragraph}{Database Trigger Architecture (Notifications)}{85}{}%
-\contentsline {paragraph}{Session Timeout and Security}{85}{}%
+\contentsline {subsubsection}{\numberline {4.4.1}Normalisation}{92}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.5}Limitations of Design}{85}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {\normalsize 4.6}Summary}{86}{}%
+\contentsline {subsubsection}{\numberline {4.4.2}Core Identity and Configuration}{94}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {4.4.3}Curriculum Structure}{98}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {4.4.4}Lesson Content and Interaction}{105}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {4.4.5}Assessment}{108}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {4.4.6}Learner Progress, Recognition and Recommendation}{110}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {4.5}Detailed Design}{114}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {4.5.1}Software Design}{114}{}%
+\contentsline {paragraph}{Provider components (global state)}{114}{}%
+\contentsline {paragraph}{Pure computation modules}{115}{}%
+\contentsline {paragraph}{Data access layer}{116}{}%
+\contentsline {paragraph}{Server-side routes reserved for privileged operations}{116}{}%
+\contentsline {paragraph}{The recommendation engine}{117}{}%
+\contentsline {paragraph}{Server-side assessment}{119}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {4.5.2}Physical Database Design}{119}{}%
+\contentsline {paragraph}{Schema consolidation}{120}{}%
+\contentsline {paragraph}{Representative table definitions}{121}{}%
+\contentsline {paragraph}{Constraints}{122}{}%
+\contentsline {paragraph}{Indexes}{122}{}%
+\contentsline {paragraph}{Row-Level Security}{122}{}%
+\contentsline {paragraph}{Triggers}{123}{}%
+\contentsline {paragraph}{Storage}{124}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {4.5.3}Systemic Implementation Details}{124}{}%
+\contentsline {paragraph}{In-video questions}{124}{}%
+\contentsline {paragraph}{Notification generation by trigger}{124}{}%
+\contentsline {paragraph}{Session timeout}{124}{}%
+\contentsline {paragraph}{Text-to-speech}{125}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {4.6}Limitations of Design}{125}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {4.7}Summary}{127}{}%
 \addvspace {-10mm}
-\contentsline {section}{References}{87}{}%
+\contentsline {section}{\numberline {CHAPTER 5:}IMPLEMENTATION}{129}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {5.1}Introduction}{129}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {5.2}Development Environment Setup}{130}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {5.2.1}Hardware Environment}{130}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {5.2.2}Software Environment}{130}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {5.2.3}Local backend environment}{132}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {5.3}Software Configuration Management}{132}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {5.3.1}Configuration environment setup}{132}{}%
+\contentsline {paragraph}{Environment configuration.}{132}{}%
+\contentsline {paragraph}{Database configuration.}{133}{}%
+\contentsline {paragraph}{Demonstration data.}{133}{}%
+\contentsline {paragraph}{Code quality configuration.}{134}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {5.3.2}Version control procedure}{134}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {5.4}Implementation Status}{136}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {5.4.1}Verification performed during implementation}{138}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {5.5}Conclusion}{138}{}%
+\addvspace {-10mm}
+\contentsline {section}{\numberline {CHAPTER 6:}TESTING}{140}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {6.1}Introduction}{140}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {6.2}Test Plan}{141}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.2.1}Test Organization}{141}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.2.2}Test Environment}{141}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.2.3}Test Schedule}{142}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {6.3}Test Strategy}{142}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.3.1}Test classes}{142}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {6.4}Test Design}{143}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.4.1}Automated end-to-end suite}{143}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.4.2}Manual spot-check matrix}{145}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.4.3}WCAG 2.2 expert review}{147}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.4.4}User acceptance testing: personas and form}{149}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {6.5}Test Results and Analysis}{151}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.5.1}Automated end-to-end suite: results}{151}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.5.2}Manual spot-check: results}{153}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.5.3}WCAG 2.2 expert review: results}{153}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.5.4}User acceptance testing: results}{153}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {6.6}Conclusion}{153}{}%
+\addvspace {-10mm}
+\contentsline {section}{\numberline {CHAPTER 7:}CONCLUSION}{155}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {7.1}Introduction}{155}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {7.2}Project Summarization}{155}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {7.3}Project Contribution}{156}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {7.4}Project Limitation}{157}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {7.5}Future Works}{158}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {7.6}Conclusion}{159}{}%
+\addvspace {-10mm}
+\contentsline {section}{References}{160}{}%

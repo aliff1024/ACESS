@@ -1,15 +1,31 @@
 \babel@toc {english}{}\relax 
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Gantt chart of ACESS development schedule (14 weeks)}}{20}{}%
-\contentsline {figure}{\numberline {3.1}{\ignorespaces Current System Problem Analysis Diagram}}{22}{}%
-\contentsline {figure}{\numberline {3.2}{\ignorespaces Use Case Diagram for ACESS Platform}}{25}{}%
-\contentsline {figure}{\numberline {3.3}{\ignorespaces Context Diagram}}{32}{}%
-\contentsline {figure}{\numberline {3.4}{\ignorespaces System Architecture Diagram}}{33}{}%
-\contentsline {figure}{\numberline {3.5}{\ignorespaces Deployment Diagram}}{35}{}%
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Student Activity Diagram}}{40}{}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces Educator Activity Diagram}}{43}{}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces Administrator Activity Diagram}}{45}{}%
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Course Enrollment Sequence Diagram}}{46}{}%
-\contentsline {figure}{\numberline {4.5}{\ignorespaces Lesson Learning Sequence Diagram}}{47}{}%
-\contentsline {figure}{\numberline {4.6}{\ignorespaces Quiz Attempt Sequence Diagram}}{48}{}%
-\contentsline {figure}{\numberline {4.7}{\ignorespaces Course Creation Sequence Diagram}}{49}{}%
-\contentsline {figure}{\numberline {4.8}{\ignorespaces Database Entity Relationship Diagram (Full resolution version provided in Appendix)}}{54}{}%
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Gantt chart of ACESS development schedule (14 weeks)}}{25}{}%
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Current System Problem Analysis Diagram}}{28}{}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Use Case Diagram for ACESS Platform}}{31}{}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Context Diagram}}{44}{}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces System Architecture Diagram}}{45}{}%
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Deployment Diagram}}{47}{}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Student Activity Diagram}}{52}{}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Educator Activity Diagram}}{54}{}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Administrator Activity Diagram}}{55}{}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Course Enrollment Sequence Diagram}}{56}{}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Lesson Learning Sequence Diagram}}{57}{}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Quiz Attempt Sequence Diagram}}{58}{}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Course Creation Sequence Diagram}}{60}{}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Learner Dashboard (Default State)}}{62}{}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Educator Course Workspace (Lessons Tab)}}{63}{}%
+\contentsline {figure}{\numberline {4.10}{\ignorespaces Accessibility Settings Panel (Reading Group)}}{66}{}%
+\contentsline {figure}{\numberline {4.11}{\ignorespaces Quiz Interface}}{67}{}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Learner Progress Page}}{69}{}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces Administrator Analytics Dashboard}}{69}{}%
+\contentsline {figure}{\numberline {4.14}{\ignorespaces Accessibility Analytics}}{70}{}%
+\contentsline {figure}{\numberline {4.15}{\ignorespaces Identity, Access and Platform ERD}}{73}{}%
+\contentsline {figure}{\numberline {4.16}{\ignorespaces Curriculum and Content ERD}}{75}{}%
+\contentsline {figure}{\numberline {4.17}{\ignorespaces Assessment, Learning Record and Recognition ERD}}{76}{}%
+\contentsline {figure}{\numberline {4.18}{\ignorespaces Complete ACESS Entity Relationship Diagram}}{77}{}%
+\contentsline {figure}{\numberline {4.19}{\ignorespaces Preset Preview Dialog}}{85}{}%
+\contentsline {figure}{\numberline {4.20}{\ignorespaces Default vs.\ Dyslexia Preset}}{86}{}%
+\contentsline {figure}{\numberline {4.21}{\ignorespaces Lesson Under the ADHD Preset}}{87}{}%
+\contentsline {figure}{\numberline {4.22}{\ignorespaces Lesson Under the Autism Preset}}{88}{}%
+\contentsline {figure}{\numberline {4.23}{\ignorespaces Learner Dashboard Under the Dyslexia Preset}}{89}{}%
+\contentsline {figure}{\numberline {4.24}{\ignorespaces Lesson Accessibility Check in the Educator Editor}}{90}{}%

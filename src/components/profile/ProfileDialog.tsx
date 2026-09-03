@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Bell, Loader2, Save, Camera, Palette, Trash2, CheckCircle2 } from 'lucide-react';
+import { User, Bell, Loader2, Save, Camera, Palette, Trash2, CheckCircle2, Trophy, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,6 +35,7 @@ import type {
   AccessibilitySettingsData,
   NotificationSettingsData,
 } from '@/lib/learner-api';
+import { getRankingParticipation, setRankingParticipation } from '@/lib/educator-ranking-api';
 import { toast } from 'sonner';
 import { useAccessibility } from '@/providers/AccessibilityProvider';
 import { dedupeSpeechVoices } from '@/lib/accessibility-utils';
@@ -87,11 +88,14 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const [feedbackNotifications, setFeedbackNotifications] = useState(true);
   const [marketingNotifications, setMarketingNotifications] = useState(false);
 
+  // Educator Ranking Preferences
+  const [participateInRanking, setParticipateInRanking] = useState(true);
+
   useEffect(() => {
     if (!open) return;
     setLoading(true);
     fetchFullProfile()
-      .then((data) => {
+      .then(async (data) => {
         setProfile(data);
         setFullName(data.full_name || '');
         const p = data.profile;
@@ -131,6 +135,16 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           setAchievementNotifications(n.achievement_notifications ?? true);
           setFeedbackNotifications(n.feedback_notifications ?? true);
           setMarketingNotifications(n.marketing_notifications ?? false);
+        }
+
+        // Fetch ranking participation if educator or admin
+        if (data.role === 'educator' || data.role === 'admin') {
+          try {
+            const isParticipating = await getRankingParticipation(data.id);
+            setParticipateInRanking(isParticipating);
+          } catch {
+            setParticipateInRanking(true);
+          }
         }
       })
       .catch((err) => {
@@ -282,6 +296,19 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     }
   };
 
+  const saveEducatorRanking = async () => {
+    setSaving('ranking');
+    try {
+      await setRankingParticipation(participateInRanking);
+      toast.success('Educator ranking preferences saved successfully');
+    } catch (err) {
+      console.error('Ranking preference save error:', err);
+      toast.error('Failed to save ranking preferences');
+    } finally {
+      setSaving(null);
+    }
+  };
+
   const initials =
     fullName
       ?.split(' ')
@@ -363,7 +390,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             </div>
           ) : (
             <Tabs defaultValue="account" className="w-full">
-              <TabsList className="grid grid-cols-3 mb-6 bg-gray-100/80 p-1 rounded-xl">
+              <TabsList className={`grid ${profile?.role === 'educator' || profile?.role === 'admin' ? 'grid-cols-4' : 'grid-cols-3'} mb-6 bg-gray-100/80 p-1 rounded-xl`}>
                 <TabsTrigger value="account" className="flex items-center gap-2 text-xs font-semibold rounded-lg data-[state=active]:bg-white data-[state=active]:text-purple-900 data-[state=active]:shadow-xs">
                   <User className="w-3.5 h-3.5" /> Account Profile
                 </TabsTrigger>
@@ -375,6 +402,12 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                 <TabsTrigger value="appearance" className="flex items-center gap-2 text-xs font-semibold rounded-lg data-[state=active]:bg-white data-[state=active]:text-purple-900 data-[state=active]:shadow-xs">
                   <Palette className="w-3.5 h-3.5" /> Accessibility
                 </TabsTrigger>
+
+                {(profile?.role === 'educator' || profile?.role === 'admin') && (
+                  <TabsTrigger value="ranking" className="flex items-center gap-2 text-xs font-semibold rounded-lg data-[state=active]:bg-white data-[state=active]:text-purple-900 data-[state=active]:shadow-xs">
+                    <Trophy className="w-3.5 h-3.5 text-amber-500" /> Educator Ranking
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               {/* TAB 1: ACCOUNT PROFILE */}
@@ -704,6 +737,83 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                   </div>
                 </div>
               </TabsContent>
+
+              {/* TAB 4: EDUCATOR RANKING PREFERENCES */}
+              {(profile?.role === 'educator' || profile?.role === 'admin') && (
+                <TabsContent value="ranking">
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-200">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-amber-100 rounded-lg text-amber-700 mt-0.5">
+                          <Trophy className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm text-gray-900">Educator Leaderboard & Motivation</h4>
+                          <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                            The Educator Ranking tracks multi-dimensional teaching metrics including course quality, student completion rate, active engagement, and retention. It encourages peer learning and continuous instructional improvement.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-gray-100 rounded-xl border border-gray-200 overflow-hidden bg-white">
+                      {/* Participate in Educator Ranking Switch */}
+                      <div className="p-4 hover:bg-gray-50/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="pr-4">
+                            <Label htmlFor="dlg-ranking-participate" className="font-semibold text-sm text-gray-900 cursor-pointer">
+                              Participate in Educator Ranking
+                            </Label>
+                            <p className="text-xs text-gray-500 mt-1">
+                              When enabled, your educator profile, overall score, and earned badges appear on the public Educator Ranking page.
+                            </p>
+                          </div>
+                          <Switch
+                            id="dlg-ranking-participate"
+                            checked={participateInRanking}
+                            onCheckedChange={setParticipateInRanking}
+                          />
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs">
+                          <span className="font-medium text-gray-500">Current Status:</span>
+                          {participateInRanking ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Active on Leaderboard
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-300">
+                              <Shield className="w-3 h-3 text-gray-500" /> Hidden from Public Ranking
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-gray-500 bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
+                      <p className="font-semibold text-gray-700">Privacy & Performance Analytics:</p>
+                      <p className="text-gray-600">
+                        Disabling participation hides your profile from other educators on the ranking leaderboard. Your private performance analytics, student monitoring data, and course management tools remain completely accessible to you.
+                      </p>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <Button
+                        onClick={saveEducatorRanking}
+                        disabled={saving === 'ranking'}
+                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-sm px-5"
+                      >
+                        {saving === 'ranking' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4 mr-2" />
+                        )}
+                        Save Ranking Preferences
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              )}
             </Tabs>
           )}
         </div>
