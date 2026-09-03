@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.21)  3 SEP 2026 00:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.6.21)  3 SEP 2026 15:22
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2292,6 +2292,12 @@ ce uses con-nec-tion pool-ing
  []
 
 
+Underfull \hbox (badness 1681) in paragraph at lines 1166--1167
+\OT1/ptm/m/n/12 stack rather than leav-ing it as-serted, though not yet against
+ the de-ployed
+ []
+
+
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
 (fancyhdr)                \setlength{\headheight}{14.49998pt}.
@@ -2312,8 +2318,8 @@ Underfull \hbox (badness 4608) in paragraph at lines 1175--1176
 
 
 Underfull \hbox (badness 5147) in paragraph at lines 1175--1176
-\OT1/ptm/m/n/12 sec-ond time by \OT1/pcr/m/n/12 CHECK \OT1/ptm/m/n/12 con-strai
-nts in the schema. A sin-gle shared
+\OT1/ptm/m/n/12 sec-ond time by $\OT1/pcr/m/n/12 CHECK$ \OT1/ptm/m/n/12 con-str
+aints in the schema. A sin-gle shared
  []
 
 
@@ -2348,6 +2354,13 @@ ctabil-ity for Autis-tic
  []
 
 
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[41]
 Underfull \hbox (badness 1584) in paragraph at lines 1196--1197
 []\OT1/ptm/b/n/12 Backup and Re-pro-ducibil-ity: \OT1/ptm/m/n/12 The hosted Su-
 pabase project re-lies on the
@@ -2366,13 +2379,6 @@ Underfull \hbox (badness 3492) in paragraph at lines 1196--1197
  []
 
 
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 14.49998pt, for example:
-(fancyhdr)                \setlength{\headheight}{14.49998pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
-
-[41]
 Underfull \hbox (badness 1546) in paragraph at lines 1201--1202
 []\OT1/ptm/b/n/12 Modular Ar-chi-tec-ture: \OT1/ptm/m/n/12 The code-base must a
 d-here to strict sep-a-ra-tion of
@@ -3192,20 +3198,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [97]
-Overfull \hbox (2.66261pt too wide) in paragraph at lines 2216--2216
-\OT1/ptm/m/n/8 guided[]learning[]enabled|  
- []
-
-
-Overfull \hbox (2.91856pt too wide) in paragraph at lines 2223--2223
-\OT1/ptm/m/n/8 ter[]organization[]enabled|  
- []
-
-
-Overfull \hbox (5.78236pt too wide) in paragraph at lines 2234--2234
-\OT1/ptm/m/n/8 ondary[]disability[]focuses|  
- []
-
 ignored error: Infinite glue shrinkage found in box being split
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -3224,16 +3216,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [99]
-Overfull \hbox (6.67035pt too wide) in paragraph at lines 2311--2311
-\OT1/ptm/m/n/8 mary[]reflection[]questions|  
- []
-
-
-Overfull \hbox (8.63853pt too wide) in paragraph at lines 2312--2312
-\OT1/ptm/m/n/8 mary[]ai[]feedback[]enabled|  
- []
-
-ignored error: Infinite glue shrinkage found in box being split
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3339,7 +3321,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [112]
-ignored error: Infinite glue shrinkage found in box being split
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3348,6 +3329,14 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [113]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[114]
 Underfull \hbox (badness 2005) in paragraph at lines 2955--2956
 \OT1/ptm/m/n/12 op-er-a-tions through Re-act con-text. It also drives the $\OT1
 /pcr/m/n/12 SessionTimeout$
@@ -3392,13 +3381,6 @@ Underfull \hbox (badness 10000) in paragraph at lines 2956--2957
  []
 
 
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 14.49998pt, for example:
-(fancyhdr)                \setlength{\headheight}{14.49998pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
-
-[114]
 Underfull \hbox (badness 6526) in paragraph at lines 2960--2961
 \OT1/ptm/m/n/12 it caused a real de-fect. The provider dis-tin-guishes $\OT1/pc
 r/m/n/12 base _ preset$ \OT1/ptm/m/n/12 from
@@ -3472,8 +3454,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 [119]
 Underfull \hbox (badness 2057) in paragraph at lines 3061--3062
-\OT1/ptm/m/n/12 re-build the database: none of them con-tained a \OT1/pcr/m/n/1
-2 CREATE TABLE \OT1/ptm/m/n/12 for $\OT1/pcr/m/n/12 users$\OT1/ptm/m/n/12 ,
+\OT1/ptm/m/n/12 re-build the database: none of them con-tained a $\OT1/pcr/m/n/
+12 CREATE TABLE$ \OT1/ptm/m/n/12 for $\OT1/pcr/m/n/12 users$\OT1/ptm/m/n/12 ,
  []
 
 
@@ -3584,8 +3566,8 @@ Underfull \hbox (badness 1783) in paragraph at lines 3193--3194
 
 
 Underfull \hbox (badness 10000) in paragraph at lines 3205--3206
-\OT1/ptm/m/n/12 plat-form al-ready col-lects, al-though \OT1/pcr/m/n/12 lesson[
-]progress \OT1/ptm/m/n/12 and
+\OT1/ptm/m/n/12 plat-form al-ready col-lects, al-though $\OT1/pcr/m/n/12 lesson
+ _ progress$ \OT1/ptm/m/n/12 and
  []
 
 
@@ -3741,15 +3723,27 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [140]
-Underfull \hbox (badness 1132) in paragraph at lines 3524--3525
-[]\OT1/ptm/m/n/12 The au-to-mated suite drives a real Chromium browser against 
-the de-ployed
+Underfull \hbox (badness 2435) in paragraph at lines 3525--3526
+\OT1/ptm/m/n/12 against the \OT1/ptm/b/n/12 lo-cal de-vel-op-ment stack\OT1/ptm
+/m/n/12 , not the de-ployed ap-pli-ca-tion: a Next.js
  []
 
 
-Underfull \hbox (badness 1642) in paragraph at lines 3524--3525
-\OT1/ptm/m/n/12 the four roles served as test ac-counts, each al-ready car-ry-i
-ng a re-al-is-tic his-tory
+Underfull \hbox (badness 2617) in paragraph at lines 3525--3526
+\OT1/ptm/m/n/12 de-vel-op-ment server ($\OT1/pcr/m/n/12 next dev$\OT1/ptm/m/n/1
+2 ) on $\OT1/pcr/m/n/12 localhost : 3000$\OT1/ptm/m/n/12 , con-nected to a lo-c
+al
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3525--3526
+\OT1/ptm/m/n/12 as a claim about the sep-a-rately hosted ap-pli-ca-tion at
+ []
+
+
+Underfull \hbox (badness 1221) in paragraph at lines 3525--3526
+\OT1/ptm/m/n/12 seeded per-sonas across the three roles (three ad-min-is-tra-to
+rs, three ed-u-ca-tors, six
  []
 
 
@@ -3760,6 +3754,22 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [141]
+Underfull \hbox (badness 10000) in paragraph at lines 3527--3528
+\OT1/ptm/m/n/12 still listed thirty generic $\OT1/pcr/m/n/12 learnerN @ test . 
+com$ \OT1/ptm/m/n/12 ac-counts and an
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3527--3528
+\OT1/ptm/m/n/12 cur-rent database. Only the twelve named per-sonas in
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3527--3528
+\OT1/ptm/m/n/12 database with $\OT1/pcr/m/n/12 select email ,[]  role ,[]  full
+ _ name from users$\OT1/ptm/m/n/12 . The
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3768,41 +3778,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [142]
-Underfull \hbox (badness 10000) in paragraph at lines 3568--3569
-\OT1/ptm/m/n/12 through $\OT1/pcr/m/n/12 playwright . config . ts$ \OT1/ptm/m/n
-/12 and run with
- []
-
-
-Overfull \hbox (5.40852pt too wide) in paragraph at lines 3590--3590
-\OT1/ptm/m/n/8 LEARNER- 
- []
-
-
-Overfull \hbox (5.40852pt too wide) in paragraph at lines 3591--3591
-\OT1/ptm/m/n/8 LEARNER- 
- []
-
-
-Overfull \hbox (5.40852pt too wide) in paragraph at lines 3592--3592
-\OT1/ptm/m/n/8 LEARNER- 
- []
-
-
-Overfull \hbox (5.40852pt too wide) in paragraph at lines 3593--3593
-\OT1/ptm/m/n/8 LEARNER- 
- []
-
-
-Overfull \hbox (11.04053pt too wide) in paragraph at lines 3594--3594
-\OT1/ptm/m/n/8 EDUCATOR- 
- []
-
-
-Overfull \hbox (11.04053pt too wide) in paragraph at lines 3595--3595
-\OT1/ptm/m/n/8 EDUCATOR- 
- []
-
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3811,7 +3786,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [143]
-ignored error: Infinite glue shrinkage found in box being split
+Underfull \hbox (badness 1546) in paragraph at lines 3574--3575
+\OT1/ptm/m/n/12 the same day. A fur-ther two sce-nar-ios (LEARNER-08 through LE
+ARNER-10,
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3828,6 +3807,75 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [145]
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3599--3599
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3600--3600
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3601--3601
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3602--3602
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3603--3603
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3604--3604
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3605--3605
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3606--3606
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3607--3607
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (3.91512pt too wide) in paragraph at lines 3608--3608
+\OT1/ptm/m/n/10 LEARNER- 
+ []
+
+
+Overfull \hbox (10.95514pt too wide) in paragraph at lines 3609--3609
+\OT1/ptm/m/n/10 EDUCATOR- 
+ []
+
+
+Overfull \hbox (10.95514pt too wide) in paragraph at lines 3610--3610
+\OT1/ptm/m/n/10 EDUCATOR- 
+ []
+
+
+Overfull \hbox (10.95514pt too wide) in paragraph at lines 3611--3611
+\OT1/ptm/m/n/10 EDUCATOR- 
+ []
+
+
+Overfull \hbox (10.95514pt too wide) in paragraph at lines 3612--3612
+\OT1/ptm/m/n/10 EDUCATOR- 
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3835,8 +3883,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[146]
-ignored error: Infinite glue shrinkage found in box being split
+[146
+
+]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3845,7 +3894,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [147]
-ignored error: Infinite glue shrinkage found in box being split
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3870,16 +3918,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [150]
-Overfull \hbox (2.41966pt too wide) in paragraph at lines 3781--3781
-\OT1/ptm/m/n/10 EDUCATOR- 
- []
-
-
-Overfull \hbox (2.41966pt too wide) in paragraph at lines 3782--3782
-\OT1/ptm/m/n/10 EDUCATOR- 
- []
-
-ignored error: Infinite glue shrinkage found in box being split
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3896,11 +3934,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [152]
-Underfull \hbox (badness 1577) in paragraph at lines 3793--3794
-\OT1/ptm/m/n/12 when the timer reaches zero, and only a learner with a pre-set 
-ac-tive gets the
- []
-
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3917,11 +3950,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [154]
-Underfull \hbox (badness 1067) in paragraph at lines 3816--3817
-\OT1/ptm/m/n/12 text-to-speech, ad-justable ac-ces-si-bil-ity set-tings, les-so
-n and quiz man-age-ment, and
- []
-
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -3930,27 +3958,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [155]
-Underfull \hbox (badness 1454) in paragraph at lines 3822--3823
-\OT1/ptm/m/n/12 seed, and the se-cu-rity and be-havioural prop-er-ties from ex-
-e-cutable scripts and a
- []
-
-
-Underfull \hbox (badness 2318) in paragraph at lines 3826--3827
-\OT1/ptm/m/n/12 di-a-grams and data-dictionary ta-bles di-rectly from the live 
-schema and back-ing
- []
-
-
-Underfull \hbox (badness 1320) in paragraph at lines 3828--3829
-[]\OT1/ptm/m/n/12 For the re-search com-mu-nity, the project's most trans-fer-a
-ble con-tri-bu-tion is
- []
-
-
-Underfull \hbox (badness 1189) in paragraph at lines 3830--3831
-\OT1/ptm/m/n/12 with-out ei-ther a de-scrip-tion or an ex-plicit ex-clu-sion, a
-re both ap-pli-ca-ble to any
+Underfull \hbox (badness 1533) in paragraph at lines 3623--3624
+\OT1/ptm/m/n/12 the real ap-pli-ca-tion calls for that ac-tion, un-der the same
+ row-level-security and
  []
 
 
@@ -3960,10 +3970,30 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[156]
-Underfull \hbox (badness 10000) in paragraph at lines 3832--3833
-\OT1/ptm/m/n/12 re-spon-si-bly. The user-facing ac-ces-si-bil-ity state-ment, p
-ub-lished at
+[156
+
+]
+Underfull \hbox (badness 1895) in paragraph at lines 3629--3630
+\OT1/ptm/m/n/12 pol-icy at all, so grad-ing hap-pens ex-clu-sively in-side this
+ $\OT1/pcr/m/n/12 SECURITY DEFINER$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3629--3630
+\OT1/ptm/b/n/12 con-cur-rency de-fect\OT1/ptm/m/n/12 : of 1,292 re-quests, two 
+failed with a raw $\OT1/pcr/m/n/12 409$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3629--3630
+\OT1/pcr/m/n/12 "duplicate key value violates unique constraint"$ \OT1/ptm/m/n/
+12 er-ror, and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3629--3630
+\OT1/ptm/m/n/12 the next $\OT1/pcr/m/n/12 attempt _ number$ \OT1/ptm/m/n/12 wit
+h a plain
  []
 
 
@@ -3974,17 +4004,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [157]
-Underfull \hbox (badness 1708) in paragraph at lines 3849--3850
-[]\OT1/ptm/b/n/12 Independent eval-u-a-tion with neu-ro-di-ver-gent learn-ers. 
-\OT1/ptm/m/n/12 The sin-gle most
- []
-
-
-Underfull \hbox (badness 1789) in paragraph at lines 3850--3851
-\OT1/ptm/m/n/12 VoiceOver, would con-vert the self-assessment in Ta-ble 4.3[] i
-nto a ver-i-fied
- []
-
+ignored error: Infinite glue shrinkage found in box being split
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -4000,7 +4020,399 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[159] (Template Report PSM.bbl
+[159]
+ignored error: Infinite glue shrinkage found in box being split
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[160]
+ignored error: Infinite glue shrinkage found in box being split
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[161]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[162]
+ignored error: Infinite glue shrinkage found in box being split
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[163]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[164]
+Underfull \hbox (badness 10000) in paragraph at lines 3815--3816
+\OT1/ptm/b/n/12 Tasks'' popup. \OT1/ptm/m/n/12 Clos-ing that popup (a Radix $\O
+T1/pcr/m/n/12 Dialog$\OT1/ptm/m/n/12 ,
+ []
+
+
+Underfull \hbox (badness 4353) in paragraph at lines 3815--3816
+\OT1/pcr/m/n/12 node _ modules / @radix-[]ui / react-[]dismissable-[]layer$\OT1
+/ptm/m/n/12 : it tracks how
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3815--3816
+\OT1/ptm/m/n/12 be-cause this code-base never wraps its com-po-nent tree in Rad
+ix's own
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3815--3816
+\OT1/ptm/m/n/12 than patch a third-party li-brary's in-ter-nals, a small watch-
+dog com-po-nent
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3815--3816
+\OT1/ptm/m/n/12 ($\OT1/pcr/m/n/12 src / components / ui / dialog-[]pointer-[]ev
+ents-[]guard . tsx$\OT1/ptm/m/n/12 , mounted
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3815--3816
+\OT1/ptm/m/n/12 Es-cape/pointerdown recheck and a one-second safety-net in-ter-
+val clear
+ []
+
+
+Underfull \hbox (badness 1688) in paragraph at lines 3815--3816
+\OT1/pcr/m/n/12 document . body$\OT1/ptm/m/n/12 's stray $\OT1/pcr/m/n/12 point
+er-[]events :  none$ \OT1/ptm/m/n/12 the mo-ment no di-a-log is
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[165]
+Underfull \hbox (badness 4036) in paragraph at lines 3817--3818
+\OT1/ptm/b/n/12 les-son con-trols be-neath it. \OT1/ptm/m/n/12 Un-der the Autis
+m pre-set's step-by-step lay-out,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3817--3818
+\OT1/ptm/m/n/12 hand. The side-bar ($\OT1/pcr/m/n/12 LessonViewPage . tsx : 175
+1-[]-[]1753$\OT1/ptm/m/n/12 ) is po-si-tioned
+ []
+
+
+Underfull \hbox (badness 1688) in paragraph at lines 3817--3818
+\OT1/ptm/m/n/12 -- so even a view-port this was not specif-i-cally tuned for ca
+n-not re-pro-duce the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3817--3818
+\OT1/ptm/m/n/12 1920$\OMS/ztmcm/m/n/12 ^^B$\OT1/ptm/m/n/12 1080 (well past $\OT
+1/pcr/m/n/12 2xl$\OT1/ptm/m/n/12 , so the side-bar is still present) to con-fir
+m
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3819--3820
+\OT1/ptm/b/n/12 same learner. \OT1/ptm/m/n/12 A Dyslexia-profile learner's page
+ car-ried
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3819--3820
+\OT1/pcr/m/n/12 data-[]theme = "high _ contrast"$ \OT1/ptm/m/n/12 on $\OT1/pcr/
+m/n/12 <[]html>[]$ \OT1/ptm/m/n/12 at the same time as
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3819--3820
+\OT1/ptm/m/n/12 auto-merges $\OT1/pcr/m/n/12 EASY _ READ _ PRESETS$ \OT1/ptm/m/
+n/12 ($\OT1/pcr/m/n/12 accessibility-[]utils . ts : 41-[]-[]50$\OT1/ptm/m/n/12 
+)
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3819--3820
+\OT1/ptm/m/n/12 into a learner's set-tings on ev-ery pro-file load when-ever
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[166]
+Underfull \hbox (badness 6691) in paragraph at lines 3821--3822
+\OT1/pcr/m/n/12 submit _ quiz _ attempt()$\OT1/ptm/m/n/12 , the only path that 
+can write a quiz at-tempt
+ []
+
+
+Underfull \hbox (badness 4779) in paragraph at lines 3821--3822
+\OT1/ptm/m/n/12 ($\OT1/pcr/m/n/12 quiz _ attempts$ \OT1/ptm/m/n/12 has no $\OT1
+/pcr/m/n/12 INSERT$ \OT1/ptm/m/n/12 pol-icy of its own), com-puted the next
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3821--3822
+\OT1/pcr/m/n/12 attempt _ number$ \OT1/ptm/m/n/12 with
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3821--3822
+\OT1/ptm/m/n/12 ev-ery re-quest in a batch at once) pro-duced two raw $\OT1/pcr
+/m/n/12 409$
+ []
+
+
+Underfull \hbox (badness 4266) in paragraph at lines 3821--3822
+\OT1/pcr/m/n/12 "duplicate key value violates unique constraint"$ \OT1/ptm/m/n/
+12 er-rors out of
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[167]
+Underfull \hbox (badness 10000) in paragraph at lines 3823--3824
+\OT1/ptm/m/n/12 retry. Two sep-a-rate real causes were found, not one. \OT1/ptm
+/m/it/12 Cause A:
+ []
+
+
+Underfull \hbox (badness 2351) in paragraph at lines 3823--3824
+\OT1/ptm/m/n/12 ap-proval API route re-com-pil-ing on de-mand (a $\OT1/pcr/m/n/
+12 next dev$ \OT1/ptm/m/n/12 char-ac-ter-is-tic, since
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3823--3824
+\OT1/ptm/m/n/12 the han-dler could read it and throw-ing
+ []
+
+
+Underfull \hbox (badness 1163) in paragraph at lines 3825--3826
+[]\OT1/ptm/b/n/12 Defect 6 -- ADHD fo-cus mode: the real lesson-completion con-
+trol was
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3825--3826
+\OT1/ptm/m/n/12 The prox-i-mate cause was that the real but-ton is gated on
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3825--3826
+\OT1/pcr/m/n/12 currentFocusId  = = =  '[]summary'[]$\OT1/ptm/m/n/12 , and ADHD
+ forces
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3825--3826
+\OT1/ptm/m/n/12 deeper: $\OT1/pcr/m/n/12 focusStep$ \OT1/ptm/m/n/12 (the in-dex
+ driv-ing $\OT1/pcr/m/n/12 currentFocusId$ \OT1/ptm/m/n/12 through
+ []
+
+
+Underfull \hbox (badness 3396) in paragraph at lines 3825--3826
+\OT1/ptm/m/n/12 Video/Content/Activities/Summary) is changed only by the ``Fo-c
+us Mode Slide
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3825--3826
+\OT1/ptm/m/n/12 be gated on the raw, manually-toggled $\OT1/pcr/m/n/12 focusMod
+e$ \OT1/ptm/m/n/12 flag rather than on
+ []
+
+
+Underfull \hbox (badness 1033) in paragraph at lines 3825--3826
+\OT1/ptm/m/n/12 per-ma-nently at 0 for the whole les-son, $\OT1/pcr/m/n/12 curr
+entFocusId$ \OT1/ptm/m/n/12 could never be-come
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3825--3826
+\OT1/ptm/m/n/12 via the step pills, click-ing Com-plete Les-son, and con-firm-i
+ng
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[168]
+Underfull \hbox (badness 10000) in paragraph at lines 3827--3828
+\OT1/ptm/m/n/12 the com-po-nent's re-sponse to that check wrote
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3827--3828
+\OT1/pcr/m/n/12 reason :  attemptCheck . message  | |  '[] max _ attempts'[]$ \
+OT1/ptm/m/n/12 -- since the
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[169]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[170]
+Underfull \hbox (badness 1616) in paragraph at lines 3843--3844
+\OT1/ptm/m/n/12 claim should be cor-rected, along-side the three find-ings now 
+fixed and the two
+ []
+
+
+Underfull \hbox (badness 2913) in paragraph at lines 3843--3844
+\OT1/ptm/m/n/12 ma-trix and user ac-cep-tance test-ing re-main pend-ing, ex-act
+ly as Ta-ble 6.5[] and
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[171]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[172]
+Underfull \hbox (badness 1067) in paragraph at lines 3858--3859
+\OT1/ptm/m/n/12 text-to-speech, ad-justable ac-ces-si-bil-ity set-tings, les-so
+n and quiz man-age-ment, and
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[173]
+Underfull \hbox (badness 1454) in paragraph at lines 3864--3865
+\OT1/ptm/m/n/12 seed, and the se-cu-rity and be-havioural prop-er-ties from ex-
+e-cutable scripts and a
+ []
+
+
+Underfull \hbox (badness 2318) in paragraph at lines 3868--3869
+\OT1/ptm/m/n/12 di-a-grams and data-dictionary ta-bles di-rectly from the live 
+schema and back-ing
+ []
+
+
+Underfull \hbox (badness 1320) in paragraph at lines 3870--3871
+[]\OT1/ptm/m/n/12 For the re-search com-mu-nity, the project's most trans-fer-a
+ble con-tri-bu-tion is
+ []
+
+
+Underfull \hbox (badness 1189) in paragraph at lines 3872--3873
+\OT1/ptm/m/n/12 with-out ei-ther a de-scrip-tion or an ex-plicit ex-clu-sion, a
+re both ap-pli-ca-ble to any
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[174]
+Underfull \hbox (badness 10000) in paragraph at lines 3874--3875
+\OT1/ptm/m/n/12 re-spon-si-bly. The user-facing ac-ces-si-bil-ity state-ment, p
+ub-lished at
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[175]
+Underfull \hbox (badness 1708) in paragraph at lines 3891--3892
+[]\OT1/ptm/b/n/12 Independent eval-u-a-tion with neu-ro-di-ver-gent learn-ers. 
+\OT1/ptm/m/n/12 The sin-gle most
+ []
+
+
+Underfull \hbox (badness 1789) in paragraph at lines 3892--3893
+\OT1/ptm/m/n/12 VoiceOver, would con-vert the self-assessment in Ta-ble 4.3[] i
+nto a ver-i-fied
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[176]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[177] (Template Report PSM.bbl
 LaTeX Font Info:    Trying to load font information for OML+ptm on input line 7
 .
 
@@ -4044,7 +4456,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[160]
+[178]
 Underfull \hbox (badness 4120) in paragraph at lines 125--129
 []\OT1/ptm/m/n/12 Google LLC (2025).  Youtube iframe player api ref-er-ence.  A
 c-cessed 2
@@ -4057,7 +4469,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[161]
+[179]
 Underfull \hbox (badness 10000) in paragraph at lines 143--148
 []\OT1/ptm/m/n/12 Instructure, Inc. (2024a).  Can-vas ac-ces-si-bil-ity stan-da
 rds and vol-un-tary
@@ -4088,7 +4500,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[162]
+[180]
 Underfull \hbox (badness 1527) in paragraph at lines 232--236
 []\OT1/ptm/m/n/12 PostgreSQL Global De-vel-op-ment Group (2025).  Post-gresql 1
 7 doc-u-men-ta-tion.
@@ -4107,7 +4519,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[163]
+[181]
 Underfull \hbox (badness 4454) in paragraph at lines 279--283
 []\OT1/ptm/m/n/12 Supabase (2024).  Su-pabase row level se-cu-rity doc-u-men-ta
 -tion.  Ac-cessed
@@ -4133,32 +4545,33 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[164] (Template Report PSM.aux)
+[182] (Template Report PSM.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 31281 strings out of 467871
- 675563 string characters out of 5418860
- 1180395 words of memory out of 5000000
- 59550 multiletter control sequences out of 15000+600000
- 676928 words of font info for 148 fonts, out of 8000000 for 9000
+ 31287 strings out of 467871
+ 675641 string characters out of 5418860
+ 1194515 words of memory out of 5000000
+ 59553 multiletter control sequences out of 15000+600000
+ 677812 words of font info for 151 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 102i,15n,108p,2197b,996s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 102i,15n,108p,2696b,996s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/c
 mmi10.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfo
 nts/cm/cmmi12.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/type1/publ
 ic/amsfonts/cm/cmr10.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fonts/typ
 e1/public/amsfonts/cm/cmsy10.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/f
-onts/type1/urw/courier/ucrr8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/
-fonts/type1/urw/times/utmb8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/f
-onts/type1/urw/times/utmr8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/fo
-nts/type1/urw/times/utmri8a.pfb>
-Output written on "Template Report PSM.pdf" (184 pages, 10349406 bytes).
+onts/type1/urw/courier/ucrb8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/
+fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX
+/fonts/type1/urw/times/utmb8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/
+fonts/type1/urw/times/utmr8a.pfb><C:/Users/user/AppData/Local/Programs/MiKTeX/f
+onts/type1/urw/times/utmri8a.pfb>
+Output written on "Template Report PSM.pdf" (202 pages, 10398131 bytes).
 PDF statistics:
- 713 PDF objects out of 1000 (max. 8388607)
+ 775 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  302 words of extra memory for PDF output out of 10000 (max. 10000000)
 

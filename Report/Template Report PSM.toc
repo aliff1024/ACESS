@@ -179,29 +179,29 @@
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {4.4.6}Learner Progress, Recognition and Recommendation}{110}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {4.5}Detailed Design}{114}{}%
+\contentsline {subsection}{\numberline {4.5}Detailed Design}{115}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.5.1}Software Design}{114}{}%
-\contentsline {paragraph}{Provider components (global state)}{114}{}%
-\contentsline {paragraph}{Pure computation modules}{115}{}%
+\contentsline {subsubsection}{\numberline {4.5.1}Software Design}{115}{}%
+\contentsline {paragraph}{Provider components (global state)}{115}{}%
+\contentsline {paragraph}{Pure computation modules}{116}{}%
 \contentsline {paragraph}{Data access layer}{116}{}%
-\contentsline {paragraph}{Server-side routes reserved for privileged operations}{116}{}%
+\contentsline {paragraph}{Server-side routes reserved for privileged operations}{117}{}%
 \contentsline {paragraph}{The recommendation engine}{117}{}%
 \contentsline {paragraph}{Server-side assessment}{119}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {4.5.2}Physical Database Design}{119}{}%
+\contentsline {subsubsection}{\numberline {4.5.2}Physical Database Design}{120}{}%
 \contentsline {paragraph}{Schema consolidation}{120}{}%
 \contentsline {paragraph}{Representative table definitions}{121}{}%
 \contentsline {paragraph}{Constraints}{122}{}%
 \contentsline {paragraph}{Indexes}{122}{}%
-\contentsline {paragraph}{Row-Level Security}{122}{}%
+\contentsline {paragraph}{Row-Level Security}{123}{}%
 \contentsline {paragraph}{Triggers}{123}{}%
 \contentsline {paragraph}{Storage}{124}{}%
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {4.5.3}Systemic Implementation Details}{124}{}%
 \contentsline {paragraph}{In-video questions}{124}{}%
 \contentsline {paragraph}{Notification generation by trigger}{124}{}%
-\contentsline {paragraph}{Session timeout}{124}{}%
+\contentsline {paragraph}{Session timeout}{125}{}%
 \contentsline {paragraph}{Text-to-speech}{125}{}%
 \addvspace {0mm}
 \contentsline {subsection}{\numberline {4.6}Limitations of Design}{125}{}%
@@ -246,46 +246,50 @@
 \addvspace {0mm}
 \contentsline {subsubsection}{\numberline {6.2.2}Test Environment}{141}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.2.3}Test Schedule}{142}{}%
+\contentsline {subsubsection}{\numberline {6.2.3}Test Schedule}{143}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {6.3}Test Strategy}{142}{}%
+\contentsline {subsection}{\numberline {6.3}Test Strategy}{143}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.3.1}Test classes}{142}{}%
+\contentsline {subsubsection}{\numberline {6.3.1}Test classes}{143}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {6.4}Test Design}{143}{}%
+\contentsline {subsection}{\numberline {6.4}Test Design}{144}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.4.1}Automated end-to-end suite}{143}{}%
+\contentsline {subsubsection}{\numberline {6.4.1}Automated end-to-end suite}{144}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.4.2}Manual spot-check matrix}{145}{}%
+\contentsline {subsubsection}{\numberline {6.4.2}Load Testing}{156}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.4.3}WCAG 2.2 expert review}{147}{}%
+\contentsline {subsubsection}{\numberline {6.4.3}Manual spot-check matrix}{158}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.4.4}User acceptance testing: personas and form}{149}{}%
+\contentsline {subsubsection}{\numberline {6.4.4}WCAG 2.2 expert review}{159}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {6.5}Test Results and Analysis}{151}{}%
+\contentsline {subsubsection}{\numberline {6.4.5}User acceptance testing: personas and form}{163}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.5.1}Automated end-to-end suite: results}{151}{}%
+\contentsline {subsection}{\numberline {6.5}Test Results and Analysis}{164}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.5.2}Manual spot-check: results}{153}{}%
+\contentsline {subsubsection}{\numberline {6.5.1}Automated end-to-end suite: results}{164}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.5.3}WCAG 2.2 expert review: results}{153}{}%
+\contentsline {subsubsection}{\numberline {6.5.2}Defects Found and Fixed}{165}{}%
 \addvspace {0mm}
-\contentsline {subsubsection}{\numberline {6.5.4}User acceptance testing: results}{153}{}%
+\contentsline {subsubsection}{\numberline {6.5.3}Manual spot-check: results}{170}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {6.6}Conclusion}{153}{}%
+\contentsline {subsubsection}{\numberline {6.5.4}WCAG 2.2 expert review: results}{170}{}%
+\addvspace {0mm}
+\contentsline {subsubsection}{\numberline {6.5.5}User acceptance testing: results}{171}{}%
+\addvspace {0mm}
+\contentsline {subsection}{\numberline {6.6}Conclusion}{171}{}%
 \addvspace {-10mm}
-\contentsline {section}{\numberline {CHAPTER 7:}CONCLUSION}{155}{}%
+\contentsline {section}{\numberline {CHAPTER 7:}CONCLUSION}{173}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {7.1}Introduction}{155}{}%
+\contentsline {subsection}{\numberline {7.1}Introduction}{173}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {7.2}Project Summarization}{155}{}%
+\contentsline {subsection}{\numberline {7.2}Project Summarization}{173}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {7.3}Project Contribution}{156}{}%
+\contentsline {subsection}{\numberline {7.3}Project Contribution}{174}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {7.4}Project Limitation}{157}{}%
+\contentsline {subsection}{\numberline {7.4}Project Limitation}{175}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {7.5}Future Works}{158}{}%
+\contentsline {subsection}{\numberline {7.5}Future Works}{176}{}%
 \addvspace {0mm}
-\contentsline {subsection}{\numberline {7.6}Conclusion}{159}{}%
+\contentsline {subsection}{\numberline {7.6}Conclusion}{177}{}%
 \addvspace {-10mm}
-\contentsline {section}{References}{160}{}%
+\contentsline {section}{References}{178}{}%

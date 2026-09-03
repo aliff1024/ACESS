@@ -38,12 +38,25 @@ export const ANIMATION_LEVELS = [
 
 // ─── Easy Read Presets (legacy, still functional) ──────────────────────
 
+// Re-verified 2026-09-03 (docs/testing-report.md, A11Y-01): this used to
+// also force preferred_theme: 'high_contrast'. That was fine back when
+// preferred_theme was the only theming mechanism, but it now fights the
+// newer, more granular preset fields (background_tint, font_family, etc.) —
+// a Dyslexia-preset learner with preferred_reading_level: 'simplified' (mei
+// in the seed data) got the preset's own intended cream background and
+// OpenDyslexic font from the newer fields, and simultaneously
+// html[data-theme="high_contrast"] from this merge, applied on every
+// profile load via applyReadingLevelDefaults() below — two theming systems
+// live at once with no reconciliation between them. Easy Read's larger
+// font / looser spacing / dyslexia-friendly font and simplified_ui itself
+// aren't in conflict with anything and are kept; only the theme override
+// is removed, so Easy Read no longer overrides whatever theme (from a
+// preset or the user's own Sensory-tab choice) is already in effect.
 export const EASY_READ_PRESETS: Pick<
   AccessibilitySettingsData,
-  'preferred_font_size' | 'preferred_theme' | 'line_spacing' | 'preferred_font' | 'simplified_ui'
+  'preferred_font_size' | 'line_spacing' | 'preferred_font' | 'simplified_ui'
 > = {
   preferred_font_size: 'xlarge',
-  preferred_theme: 'high_contrast',
   line_spacing: 'loose',
   preferred_font: 'dyslexia',
   simplified_ui: true,

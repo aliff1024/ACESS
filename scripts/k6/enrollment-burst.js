@@ -44,26 +44,31 @@ export const options = {
 
 export default function () {
   const me = users[(__VU - 1) % users.length]
-  const headers = {
+  const baseHeaders = {
     apikey: fixture.anonKey,
     Authorization: `Bearer ${me.access_token}`,
     'Content-Type': 'application/json',
-    Prefer: 'return=representation',
   }
 
   const insertRes = http.post(
     `${fixture.supabaseUrl}/rest/v1/enrollments`,
     JSON.stringify({ user_id: me.id, course_id: COURSE_ID, status: 'active' }),
-    { headers, tags: { name: 'enroll_insert' } },
+    { headers: { ...baseHeaders, Prefer: 'return=representation' }, tags: { name: 'enroll_insert' } },
   )
   check(insertRes, { 'enroll: 201 Created': (r) => r.status === 201 })
 
   sleep(0.3)
 
+  // return=minimal (the supabase-js default for .delete() with no .select())
+  // -> PostgREST replies 204 with no body. Requesting return=representation
+  // here instead makes it reply 200 with the deleted row, which is what the
+  // first run of this script did by mistake (shared headers object) and
+  // flagged every delete as a false "failure" — fixed by giving the two
+  // requests their own headers.
   const delRes = http.del(
     `${fixture.supabaseUrl}/rest/v1/enrollments?user_id=eq.${me.id}&course_id=eq.${COURSE_ID}`,
     null,
-    { headers, tags: { name: 'enroll_delete' } },
+    { headers: { ...baseHeaders, Prefer: 'return=minimal' }, tags: { name: 'enroll_delete' } },
   )
   check(delRes, { 'drop: 204 No Content': (r) => r.status === 204 })
 

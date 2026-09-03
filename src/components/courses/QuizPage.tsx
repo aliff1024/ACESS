@@ -46,7 +46,7 @@ export function QuizPage({
   const [activeTab, setActiveTab] = useState<'info' | 'history'>('info');
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [blocked, setBlocked] = useState<{ reason: string } | null>(null);
+  const [blocked, setBlocked] = useState<{ reason: string; detail?: string } | null>(null);
   const [showStartScreen, setShowStartScreen] = useState(true);
   const [attemptHistory, setAttemptHistory] = useState<{ attempt_number: number; score_pct: number; result: string; created_at: string }[]>([]);
   const [usedAttempts, setUsedAttempts] = useState(0);
@@ -111,7 +111,7 @@ export function QuizPage({
           return;
         }
         if (!attemptCheck.canAttempt) {
-          setBlocked({ reason: attemptCheck.message || 'max_attempts' });
+          setBlocked({ reason: 'max_attempts', detail: attemptCheck.message });
           return;
         }
         setQuizData(quiz);
@@ -284,7 +284,7 @@ export function QuizPage({
             <>
               <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
               <p className="text-gray-800 font-semibold mb-2">{t('quiz.maxAttempts')}</p>
-              <p className="text-gray-600 mb-4">{t('quiz.maxAttemptsDesc')}</p>
+              <p className="text-gray-600 mb-4">{blocked.detail || t('quiz.maxAttemptsDesc')}</p>
             </>
           )}
           {blocked.reason === 'error' && (

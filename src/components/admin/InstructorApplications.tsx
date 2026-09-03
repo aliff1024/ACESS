@@ -36,8 +36,22 @@ export function InstructorApplications() {
   const [selectedApp, setSelectedApp] = useState<InstructorApplication | null>(null)
   const [adminNotes, setAdminNotes] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false)
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+  // Re-verified 2026-09-03 (docs/testing-report.md, ADMIN-01): this used to
+  // be two booleans (approveDialogOpen / rejectDialogOpen) with the
+  // "Application Details" Dialog's own `open` prop computed as
+  // `!!selectedApp && !approveDialogOpen && !rejectDialogOpen` — so clicking
+  // Approve closed the Details Dialog (one Radix root unmounting) at the
+  // exact same instant the Confirm dialog opened (a second Radix root
+  // mounting). Two DismissableLayer instances transitioning simultaneously
+  // is exactly the shared-module-state race documented in
+  // src/components/ui/dialog-pointer-events-guard.tsx, and was the
+  // reproducible cause of ADMIN-01 clicking "Confirm Approval" and getting
+  // no error but no database write either — first attempt after a fresh
+  // login failed in 3 of 4 full suite runs, always passing on an immediate
+  // retry. A single Dialog whose content just switches view never has two
+  // layers competing, since there's only ever one open/close transition:
+  // the whole Dialog's own.
+  const [dialogView, setDialogView] = useState<'details' | 'confirm-approve' | 'confirm-reject'>('details')
 
   const refetch = useCallback(async () => {
     setLoadError(false)
@@ -88,9 +102,8 @@ export function InstructorApplications() {
         await updateInstructorApplication(appId, { status, admin_notes: adminNotes })
         toast.success(`Application ${status} successfully`)
       }
-      setApproveDialogOpen(false)
-      setRejectDialogOpen(false)
       setSelectedApp(null)
+      setDialogView('details')
       setAdminNotes('')
       refetch()
     } catch (err) {
@@ -179,7 +192,7 @@ export function InstructorApplications() {
         <div className="space-y-3">
           {filtered.map(app => (
             <Card key={app.id} className="p-5 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => { setSelectedApp(app); setAdminNotes(app.admin_notes || '') }}
+              onClick={() => { setSelectedApp(app); setAdminNotes(app.admin_notes || ''); setDialogView('details') }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4">
@@ -206,8 +219,11 @@ export function InstructorApplications() {
         </div>
       )}
 
-      {/* View Details Dialog */}
-      <Dialog open={!!selectedApp && !approveDialogOpen && !rejectDialogOpen} onOpenChange={(o) => { if (!o) setSelectedApp(null) }}>
+      {/* Single Dialog, three views (details / confirm-approve / confirm-reject)
+          switched by dialogView — see the comment on dialogView's
+          declaration for why this replaced three separate Dialog roots. */}
+      <Dialog open={!!selectedApp} onOpenChange={(o) => { if (!o) { setSelectedApp(null); setDialogView('details') } }}>
+        {dialogView === 'details' && (
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Application Details</DialogTitle>
@@ -273,13 +289,13 @@ export function InstructorApplications() {
               {selectedApp.status === 'pending' && (
                 <div className="flex gap-3 pt-2">
                   <Button
-                    onClick={() => { setApproveDialogOpen(true) }}
+                    onClick={() => { setDialogView('confirm-approve') }}
                     className="bg-green-600 hover:bg-green-700 text-white flex-1"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" /> Approve
                   </Button>
                   <Button
-                    onClick={() => { setRejectDialogOpen(true) }}
+                    onClick={() => { setDialogView('confirm-reject') }}
                     variant="outline"
                     className="text-red-600 border-red-200 hover:bg-red-50 flex-1"
                   >
@@ -290,11 +306,10 @@ export function InstructorApplications() {
             </div>
           )}
         </DialogContent>
-      </Dialog>
+        )}
 
-      {/* Confirm Approve Dialog */}
-      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+        {dialogView === 'confirm-approve' && (
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Approval</DialogTitle>
             <DialogDescription>This will activate the educator account with fixed credentials.</DialogDescription>
@@ -304,7 +319,7 @@ export function InstructorApplications() {
             Login credentials will be shown after approval for you to share with them.
           </p>
           <div className="flex gap-3 justify-end pt-2">
-            <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogView('details')}>Cancel</Button>
             <Button
               onClick={() => selectedApp && handleAction(selectedApp.id, 'approved')}
               disabled={actionLoading}
@@ -315,10 +330,9 @@ export function InstructorApplications() {
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
+        )}
 
-      {/* Confirm Reject Dialog */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        {dialogView === 'confirm-reject' && (
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Rejection</DialogTitle>
@@ -328,7 +342,7 @@ export function InstructorApplications() {
             Are you sure you want to reject <strong>{selectedApp?.full_name}</strong>&apos;s application?
           </p>
           <div className="flex gap-3 justify-end pt-2">
-            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogView('details')}>Cancel</Button>
             <Button
               onClick={() => selectedApp && handleAction(selectedApp.id, 'rejected')}
               disabled={actionLoading}
@@ -339,6 +353,7 @@ export function InstructorApplications() {
             </Button>
           </div>
         </DialogContent>
+        )}
       </Dialog>
       </div>
     </div>

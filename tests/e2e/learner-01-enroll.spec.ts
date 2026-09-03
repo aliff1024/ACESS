@@ -6,7 +6,13 @@ import { loginAs } from './helpers'
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
 const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
-const TARGET_COURSE_ID = '2a7e86c1-4461-47c0-be7f-5fd16d7b26a6'
+// Re-verified 2026-09-03 by actually running this test: the original
+// TARGET_COURSE_ID (2a7e86c1-4461-47c0-be7f-5fd16d7b26a6) no longer exists in
+// the local database — a direct read returned zero rows, stale from an
+// earlier seed generation. It was silently causing a timeout waiting for
+// "Course Lessons" text that could never appear. Replaced with a course
+// confirmed both to exist and to be unenrolled by haziq via a direct read.
+const TARGET_COURSE_ID = 'c2c9deb5-bb08-412a-8bac-739edd3cdaf1' // "Focus and Study Skills for ADHD Learners"
 
 // Learner (baseline persona: haziq, "still exploring which courses to
 // follow") enrols in a course through the real catalogue UI. The target

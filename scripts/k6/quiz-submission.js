@@ -65,12 +65,13 @@ export default function () {
     JSON.stringify({ p_quiz_id: QUIZ_ID, p_answers: ANSWERS }),
     { headers, tags: { name: 'submit_quiz_attempt' } },
   )
-  check(res, {
+  const ok = check(res, {
     'rpc: 200 OK': (r) => r.status === 200,
     'graded (score_pct present)': (r) => {
       try { return typeof JSON.parse(r.body).score_pct === 'number' } catch { return false }
     },
   })
+  if (!ok) console.error(`FAILURE user=${me.email} status=${res.status} body=${res.body}`)
 
   sleep(Math.random() * 1.2 + 0.3)
 }

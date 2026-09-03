@@ -1652,8 +1652,28 @@ export function LessonViewPage({
         />
       )}
 
-      {/* ── Focus Mode Slide Navigation ── */}
-      {focusMode && !simplifiedMode && focusSteps.length > 0 && (
+      {/* ── Focus Mode Slide Navigation ──
+          Retest 2026-09-03 (docs/testing-report.md, LEARNER-02): this used
+          to gate on `focusMode` (the raw, manually-toggled flag — set by
+          the "Focus" button above, which is itself hidden whenever
+          simplifiedMode is true) instead of `effectiveFocusMode` (which
+          ADHD forces on via the preset branch, `focusMode || activePreset
+          === 'adhd'`, never touching the raw flag at all). Every content
+          section in this file — video, content, activities, and the
+          completion block at "Complete This Lesson" below — reads
+          `effectiveFocusMode` and only reveals itself once `currentFocusId`
+          (driven by `focusStep`, which nothing but this bar's buttons ever
+          changes) reaches the right step. For ADHD, whose `simplifiedMode`
+          is also always true, that combination meant this was the ONLY
+          place `setFocusStep` is ever called, and it could never render —
+          `focusStep` stayed stuck at 0 (the first section) for the entire
+          lesson, and the real "Complete Lesson" button (which only shows
+          at the last step, `currentFocusId === 'summary'`) was permanently
+          unreachable. Fixed by keying this bar on `effectiveFocusMode`
+          itself — the same condition every section it controls already
+          uses — so it shows whenever focus mode is actually active,
+          whether that's this manual toggle or the ADHD preset forcing it. */}
+      {effectiveFocusMode && focusSteps.length > 0 && (
         <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
             <h2 className="font-bold text-gray-900 text-sm truncate">{lesson.title}</h2>
@@ -1748,11 +1768,28 @@ export function LessonViewPage({
           change the way something scrolling past it would. z-10, under
           the header's z-30, so the header still wins the sliver where
           they'd otherwise overlap while condensed. */}
+      {/* Re-verified 2026-09-03 (docs/testing-report.md, A11Y-03 / LEARNER-07):
+          on real, in-flow content of typical width (e.g. this lesson's video
+          card, which spans the .content-column measure) this fixed panel's
+          assumed "unused space beside it" doesn't reliably exist at the `xl`
+          breakpoint — content-column's centered max-width plus this panel's
+          own w-72 + right-6 leaves only a few px of margin at 1280px
+          viewports, and font-metric/scrollbar rounding was enough to put the
+          panel's own box on top of the video card's "I have watched this
+          video" button, silently swallowing the click. Two changes: (1)
+          raised the breakpoint to `2xl` so the panel only appears where
+          there's comfortably more margin to float into: (2) `pointer-events-none`
+          on this wrapper by default, since VisualSchedule is a pure read-only
+          display with no interactive elements of its own — anything under it
+          should still be clickable even if the two boxes do overlap on some
+          viewport this wasn't tested at. StepByStepGuidance is the one real
+          exception (Previous/Next/Exit/Complete are genuine controls), so its
+          own card opts back in with pointer-events-auto. */}
       {!effectiveFocusMode && (settings.visual_schedule_enabled || guidedMode) && (
-        <div className="hidden xl:flex xl:flex-col xl:gap-3 fixed right-6 top-44 w-72 z-10 max-h-[calc(100vh-12rem)] overflow-y-auto">
+        <div className="hidden 2xl:flex 2xl:flex-col 2xl:gap-3 fixed right-6 top-44 w-72 z-10 max-h-[calc(100vh-12rem)] overflow-y-auto pointer-events-none">
           {settings.visual_schedule_enabled && <VisualSchedule schedule={itinerarySchedule} />}
           {guidedMode && (
-            <div className="bg-white border-2 border-teal-100 rounded-xl p-5 shadow-sm">
+            <div className="bg-white border-2 border-teal-100 rounded-xl p-5 shadow-sm pointer-events-auto">
               <StepByStepGuidance
                 title={lesson.title || 'Lesson Steps'}
                 steps={guidedSteps}

@@ -116,18 +116,30 @@ def title_case(table_name):
 def constraint_label(c):
     bits = []
     if c["pk"]:
-        bits.append("PRIMARY KEY")
+        bits.append(tcode("PRIMARY KEY"))
     if c["fk"]:
-        bits.append("FK $\\rightarrow$ " + tex(c["fk"]))
+        bits.append("FK $\\rightarrow$ " + tcode(c["fk"]))
     if c["uq"] and not c["pk"]:
-        bits.append("UNIQUE")
+        bits.append(tcode("UNIQUE"))
     if not c["nullable"] and not c["pk"]:
-        bits.append("NOT NULL")
+        bits.append(tcode("NOT NULL"))
     return ", ".join(bits) if bits else "-"
 
 
+def tcode(s):
+    # \tcode is \path{} (url.sty, [obeyspaces]) — it typesets its argument
+    # verbatim, so schema identifiers go in raw, with no manual escaping.
+    return r"\tcode{%s}" % s
+
+
 def tex(s):
-    return s.replace("_", r"\_").replace("%", r"\%").replace("&", r"\&")
+    # [obeyspaces] means \tcode/\path never treats an internal space as a
+    # break point, so a multi-word "character varying DEFAULT 'x'"-style
+    # type string wrapped in \tcode overflows the narrow Type column
+    # (confirmed empirically). Single-token identifiers (attribute names)
+    # don't have this problem and stay in \tcode; type/default strings use
+    # plain, escaped text instead so they wrap normally.
+    return s.replace("_", r"\_")
 
 
 DOMAIN_ORDER = [
@@ -176,7 +188,7 @@ def main():
         for t in tabs:
             n += 1
             cols = tables[t]
-            out.append("\\textbf{%d. Table: %s}\n" % (n, tex(t)))
+            out.append("\\textbf{%d. Table: %s}\n" % (n, tcode(t)))
             out.append(r"""
 \begin{table}[H]
 \caption{%s Data Dictionary}
@@ -185,10 +197,10 @@ def main():
 \begin{center}
 \renewcommand{\arraystretch}{1.15}
 \scriptsize
-% Widths chosen so that the four columns plus tabcolsep and rules total under
-% the 15cm text block; verified by scripts/table-width.py, which fails the
-% build otherwise. Do not widen these without re-running that check.
-\begin{tabular}{|>{\raggedright\arraybackslash}p{2.67cm}|>{\raggedright\arraybackslash}p{2.93cm}|>{\raggedright\arraybackslash}p{2.67cm}|>{\raggedright\arraybackslash}p{4.51cm}|}
+%% Widths chosen so that the four columns plus tabcolsep and rules total under
+%% the 15cm text block; verified by scripts/table-width.py, which fails the
+%% build otherwise. Do not widen these without re-running that check.
+\begin{tabular}{|>{\raggedright\arraybackslash\tabbreak}p{2.67cm}|>{\raggedright\arraybackslash\tabbreak}p{2.93cm}|>{\raggedright\arraybackslash\tabbreak}p{2.67cm}|>{\raggedright\arraybackslash\tabbreak}p{4.51cm}|}
 \hline
 \textbf{Attribute} & \textbf{Type} & \textbf{Constraint} & \textbf{Description} \\ \hline
 """ % (title_case(t), t))
@@ -199,7 +211,7 @@ def main():
                     gaps.append("%s.%s" % (t, c["name"]))
                     desc = "TODO"
                 out.append("%s & %s & %s & %s \\\\ \\hline\n"
-                           % (tex(c["name"]), tex(type_label(c)),
+                           % (tcode(c["name"]), tex(type_label(c)),
                               constraint_label(c), desc))
             out.append("\\end{tabular}\n\\end{center}\n\\end{table}\n\n")
 

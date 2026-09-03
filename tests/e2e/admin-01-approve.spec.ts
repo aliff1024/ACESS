@@ -38,27 +38,35 @@ test('ADMIN-01: approve a pending instructor application', async ({ page }) => {
     .eq('email', 'cheemeng.tan@example.com')
     .single()
   console.log('ADMIN-01: application status in the database after clicking Approve:', appRow?.status, '| reviewed_by:', appRow?.reviewed_by ?? 'NULL — not set by this approval path, unlike updateInstructorApplication() in admin-api.ts')
-  expect(appRow?.status).toBe('approved')
+  // Re-verified 2026-09-03: this assertion sat with no try/finally around
+  // the teardown below it — a failed run (this test has been genuinely
+  // flaky; see docs/testing-report.md) left the application "approved" and
+  // a provisioned account behind, and the NEXT run then failed differently
+  // (couldn't even find "pending" text on the row) for a completely
+  // unrelated-looking reason. Wrapped so teardown always runs.
+  try {
+    expect(appRow?.status).toBe('approved')
+  } finally {
+    // Teardown. Approving this application does more than change its status:
+    // it provisions a real educator account for the applicant (confirmed via a
+    // direct read — this is not documented behaviour of the UI copy alone, it
+    // was found by checking the database). instructor_applications.user_id is
+    // ON DELETE CASCADE against users (confirmed the hard way: deleting the
+    // provisioned user before clearing this reference deleted the application
+    // row along with it, and it had to be restored from a captured copy), so
+    // the application's own columns are reset FIRST — severing the user_id
+    // link — and only then is the provisioned account deleted.
+    const { error } = await admin
+      .from('instructor_applications')
+      .update({ status: 'pending', admin_notes: null, reviewed_by: null, reviewed_at: null, user_id: null })
+      .eq('id', appRow!.id)
+    console.log('ADMIN-01 teardown: application reverted to pending:', error ? 'FAILED — ' + error.message : 'ok')
 
-  // Teardown. Approving this application does more than change its status:
-  // it provisions a real educator account for the applicant (confirmed via a
-  // direct read — this is not documented behaviour of the UI copy alone, it
-  // was found by checking the database). instructor_applications.user_id is
-  // ON DELETE CASCADE against users (confirmed the hard way: deleting the
-  // provisioned user before clearing this reference deleted the application
-  // row along with it, and it had to be restored from a captured copy), so
-  // the application's own columns are reset FIRST — severing the user_id
-  // link — and only then is the provisioned account deleted.
-  const { error } = await admin
-    .from('instructor_applications')
-    .update({ status: 'pending', admin_notes: null, reviewed_by: null, reviewed_at: null, user_id: null })
-    .eq('id', appRow!.id)
-  console.log('ADMIN-01 teardown: application reverted to pending:', error ? 'FAILED — ' + error.message : 'ok')
-
-  const { data: newUserRow } = await admin.from('users').select('id').eq('email', 'cheemeng.tan@example.com').maybeSingle()
-  if (newUserRow) {
-    const { error: authDelErr } = await admin.auth.admin.deleteUser(newUserRow.id)
-    console.log('ADMIN-01 teardown: provisioned educator account removed:', authDelErr ? 'FAILED — ' + authDelErr.message : 'ok')
-    await admin.from('users').delete().eq('id', newUserRow.id)
+    const { data: newUserRow } = await admin.from('users').select('id').eq('email', 'cheemeng.tan@example.com').maybeSingle()
+    if (newUserRow) {
+      const { error: authDelErr } = await admin.auth.admin.deleteUser(newUserRow.id)
+      console.log('ADMIN-01 teardown: provisioned educator account removed:', authDelErr ? 'FAILED — ' + authDelErr.message : 'ok')
+      await admin.from('users').delete().eq('id', newUserRow.id)
+    }
   }
 })

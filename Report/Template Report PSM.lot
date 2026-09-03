@@ -19,43 +19,43 @@
 \contentsline {table}{\numberline {4.13}{\ignorespaces Adaptive Interactions Data Dictionary}}{98}{}%
 \contentsline {table}{\numberline {4.14}{\ignorespaces Courses Data Dictionary}}{98}{}%
 \contentsline {table}{\numberline {4.15}{\ignorespaces Course Chapters Data Dictionary}}{100}{}%
-\contentsline {table}{\numberline {4.16}{\ignorespaces Lessons Data Dictionary}}{100}{}%
-\contentsline {table}{\numberline {4.17}{\ignorespaces Course Accessibility Categories Data Dictionary}}{102}{}%
+\contentsline {table}{\numberline {4.16}{\ignorespaces Lessons Data Dictionary}}{101}{}%
+\contentsline {table}{\numberline {4.17}{\ignorespaces Course Accessibility Categories Data Dictionary}}{103}{}%
 \contentsline {table}{\numberline {4.18}{\ignorespaces Course Milestones Data Dictionary}}{103}{}%
-\contentsline {table}{\numberline {4.19}{\ignorespaces Course Achievements Data Dictionary}}{103}{}%
+\contentsline {table}{\numberline {4.19}{\ignorespaces Course Achievements Data Dictionary}}{104}{}%
 \contentsline {table}{\numberline {4.20}{\ignorespaces Lesson Templates Data Dictionary}}{104}{}%
-\contentsline {table}{\numberline {4.21}{\ignorespaces Lesson Versions Data Dictionary}}{104}{}%
+\contentsline {table}{\numberline {4.21}{\ignorespaces Lesson Versions Data Dictionary}}{105}{}%
 \contentsline {table}{\numberline {4.22}{\ignorespaces Media Assets Data Dictionary}}{105}{}%
-\contentsline {table}{\numberline {4.23}{\ignorespaces Lesson Interactive Content Data Dictionary}}{105}{}%
+\contentsline {table}{\numberline {4.23}{\ignorespaces Lesson Interactive Content Data Dictionary}}{106}{}%
 \contentsline {table}{\numberline {4.24}{\ignorespaces Video Questions Data Dictionary}}{106}{}%
-\contentsline {table}{\numberline {4.25}{\ignorespaces H5P Contents Data Dictionary}}{106}{}%
+\contentsline {table}{\numberline {4.25}{\ignorespaces H5P Contents Data Dictionary}}{107}{}%
 \contentsline {table}{\numberline {4.26}{\ignorespaces Lesson Checkpoints Data Dictionary}}{107}{}%
-\contentsline {table}{\numberline {4.27}{\ignorespaces Lesson AI Summaries Data Dictionary}}{107}{}%
+\contentsline {table}{\numberline {4.27}{\ignorespaces Lesson AI Summaries Data Dictionary}}{108}{}%
 \contentsline {table}{\numberline {4.28}{\ignorespaces Lesson Comments Data Dictionary}}{108}{}%
-\contentsline {table}{\numberline {4.29}{\ignorespaces Quizzes Data Dictionary}}{108}{}%
+\contentsline {table}{\numberline {4.29}{\ignorespaces Quizzes Data Dictionary}}{109}{}%
 \contentsline {table}{\numberline {4.30}{\ignorespaces Quiz Questions Data Dictionary}}{109}{}%
 \contentsline {table}{\numberline {4.31}{\ignorespaces Quiz Options Data Dictionary}}{109}{}%
-\contentsline {table}{\numberline {4.32}{\ignorespaces Quiz Attempts Data Dictionary}}{109}{}%
+\contentsline {table}{\numberline {4.32}{\ignorespaces Quiz Attempts Data Dictionary}}{110}{}%
 \contentsline {table}{\numberline {4.33}{\ignorespaces Quiz Answers Data Dictionary}}{110}{}%
-\contentsline {table}{\numberline {4.34}{\ignorespaces Enrollments Data Dictionary}}{110}{}%
+\contentsline {table}{\numberline {4.34}{\ignorespaces Enrollments Data Dictionary}}{111}{}%
 \contentsline {table}{\numberline {4.35}{\ignorespaces Lesson Progress Data Dictionary}}{111}{}%
-\contentsline {table}{\numberline {4.36}{\ignorespaces Learner Checkpoints Data Dictionary}}{111}{}%
+\contentsline {table}{\numberline {4.36}{\ignorespaces Learner Checkpoints Data Dictionary}}{112}{}%
 \contentsline {table}{\numberline {4.37}{\ignorespaces H5P Responses Data Dictionary}}{112}{}%
-\contentsline {table}{\numberline {4.38}{\ignorespaces Recommendations Data Dictionary}}{112}{}%
-\contentsline {table}{\numberline {4.39}{\ignorespaces Course Favorites Data Dictionary}}{112}{}%
+\contentsline {table}{\numberline {4.38}{\ignorespaces Recommendations Data Dictionary}}{113}{}%
+\contentsline {table}{\numberline {4.39}{\ignorespaces Course Favorites Data Dictionary}}{113}{}%
 \contentsline {table}{\numberline {4.40}{\ignorespaces User Achievements Data Dictionary}}{113}{}%
-\contentsline {table}{\numberline {4.41}{\ignorespaces Certificates Data Dictionary}}{113}{}%
+\contentsline {table}{\numberline {4.41}{\ignorespaces Certificates Data Dictionary}}{114}{}%
 \contentsline {table}{\numberline {4.42}{\ignorespaces Tables Removed During Schema Consolidation}}{120}{}%
 \contentsline {table}{\numberline {5.1}{\ignorespaces Development Workstation Specification}}{130}{}%
 \contentsline {table}{\numberline {5.2}{\ignorespaces Software Environment and Versions}}{131}{}%
 \contentsline {table}{\numberline {5.3}{\ignorespaces Implementation Status of Each Module}}{136}{}%
 \contentsline {table}{\numberline {5.4}{\ignorespaces Executable Verification Scripts}}{138}{}%
 \contentsline {table}{\numberline {6.1}{\ignorespaces Test Organization}}{141}{}%
-\contentsline {table}{\numberline {6.2}{\ignorespaces Test Schedule}}{142}{}%
-\contentsline {table}{\numberline {6.3}{\ignorespaces Automated Suite Test Descriptions}}{144}{}%
-\contentsline {table}{\numberline {6.4}{\ignorespaces Manual Spot-Check Matrix}}{146}{}%
-\contentsline {table}{\numberline {6.5}{\ignorespaces WCAG 2.2 Expert Review Findings}}{147}{}%
-\contentsline {table}{\numberline {6.6}{\ignorespaces UAT Form Structure}}{149}{}%
-\contentsline {table}{\numberline {6.7}{\ignorespaces UAT Likert Statements (asked once per persona)}}{150}{}%
-\contentsline {table}{\numberline {6.8}{\ignorespaces UAT Persona Task Briefs}}{150}{}%
-\contentsline {table}{\numberline {6.9}{\ignorespaces Automated Suite Results}}{151}{}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Test Schedule}}{143}{}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces Automated Suite Test Cases and Results}}{146}{}%
+\contentsline {table}{\numberline {6.4}{\ignorespaces Load Test Results (post-fix)}}{158}{}%
+\contentsline {table}{\numberline {6.5}{\ignorespaces Manual Spot-Check Matrix}}{158}{}%
+\contentsline {table}{\numberline {6.6}{\ignorespaces WCAG 2.2 Expert Review Findings}}{160}{}%
+\contentsline {table}{\numberline {6.7}{\ignorespaces UAT Form Structure}}{163}{}%
+\contentsline {table}{\numberline {6.8}{\ignorespaces UAT Likert Statements (asked once per persona)}}{163}{}%
+\contentsline {table}{\numberline {6.9}{\ignorespaces UAT Persona Task Briefs}}{163}{}%
